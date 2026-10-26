@@ -1,0 +1,904 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Parcours de graphes animés</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,600;1,700&family=Roboto+Mono:wght@400;500;600&display=swap">
+<style>
+/* Mise en page façon logiciel de géométrie : barre d'outils (algorithmes), barre de style (commandes), puis vue Algèbre à gauche et, à droite, vue Graphique avec grille et axes, Tableur (Floyd-Warshall) et vue Algorithme. Une seule colonne sur téléphone, graphique en premier. */
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --head: #f4f4f4;
+  --border: #d0d0d0;
+  --fg: #1a1a1a;
+  --muted: #666666;
+  --grid-major: #cfcfcf;
+  --grid-minor: #ececec;
+  --axis: #1a1a1a;
+  --accent: #6557d2;
+  --accent-soft: #e8e4fb;
+  --on-accent: #ffffff;
+  --sheet-k: #f5f3fd;
+  --edge: #1a1a1a;
+  --pt-idle: #8a8a8a;
+  --pt-blue: #1565c0;
+  --pt-done: #2e7d32;
+  --pt-bad: #c62828;
+  --look: #e65f00;
+  --ok: #2e7d32;
+  --bad: #c62828;
+  color-scheme: light;
+  --font-body: "Open Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+h1 { font: 700 1.3rem var(--font-body); margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.kicker { font: 500 0.72rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; min-width: 0; }
+.topbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 12px 16px; }
+
+/* Barre d'outils et barre de style */
+.tools { display: flex; flex-wrap: wrap; }
+.tab {
+  font: 600 0.9rem var(--font-body); color: var(--fg); background: transparent; border: 0;
+  border-right: 1px solid var(--border); border-bottom: 3px solid transparent;
+  padding: 12px 18px; cursor: pointer;
+}
+.tab[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-bottom-color: var(--accent); }
+.stylebar { border-top: 1px solid var(--border); padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+.info { color: var(--muted); font: 400 0.8rem var(--font-mono); }
+.row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.field { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--muted); }
+select {
+  font: 600 0.88rem var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 6px 10px; max-width: 100%;
+}
+.btn {
+  font: 600 0.88rem var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 7px 14px; cursor: pointer;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); min-width: 6.5rem; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.tab:focus-visible, .btn:focus-visible, select:focus-visible, input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="range"] { accent-color: var(--accent); }
+.speed input { width: 110px; }
+.scrub { display: flex; align-items: center; gap: 12px; }
+.scrub input { flex: 1; min-width: 0; }
+.mono { font: 400 0.8rem var(--font-mono); color: var(--muted); white-space: nowrap; }
+
+/* Vues */
+.views {
+  display: grid; grid-template-columns: minmax(270px, 330px) minmax(0, 1fr); gap: 12px; align-items: start;
+}
+.right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.view { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; min-width: 0; }
+.vh {
+  background: var(--head); border-bottom: 1px solid var(--border); padding: 7px 12px;
+  font: 600 0.78rem var(--font-body); color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px;
+}
+.vh .hint { font-weight: 400; }
+
+/* Algèbre */
+.msgbox { padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 6px; min-height: 8.6rem; }
+.step { font: 500 0.74rem var(--font-mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+#msg { font-size: 0.95rem; }
+#msg.warn { color: var(--bad); font-weight: 600; }
+.sec {
+  border-top: 1px solid var(--border); background: var(--head); padding: 5px 12px;
+  font: 600 0.72rem var(--font-body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 12px;
+}
+.sec .hint { font-weight: 400; text-transform: none; letter-spacing: 0; }
+.struct { padding: 10px 12px 12px; font: 500 0.88rem/1.9 var(--font-mono); min-height: 3.4rem; }
+.struct .br { color: var(--muted); }
+.struct .it { padding: 1px 5px; border-radius: 3px; }
+.struct .it.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.struct .it.on { color: var(--ok); font-weight: 600; }
+.struct .sep { color: var(--muted); }
+.alist { list-style: none; margin: 0; padding: 0; }
+.arow { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-top: 1px solid var(--grid-minor); }
+.bul {
+  --c: var(--pt-idle); flex: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--c); border: 2px solid var(--c); box-shadow: inset 0 0 0 2px var(--surface);
+}
+.arow.st-open .bul { --c: var(--pt-blue); }
+.arow.st-cur .bul { --c: var(--accent); }
+.arow.st-done .bul { --c: var(--pt-done); }
+.arow.st-bad .bul { --c: var(--pt-bad); }
+.arow.st-cur { background: var(--accent-soft); }
+.expr { font-size: 0.95rem; }
+.expr i { font-style: italic; font-weight: 600; }
+.expr .v { font-weight: 700; }
+
+/* Graphique */
+svg { width: 100%; height: auto; display: block; background: var(--surface); }
+.gm { stroke: var(--grid-minor); stroke-width: 1; }
+.gM { stroke: var(--grid-major); stroke-width: 1; }
+.axis { stroke: var(--axis); stroke-width: 1.5; }
+.axarrow { fill: var(--axis); }
+.tk { font: 400 11px var(--font-body); fill: var(--muted); }
+.legend { list-style: none; margin: 0; padding: 8px 12px 10px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--border); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--pt-idle); flex: none; }
+.dot.open { background: var(--pt-blue); }
+.dot.cur { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.dot.done { background: var(--pt-done); }
+.dot.bad { background: var(--pt-bad); }
+.bar { width: 18px; height: 4px; border-radius: 2px; flex: none; }
+.bar.tree { background: var(--pt-blue); }
+.bar.win { background: var(--ok); }
+.bar.fail { background: var(--bad); }
+
+.edge { stroke: var(--edge); stroke-width: 2; fill: none; transition: stroke 0.2s; }
+.edge.tree { stroke: var(--pt-blue); stroke-width: 3.2; }
+.edge.look-try { stroke: var(--look); stroke-width: 3.8; }
+.edge.look-win { stroke: var(--ok); stroke-width: 3.8; }
+.edge.look-fail { stroke: var(--bad); stroke-width: 3.8; }
+.ma-idle { fill: var(--edge); }
+.ma-tree { fill: var(--pt-blue); }
+.ma-look-try { fill: var(--look); }
+.ma-look-win { fill: var(--ok); }
+.ma-look-fail { fill: var(--bad); }
+.w { font: 600 14px var(--font-mono); fill: var(--muted); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.w.neg { fill: var(--bad); }
+.node .pt { fill: var(--pt-idle); stroke: var(--surface); stroke-width: 2; transition: fill 0.2s, r 0.2s; }
+.node .halo { fill: var(--accent); opacity: 0; transition: opacity 0.2s; }
+.node .ring { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 3; display: none; }
+.node.src .ring { display: block; }
+.node text.lab { font: 600 15px var(--font-body); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.node .ltr { font-style: italic; font-weight: 700; fill: var(--fg); }
+.node .val { font: 600 13.5px var(--font-mono); fill: var(--accent); }
+.st-open .pt { fill: var(--pt-blue); }
+.st-cur .pt { fill: var(--accent); r: 8.5px; }
+.st-cur .halo { opacity: 0.28; }
+.st-done .pt { fill: var(--pt-done); }
+.st-bad .pt { fill: var(--pt-bad); }
+
+/* Tableur */
+.scroll { overflow-x: auto; }
+table.mat { border-collapse: collapse; width: 100%; font: 400 0.85rem var(--font-mono); }
+.mat th, .mat td { text-align: center; padding: 5px 4px; border: 1px solid var(--border); min-width: 2.4rem; }
+.mat th { background: var(--head); color: var(--muted); font-weight: 600; }
+.mat td.k { background: var(--sheet-k); }
+.mat td.chg { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); font-weight: 700; }
+.mat td.neg { color: var(--bad); }
+.mat td.inf { color: var(--muted); }
+
+/* Algorithme */
+pre { margin: 0; padding: 6px 0; font: 400 0.8rem/1.7 var(--font-mono); overflow-x: auto; color: var(--fg); }
+.ln { display: block; white-space: pre; padding: 0 12px 0 0; min-height: 1.7em; }
+.ln::before {
+  content: attr(data-n); display: inline-block; width: 2.6em; margin-right: 0.9em; padding-right: 0.7em; text-align: right;
+  color: var(--muted); border-right: 1px solid var(--border);
+}
+.ln.on { background: var(--accent-soft); }
+.ln.on::before { color: var(--accent); font-weight: 700; }
+
+@media (max-width: 900px) {
+  .views { display: flex; flex-direction: column; gap: 12px; }
+  .right { display: contents; }
+  .v-gfx { order: 1; }
+  .v-alg { order: 2; }
+  .v-sheet { order: 3; }
+  .v-code { order: 4; }
+  .msgbox { min-height: 0; }
+}
+@media (max-width: 520px) {
+  .tab { padding: 10px 12px; font-size: 0.85rem; }
+  .speed input { width: 90px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge, .node .pt, .node .halo { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="panel">
+    <div class="topbar">
+      <h1>Parcours de graphes animés</h1>
+      <span class="kicker">Informatique · CPGE</span>
+    </div>
+    <div class="tools" id="tabs" role="group" aria-label="Algorithme">
+      <button type="button" class="tab" data-algo="bfs" aria-pressed="true">Largeur</button>
+      <button type="button" class="tab" data-algo="dfs" aria-pressed="false">Profondeur</button>
+      <button type="button" class="tab" data-algo="dijkstra" aria-pressed="false">Dijkstra</button>
+      <button type="button" class="tab" data-algo="bf" aria-pressed="false">Bellman-Ford</button>
+      <button type="button" class="tab" data-algo="fw" aria-pressed="false">Floyd-Warshall</button>
+    </div>
+    <div class="stylebar">
+      <p class="info" id="info"></p>
+      <div class="row">
+        <label class="field" for="graph">Graphe
+          <select id="graph">
+            <option value="pos">Poids positifs</option>
+            <option value="neg">Un arc négatif, sans cycle absorbant</option>
+            <option value="cyc">Cycle absorbant</option>
+          </select>
+        </label>
+        <label class="field" for="src" id="src-field">Départ
+          <select id="src"></select>
+        </label>
+      </div>
+      <div class="row">
+        <button type="button" class="btn" id="btn-restart">Début</button>
+        <button type="button" class="btn" id="btn-prev">‹ Précédent</button>
+        <button type="button" class="btn primary" id="btn-play">Lecture</button>
+        <button type="button" class="btn" id="btn-next">Suivant ›</button>
+        <label class="field speed" for="speed">Vitesse
+          <input type="range" id="speed" min="1" max="5" value="3">
+        </label>
+      </div>
+      <div class="scrub">
+        <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Étape de l'animation">
+        <span class="mono" id="count"></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="views">
+    <section class="view v-alg" aria-label="Vue Algèbre">
+      <div class="vh">Algèbre</div>
+      <div class="msgbox">
+        <span class="step" id="step-kicker"></span>
+        <p id="msg"></p>
+      </div>
+      <div class="sec"><span id="st-title"></span><span class="hint" id="st-hint"></span></div>
+      <div class="struct" id="chips"></div>
+      <div class="sec"><span>Sommets</span></div>
+      <ul class="alist" id="nodes"></ul>
+    </section>
+
+    <div class="right">
+      <section class="view v-gfx" aria-label="Vue Graphique">
+        <div class="vh">Graphique</div>
+        <svg id="svg" viewBox="0 0 650 420" role="img" aria-label="Graphe orienté et pondéré de sept sommets, de A à G, tracé sur une grille"></svg>
+        <ul class="legend">
+          <li><span class="dot"></span>pas atteint</li>
+          <li><span class="dot open"></span>découvert</li>
+          <li><span class="dot cur"></span>en cours</li>
+          <li><span class="dot done"></span>terminé</li>
+          <li><span class="dot bad"></span>faux ou problème</li>
+          <li><span class="bar tree"></span>meilleur chemin connu</li>
+          <li><span class="bar win"></span>arc qui améliore</li>
+          <li><span class="bar fail"></span>arc sans effet</li>
+        </ul>
+      </section>
+      <section class="view v-sheet" id="matcard" hidden aria-label="Vue Tableur">
+        <div class="vh"><span>Tableur : matrice des distances d</span><span class="hint">ligne = départ i, colonne = arrivée j</span></div>
+        <div class="scroll"><table class="mat" id="mat"></table></div>
+      </section>
+      <section class="view v-code" aria-label="Algorithme">
+        <div class="vh">Algorithme (Python)</div>
+        <pre id="code"></pre>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+//<LOGIC>
+var IDS = ["A", "B", "C", "D", "E", "F", "G"];
+var N = IDS.length;
+var POS = { A: [60, 190], B: [190, 80], C: [190, 300], D: [350, 150], E: [350, 320], F: [510, 110], G: [520, 260] };
+var LABEL_DY = { A: 38, B: -32, C: 38, D: -32, E: 38, F: -32, G: 38 };
+/* Les listes d'arcs sont volontairement dans un ordre défavorable : Bellman-Ford a alors besoin de plusieurs tours. */
+var GRAPHS = {
+  pos: { edges: [["E","F",3],["D","E",2],["A","B",4],["C","D",8],["B","D",5],["F","G",1],["A","C",1],["C","B",2],["D","F",6],["C","E",10],["E","G",4]] },
+  neg: { edges: [["E","F",3],["D","E",2],["B","C",-4],["C","D",3],["A","B",5],["F","G",1],["A","C",2],["B","D",6],["D","F",7],["C","E",9],["E","G",4]] },
+  cyc: { edges: [["D","B",1],["C","D",-4],["A","B",1],["B","C",2],["E","F",2],["F","G",1],["D","E",3],["A","C",5]] }
+};
+var EDGES = [];
+var adj = {};
+
+function setGraph(key) {
+  EDGES = GRAPHS[key].edges;
+  adj = {};
+  IDS.forEach(function (i) { adj[i] = []; });
+  EDGES.forEach(function (e) { adj[e[0]].push({ v: e[1], w: e[2] }); });
+  IDS.forEach(function (i) { adj[i].sort(function (a, b) { return a.v < b.v ? -1 : 1; }); });
+}
+function fmt(x) { return x === Infinity ? "∞" : String(x); }
+function items(arr) { return arr.map(function (t) { return { t: t }; }); }
+
+function trueDist(edges, s) {
+  var d = {};
+  IDS.forEach(function (i) { d[i] = Infinity; });
+  d[s] = 0;
+  for (var t = 0; t < N - 1; t++) {
+    var ch = false;
+    edges.forEach(function (e) { if (d[e[0]] + e[2] < d[e[1]]) { d[e[1]] = d[e[0]] + e[2]; ch = true; } });
+    if (!ch) break;
+  }
+  var cyc = false;
+  edges.forEach(function (e) { if (d[e[0]] + e[2] < d[e[1]]) cyc = true; });
+  return { d: d, cyc: cyc };
+}
+
+function Rec(title, hint) {
+  this.frames = [];
+  this.ns = {}; this.nl = {}; this.parent = {};
+  var self = this;
+  IDS.forEach(function (i) { self.ns[i] = "idle"; self.nl[i] = ""; });
+  this.st = { title: title, hint: hint, items: [] };
+}
+Rec.prototype.snap = function (line, msg, o) {
+  o = o || {};
+  this.frames.push({
+    ns: Object.assign({}, this.ns),
+    nl: Object.assign({}, this.nl),
+    parent: Object.assign({}, this.parent),
+    st: { title: this.st.title, hint: this.st.hint, items: this.st.items.map(function (x) { return Object.assign({}, x); }) },
+    line: line, msg: msg,
+    look: o.look || null, kind: o.kind || null, warn: !!o.warn,
+    mat: o.mat || null, hi: o.hi || null
+  });
+};
+
+function hasNeg() { return EDGES.some(function (e) { return e[2] < 0; }); }
+
+function genBFS(s) {
+  var r = new Rec("File (FIFO)", "entrée à droite, sortie à gauche");
+  r.snap(-1, "Parcours en largeur depuis " + s + ". On explore couche par couche avec une file : d'abord les voisins de " + s + ", puis leurs voisins, et ainsi de suite. Les poids sont ignorés. Lance la lecture ou avance pas à pas.");
+  var dist = {}, q = [];
+  dist[s] = 0; q.push(s); r.ns[s] = "open"; r.nl[s] = "d=0"; r.st.items = items(q);
+  r.snap(2, s + " entre dans la file avec dist[" + s + "] = 0.");
+  while (q.length) {
+    var u = q.shift();
+    r.ns[u] = "cur"; r.st.items = items(q);
+    r.snap(4, "On défile " + u + " et on examine ses voisins.");
+    adj[u].forEach(function (a) {
+      var v = a.v, key = u + ">" + v;
+      if (dist[v] === undefined) {
+        dist[v] = dist[u] + 1; q.push(v);
+        r.ns[v] = "open"; r.nl[v] = "d=" + dist[v]; r.parent[v] = u; r.st.items = items(q);
+        r.snap(7, v + " est nouveau : dist[" + v + "] = " + dist[v] + ", on l'enfile.", { look: key, kind: "win" });
+      } else {
+        r.snap(6, v + " est déjà découvert : on l'ignore.", { look: key, kind: "fail" });
+      }
+    });
+    r.ns[u] = "done";
+  }
+  r.snap(9, "La file est vide : fin du parcours. d est le nombre minimal d'arcs depuis " + s + ". Les sommets restés blancs ne sont pas accessibles.");
+  return r.frames;
+}
+
+function genDFS(s) {
+  var r = new Rec("Pile d'appels", "dernier appel à droite");
+  var stack = [], d = {}, f = {}, clock = 0;
+  function sync() { r.st.items = items(stack); }
+  r.snap(-1, "Parcours en profondeur depuis " + s + ". On suit un chemin le plus loin possible, puis on revient en arrière. L'algorithme est récursif : la pile d'appels est affichée à droite, et chaque sommet reçoit une date de début et de fin. Les poids sont ignorés.");
+  function visit(u, from) {
+    if (stack.length) r.ns[stack[stack.length - 1]] = "open";
+    stack.push(u); d[u] = ++clock;
+    r.ns[u] = "cur"; r.nl[u] = d[u] + "/";
+    if (from) r.parent[u] = from;
+    sync();
+    r.snap(1, "Appel dfs(" + u + ") : début de visite, date " + d[u] + ".");
+    adj[u].forEach(function (a) {
+      var v = a.v, key = u + ">" + v;
+      if (d[v] === undefined) {
+        r.snap(4, v + " n'est pas encore visité : on descend dans " + v + ".", { look: key, kind: "win" });
+        visit(v, u);
+      } else {
+        r.snap(3, v + " est déjà visité : on ignore cet arc.", { look: key, kind: "fail" });
+      }
+    });
+    f[u] = ++clock; stack.pop();
+    r.ns[u] = "done"; r.nl[u] = d[u] + "/" + f[u];
+    if (stack.length) r.ns[stack[stack.length - 1]] = "cur";
+    sync();
+    r.snap(5, "Fin de visite de " + u + " (date " + f[u] + ") : retour à l'appelant.");
+  }
+  visit(s, null);
+  r.snap(5, "Parcours terminé. Chaque sommet affiche début/fin. Les sommets restés blancs ne sont pas accessibles depuis " + s + ".");
+  return r.frames;
+}
+
+function genDijkstra(s) {
+  var r = new Rec("File de priorité", "sommets non fixés, plus petite distance en premier");
+  var dist = {}, rem = new Set(IDS);
+  IDS.forEach(function (i) { dist[i] = Infinity; });
+  var intro = "Dijkstra depuis " + s + ". À chaque étape, on fixe le sommet non traité de plus petite distance, puis on relâche ses arcs sortants.";
+  if (hasNeg()) intro += " Ce graphe a un arc négatif : Dijkstra n'est pas fait pour ça, regarde ce qui arrive.";
+  r.snap(-1, intro);
+  function pq() {
+    return items(IDS.filter(function (x) { return rem.has(x) && dist[x] !== Infinity; })
+      .sort(function (a, b) { return dist[a] - dist[b] || (a < b ? -1 : 1); })
+      .map(function (x) { return x + " : " + dist[x]; }));
+  }
+  IDS.forEach(function (i) { r.nl[i] = "∞"; });
+  dist[s] = 0; r.nl[s] = "0"; r.ns[s] = "open"; r.st.items = pq();
+  r.snap(2, "dist[" + s + "] = 0, toutes les autres distances valent ∞.");
+  while (rem.size) {
+    var u = null;
+    rem.forEach(function (x) { if (u === null || dist[x] < dist[u]) u = x; });
+    if (dist[u] === Infinity) {
+      r.st.items = [];
+      r.snap(6, "Il ne reste que des sommets à distance ∞ : ils sont inaccessibles, on s'arrête.");
+      break;
+    }
+    rem.delete(u); r.ns[u] = "cur"; r.st.items = pq();
+    r.snap(7, "On extrait " + u + ", de plus petite distance (" + dist[u] + ") : sa distance est définitive.");
+    adj[u].forEach(function (a) {
+      var v = a.v, w = a.w, key = u + ">" + v, sum = dist[u] + w;
+      if (!rem.has(v)) {
+        var extra = sum < dist[v] ? " Avec ce poids négatif, " + v + " aurait pu être amélioré (" + sum + " < " + dist[v] + ") : c'est l'erreur de Dijkstra." : "";
+        r.snap(9, v + " est déjà fixé : on n'y touche plus." + extra, { look: key, kind: "fail", warn: extra !== "" });
+      } else if (sum < dist[v]) {
+        var old = dist[v];
+        dist[v] = sum; r.parent[v] = u; r.nl[v] = String(sum); r.ns[v] = "open"; r.st.items = pq();
+        r.snap(10, u + "→" + v + " : " + dist[u] + " + " + w + " = " + sum + " < " + fmt(old) + ", on met à jour dist[" + v + "].", { look: key, kind: "win" });
+      } else {
+        r.snap(9, u + "→" + v + " : " + dist[u] + " + " + w + " = " + sum + " ≥ " + dist[v] + ", pas d'amélioration.", { look: key, kind: "fail" });
+      }
+    });
+    r.ns[u] = "done";
+  }
+  r.st.items = pq();
+  var msg = "Terminé : toutes les distances affichées sont définitives et exactes.", warn = false;
+  if (hasNeg()) {
+    var tr = trueDist(EDGES, s);
+    if (tr.cyc) {
+      msg = "⚠ Le graphe contient un cycle absorbant : les vraies distances ne sont pas définies. Dijkstra s'est terminé, mais son résultat n'a pas de sens."; warn = true;
+      IDS.forEach(function (x) { if (dist[x] !== Infinity) r.ns[x] = "bad"; });
+    } else {
+      var wrong = IDS.filter(function (x) { return dist[x] !== tr.d[x]; });
+      if (wrong.length) {
+        wrong.forEach(function (x) { r.ns[x] = "bad"; });
+        msg = "⚠ Dijkstra donne un résultat faux pour " + wrong.join(", ") + ". Valeurs exactes : " + wrong.map(function (x) { return x + " = " + fmt(tr.d[x]); }).join(", ") + ". Avec des poids négatifs, utilise Bellman-Ford.";
+        warn = true;
+      } else {
+        msg = "Il y a des poids négatifs, mais depuis ce sommet de départ le résultat est correct, par chance. Dijkstra ne le garantit pas : essaie un autre départ.";
+      }
+    }
+  }
+  r.snap(11, msg, { warn: warn });
+  return r.frames;
+}
+
+function genBF(s) {
+  var r = new Rec("Arcs relâchés dans cet ordre", "");
+  var dist = {};
+  IDS.forEach(function (i) { dist[i] = Infinity; });
+  dist[s] = 0;
+  function sync(cur) {
+    IDS.forEach(function (i) { r.ns[i] = dist[i] === Infinity ? "idle" : "open"; r.nl[i] = fmt(dist[i]); });
+    if (cur) r.ns[cur] = "cur";
+  }
+  function edgeItems(k) { return EDGES.map(function (e, idx) { return { t: e[0] + "→" + e[1], c: idx === k ? "cur" : "" }; }); }
+  var intro = "Bellman-Ford depuis " + s + ". On relâche tous les arcs, dans l'ordre de la liste, jusqu'à ce que plus rien ne change (au plus " + (N - 1) + " tours). Les poids négatifs sont acceptés.";
+  if (EDGES.some(function (e) { return e[0] === "C" && e[1] === "D" && e[2] === -4; })) intro += " Ce graphe contient un cycle absorbant (B → C → D → B, de poids −1) : l'algorithme doit le détecter.";
+  r.st.items = edgeItems(-1);
+  r.snap(-1, intro);
+  sync();
+  r.snap(2, "dist[" + s + "] = 0, les autres distances valent ∞.");
+  for (var t = 1; t <= N - 1; t++) {
+    var change = false;
+    r.st.hint = "Tour " + t + " sur " + (N - 1);
+    for (var k = 0; k < EDGES.length; k++) {
+      var u = EDGES[k][0], v = EDGES[k][1], w = EDGES[k][2], key = u + ">" + v;
+      r.st.items = edgeItems(k);
+      if (dist[u] === Infinity) {
+        sync();
+        r.snap(6, "Tour " + t + " · " + u + "→" + v + " : dist[" + u + "] = ∞, rien à propager.", { look: key, kind: "fail" });
+      } else if (dist[u] + w < dist[v]) {
+        var old = dist[v];
+        dist[v] = dist[u] + w; r.parent[v] = u; change = true;
+        sync(v);
+        r.snap(7, "Tour " + t + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + dist[v] + " < " + fmt(old) + ", dist[" + v + "] est améliorée.", { look: key, kind: "win" });
+      } else {
+        sync();
+        r.snap(6, "Tour " + t + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + (dist[u] + w) + " ≥ " + fmt(dist[v]) + ", pas d'amélioration.", { look: key, kind: "fail" });
+      }
+    }
+    r.st.items = edgeItems(-1); sync();
+    if (!change) {
+      IDS.forEach(function (x) { if (dist[x] !== Infinity) r.ns[x] = "done"; });
+      r.snap(10, "Fin du tour " + t + " : aucune distance n'a changé, on s'arrête. Les distances sont exactes.");
+      return r.frames;
+    }
+    r.snap(9, "Fin du tour " + t + " : au moins une distance a changé, on continue.");
+  }
+  r.st.title = "Tour de vérification"; r.st.hint = "une amélioration possible prouve un cycle absorbant";
+  for (var k2 = 0; k2 < EDGES.length; k2++) {
+    var u2 = EDGES[k2][0], v2 = EDGES[k2][1], w2 = EDGES[k2][2], key2 = u2 + ">" + v2;
+    r.st.items = edgeItems(k2); sync();
+    if (dist[u2] !== Infinity && dist[u2] + w2 < dist[v2]) {
+      r.ns[v2] = "bad";
+      r.snap(13, "Vérification · " + u2 + "→" + v2 + " : " + dist[u2] + " + " + w2 + " = " + (dist[u2] + w2) + " < " + fmt(dist[v2]) + ". Après " + (N - 1) + " tours, une amélioration est encore possible : il existe un cycle absorbant accessible depuis " + s + ". Les distances ne sont pas définies.", { look: key2, kind: "fail", warn: true });
+      return r.frames;
+    }
+    r.snap(12, "Vérification · " + u2 + "→" + v2 + " : aucune amélioration possible.", { look: key2, kind: "fail" });
+  }
+  r.st.items = edgeItems(-1);
+  IDS.forEach(function (x) { if (dist[x] !== Infinity) r.ns[x] = "done"; });
+  r.snap(14, "Aucune amélioration à la vérification : pas de cycle absorbant, les distances sont exactes.");
+  return r.frames;
+}
+
+function genFW() {
+  var r = new Rec("Sommets intermédiaires autorisés", "en vert : déjà autorisés, en bleu : k");
+  var d = IDS.map(function () { return IDS.map(function () { return Infinity; }); });
+  IDS.forEach(function (_, i) { d[i][i] = 0; });
+  EDGES.forEach(function (e) { d[IDS.indexOf(e[0])][IDS.indexOf(e[1])] = e[2]; });
+  function cp() { return d.map(function (row) { return row.slice(); }); }
+  function kItems(k) { return IDS.map(function (id, i) { return { t: id, c: i === k ? "cur" : (i < k ? "on" : "") }; }); }
+  function resetNs() { IDS.forEach(function (i) { r.ns[i] = "idle"; r.nl[i] = ""; }); }
+  var intro = "Floyd-Warshall calcule les distances entre toutes les paires de sommets. Pour chaque sommet k, on teste si passer par k raccourcit le trajet de i à j. Pas de sommet de départ ici.";
+  if (EDGES.some(function (e) { return e[0] === "C" && e[1] === "D" && e[2] === -4; })) intro += " Ce graphe contient un cycle absorbant : on le repérera à un terme diagonal négatif.";
+  r.st.items = kItems(-1);
+  r.snap(-1, intro, { mat: cp() });
+  r.snap(1, "Matrice initiale : d[i][j] est le poids de l'arc i→j, ∞ s'il n'y en a pas, et 0 sur la diagonale.", { mat: cp(), hi: {} });
+  for (var k = 0; k < N; k++) {
+    var K = IDS[k], before = cp(), ev = [];
+    for (var i = 0; i < N; i++) {
+      for (var j = 0; j < N; j++) {
+        var a = d[i][k], b = d[k][j];
+        if (a + b < d[i][j]) {
+          var old = d[i][j];
+          d[i][j] = a + b;
+          ev.push({ i: i, j: j, old: old, a: a, b: b, mat: cp() });
+        }
+      }
+    }
+    resetNs(); r.ns[K] = "cur"; r.st.items = kItems(k);
+    r.snap(2, "k = " + K + " : on autorise " + K + " comme sommet intermédiaire. " + (ev.length ? ev.length + " amélioration" + (ev.length > 1 ? "s" : "") + " à venir." : "Aucune amélioration avec ce sommet."), { mat: before, hi: { k: k } });
+    ev.forEach(function (e) {
+      resetNs(); r.ns[K] = "cur"; r.ns[IDS[e.i]] = r.ns[IDS[e.i]] === "cur" ? "cur" : "open"; r.ns[IDS[e.j]] = r.ns[IDS[e.j]] === "cur" ? "cur" : "open";
+      r.snap(6, "d[" + IDS[e.i] + "][" + IDS[e.j] + "] : " + e.a + " + " + e.b + " = " + (e.a + e.b) + " < " + fmt(e.old) + ". Passer par " + K + " est plus court : mise à jour.", { mat: e.mat, hi: { k: k, i: e.i, j: e.j } });
+    });
+  }
+  resetNs();
+  var neg = IDS.filter(function (_, i) { return d[i][i] < 0; });
+  r.st.items = kItems(N);
+  if (neg.length) {
+    neg.forEach(function (x) { r.ns[x] = "bad"; });
+    r.snap(7, "⚠ d[" + neg[0] + "][" + neg[0] + "] < 0 : il existe un cycle absorbant passant par " + neg.join(", ") + ". Les distances ne sont pas définies pour les trajets qui peuvent l'emprunter.", { mat: cp(), hi: {}, warn: true });
+  } else {
+    r.snap(7, "Terminé : d[i][j] est la plus courte distance de i à j, ∞ si j n'est pas accessible depuis i. La diagonale reste à 0, donc pas de cycle absorbant.", { mat: cp(), hi: {} });
+  }
+  return r.frames;
+}
+
+var CODE = {
+  bfs: [
+    "def bfs(g, s):",
+    "    dist = {s: 0}",
+    "    file = deque([s])",
+    "    while file:",
+    "        u = file.popleft()",
+    "        for v in g[u]:",
+    "            if v not in dist:",
+    "                dist[v] = dist[u] + 1",
+    "                file.append(v)",
+    "    return dist"
+  ],
+  dfs: [
+    "def dfs(g, u, vus):",
+    "    vus.add(u)            # début de visite",
+    "    for v in g[u]:",
+    "        if v not in vus:",
+    "            dfs(g, v, vus)",
+    "    # fin de visite de u"
+  ],
+  dijkstra: [
+    "def dijkstra(g, s):",
+    "    dist = {u: inf for u in g}",
+    "    dist[s] = 0",
+    "    a_traiter = set(g)       # non fixés",
+    "    while a_traiter:",
+    "        u = min(a_traiter, key=lambda x: dist[x])",
+    "        if dist[u] == inf: break",
+    "        a_traiter.remove(u)  # dist[u] définitive",
+    "        for v, w in g[u]:",
+    "            if v in a_traiter and dist[u] + w < dist[v]:",
+    "                dist[v] = dist[u] + w",
+    "    return dist"
+  ],
+  bf: [
+    "def bellman_ford(n, aretes, s):",
+    "    dist = [inf] * n",
+    "    dist[s] = 0",
+    "    for tour in range(n - 1):",
+    "        change = False",
+    "        for u, v, w in aretes:",
+    "            if dist[u] + w < dist[v]:",
+    "                dist[v] = dist[u] + w",
+    "                change = True",
+    "        if not change:",
+    "            return dist",
+    "    for u, v, w in aretes:   # vérification",
+    "        if dist[u] + w < dist[v]:",
+    "            return None      # cycle absorbant",
+    "    return dist"
+  ],
+  fw: [
+    "def floyd_warshall(d):",
+    "    n = len(d)",
+    "    for k in range(n):",
+    "        for i in range(n):",
+    "            for j in range(n):",
+    "                if d[i][k] + d[k][j] < d[i][j]:",
+    "                    d[i][j] = d[i][k] + d[k][j]",
+    "    return d"
+  ]
+};
+var INFO = {
+  bfs: "Temps O(n + m) · structure : file · poids : ignorés · distances en nombre d'arcs",
+  dfs: "Temps O(n + m) · structure : pile d'appels · poids : ignorés",
+  dijkstra: "Temps O(n²) ici, O((n + m) log n) avec un tas · poids ≥ 0 uniquement",
+  bf: "Temps O(n · m) · structure : liste d'arcs · poids quelconques · détecte les cycles absorbants",
+  fw: "Temps O(n³), espace O(n²) · matrice des distances · poids quelconques · toutes les paires"
+};
+function generate(algo, s) {
+  if (algo === "bfs") return genBFS(s);
+  if (algo === "dfs") return genDFS(s);
+  if (algo === "dijkstra") return genDijkstra(s);
+  if (algo === "bf") return genBF(s);
+  return genFW();
+}
+//</LOGIC>
+
+(function () {
+  var SVGNS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("svg");
+  var algo = "bfs", graphKey = "pos", src = "A";
+  var frames = [], idx = 0, playing = false, timer = null;
+  var nodeEls = {}, valEls = {}, edgeEls = [], rowEls = {}, valCells = {};
+  var SPEEDS = [2200, 1500, 1000, 600, 300];
+  var VBW = 650, OX = 24, OY = 392, TX = 40, TY = 10;
+  var LDY = { A: 24, B: -20, C: 24, D: -20, E: 24, F: -20, G: 24 };
+  var PRE = { bfs: "d", dfs: "t", dijkstra: "dist", bf: "dist", fw: null };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var srcSel = $("src"), graphSel = $("graph"), speedEl = $("speed"), scrub = $("scrub");
+
+  IDS.forEach(function (id) {
+    var o = document.createElement("option");
+    o.value = id; o.textContent = id; srcSel.appendChild(o);
+  });
+
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(SVGNS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function seg(x1, y1, x2, y2, cls, parent) {
+    return el("line", { x1: x1, y1: y1, x2: x2, y2: y2, class: cls }, parent);
+  }
+
+  function buildSvg() {
+    svg.textContent = "";
+    var defs = el("defs", {}, svg);
+    ["idle", "tree", "look-try", "look-win", "look-fail"].forEach(function (c) {
+      var m = el("marker", { id: "m-" + c, markerUnits: "userSpaceOnUse", markerWidth: 10, markerHeight: 10, refX: 9, refY: 5, orient: "auto" }, defs);
+      el("path", { d: "M0,0 L10,5 L0,10 z", class: "ma-" + c }, m);
+    });
+    var x, y, k, t;
+    for (x = OX + 20; x < VBW; x += 20) if ((x - OX) % 40 !== 0) seg(x, 6, x, OY, "gm", svg);
+    for (y = OY - 20; y > 6; y -= 20) if ((OY - y) % 40 !== 0) seg(OX, y, VBW, y, "gm", svg);
+    for (x = OX + 40; x < VBW; x += 40) seg(x, 6, x, OY, "gM", svg);
+    for (y = OY - 40; y > 6; y -= 40) seg(OX, y, VBW, y, "gM", svg);
+    seg(OX - 8, OY, VBW - 6, OY, "axis", svg);
+    seg(OX, OY + 8, OX, 8, "axis", svg);
+    el("path", { d: "M" + (VBW - 14) + "," + (OY - 4.5) + " L" + (VBW - 4) + "," + OY + " L" + (VBW - 14) + "," + (OY + 4.5) + " z", class: "axarrow" }, svg);
+    el("path", { d: "M" + (OX - 4.5) + ",16 L" + OX + ",6 L" + (OX + 4.5) + ",16 z", class: "axarrow" }, svg);
+    for (k = 1; OX + 40 * k < VBW - 14; k++) {
+      seg(OX + 40 * k, OY - 4, OX + 40 * k, OY + 4, "axis", svg);
+      t = el("text", { x: OX + 40 * k, y: OY + 17, class: "tk", "text-anchor": "middle" }, svg); t.textContent = String(k);
+    }
+    for (k = 1; OY - 40 * k > 18; k++) {
+      seg(OX - 4, OY - 40 * k, OX + 4, OY - 40 * k, "axis", svg);
+      t = el("text", { x: OX - 8, y: OY - 40 * k, class: "tk", "text-anchor": "end", "dominant-baseline": "central" }, svg); t.textContent = String(k);
+    }
+    t = el("text", { x: OX - 8, y: OY + 14, class: "tk", "text-anchor": "end" }, svg); t.textContent = "0";
+
+    var content = el("g", { transform: "translate(" + TX + "," + TY + ")" }, svg);
+    edgeEls = [];
+    EDGES.forEach(function (e) {
+      var p1 = POS[e[0]], p2 = POS[e[1]];
+      var dx = p2[0] - p1[0], dy = p2[1] - p1[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+      var line = el("line", {
+        x1: p1[0] + ux * 8, y1: p1[1] + uy * 8,
+        x2: p2[0] - ux * 9, y2: p2[1] - uy * 9,
+        class: "edge", "marker-end": "url(#m-idle)"
+      }, content);
+      edgeEls.push(line);
+    });
+    EDGES.forEach(function (e) {
+      var p1 = POS[e[0]], p2 = POS[e[1]];
+      var dx = p2[0] - p1[0], dy = p2[1] - p1[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+      var w = el("text", { x: (p1[0] + p2[0]) / 2 - uy * 14, y: (p1[1] + p2[1]) / 2 + ux * 14, class: "w" + (e[2] < 0 ? " neg" : "") }, content);
+      w.textContent = String(e[2]).replace("-", "−");
+    });
+    IDS.forEach(function (id) {
+      var g = el("g", { class: "node st-idle", transform: "translate(" + POS[id][0] + "," + POS[id][1] + ")" }, content);
+      el("circle", { r: 16, class: "halo" }, g);
+      el("circle", { r: 13, class: "ring" }, g);
+      el("circle", { r: 6.5, class: "pt" }, g);
+      var lab = el("text", { class: "lab", y: LDY[id] }, g);
+      var ltr = el("tspan", { class: "ltr" }, lab); ltr.textContent = id;
+      var val = el("tspan", { class: "val", dx: 0 }, lab);
+      nodeEls[id] = g; valEls[id] = val;
+    });
+  }
+
+  function buildAlgebra() {
+    var ul = $("nodes");
+    ul.textContent = "";
+    rowEls = {}; valCells = {};
+    function it(txt) { var i = document.createElement("i"); i.textContent = txt; return i; }
+    IDS.forEach(function (id) {
+      var li = document.createElement("li"); li.className = "arow st-idle";
+      var b = document.createElement("span"); b.className = "bul"; li.appendChild(b);
+      var ex = document.createElement("span"); ex.className = "expr";
+      if (PRE[algo]) {
+        ex.appendChild(it(PRE[algo]));
+        ex.appendChild(document.createTextNode("("));
+        ex.appendChild(it(id));
+        ex.appendChild(document.createTextNode(") = "));
+        var v = document.createElement("b"); v.className = "v"; ex.appendChild(v); valCells[id] = v;
+      } else {
+        ex.appendChild(it(id));
+      }
+      li.appendChild(ex); ul.appendChild(li); rowEls[id] = li;
+    });
+  }
+
+  function valText(nl) {
+    if (algo === "dfs") {
+      if (!nl) return "?";
+      var p = nl.split("/");
+      return p[0] + " / " + (p[1] || "?");
+    }
+    if (!nl) return "?";
+    if (algo === "bfs") return nl.replace(/^d=/, "");
+    return nl.replace("-", "−");
+  }
+
+  function buildCode() {
+    var pre = $("code");
+    pre.textContent = "";
+    CODE[algo].forEach(function (line, i) {
+      var s = document.createElement("span");
+      s.className = "ln"; s.id = "ln" + i; s.setAttribute("data-n", String(i + 1)); s.textContent = line;
+      pre.appendChild(s);
+    });
+  }
+
+  function buildMat(f) {
+    var t = $("mat");
+    t.textContent = "";
+    var hi = f.hi || {};
+    var head = document.createElement("tr");
+    head.appendChild(document.createElement("th"));
+    IDS.forEach(function (id) { var th = document.createElement("th"); th.textContent = id; head.appendChild(th); });
+    t.appendChild(head);
+    f.mat.forEach(function (row, i) {
+      var tr = document.createElement("tr");
+      var th = document.createElement("th"); th.textContent = IDS[i]; tr.appendChild(th);
+      row.forEach(function (val, j) {
+        var td = document.createElement("td");
+        var cls = [];
+        if (hi.k !== undefined && (i === hi.k || j === hi.k)) cls.push("k");
+        if (hi.i === i && hi.j === j) cls.push("chg");
+        if (val === Infinity) cls.push("inf");
+        if (val < 0) cls.push("neg");
+        td.className = cls.join(" ");
+        td.textContent = fmt(val).replace("-", "−");
+        tr.appendChild(td);
+      });
+      t.appendChild(tr);
+    });
+  }
+
+  function render() {
+    var f = frames[idx];
+    IDS.forEach(function (id) {
+      nodeEls[id].setAttribute("class", "node st-" + f.ns[id] + (algo !== "fw" && id === src ? " src" : ""));
+      var lbl = (f.nl[id] || "").replace("-", "−");
+      valEls[id].textContent = lbl;
+      valEls[id].setAttribute("dx", lbl ? 6 : 0);
+      rowEls[id].className = "arow st-" + f.ns[id];
+      if (valCells[id]) valCells[id].textContent = valText(f.nl[id]);
+    });
+    EDGES.forEach(function (e, i) {
+      var key = e[0] + ">" + e[1], cls = "idle";
+      if (f.parent[e[1]] === e[0]) cls = "tree";
+      if (f.look === key) cls = "look-" + (f.kind || "try");
+      edgeEls[i].setAttribute("class", "edge " + (cls === "idle" ? "" : cls));
+      edgeEls[i].setAttribute("marker-end", "url(#m-" + cls + ")");
+    });
+    $("st-title").textContent = f.st.title;
+    $("st-hint").textContent = f.st.hint;
+    var box = $("chips");
+    box.textContent = "";
+    function span(cls, txt) { var s = document.createElement("span"); s.className = cls; s.textContent = txt; box.appendChild(s); }
+    span("br", "{ ");
+    f.st.items.forEach(function (it, i) {
+      if (i) span("sep", ", ");
+      span("it" + (it.c ? " " + it.c : ""), it.t.replace("-", "−"));
+    });
+    span("br", f.st.items.length ? " }" : "}");
+    var msg = $("msg");
+    msg.textContent = f.msg;
+    msg.className = f.warn ? "warn" : "";
+    $("step-kicker").textContent = idx === 0 ? "Présentation" : "Étape " + idx + " sur " + (frames.length - 1);
+    CODE[algo].forEach(function (_, i) { $("ln" + i).className = "ln" + (i === f.line ? " on" : ""); });
+    var mc = $("matcard");
+    if (f.mat) { mc.hidden = false; buildMat(f); } else { mc.hidden = true; }
+    scrub.max = frames.length - 1; scrub.value = idx;
+    $("count").textContent = idx + " / " + (frames.length - 1);
+    $("btn-prev").disabled = idx === 0;
+    $("btn-restart").disabled = idx === 0;
+    $("btn-next").disabled = idx >= frames.length - 1;
+    $("btn-play").textContent = playing ? "Pause" : (idx >= frames.length - 1 ? "Rejouer" : "Lecture");
+  }
+
+  function stop() {
+    playing = false;
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+  function tick() {
+    timer = setTimeout(function () {
+      if (idx < frames.length - 1) { idx++; render(); tick(); }
+      else { stop(); render(); }
+    }, SPEEDS[+speedEl.value - 1]);
+  }
+  function play() {
+    if (idx >= frames.length - 1) idx = 0;
+    playing = true; render(); tick();
+  }
+
+  function rebuild() {
+    stop();
+    setGraph(graphKey);
+    buildSvg();
+    buildAlgebra();
+    buildCode();
+    frames = generate(algo, src);
+    idx = 0;
+    $("info").textContent = INFO[algo];
+    $("src-field").hidden = algo === "fw";
+    render();
+  }
+
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".tab");
+    if (!b) return;
+    algo = b.getAttribute("data-algo");
+    document.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-pressed", t === b ? "true" : "false"); });
+    rebuild();
+  });
+  graphSel.addEventListener("change", function () { graphKey = graphSel.value; rebuild(); });
+  srcSel.addEventListener("change", function () { src = srcSel.value; rebuild(); });
+  $("btn-play").addEventListener("click", function () { if (playing) { stop(); render(); } else play(); });
+  $("btn-next").addEventListener("click", function () { stop(); if (idx < frames.length - 1) idx++; render(); });
+  $("btn-prev").addEventListener("click", function () { stop(); if (idx > 0) idx--; render(); });
+  $("btn-restart").addEventListener("click", function () { stop(); idx = 0; render(); });
+  scrub.addEventListener("input", function () { stop(); idx = +scrub.value; render(); });
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target && e.target.tagName) || "";
+    if (tag === "INPUT" || tag === "SELECT") return;
+    if (e.key === "ArrowRight") { stop(); if (idx < frames.length - 1) idx++; render(); }
+    if (e.key === "ArrowLeft") { stop(); if (idx > 0) idx--; render(); }
+  });
+
+  rebuild();
+})();
+</script>
+
+</body></html>
