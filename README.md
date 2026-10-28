@@ -4,4 +4,4 @@ Voici une animation des différents parcours de graphes au programme de CPGE en 
 
 Voici une page permettant d’illustrer les tables de hachage :
 
-[animation tables de hachage](https://siicpgeamansur.github.io/ITC/Table_de_hachage.html)
+[animation tables de hachage](https://siicpgeamansur.github.io/ITC/Tables_de_hachage.html)
