@@ -1,0 +1,550 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Tables de hachage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{
+  /* Mise en page : fenêtre de type GeoGebra. Vue Algèbre (paramètres, champs de saisie, curseurs) à gauche, vue Graphique (la table) à droite. Fond blanc assumé dans les deux thèmes. */
+  --paper:#ffffff;
+  --ink:#1f1f28;
+  --muted:#6a6a78;
+  --line:#dcdce4;
+  --soft:#f5f5fa;
+  --ui:#6557d2;
+  --ui-soft:#ecebfa;
+  --occ:#e6effc;
+  --occ-line:#8fa8d8;
+  --coll:#d93a2b;
+  --coll-soft:#fdeceb;
+  --path:#e08a00;
+  --path-soft:#fff3dc;
+  --ok:#2e8b57;
+  --ok-soft:#e3f4ea;
+  --bad:#c62828;
+  --font-ui:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-math:"Cambria Math","STIX Two Math",Georgia,"Times New Roman",serif;
+  --font-mono:ui-monospace,"Cascadia Mono",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{
+  box-sizing:border-box;margin:0;background:var(--paper);color:var(--ink);
+  font:14px/1.4 var(--font-ui);
+  padding-block:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+*{box-sizing:border-box}
+.app{height:100%;min-height:560px;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--paper)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--soft)}
+.brand{font-weight:600;font-size:15px}
+.formula{font-family:var(--font-math);font-size:16px;font-style:italic}
+.formula b{font-style:normal;font-weight:400}
+.body{flex:1;display:flex;min-height:0}
+.alg{width:360px;flex:none;overflow-y:auto;border-right:1px solid var(--line);background:var(--paper)}
+.view{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.vbar{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.vbar span{display:inline-flex;align-items:center;gap:6px}
+.sq{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--occ-line);background:var(--occ)}
+.sq.c{border-color:var(--coll);background:var(--coll-soft)}
+.sq.p{border-color:var(--path);background:var(--path-soft)}
+.sq.f{border-color:var(--ok);background:var(--ok-soft)}
+.vis{flex:1;min-height:0;overflow:auto;padding:14px}
+
+.sec{padding:12px 14px 10px;border-bottom:1px solid var(--line)}
+.sec h2{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;padding:7px 2px;border:0;border-right:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;min-width:0}
+.seg button:last-child{border-right:0}
+.seg button[aria-checked="true"]{background:var(--ui-soft);color:var(--ui);font-weight:600}
+.seg button:hover{background:var(--soft)}
+.seg button[aria-checked="true"]:hover{background:var(--ui-soft)}
+.seg button:focus-visible,.btn:focus-visible{outline:2px solid var(--ui);outline-offset:-2px}
+.desc{margin:8px 0 0;color:var(--muted);font-size:13px}
+.desc code{font-family:var(--font-math);font-style:italic;color:var(--ink);font-size:14px}
+.row{display:flex;align-items:center;gap:8px;min-height:34px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--c,var(--ink))}
+.name{font-family:var(--font-math);font-style:italic;font-size:17px;min-width:16px}
+.eq{color:var(--muted)}
+.field{flex:1;min-width:0;height:30px;border:1px solid var(--line);border-radius:4px;padding:0 8px;font:14px var(--font-ui);background:var(--paper);color:var(--ink)}
+.field.num{flex:none;width:76px}
+.field:focus,textarea:focus{outline:2px solid var(--ui);outline-offset:-1px;border-color:var(--ui)}
+.field.bad{border-color:var(--bad);background:#fff5f5}
+textarea.field{height:auto;padding:6px 8px;resize:vertical;line-height:1.4;font-family:var(--font-mono);font-size:13px;width:100%;display:block}
+.unit{font-size:12px;color:var(--muted)}
+.slider{padding:0 0 4px}
+input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:calc(100% - 20px);margin:0 0 0 20px;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:#c7c7d1;border-radius:2px}
+input[type=range]::-moz-range-track{height:3px;background:#c7c7d1;border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--c,var(--ui));border:2px solid #fff;box-shadow:0 0 0 1px var(--c,var(--ui));margin-top:-5.5px}
+input[type=range]::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:var(--c,var(--ui));border:2px solid #fff;box-shadow:0 0 0 1px var(--c,var(--ui))}
+input[type=range]:focus-visible{outline:2px solid var(--ui);outline-offset:2px}
+.chk{display:flex;align-items:center;gap:8px;min-height:30px;cursor:pointer}
+.chk input{width:16px;height:16px;margin:0;accent-color:var(--ui)}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.btn{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--soft)}
+.btn.main{background:var(--ui);color:#fff;border-color:var(--ui)}
+.btn.main:hover{background:#5648c0}
+.msg{margin:8px 0 0;padding:8px 10px;border-radius:4px;background:var(--soft);font-size:13px;overflow-wrap:anywhere}
+.msg.ok{background:var(--ok-soft)}
+.msg.warn{background:var(--path-soft)}
+.msg.err{background:var(--coll-soft)}
+.msg code{font-family:var(--font-math);font-style:italic;font-size:14px}
+.res{display:grid;grid-template-columns:12px 1fr auto;align-items:baseline;gap:8px;padding:3px 0}
+.res .dot{align-self:center}
+.res .val{font-variant-numeric:tabular-nums;font-weight:600}
+.hist{display:block;width:100%;height:auto;margin-top:2px}
+
+/* vue graphique */
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.idx{width:38px;height:32px;flex:none;display:grid;place-items:center;background:var(--soft);border:1px solid var(--line);border-radius:3px;font:600 13px var(--font-ui);color:var(--muted);font-variant-numeric:tabular-nums}
+.node,.cv{position:relative;display:grid;place-items:center;min-width:44px;height:32px;padding:0 10px;background:var(--occ);border:1.5px solid var(--occ-line);border-radius:3px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap}
+.node.c,.cv.c{background:var(--coll-soft);border-color:var(--coll)}
+.node.p,.cv.p{background:var(--path-soft);border-color:var(--path);box-shadow:0 0 0 2px var(--path-soft)}
+.node.f,.cv.f{background:var(--ok-soft);border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
+.arr{color:var(--muted);font-size:13px}
+.nil{color:var(--muted);font-size:12px}
+.idx.p{border-color:var(--path);background:var(--path-soft);color:var(--ink)}
+.badge{position:absolute;top:-8px;right:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:var(--path);color:#fff;font:600 10px/16px var(--font-ui);text-align:center}
+.f .badge{background:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:12px 8px}
+.cell{border:1px solid var(--line);border-radius:4px;background:var(--paper)}
+.cell .ci{font-size:11px;color:var(--muted);background:var(--soft);text-align:center;padding:1px 0;border-bottom:1px solid var(--line);border-radius:3px 3px 0 0;font-variant-numeric:tabular-nums}
+.cell .cv{border:0;border-radius:0 0 3px 3px;height:36px;background:var(--paper);cursor:default}
+.cell .cv.o{background:var(--occ);cursor:pointer}
+.cell .cv.o.c{background:var(--coll-soft)}
+.cell .cv.o.p{background:var(--path-soft)}
+.cell .cv.o.f{background:var(--ok-soft)}
+.cell.p{border-color:var(--path);box-shadow:0 0 0 2px var(--path-soft)}
+.cell.f{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
+.cell.c{border-color:var(--coll)}
+.home{font-size:10px;font-weight:400;color:var(--coll);position:absolute;bottom:1px;left:0;right:0;text-align:center}
+.cv.o{padding:0 4px}
+.cv.o.c{padding-bottom:9px}
+.empty{color:var(--muted);font-size:14px;padding:20px 0}
+
+@media (pointer:coarse){.field,.field.num,textarea.field{font-size:16px}}
+@media (max-width:820px){
+  html,body{height:auto}
+  .app{height:auto;min-height:0}
+  .body{flex-direction:column}
+  .view{order:-1;flex:none;height:min(70vh,520px)}
+  .alg{width:auto;border-right:0;overflow:visible}
+}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand">Tables de hachage</div>
+    <div class="formula" id="formula"></div>
+  </header>
+
+  <div class="body">
+    <aside class="alg" aria-label="Algèbre">
+
+      <section class="sec">
+        <h2>Fonction de hachage</h2>
+        <div class="seg" id="seg-hash" style="--cols:3" role="radiogroup" aria-label="Fonction de hachage">
+          <button type="button" role="radio" data-v="div">Division</button>
+          <button type="button" role="radio" data-v="mult">Multiplication</button>
+          <button type="button" role="radio" data-v="digits">Chiffres</button>
+        </div>
+        <p class="desc" id="desc-hash"></p>
+      </section>
+
+      <section class="sec">
+        <h2>Gestion des collisions</h2>
+        <div class="seg" id="seg-method" style="--cols:4" role="radiogroup" aria-label="Gestion des collisions">
+          <button type="button" role="radio" data-v="chain">Chaînage</button>
+          <button type="button" role="radio" data-v="lin">Linéaire</button>
+          <button type="button" role="radio" data-v="quad">Quadr.</button>
+          <button type="button" role="radio" data-v="dbl">Double</button>
+        </div>
+        <p class="desc" id="desc-method"></p>
+      </section>
+
+      <section class="sec">
+        <h2>Paramètres</h2>
+        <div id="host-params"></div>
+        <label class="chk"><input type="checkbox" id="ck-auto"><span>Agrandir la table si α dépasse le seuil</span></label>
+        <div id="host-thr"></div>
+        <div class="btns"><button type="button" class="btn" id="b-regen">Tirer de nouvelles clés</button></div>
+      </section>
+
+      <section class="sec">
+        <h2>Clés (modifiables)</h2>
+        <textarea class="field" id="keys" rows="3" spellcheck="false" autocomplete="off" aria-label="Liste des clés"></textarea>
+        <p class="desc">Entiers ou mots, séparés par des espaces ou des virgules.</p>
+      </section>
+
+      <section class="sec">
+        <h2>Opération sur une clé</h2>
+        <div class="row"><span class="dot" style="--c:var(--path)"></span><label class="name" for="op-key">k</label><span class="eq">=</span><input class="field" id="op-key" type="text" autocomplete="off" spellcheck="false" value="42"></div>
+        <div class="btns">
+          <button type="button" class="btn main" id="b-ins">Insérer</button>
+          <button type="button" class="btn" id="b-find">Rechercher</button>
+          <button type="button" class="btn" id="b-del">Supprimer</button>
+        </div>
+        <p class="msg" id="msg"></p>
+      </section>
+
+      <section class="sec">
+        <h2>Résultats</h2>
+        <div class="res"><span class="dot" style="--c:var(--ui)"></span><span>Taille effective m</span><span class="val" id="r-m"></span></div>
+        <div class="res"><span class="dot" style="--c:var(--ui)"></span><span>Facteur de charge α = n / m</span><span class="val" id="r-a"></span></div>
+        <div class="res"><span class="dot" style="--c:var(--coll)"></span><span>Collisions</span><span class="val" id="r-c"></span></div>
+        <div class="res"><span class="dot" style="--c:var(--path)"></span><span>Sondages par insertion (moy.)</span><span class="val" id="r-p"></span></div>
+        <div class="res"><span class="dot" style="--c:var(--path)"></span><span id="r-l-lab">Plus longue chaîne</span><span class="val" id="r-l"></span></div>
+        <div class="res"><span class="dot" style="--c:var(--ok)"></span><span>Cases vides</span><span class="val" id="r-e"></span></div>
+        <p class="msg err" id="warn" hidden></p>
+      </section>
+
+      <section class="sec">
+        <h2>Clés par case de départ</h2>
+        <svg class="hist" id="hist" viewBox="0 0 320 96" role="img" aria-label="Nombre de clés par valeur de hachage"></svg>
+      </section>
+
+    </aside>
+
+    <main class="view">
+      <div class="vbar" aria-hidden="true">
+        <span><i class="sq"></i>clé à sa case de départ</span>
+        <span><i class="sq c"></i>collision, clé déplacée</span>
+        <span><i class="sq p"></i>sondage</span>
+        <span><i class="sq f"></i>clé trouvée</span>
+      </div>
+      <div class="vis" id="vis"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PHI=(Math.sqrt(5)-1)/2;
+
+/* ---------- état ---------- */
+const S={
+  hash:'div', method:'chain', m:11,
+  keys:['54','26','93','17','77','31','44','55','20','65'],
+  auto:false, thr:0.75,
+  sel:null, msg:null
+};
+const HDESC={
+  div:'h(k) = k mod m. Simple et rapide. Elle répartit bien quand m est premier.',
+  mult:'h(k) = ⌊ m · frac(k · φ) ⌋ avec φ = 0,618… Peu sensible au choix de m.',
+  digits:'h(k) = (somme des chiffres de k) mod m. Mauvaise fonction : les valeurs se concentrent.'
+};
+const MDESC={
+  chain:'Chaînage séparé : chaque case contient une liste. Une collision allonge la liste.',
+  lin:'Sondage linéaire : essai des cases h, h+1, h+2… Forme des paquets de cases occupées.',
+  quad:'Sondage quadratique : essai des cases h, h+1², h+2²… Peut échouer si α dépasse 0,5.',
+  dbl:'Double hachage : pas h₂(k) = 1 + k mod (m−1). Le pas change d\'une clé à l\'autre.'
+};
+const MNAME={chain:'chaînage séparé',lin:'sondage linéaire',quad:'sondage quadratique',dbl:'double hachage'};
+
+/* ---------- clés ---------- */
+function toNum(key){
+  if(/^\d{1,15}$/.test(key)) return parseInt(key,10);
+  let h=0;
+  for(let i=0;i<key.length;i++) h=(Math.imul(h,31)+key.charCodeAt(i))>>>0;
+  return h;
+}
+const isText=k=>!/^\d{1,15}$/.test(k);
+function digitSum(n){let s=0;while(n>0){s+=n%10;n=Math.floor(n/10);}return s;}
+function hv(k,m){
+  const n=toNum(k);
+  if(S.hash==='div') return n%m;
+  if(S.hash==='mult') return Math.floor(m*((n*PHI)%1));
+  return digitSum(n)%m;
+}
+function h2(k,m){return 1+toNum(k)%(m-1);}
+function hExpr(k,m){
+  const n=toNum(k);
+  let pre=isText(k)?'k = « '+esc(k)+' » → '+n+'<br>':'';
+  if(S.hash==='div') return pre+'h(k) = '+n+' mod '+m+' = <b>'+(n%m)+'</b>';
+  if(S.hash==='mult') return pre+'h(k) = ⌊'+m+' · frac('+n+' · φ)⌋ = <b>'+hv(k,m)+'</b>';
+  return pre+'h(k) = '+digitSum(n)+' mod '+m+' = <b>'+hv(k,m)+'</b> <span class="unit">(somme des chiffres = '+digitSum(n)+')</span>';
+}
+function parseKeys(text){
+  const out=[],seen=new Set();
+  for(const t of text.split(/[\s,;]+/)){
+    if(!t||seen.has(t)) continue;
+    seen.add(t);out.push(t.slice(0,12));
+    if(out.length>=60) break;
+  }
+  return out;
+}
+function randomKeys(count,existing){
+  const set=new Set(existing);const out=existing.slice();
+  while(out.length<count){
+    const k=String(Math.floor(Math.random()*1000));
+    if(!set.has(k)){set.add(k);out.push(k);}
+  }
+  return out;
+}
+
+/* ---------- construction de la table ---------- */
+function effectiveM(){
+  let m=S.m;
+  if(S.auto){
+    while(S.keys.length/m>S.thr&&m<61) m=Math.min(61,2*m+1);
+  }
+  return m;
+}
+function probeIdx(k,i,m){
+  const h=hv(k,m);
+  if(S.method==='lin') return (h+i)%m;
+  if(S.method==='quad') return (h+i*i)%m;
+  return (h+i*h2(k,m))%m;
+}
+function build(){
+  const m=effectiveM(), chain=S.method==='chain';
+  const T=chain?Array.from({length:m},()=>[]):new Array(m).fill(null);
+  const info={},failed=[];
+  let collisions=0,totalProbes=0,maxProbe=0;
+  const home=new Array(m).fill(0);
+  for(const k of S.keys){
+    const h=hv(k,m);home[h]++;
+    if(chain){
+      const probes=T[h].length+1;
+      if(T[h].length>0) collisions++;
+      T[h].push(k);
+      info[k]={home:h,slot:h,pos:T[h].length-1,probes,placed:true};
+      totalProbes+=probes;maxProbe=Math.max(maxProbe,T[h].length);
+    }else{
+      let placed=false,probes=0;
+      for(let i=0;i<m;i++){
+        const j=probeIdx(k,i,m);probes++;
+        if(T[j]===null){T[j]=k;info[k]={home:h,slot:j,probes,placed:true};placed=true;break;}
+      }
+      if(T[h]!==null&&(!placed||info[k].slot!==h)) collisions++;
+      if(!placed){failed.push(k);info[k]={home:h,slot:-1,probes,placed:false};}
+      totalProbes+=probes;maxProbe=Math.max(maxProbe,probes);
+    }
+  }
+  const n=S.keys.length;
+  const empty=chain?T.filter(b=>b.length===0).length:T.filter(x=>x===null).length;
+  return {m,T,info,failed,collisions,avg:n?totalProbes/n:0,maxProbe,empty,home,chain,n};
+}
+function pathFor(B,k){
+  const m=B.m,path=[];
+  if(B.chain){
+    const h=hv(k,m),b=B.T[h];
+    path.push({b:h,pos:-1});
+    for(let i=0;i<b.length;i++){
+      path.push({b:h,pos:i});
+      if(b[i]===k) return {path,found:true,probes:i+1};
+    }
+    return {path,found:false,probes:b.length};
+  }
+  for(let i=0;i<m;i++){
+    const j=probeIdx(k,i,m);
+    path.push({b:j,pos:0});
+    if(B.T[j]===k) return {path,found:true,probes:i+1};
+    if(B.T[j]===null) return {path,found:false,probes:i+1};
+  }
+  return {path,found:false,probes:m};
+}
+
+/* ---------- interface : curseurs ---------- */
+const syncs=[];
+function makeSlider(hostId,o){
+  const host=$(hostId);
+  const wrap=document.createElement('div');
+  wrap.className='slider';
+  wrap.style.setProperty('--c',o.color||'#6557d2');
+  wrap.innerHTML='<div class="row"><span class="dot"></span><label class="name" for="'+o.id+'-n">'+o.name+'</label><span class="eq">=</span><input class="field num" id="'+o.id+'-n" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><span class="unit">'+(o.note||'')+'</span></div><input type="range" id="'+o.id+'-r" min="'+o.min+'" max="'+o.max+'" step="'+o.step+'" aria-label="'+o.label+'">';
+  host.appendChild(wrap);
+  const num=wrap.querySelector('.num'),rg=wrap.querySelector('[type=range]');
+  const dec=o.dec===undefined?0:o.dec;
+  const fmt=x=>(Math.round(x*Math.pow(10,dec))/Math.pow(10,dec)).toString().replace('.',',');
+  rg.addEventListener('input',()=>{o.set(parseFloat(rg.value));render(null);});
+  num.addEventListener('input',()=>{
+    const v=parseFloat(num.value.replace(',','.'));
+    if(!isFinite(v)){num.classList.add('bad');return;}
+    num.classList.remove('bad');
+    o.set(clamp(v,o.min,o.max));
+    render(num);
+  });
+  num.addEventListener('blur',()=>{num.classList.remove('bad');num.value=fmt(o.get());});
+  syncs.push(skip=>{if(skip!==num)num.value=fmt(o.get());rg.value=o.get();});
+}
+makeSlider('host-params',{id:'sl-m',name:'m',label:'Taille de la table',min:3,max:32,step:1,get:()=>S.m,set:v=>{S.m=Math.round(v);},note:'cases'});
+makeSlider('host-params',{id:'sl-n',name:'n',label:'Nombre de clés',min:0,max:40,step:1,get:()=>S.keys.length,set:v=>{
+  v=Math.round(v);
+  if(v<S.keys.length) S.keys=S.keys.slice(0,v);
+  else if(v>S.keys.length) S.keys=randomKeys(v,S.keys);
+},note:'clés'});
+makeSlider('host-thr',{id:'sl-t',name:'seuil',label:'Seuil du facteur de charge',color:'#7a7a88',min:0.3,max:1,step:0.05,dec:2,get:()=>S.thr,set:v=>{S.thr=v;}});
+
+/* ---------- interface : commandes ---------- */
+function bindSeg(id,key){
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{S[key]=b.dataset.v;render(null);}));
+}
+bindSeg('seg-hash','hash');bindSeg('seg-method','method');
+$('ck-auto').addEventListener('change',e=>{S.auto=e.target.checked;render(null);});
+$('b-regen').addEventListener('click',()=>{S.keys=randomKeys(S.keys.length,[]);S.sel=null;S.msg=null;render(null);});
+$('keys').addEventListener('input',e=>{S.keys=parseKeys(e.target.value);render(e.target);});
+$('keys').addEventListener('blur',()=>{$('keys').value=S.keys.join(', ');});
+
+function opKey(){return $('op-key').value.trim().slice(0,12);}
+function doInsert(){
+  const k=opKey();if(!k) return;
+  if(S.keys.includes(k)){S.sel=k;S.msg={t:'warn',h:'La clé <b>'+esc(k)+'</b> est déjà dans la table.'};}
+  else if(S.keys.length>=60){S.msg={t:'err',h:'Limite de 60 clés atteinte.'};}
+  else{S.keys.push(k);S.sel=k;S.msg={mode:'ins',k};}
+  render(null);
+}
+function doFind(){
+  const k=opKey();if(!k) return;
+  S.sel=k;S.msg={mode:'find',k};render(null);
+}
+function doDel(){
+  const k=opKey();if(!k) return;
+  const i=S.keys.indexOf(k);
+  if(i<0){S.sel=k;S.msg={mode:'find',k};}
+  else{S.keys.splice(i,1);S.sel=null;S.msg={t:'ok',h:'Clé <b>'+esc(k)+'</b> supprimée. La table est reconstruite avec les clés restantes.'};}
+  render(null);
+}
+$('b-ins').addEventListener('click',doInsert);
+$('b-find').addEventListener('click',doFind);
+$('b-del').addEventListener('click',doDel);
+$('op-key').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doInsert();}});
+$('vis').addEventListener('click',e=>{
+  const el=e.target.closest('[data-key]');
+  if(!el) return;
+  $('op-key').value=el.dataset.key;
+  S.sel=el.dataset.key;S.msg={mode:'find',k:el.dataset.key};render(null);
+});
+
+/* ---------- rendu ---------- */
+function renderVis(B,pathInfo){
+  const pm=new Map();
+  if(pathInfo) pathInfo.path.forEach((p,i)=>pm.set(p.b+':'+p.pos,i));
+  const found=pathInfo&&pathInfo.found?pathInfo.path[pathInfo.path.length-1]:null;
+  const isFound=(b,pos)=>found&&found.b===b&&found.pos===pos;
+  let h='';
+  if(B.n===0){$('vis').innerHTML='<p class="empty">Aucune clé. Ajoute des clés avec le curseur n ou la zone de texte.</p>';return;}
+  if(B.chain){
+    for(let i=0;i<B.m;i++){
+      const hb=pm.has(i+':-1');
+      h+='<div class="brow"><span class="idx'+(hb?' p':'')+'">'+i+'</span>';
+      const b=B.T[i];
+      if(!b.length) h+='<span class="nil">∅</span>';
+      b.forEach((k,pos)=>{
+        const key=i+':'+pos,onp=pm.has(key),f=isFound(i,pos);
+        const cls='node'+(pos>0?' c':'')+(f?' f':onp?' p':'');
+        h+=(pos>0?'<span class="arr">→</span>':'<span class="arr">▸</span>')+'<span class="'+cls+'" data-key="'+esc(k)+'" title="h = '+i+'">'+esc(k)+(onp?'<span class="badge">'+pm.get(key)+'</span>':'')+'</span>';
+      });
+      if(b.length) h+='<span class="arr">→</span><span class="nil">∅</span>';
+      h+='</div>';
+    }
+  }else{
+    h+='<div class="grid">';
+    for(let j=0;j<B.m;j++){
+      const k=B.T[j],key=j+':0',onp=pm.has(key),f=isFound(j,0);
+      const coll=k!==null&&B.info[k].home!==j;
+      let cc='cell'+(f?' f':onp?' p':coll?' c':'');
+      let vc='cv'+(k!==null?' o':'')+(coll?' c':'')+(f?' f':onp?' p':'');
+      h+='<div class="'+cc+'"><div class="ci">'+j+'</div><div class="'+vc+'"'+(k!==null?' data-key="'+esc(k)+'"':'')+'>'+(k!==null?esc(k):'')+(coll?'<span class="home">h='+B.info[k].home+'</span>':'')+(onp?'<span class="badge">'+(pm.get(key)+1)+'</span>':'')+'</div></div>';
+    }
+    h+='</div>';
+  }
+  $('vis').innerHTML=h;
+}
+function renderHist(B){
+  const W=320,Hh=96,top=14,base=Hh-16,left=22,right=6;
+  const mx=Math.max(3,...B.home);
+  const bw=(W-left-right)/B.m;
+  let s='<line x1="'+left+'" y1="'+base+'" x2="'+(W-right)+'" y2="'+base+'" stroke="#55555f" stroke-width="1"/>';
+  for(let v=0;v<=mx;v+=(mx>6?Math.ceil(mx/3):1)){
+    const y=base-(base-top)*v/mx;
+    s+='<line x1="'+left+'" y1="'+y+'" x2="'+(W-right)+'" y2="'+y+'" stroke="#e8e8ee" stroke-width="1"/><text x="'+(left-5)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10" fill="#6a6a78">'+v+'</text>';
+  }
+  B.home.forEach((c,i)=>{
+    const x=left+i*bw+bw*0.15,w=bw*0.7,hh=(base-top)*c/mx;
+    if(c>0) s+='<rect x="'+x.toFixed(2)+'" y="'+(base-hh).toFixed(2)+'" width="'+w.toFixed(2)+'" height="'+hh.toFixed(2)+'" fill="'+(c>1?'#d93a2b':'#8fa8d8')+'"/>';
+  });
+  const step=B.m>20?5:B.m>10?2:1;
+  for(let i=0;i<B.m;i+=step){
+    s+='<text x="'+(left+i*bw+bw/2).toFixed(2)+'" y="'+(Hh-4)+'" text-anchor="middle" font-size="10" fill="#6a6a78">'+i+'</text>';
+  }
+  $('hist').innerHTML=s;
+}
+function renderMsg(B){
+  const el=$('msg'),m=S.msg;
+  el.className='msg';
+  if(!m){el.innerHTML='Saisis une clé puis choisis une opération. Un clic sur une clé de la table la recherche.';return;}
+  if(m.t){el.className='msg '+m.t;el.innerHTML=m.h;return;}
+  const k=m.k;
+  const pi=pathFor(B,k);
+  let h='<code>'+hExpr(k,B.m)+'</code>';
+  if(S.method==='dbl'&&B.m>1) h+='<br><code>h₂(k) = 1 + k mod '+(B.m-1)+' = '+h2(k,B.m)+'</code>';
+  let t='';
+  if(m.mode==='ins'){
+    const inf=B.info[k];
+    if(inf&&inf.placed){
+      t=B.chain?'Insérée dans la case <b>'+inf.home+'</b>, position '+(inf.pos+1)+' de la liste ('+inf.probes+' comparaison'+(inf.probes>1?'s':'')+').'
+               :'Insérée dans la case <b>'+inf.slot+'</b> après '+inf.probes+' sondage'+(inf.probes>1?'s':'')+'.';
+      el.className='msg '+(inf.probes>1?'warn':'ok');
+    }else{
+      t='<b>Échec</b> : aucune case libre trouvée après '+B.m+' sondages.';
+      el.className='msg err';
+    }
+  }else{
+    if(pi.found){t='Clé <b>trouvée</b> après '+pi.probes+' '+(B.chain?'comparaison':'sondage')+(pi.probes>1?'s':'')+'.';el.className='msg ok';}
+    else{t='Clé <b>absente</b> ('+pi.probes+' '+(B.chain?'comparaison':'sondage')+(pi.probes>1?'s':'')+').';el.className='msg warn';}
+  }
+  el.innerHTML=h+'<br>'+t;
+}
+function renderStats(B){
+  $('r-m').textContent=B.m+(B.m!==S.m?' (agrandie)':'');
+  $('r-a').textContent=(B.n/B.m).toFixed(2).replace('.',',');
+  $('r-c').textContent=B.collisions;
+  $('r-p').textContent=B.avg.toFixed(2).replace('.',',');
+  $('r-l-lab').textContent=B.chain?'Plus longue chaîne':'Plus long sondage';
+  $('r-l').textContent=B.maxProbe;
+  $('r-e').textContent=B.empty+' / '+B.m;
+  const notes=[];
+  if(B.failed.length) notes.push('<b>'+B.failed.length+' clé'+(B.failed.length>1?'s':'')+' non placée'+(B.failed.length>1?'s':'')+'</b> : '+B.failed.map(esc).join(', ')+'. '+(B.n>B.m?'Il y a plus de clés que de cases.':'Les sondages ne visitent pas toutes les cases.'));
+  if(S.method==='dbl'&&!isPrime(B.m)) notes.push('m = '+B.m+' n\'est pas premier : le double hachage peut ne visiter qu\'une partie des cases.');
+  if(S.method==='quad'&&B.n/B.m>0.5&&!B.failed.length) notes.push('α > 0,5 : le sondage quadratique n\'a plus de garantie de trouver une case libre.');
+  const w=$('warn');w.hidden=!notes.length;w.innerHTML=notes.join('<br>');
+}
+function isPrime(n){if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;}
+function formulaHtml(m){
+  const f={div:'h(k) = k mod '+m,mult:'h(k) = ⌊'+m+' · frac(k·φ)⌋',digits:'h(k) = Σ chiffres(k) mod '+m}[S.hash];
+  let s=f;
+  if(S.method==='lin') s+=' &nbsp; h(k,i) = (h(k) + i) mod '+m;
+  if(S.method==='quad') s+=' &nbsp; h(k,i) = (h(k) + i²) mod '+m;
+  if(S.method==='dbl') s+=' &nbsp; h(k,i) = (h(k) + i·h₂(k)) mod '+m;
+  return s;
+}
+function syncControls(skip){
+  document.querySelectorAll('#seg-hash button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===S.hash)));
+  document.querySelectorAll('#seg-method button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===S.method)));
+  $('desc-hash').textContent=HDESC[S.hash];
+  $('desc-method').textContent=MDESC[S.method];
+  $('ck-auto').checked=S.auto;
+  syncs.forEach(f=>f(skip));
+  if(skip!==$('keys')) $('keys').value=S.keys.join(', ');
+}
+function render(skip){
+  const B=build();
+  syncControls(skip||null);
+  if(S.sel&&!S.keys.includes(S.sel)&&!(S.msg&&S.msg.mode==='find')) S.sel=null;
+  $('formula').innerHTML=formulaHtml(B.m);
+  renderStats(B);
+  renderHist(B);
+  renderMsg(B);
+  renderVis(B,S.sel?pathFor(B,S.sel):null);
+}
+render(null);
+})();
+</script>
+
+</body></html>
