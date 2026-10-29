@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entraînement aux tris en Python – CPGE</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #38bdf8;
+    --accent2: #a78bfa;
+    --success: #4ade80;
+    --error: #f87171;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle { text-align: center; color: var(--muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+  .container { max-width: 1200px; margin: 0 auto; display: grid; gap: 1.25rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .card h2 { font-size: 1.15rem; margin-bottom: 0.75rem; color: var(--accent); }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;
+  }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+  select, input[type="text"], textarea {
+    background: #0f172a;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    width: 100%;
+  }
+  select { cursor: pointer; min-width: 180px; }
+  textarea {
+    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+    font-size: 0.9rem;
+    min-height: 280px;
+    resize: vertical;
+    line-height: 1.4;
+  }
+  .btn {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn:hover { transform: translateY(-1px); opacity: 0.95; }
+  .btn:active { transform: translateY(0); }
+  .btn-secondary { background: #475569; }
+  .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
+  #description {
+    background: #0f172a;
+    border-left: 4px solid var(--accent);
+    padding: 1rem;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+  }
+  .props-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+  .prop-item label { margin-bottom: 0.35rem; }
+  .feedback {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .feedback.ok { background: rgba(74, 222, 128, 0.15); border: 1px solid var(--success); color: var(--success); display: block; }
+  .feedback.ko { background: rgba(248, 113, 113, 0.15); border: 1px solid var(--error); color: var(--error); display: block; }
+  .feedback.info { background: rgba(56, 189, 248, 0.12); border: 1px solid var(--accent); color: var(--accent); display: block; }
+  #viz-container {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  #array-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+  .cell {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #334155;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+  }
+  .cell.compare { background: #f59e0b; color: #000; border-color: #fbbf24; }
+  .cell.swap { background: #ef4444; color: #fff; border-color: #f87171; transform: scale(1.08); }
+  .cell.sorted { background: #22c55e; color: #000; border-color: #4ade80; }
+  .cell.pivot { background: #a78bfa; color: #000; border-color: #c4b5fd; }
+  .cell.insert { background: #38bdf8; color: #000; border-color: #7dd3fc; }
+  .cell.count { background: #f472b6; color: #000; }
+  #step-info {
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-align: center;
+    min-height: 1.4em;
+  }
+  #corrected-code {
+    display: none;
+    margin-top: 1rem;
+  }
+  #corrected-code pre {
+    background: #0f172a;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    border: 1px solid var(--border);
+  }
+  .level-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+  .level-easy { background: #166534; color: #bbf7d0; }
+  .level-medium { background: #854d0e; color: #fef08a; }
+  .level-hard { background: #7f1d1d; color: #fecaca; }
+  .hint { font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; }
+  @media (max-width: 700px) {
+    .cell { width: 40px; height: 40px; font-size: 0.95rem; }
+    h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+  <h1>Entraînement aux tris en Python</h1>
+  <p class="subtitle">CPGE – Visualisation, complexité, stabilité, en-place, comparatif</p>
+
+  <div class="container">
+    <!-- Choix -->
+    <div class="card">
+      <div class="controls">
+        <div>
+          <label for="algo-select">Algorithme</label>
+          <select id="algo-select">
+            <option value="insertion">Tri par insertion</option>
+            <option value="selection">Tri par sélection</option>
+            <option value="fusion">Tri fusion</option>
+            <option value="rapide">Tri rapide</option>
+            <option value="comptage">Tri par comptage</option>
+          </select>
+        </div>
+        <div>
+          <label for="level-select">Niveau d'aide</label>
+          <select id="level-select">
+            <option value="easy">Beaucoup aidé (code prérempli)</option>
+            <option value="medium">Moyennement aidé (squelette)</option>
+            <option value="hard">Pas aidé (vide)</option>
+          </select>
+        </div>
+        <div>
+          <label for="array-input">Liste d'exemple (entiers séparés par des espaces)</label>
+          <input type="text" id="array-input" value="5 2 8 1 9 3 7 4" style="min-width:220px">
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="card">
+      <h2>Présentation de l'algorithme <span id="level-badge" class="level-badge level-easy">Beaucoup aidé</span></h2>
+      <div id="description"></div>
+    </div>
+
+    <!-- Propriétés -->
+    <div class="card">
+      <h2>Propriétés de l'algorithme</h2>
+      <div class="props-grid">
+        <div class="prop-item">
+          <label for="complexity">Complexité temporelle (pire cas)</label>
+          <select id="complexity">
+            <option value="">— Choisir —</option>
+            <option value="O(n)">O(n)</option>
+            <option value="O(n+k)">O(n + k)</option>
+            <option value="O(n log n)">O(n log n)</option>
+            <option value="O(n²)">O(n²)</option>
+            <option value="O(n log n) moy / O(n²) pire">O(n log n) moy / O(n²) pire</option>
+          </select>
+        </div>
+        <div class="prop-item">
+          <label for="inplace">En place ?</label>
+          <select id="inplace">
+            <option value="">— Choisir —</option>
+            <option value="oui">Oui</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+        <div class="prop-item">
+          <label for="stable">Stable ?</label>
+          <select id="stable">
+            <option value="">— Choisir —</option>
+            <option value="oui">Oui</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+        <div class="prop-item">
+          <label for="comparative">Comparatif ?</label>
+          <select id="comparative">
+            <option value="">— Choisir —</option>
+            <option value="oui">Oui</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="checkProperties()">Vérifier les propriétés</button>
+        <button class="btn btn-secondary" onclick="showCorrected()">Afficher le corrigé (code + propriétés)</button>
+      </div>
+      <div id="props-feedback" class="feedback"></div>
+    </div>
+
+    <!-- Code élève -->
+    <div class="card">
+      <h2>Ton code Python</h2>
+      <p class="hint">Écris (ou complète) la fonction. Pour la visualisation, on utilise une version standard de l'algorithme ; compare ton code au corrigé.</p>
+      <textarea id="student-code" spellcheck="false"></textarea>
+      <div class="btn-row">
+        <button class="btn" onclick="startVisualization()">Visualiser les étapes</button>
+        <button class="btn btn-secondary" onclick="resetViz()">Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- Visualisation -->
+    <div class="card">
+      <h2>Illustration des étapes</h2>
+      <div id="viz-container">
+        <div id="array-display"></div>
+        <div id="step-info">Choisis un algorithme et clique sur « Visualiser les étapes ».</div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="prevStep()" id="btn-prev" disabled>◀ Précédent</button>
+          <button class="btn" onclick="togglePlay()" id="btn-play" disabled>▶ Lecture</button>
+          <button class="btn btn-secondary" onclick="nextStep()" id="btn-next" disabled>Suivant ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Corrigé code -->
+    <div class="card" id="corrected-code">
+      <h2>Code attendu (style CPGE)</h2>
+      <pre id="corrected-pre"></pre>
+      <div id="corrected-props" style="margin-top:0.75rem;font-size:0.95rem;"></div>
+    </div>
+  </div>
+
+<script>
+// ========== Données des algorithmes ==========
+const ALGOS = {
+  insertion: {
+    name: "Tri par insertion",
+    complexity: "O(n²)",
+    inplace: "oui",
+    stable: "oui",
+    comparative: "oui",
+    desc: {
+      easy: `Le tri par insertion construit progressivement une portion triée à gauche de la liste.
+À chaque étape i (de 1 à n-1) :
+  1. On mémorise la valeur x = L[i].
+  2. On décale vers la droite tous les éléments de L[0..i-1] qui sont > x.
+  3. On place x dans le « trou » ainsi créé.
+
+C'est exactement le geste d'un joueur de cartes qui range une nouvelle carte dans sa main déjà triée.
+
+Complexité : O(n²) dans le pire cas (liste inversée), O(n) dans le meilleur cas (liste déjà triée).
+En place, stable, comparatif.`,
+      medium: `Principe : pour i de 1 à n-1, insérer L[i] à sa place dans la sous-liste déjà triée L[0..i-1] en décalant les éléments plus grands.
+
+Tu dois écrire une boucle for + une boucle while de décalage.`,
+      hard: `Implémente le tri par insertion en place. La liste doit être modifiée (pas de nouvelle liste créée).`
+    },
+    code: {
+      easy: `def tri_insertion(L):
+    """Trie la liste L en place par insertion."""
+    n = len(L)
+    for i in range(1, n):
+        x = L[i]          # élément à insérer
+        j = i - 1
+        while j >= 0 and L[j] > x:
+            L[j + 1] = L[j]   # décalage
+            j -= 1
+        L[j + 1] = x      # insertion
+    return L`,
+      medium: `def tri_insertion(L):
+    n = len(L)
+    for i in range(1, n):
+        x = L[i]
+        j = i - 1
+        # À compléter : décaler les éléments > x puis insérer
+        while j >= 0 and L[j] > x:
+            # ...
+            pass
+        # L[...] = x
+    return L`,
+      hard: `def tri_insertion(L):
+    # À écrire entièrement
+    pass`
+    },
+    corrected: `def tri_insertion(L):
+    """Trie la liste L en place par insertion (style CPGE)."""
+    n = len(L)
+    for i in range(1, n):
+        x = L[i]
+        j = i - 1
+        while j >= 0 and L[j] > x:
+            L[j + 1] = L[j]
+            j -= 1
+        L[j + 1] = x
+    return L`
+  },
+  selection: {
+    name: "Tri par sélection",
+    complexity: "O(n²)",
+    inplace: "oui",
+    stable: "non",
+    comparative: "oui",
+    desc: {
+      easy: `Le tri par sélection place à chaque étape le plus petit élément restant à sa position définitive.
+Pour i de 0 à n-2 :
+  1. On cherche l'indice m du minimum dans L[i..n-1].
+  2. On échange L[i] et L[m].
+
+Ainsi la portion L[0..i] est triée et ne bougera plus.
+
+Complexité toujours O(n²) (même nombre de comparaisons).
+En place, non stable (les échanges peuvent casser l'ordre relatif des égaux), comparatif.`,
+      medium: `Principe : à chaque i, trouver le min de la partie non triée et l'échanger avec L[i].
+
+Écris une double boucle : la boucle externe fixe la position, la boucle interne cherche le minimum.`,
+      hard: `Implémente le tri par sélection en place.`
+    },
+    code: {
+      easy: `def tri_selection(L):
+    """Trie la liste L en place par sélection."""
+    n = len(L)
+    for i in range(n - 1):
+        m = i
+        for j in range(i + 1, n):
+            if L[j] < L[m]:
+                m = j
+        L[i], L[m] = L[m], L[i]   # échange
+    return L`,
+      medium: `def tri_selection(L):
+    n = len(L)
+    for i in range(n - 1):
+        m = i
+        # À compléter : trouver l'indice du min dans L[i+1..]
+        for j in range(i + 1, n):
+            # ...
+            pass
+        # échanger L[i] et L[m]
+    return L`,
+      hard: `def tri_selection(L):
+    # À écrire entièrement
+    pass`
+    },
+    corrected: `def tri_selection(L):
+    """Trie la liste L en place par sélection (style CPGE)."""
+    n = len(L)
+    for i in range(n - 1):
+        m = i
+        for j in range(i + 1, n):
+            if L[j] < L[m]:
+                m = j
+        L[i], L[m] = L[m], L[i]
+    return L`
+  },
+  fusion: {
+    name: "Tri fusion",
+    complexity: "O(n log n)",
+    inplace: "non",
+    stable: "oui",
+    comparative: "oui",
+    desc: {
+      easy: `Le tri fusion utilise la stratégie « diviser pour régner » :
+  1. Si la liste a 0 ou 1 élément → déjà triée.
+  2. Sinon on la coupe en deux moitiés, on trie récursivement chaque moitié,
+  3. puis on fusionne les deux listes triées en une seule liste triée.
+
+La fusion compare les têtes des deux listes et prend le plus petit à chaque fois.
+
+Complexité O(n log n) dans tous les cas.
+Pas en place (nécessite de la mémoire supplémentaire), stable, comparatif.`,
+      medium: `Écris d'abord une fonction fusion(L1, L2) qui fusionne deux listes déjà triées.
+Puis une fonction récursive tri_fusion(L) qui coupe, trie les moitiés et fusionne.`,
+      hard: `Implémente le tri fusion (fonction récursive + fonction de fusion).`
+    },
+    code: {
+      easy: `def fusion(L1, L2):
+    """Fusionne deux listes déjà triées."""
+    L = []
+    i = j = 0
+    while i < len(L1) and j < len(L2):
+        if L1[i] <= L2[j]:
+            L.append(L1[i])
+            i += 1
+        else:
+            L.append(L2[j])
+            j += 1
+    L += L1[i:]
+    L += L2[j:]
+    return L
+
+def tri_fusion(L):
+    """Trie L par fusion (renvoie une nouvelle liste)."""
+    if len(L) <= 1:
+        return L[:]
+    m = len(L) // 2
+    return fusion(tri_fusion(L[:m]), tri_fusion(L[m:]))`,
+      medium: `def fusion(L1, L2):
+    L = []
+    i = j = 0
+    # À compléter : boucle de fusion + ajouts des restes
+    return L
+
+def tri_fusion(L):
+    if len(L) <= 1:
+        return L[:]
+    m = len(L) // 2
+    # À compléter : appels récursifs + fusion
+    return ...`,
+      hard: `def fusion(L1, L2):
+    # À écrire
+    pass
+
+def tri_fusion(L):
+    # À écrire
+    pass`
+    },
+    corrected: `def fusion(L1, L2):
+    """Fusionne deux listes déjà triées en une liste triée."""
+    L = []
+    i = j = 0
+    while i < len(L1) and j < len(L2):
+        if L1[i] <= L2[j]:
+            L.append(L1[i])
+            i += 1
+        else:
+            L.append(L2[j])
+            j += 1
+    L += L1[i:]
+    L += L2[j:]
+    return L
+
+def tri_fusion(L):
+    """Trie L par le tri fusion (renvoie une nouvelle liste)."""
+    if len(L) <= 1:
+        return L[:]
+    m = len(L) // 2
+    return fusion(tri_fusion(L[:m]), tri_fusion(L[m:]))`
+  },
+  rapide: {
+    name: "Tri rapide",
+    complexity: "O(n log n) moy / O(n²) pire",
+    inplace: "oui",
+    stable: "non",
+    comparative: "oui",
+    desc: {
+      easy: `Le tri rapide (quicksort) choisit un pivot, partitionne la liste autour de lui, puis trie récursivement les deux parties.
+Version pédagogique (pivot = dernier élément) :
+  - partition : on place le pivot à sa position définitive, tous les plus petits à gauche, les plus grands à droite.
+  - puis appels récursifs sur [début..pivot-1] et [pivot+1..fin].
+
+Complexité moyenne O(n log n), pire cas O(n²) (liste déjà triée avec ce choix de pivot).
+En place (version classique), non stable, comparatif.`,
+      medium: `Écris une fonction partition(L, deb, fin) qui place le pivot (L[fin]) à sa place et retourne son indice.
+Puis une fonction récursive tri_rapide(L, deb, fin).`,
+      hard: `Implémente le tri rapide en place (avec partition).`
+    },
+    code: {
+      easy: `def partition(L, deb, fin):
+    """Place le pivot L[fin] à sa position et retourne son indice."""
+    pivot = L[fin]
+    i = deb
+    for j in range(deb, fin):
+        if L[j] <= pivot:
+            L[i], L[j] = L[j], L[i]
+            i += 1
+    L[i], L[fin] = L[fin], L[i]
+    return i
+
+def tri_rapide(L, deb=0, fin=None):
+    """Trie L en place par le tri rapide."""
+    if fin is None:
+        fin = len(L) - 1
+    if deb < fin:
+        p = partition(L, deb, fin)
+        tri_rapide(L, deb, p - 1)
+        tri_rapide(L, p + 1, fin)
+    return L`,
+      medium: `def partition(L, deb, fin):
+    pivot = L[fin]
+    i = deb
+    # À compléter : boucle de partition + placement du pivot
+    return i
+
+def tri_rapide(L, deb=0, fin=None):
+    if fin is None:
+        fin = len(L) - 1
+    if deb < fin:
+        # À compléter
+        pass
+    return L`,
+      hard: `def tri_rapide(L, deb=0, fin=None):
+    # À écrire (avec une fonction partition auxiliaire)
+    pass`
+    },
+    corrected: `def partition(L, deb, fin):
+    """Partition autour du pivot L[fin]. Retourne l'indice final du pivot."""
+    pivot = L[fin]
+    i = deb
+    for j in range(deb, fin):
+        if L[j] <= pivot:
+            L[i], L[j] = L[j], L[i]
+            i += 1
+    L[i], L[fin] = L[fin], L[i]
+    return i
+
+def tri_rapide(L, deb=0, fin=None):
+    """Trie L en place par le tri rapide (pivot = dernier élément)."""
+    if fin is None:
+        fin = len(L) - 1
+    if deb < fin:
+        p = partition(L, deb, fin)
+        tri_rapide(L, deb, p - 1)
+        tri_rapide(L, p + 1, fin)
+    return L`
+  },
+  comptage: {
+    name: "Tri par comptage",
+    complexity: "O(n+k)",
+    inplace: "non",
+    stable: "oui",
+    comparative: "non",
+    desc: {
+      easy: `Le tri par comptage (counting sort) ne compare pas les éléments entre eux.
+Il suppose que les valeurs sont des entiers appartenant à un intervalle [a, b] de taille k = b-a+1 raisonnable.
+  1. On compte le nombre d'occurrences de chaque valeur (tableau de taille k).
+  2. On reconstruit la liste triée en recopiant chaque valeur autant de fois qu'elle apparaît.
+
+Complexité O(n + k).
+Pas en place (tableau de comptage), stable (si on reconstruit dans l'ordre), non comparatif.`,
+      medium: `Écris une fonction qui :
+  - trouve min et max,
+  - crée un tableau de comptage,
+  - compte les occurrences,
+  - reconstruit la liste triée.`,
+      hard: `Implémente le tri par comptage (pour des entiers).`
+    },
+    code: {
+      easy: `def tri_comptage(L):
+    """Trie une liste d'entiers par comptage (renvoie une nouvelle liste)."""
+    if not L:
+        return []
+    a, b = min(L), max(L)
+    k = b - a + 1
+    C = [0] * k
+    for x in L:
+        C[x - a] += 1
+    R = []
+    for v in range(k):
+        R += [v + a] * C[v]
+    return R`,
+      medium: `def tri_comptage(L):
+    if not L:
+        return []
+    a, b = min(L), max(L)
+    C = [0] * (b - a + 1)
+    # À compléter : comptage puis reconstruction
+    return R`,
+      hard: `def tri_comptage(L):
+    # À écrire entièrement
+    pass`
+    },
+    corrected: `def tri_comptage(L):
+    """Trie une liste d'entiers par comptage (renvoie une nouvelle liste)."""
+    if not L:
+        return []
+    a, b = min(L), max(L)
+    k = b - a + 1
+    C = [0] * k
+    for x in L:
+        C[x - a] += 1
+    R = []
+    for v in range(k):
+        R += [v + a] * C[v]
+    return R`
+  }
+};
+
+// ========== État visualisation ==========
+let steps = [];
+let currentStep = 0;
+let playInterval = null;
+let isPlaying = false;
+
+// ========== Initialisation ==========
+function updateUI() {
+  const algo = document.getElementById('algo-select').value;
+  const level = document.getElementById('level-select').value;
+  const data = ALGOS[algo];
+
+  const badge = document.getElementById('level-badge');
+  badge.className = 'level-badge level-' + level;
+  badge.textContent = level === 'easy' ? 'Beaucoup aidé' : level === 'medium' ? 'Moyennement aidé' : 'Pas aidé';
+
+  document.getElementById('description').textContent = data.desc[level];
+  document.getElementById('student-code').value = data.code[level];
+
+  document.getElementById('props-feedback').className = 'feedback';
+  document.getElementById('props-feedback').style.display = 'none';
+  document.getElementById('corrected-code').style.display = 'none';
+
+  document.getElementById('complexity').value = '';
+  document.getElementById('inplace').value = '';
+  document.getElementById('stable').value = '';
+  document.getElementById('comparative').value = '';
+
+  resetViz();
+}
+
+document.getElementById('algo-select').addEventListener('change', updateUI);
+document.getElementById('level-select').addEventListener('change', updateUI);
+
+// ========== Vérification propriétés ==========
+function checkProperties() {
+  const algo = document.getElementById('algo-select').value;
+  const data = ALGOS[algo];
+  const fb = document.getElementById('props-feedback');
+
+  const c = document.getElementById('complexity').value;
+  const i = document.getElementById('inplace').value;
+  const s = document.getElementById('stable').value;
+  const comp = document.getElementById('comparative').value;
+
+  if (!c || !i || !s || !comp) {
+    fb.className = 'feedback info';
+    fb.textContent = 'Remplis toutes les propriétés avant de vérifier.';
+    return;
+  }
+
+  const okC = c === data.complexity;
+  const okI = i === data.inplace;
+  const okS = s === data.stable;
+  const okComp = comp === data.comparative;
+
+  const allOk = okC && okI && okS && okComp;
+
+  let msg = '';
+  if (allOk) {
+    msg = '✅ Toutes les propriétés sont correctes !';
+    fb.className = 'feedback ok';
+  } else {
+    msg = '❌ Certaines réponses sont incorrectes :\n';
+    if (!okC) msg += `• Complexité : tu as mis « ${c} », attendu « ${data.complexity} »\n`;
+    if (!okI) msg += `• En place : tu as mis « ${i} », attendu « ${data.inplace} »\n`;
+    if (!okS) msg += `• Stable : tu as mis « ${s} », attendu « ${data.stable} »\n`;
+    if (!okComp) msg += `• Comparatif : tu as mis « ${comp} », attendu « ${data.comparative} »\n`;
+    fb.className = 'feedback ko';
+  }
+  fb.textContent = msg;
+}
+
+// ========== Corrigé ==========
+function showCorrected() {
+  const algo = document.getElementById('algo-select').value;
+  const data = ALGOS[algo];
+  document.getElementById('corrected-pre').textContent = data.corrected;
+  document.getElementById('corrected-props').innerHTML = `
+    <strong>Propriétés attendues :</strong><br>
+    Complexité (pire cas) : <code>${data.complexity}</code><br>
+    En place : <code>${data.inplace}</code> &nbsp;|&nbsp;
+    Stable : <code>${data.stable}</code> &nbsp;|&nbsp;
+    Comparatif : <code>${data.comparative}</code>
+  `;
+  document.getElementById('corrected-code').style.display = 'block';
+  document.getElementById('corrected-code').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ========== Visualisation ==========
+function parseArray() {
+  const txt = document.getElementById('array-input').value.trim();
+  if (!txt) return [5, 2, 8, 1, 9, 3, 7, 4];
+  return txt.split(/\s+/).map(Number).filter(x => !isNaN(x));
+}
+
+function recordStep(arr, highlights = {}, message = '') {
+  steps.push({
+    arr: arr.slice(),
+    highlights: { ...highlights },
+    message
+  });
+}
+
+function generateSteps(algo, arr) {
+  steps = [];
+  const A = arr.slice();
+  recordStep(A, {}, 'État initial');
+
+  if (algo === 'insertion') {
+    const n = A.length;
+    for (let i = 1; i < n; i++) {
+      const x = A[i];
+      let j = i - 1;
+      recordStep(A, { insert: i }, `On prend x = ${x} (index ${i})`);
+      while (j >= 0 && A[j] > x) {
+        recordStep(A, { compare: [j, i], insert: i }, `Comparaison A[${j}]=${A[j]} > ${x} → décalage`);
+        A[j + 1] = A[j];
+        recordStep(A, { swap: [j, j+1], insert: i }, `Décalage de ${A[j+1]} vers la droite`);
+        j--;
+      }
+      A[j + 1] = x;
+      recordStep(A, { sorted: Array.from({length: i+1}, (_,k)=>k) }, `Insertion de ${x} à l'index ${j+1}`);
+    }
+    recordStep(A, { sorted: Array.from({length: A.length}, (_,k)=>k) }, 'Liste triée !');
+  }
+  else if (algo === 'selection') {
+    const n = A.length;
+    for (let i = 0; i < n - 1; i++) {
+      let m = i;
+      recordStep(A, { pivot: i }, `Recherche du minimum à partir de l'index ${i}`);
+      for (let j = i + 1; j < n; j++) {
+        recordStep(A, { compare: [j, m], pivot: i }, `Comparaison A[${j}]=${A[j]} et min actuel A[${m}]=${A[m]}`);
+        if (A[j] < A[m]) m = j;
+      }
+      if (m !== i) {
+        recordStep(A, { swap: [i, m] }, `Échange A[${i}]=${A[i]} et A[${m}]=${A[m]}`);
+        [A[i], A[m]] = [A[m], A[i]];
+      }
+      recordStep(A, { sorted: Array.from({length: i+1}, (_,k)=>k) }, `Position ${i} fixée`);
+    }
+    recordStep(A, { sorted: Array.from({length: A.length}, (_,k)=>k) }, 'Liste triée !');
+  }
+  else if (algo === 'fusion') {
+    function mergeSortViz(L, depth = 0) {
+      if (L.length <= 1) {
+        recordStep(L, {}, `Cas de base (taille ≤ 1)`);
+        return L.slice();
+      }
+      const m = Math.floor(L.length / 2);
+      recordStep(L, {}, `Division en deux moitiés (profondeur ${depth})`);
+      const left = mergeSortViz(L.slice(0, m), depth + 1);
+      const right = mergeSortViz(L.slice(m), depth + 1);
+      const res = [];
+      let i = 0, j = 0;
+      while (i < left.length && j < right.length) {
+        if (left[i] <= right[j]) {
+          res.push(left[i++]);
+        } else {
+          res.push(right[j++]);
+        }
+        recordStep(res.concat(left.slice(i)).concat(right.slice(j)), { insert: res.length-1 }, `Fusion : on prend ${res[res.length-1]}`);
+      }
+      while (i < left.length) res.push(left[i++]);
+      while (j < right.length) res.push(right[j++]);
+      recordStep(res, { sorted: Array.from({length: res.length}, (_,k)=>k) }, `Fin de fusion → [${res.join(', ')}]`);
+      return res;
+    }
+    const sorted = mergeSortViz(A);
+    recordStep(sorted, { sorted: Array.from({length: sorted.length}, (_,k)=>k) }, 'Résultat final du tri fusion');
+  }
+  else if (algo === 'rapide') {
+    function partitionViz(L, deb, fin) {
+      const pivot = L[fin];
+      recordStep(L, { pivot: fin }, `Pivot = ${pivot} (index ${fin})`);
+      let i = deb;
+      for (let j = deb; j < fin; j++) {
+        recordStep(L, { compare: [j, fin], pivot: fin }, `Comparaison A[${j}]=${L[j]} avec pivot ${pivot}`);
+        if (L[j] <= pivot) {
+          if (i !== j) {
+            recordStep(L, { swap: [i, j], pivot: fin }, `Échange A[${i}] et A[${j}]`);
+            [L[i], L[j]] = [L[j], L[i]];
+          }
+          i++;
+        }
+      }
+      recordStep(L, { swap: [i, fin], pivot: fin }, `Placement final du pivot`);
+      [L[i], L[fin]] = [L[fin], L[i]];
+      recordStep(L, { sorted: [i] }, `Pivot ${L[i]} à sa place définitive (index ${i})`);
+      return i;
+    }
+    function quickViz(L, deb, fin) {
+      if (deb < fin) {
+        const p = partitionViz(L, deb, fin);
+        quickViz(L, deb, p - 1);
+        quickViz(L, p + 1, fin);
+      }
+    }
+    quickViz(A, 0, A.length - 1);
+    recordStep(A, { sorted: Array.from({length: A.length}, (_,k)=>k) }, 'Liste triée !');
+  }
+  else if (algo === 'comptage') {
+    if (A.length === 0) {
+      recordStep([], {}, 'Liste vide');
+      return;
+    }
+    const a = Math.min(...A);
+    const b = Math.max(...A);
+    const k = b - a + 1;
+    const C = new Array(k).fill(0);
+    recordStep(A, {}, `min=${a}, max=${b}, k=${k}`);
+    for (let x of A) {
+      C[x - a]++;
+      recordStep(A, { count: A.indexOf(x) }, `Comptage de ${x} → C[${x-a}] = ${C[x-a]}`);
+    }
+    const R = [];
+    for (let v = 0; v < k; v++) {
+      for (let t = 0; t < C[v]; t++) {
+        R.push(v + a);
+        recordStep(R, { insert: R.length-1 }, `Ajout de ${v+a} (reste ${C[v]-t-1})`);
+      }
+    }
+    recordStep(R, { sorted: Array.from({length: R.length}, (_,k)=>k) }, 'Liste triée par comptage !');
+  }
+}
+
+function renderStep() {
+  if (steps.length === 0) return;
+  const s = steps[currentStep];
+  const disp = document.getElementById('array-display');
+  disp.innerHTML = '';
+  s.arr.forEach((val, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.textContent = val;
+    if (s.highlights.sorted && s.highlights.sorted.includes(idx)) cell.classList.add('sorted');
+    if (s.highlights.compare && s.highlights.compare.includes(idx)) cell.classList.add('compare');
+    if (s.highlights.swap && s.highlights.swap.includes(idx)) cell.classList.add('swap');
+    if (s.highlights.pivot === idx) cell.classList.add('pivot');
+    if (s.highlights.insert === idx) cell.classList.add('insert');
+    if (s.highlights.count === idx) cell.classList.add('count');
+    disp.appendChild(cell);
+  });
+  document.getElementById('step-info').textContent =
+    `Étape ${currentStep + 1}/${steps.length} — ${s.message}`;
+  document.getElementById('btn-prev').disabled = currentStep === 0;
+  document.getElementById('btn-next').disabled = currentStep === steps.length - 1;
+}
+
+function startVisualization() {
+  const algo = document.getElementById('algo-select').value;
+  const arr = parseArray();
+  if (arr.length === 0) {
+    alert('Liste vide ou invalide.');
+    return;
+  }
+  if (algo === 'comptage' && arr.some(x => !Number.isInteger(x))) {
+    alert('Le tri par comptage nécessite des entiers.');
+    return;
+  }
+  generateSteps(algo, arr);
+  currentStep = 0;
+  isPlaying = false;
+  clearInterval(playInterval);
+  document.getElementById('btn-play').textContent = '▶ Lecture';
+  document.getElementById('btn-play').disabled = false;
+  document.getElementById('btn-prev').disabled = false;
+  document.getElementById('btn-next').disabled = false;
+  renderStep();
+}
+
+function nextStep() {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    renderStep();
+  } else {
+    stopPlay();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    renderStep();
+  }
+}
+
+function togglePlay() {
+  if (isPlaying) {
+    stopPlay();
+  } else {
+    isPlaying = true;
+    document.getElementById('btn-play').textContent = '⏸ Pause';
+    playInterval = setInterval(() => {
+      if (currentStep >= steps.length - 1) {
+        stopPlay();
+        return;
+      }
+      nextStep();
+    }, 700);
+  }
+}
+
+function stopPlay() {
+  isPlaying = false;
+  clearInterval(playInterval);
+  document.getElementById('btn-play').textContent = '▶ Lecture';
+}
+
+function resetViz() {
+  stopPlay();
+  steps = [];
+  currentStep = 0;
+  document.getElementById('array-display').innerHTML = '';
+  document.getElementById('step-info').textContent = 'Choisis un algorithme et clique sur « Visualiser les étapes ».';
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = true;
+  document.getElementById('btn-play').disabled = true;
+}
+
+// Init
+updateUI();
+</script>
+</body>
+</html>
