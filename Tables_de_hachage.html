@@ -1,57 +1,49 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Tables de hachage</title>
+<title>Dictionnaires et hachage</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 :root{
-  /* Mise en page : fenêtre de type GeoGebra. Vue Algèbre (paramètres, champs de saisie, curseurs) à gauche, vue Graphique (la table) à droite. Fond blanc assumé dans les deux thèmes. */
-  --paper:#ffffff;
-  --ink:#1f1f28;
-  --muted:#6a6a78;
-  --line:#dcdce4;
-  --soft:#f5f5fa;
-  --ui:#6557d2;
-  --ui-soft:#ecebfa;
-  --occ:#e6effc;
-  --occ-line:#8fa8d8;
-  --coll:#d93a2b;
-  --coll-soft:#fdeceb;
-  --path:#e08a00;
-  --path-soft:#fff3dc;
-  --ok:#2e8b57;
-  --ok-soft:#e3f4ea;
-  --bad:#c62828;
+  /* Mise en page : fenêtre de type GeoGebra. Onglets = parties du cours. Dans chaque partie : vue Algèbre (paramètres, saisies, curseurs) à gauche, vue Graphique à droite. Fond blanc assumé dans les deux thèmes. */
+  --paper:#ffffff;--ink:#1f1f28;--muted:#6a6a78;--line:#dcdce4;--soft:#f5f5fa;
+  --ui:#6557d2;--ui-soft:#ecebfa;--step:#1f3fa0;
+  --occ:#e6effc;--occ-line:#8fa8d8;--coll:#d93a2b;--coll-soft:#fdeceb;
+  --path:#e08a00;--path-soft:#fff3dc;--ok:#2e8b57;--ok-soft:#e3f4ea;--bad:#c62828;
+  --blue:#1565c0;--code:#f7f7fb;
   --font-ui:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --font-math:"Cambria Math","STIX Two Math",Georgia,"Times New Roman",serif;
   --font-mono:ui-monospace,"Cascadia Mono",Menlo,Consolas,monospace;
   color-scheme:light;
 }
 html,body{height:100%}
-body{
-  box-sizing:border-box;margin:0;background:var(--paper);color:var(--ink);
-  font:14px/1.4 var(--font-ui);
-  padding-block:16px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));
-  padding-right:max(16px,env(safe-area-inset-right,0px));
-}
+body{box-sizing:border-box;margin:0;background:var(--paper);color:var(--ink);font:14px/1.4 var(--font-ui);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 *{box-sizing:border-box}
-.app{height:100%;min-height:560px;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--paper)}
+.app{height:100%;min-height:600px;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--paper)}
 .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--soft)}
 .brand{font-weight:600;font-size:15px}
 .formula{font-family:var(--font-math);font-size:16px;font-style:italic}
-.formula b{font-style:normal;font-weight:400}
-.body{flex:1;display:flex;min-height:0}
-.alg{width:360px;flex:none;overflow-y:auto;border-right:1px solid var(--line);background:var(--paper)}
+.tabs{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--paper);scrollbar-width:thin}
+.tabs button{flex:none;font:inherit;font-size:13px;padding:9px 14px;border:0;border-right:1px solid var(--line);border-bottom:2px solid transparent;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.tabs button:hover{background:var(--soft);color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ui);font-weight:600;border-bottom-color:var(--ui);background:var(--ui-soft)}
+.tabs button:focus-visible{outline:2px solid var(--ui);outline-offset:-2px}
+.tabs .n{width:20px;height:20px;font-size:11px}
+.part{flex:1;min-height:0;display:flex}
+.part[hidden]{display:none}
+.body{flex:1;display:flex;min-height:0;width:100%}
+.alg{width:380px;flex:none;overflow-y:auto;border-right:1px solid var(--line);background:var(--paper)}
 .view{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
-.vbar{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.vbar{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);align-items:center}
 .vbar span{display:inline-flex;align-items:center;gap:6px}
+.vis{flex:1;min-height:0;overflow:auto;padding:14px}
 .sq{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--occ-line);background:var(--occ)}
 .sq.c{border-color:var(--coll);background:var(--coll-soft)}
 .sq.p{border-color:var(--path);background:var(--path-soft)}
 .sq.f{border-color:var(--ok);background:var(--ok-soft)}
-.vis{flex:1;min-height:0;overflow:auto;padding:14px}
+.pk{margin-left:auto;font-family:var(--font-mono);font-size:12px}
 
 .sec{padding:12px 14px 10px;border-bottom:1px solid var(--line)}
-.sec h2{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec h2{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.n{width:20px;height:20px;border-radius:50%;background:var(--step);color:#fff;font:600 12px/1 var(--font-ui);display:inline-grid;place-items:center;flex:none;letter-spacing:0}
 .seg{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden}
 .seg button{font:inherit;font-size:13px;padding:7px 2px;border:0;border-right:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;min-width:0}
 .seg button:last-child{border-right:0}
@@ -60,16 +52,18 @@ body{
 .seg button[aria-checked="true"]:hover{background:var(--ui-soft)}
 .seg button:focus-visible,.btn:focus-visible{outline:2px solid var(--ui);outline-offset:-2px}
 .desc{margin:8px 0 0;color:var(--muted);font-size:13px}
-.desc code{font-family:var(--font-math);font-style:italic;color:var(--ink);font-size:14px}
+.desc b,.msg b{color:var(--ink)}
+.desc code,.msg code,.code-i{font-family:var(--font-mono);font-size:12.5px;background:var(--code);padding:0 4px;border-radius:3px;color:var(--ink)}
 .row{display:flex;align-items:center;gap:8px;min-height:34px}
 .dot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--c,var(--ink))}
 .name{font-family:var(--font-math);font-style:italic;font-size:17px;min-width:16px}
 .eq{color:var(--muted)}
 .field{flex:1;min-width:0;height:30px;border:1px solid var(--line);border-radius:4px;padding:0 8px;font:14px var(--font-ui);background:var(--paper);color:var(--ink)}
-.field.num{flex:none;width:76px}
+.field.mono,textarea.field{font-family:var(--font-mono);font-size:13px}
+.field.num{flex:none;width:80px}
 .field:focus,textarea:focus{outline:2px solid var(--ui);outline-offset:-1px;border-color:var(--ui)}
 .field.bad{border-color:var(--bad);background:#fff5f5}
-textarea.field{height:auto;padding:6px 8px;resize:vertical;line-height:1.4;font-family:var(--font-mono);font-size:13px;width:100%;display:block}
+textarea.field{height:auto;padding:6px 8px;resize:vertical;line-height:1.5;width:100%;display:block}
 .unit{font-size:12px;color:var(--muted)}
 .slider{padding:0 0 4px}
 input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:calc(100% - 20px);margin:0 0 0 20px;height:22px;background:transparent;cursor:pointer}
@@ -85,230 +79,957 @@ input[type=range]:focus-visible{outline:2px solid var(--ui);outline-offset:2px}
 .btn:hover{background:var(--soft)}
 .btn.main{background:var(--ui);color:#fff;border-color:var(--ui)}
 .btn.main:hover{background:#5648c0}
+.btn:disabled{opacity:.45;cursor:default}
 .msg{margin:8px 0 0;padding:8px 10px;border-radius:4px;background:var(--soft);font-size:13px;overflow-wrap:anywhere}
-.msg.ok{background:var(--ok-soft)}
-.msg.warn{background:var(--path-soft)}
-.msg.err{background:var(--coll-soft)}
-.msg code{font-family:var(--font-math);font-style:italic;font-size:14px}
+.msg.ok{background:var(--ok-soft)}.msg.warn{background:var(--path-soft)}.msg.err{background:var(--coll-soft)}
+.msg[hidden]{display:none}
 .res{display:grid;grid-template-columns:12px 1fr auto;align-items:baseline;gap:8px;padding:3px 0}
 .res .dot{align-self:center}
-.res .val{font-variant-numeric:tabular-nums;font-weight:600}
-.hist{display:block;width:100%;height:auto;margin-top:2px}
-
-/* vue graphique */
-.brow{display:flex;align-items:center;gap:6px;margin-bottom:5px}
-.idx{width:38px;height:32px;flex:none;display:grid;place-items:center;background:var(--soft);border:1px solid var(--line);border-radius:3px;font:600 13px var(--font-ui);color:var(--muted);font-variant-numeric:tabular-nums}
-.node,.cv{position:relative;display:grid;place-items:center;min-width:44px;height:32px;padding:0 10px;background:var(--occ);border:1.5px solid var(--occ-line);border-radius:3px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap}
-.node.c,.cv.c{background:var(--coll-soft);border-color:var(--coll)}
-.node.p,.cv.p{background:var(--path-soft);border-color:var(--path);box-shadow:0 0 0 2px var(--path-soft)}
-.node.f,.cv.f{background:var(--ok-soft);border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
-.arr{color:var(--muted);font-size:13px}
-.nil{color:var(--muted);font-size:12px}
-.idx.p{border-color:var(--path);background:var(--path-soft);color:var(--ink)}
-.badge{position:absolute;top:-8px;right:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:var(--path);color:#fff;font:600 10px/16px var(--font-ui);text-align:center}
-.f .badge{background:var(--ok)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:12px 8px}
-.cell{border:1px solid var(--line);border-radius:4px;background:var(--paper)}
-.cell .ci{font-size:11px;color:var(--muted);background:var(--soft);text-align:center;padding:1px 0;border-bottom:1px solid var(--line);border-radius:3px 3px 0 0;font-variant-numeric:tabular-nums}
-.cell .cv{border:0;border-radius:0 0 3px 3px;height:36px;background:var(--paper);cursor:default}
-.cell .cv.o{background:var(--occ);cursor:pointer}
-.cell .cv.o.c{background:var(--coll-soft)}
-.cell .cv.o.p{background:var(--path-soft)}
-.cell .cv.o.f{background:var(--ok-soft)}
-.cell.p{border-color:var(--path);box-shadow:0 0 0 2px var(--path-soft)}
-.cell.f{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
-.cell.c{border-color:var(--coll)}
-.home{font-size:10px;font-weight:400;color:var(--coll);position:absolute;bottom:1px;left:0;right:0;text-align:center}
-.cv.o{padding:0 4px}
-.cv.o.c{padding-bottom:9px}
+.res .val{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.chart{display:block;width:100%;height:auto}
+.chart text{font-family:var(--font-ui)}
+.tbl{border-collapse:collapse;font-size:13px;width:100%}
+.tbl th,.tbl td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+.tbl th{background:var(--soft);font-weight:600}
+.tbl td.r,.tbl th.r{text-align:right;font-variant-numeric:tabular-nums}
+.tblw{overflow-x:auto;max-width:100%}
+pre.code{margin:0;padding:8px 0;background:var(--code);border:1px solid var(--line);border-radius:4px;overflow-x:auto;font:12.5px/1.55 var(--font-mono);color:var(--ink)}
+pre.code .ln{display:block;padding:0 10px;white-space:pre;border-left:3px solid transparent}
+pre.code .ln.on{background:var(--path-soft);border-left-color:var(--path)}
+.hk{color:#7c3aa8}.hs{color:#1c6b40}.hc{color:#7a7a88;font-style:italic}.hn{color:#b05a00}.hf{color:#1f3fa0}
+.card{border:1px solid var(--line);border-radius:4px;padding:10px 12px;background:var(--paper)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}
+.h3{font-size:13px;font-weight:600;margin:0 0 6px}
+.note{color:var(--muted);font-size:13px;margin:6px 0}
+.steps{display:grid;gap:8px;margin-top:10px}
+.st{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;font-size:13px}
+.st .n{width:22px;height:22px;margin-top:1px}
+.st .t{font-weight:600;display:block}
+.st .big{display:block;font-family:var(--font-mono);font-size:12px;overflow-wrap:anywhere;color:var(--ink);margin-top:2px}
+.st .sub{color:var(--muted)}
+.st b{color:var(--step)}
+.tag{display:inline-block;font:600 11px/1.5 var(--font-mono);padding:0 6px;border-radius:3px;text-align:center}
+.tag.t-int{background:#e6effc;color:#1f3fa0}.tag.t-float{background:#e3f4ea;color:#1c6b40}.tag.t-str{background:#fff3dc;color:#8a5200}
 .empty{color:var(--muted);font-size:14px;padding:20px 0}
-
 @media (pointer:coarse){.field,.field.num,textarea.field{font-size:16px}}
 @media (max-width:820px){
   html,body{height:auto}
   .app{height:auto;min-height:0}
   .body{flex-direction:column}
-  .view{order:-1;flex:none;height:min(70vh,520px)}
+  .view{order:-1;flex:none;height:min(72vh,540px)}
   .alg{width:auto;border-right:0;overflow:visible}
+  .pk{margin-left:0}
 }
+.rules{margin:0 0 8px;padding:0;list-style:none;display:grid;gap:6px;font-size:13px}
+.rules li{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:start}
+.tag{display:inline-block;font:600 11px/1.5 var(--font-mono);padding:0 6px;border-radius:3px;text-align:center}
+.tag.t-int{background:#e6effc;color:#1f3fa0}
+.tag.t-float{background:#e3f4ea;color:#1c6b40}
+.tag.t-str{background:#fff3dc;color:#8a5200}
+.hh.t-int{color:#1f3fa0}.hh.t-float{color:#1c6b40}.hh.t-str{color:#8a5200}
+/* les trois étapes pour la clé saisie */
+.steps{display:grid;gap:8px;margin-top:10px}
+.st{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;font-size:13px}
+.st .n{width:22px;height:22px;margin-top:1px}
+.st .t{font-weight:600;display:block}
+.st .big{display:block;font-family:var(--font-mono);font-size:12px;overflow-wrap:anywhere;color:var(--ink);margin-top:2px}
+.st .sub{color:var(--muted)}
+.st b{color:var(--step)}
+
+/* vue graphique */
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.idx{width:38px;height:50px;flex:none;display:grid;place-items:center;background:var(--soft);border:1px solid var(--line);border-radius:3px;font:600 13px var(--font-ui);color:var(--muted);font-variant-numeric:tabular-nums}
+.idx.p{border-color:var(--path);background:var(--path-soft);color:var(--ink)}
+.pq{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:86px;height:50px;padding:2px 8px;background:var(--occ);border:1.5px solid var(--occ-line);border-radius:3px;cursor:pointer;line-height:1.15}
+.pq .k{font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pq .v{font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pq .hh{font:10px var(--font-mono);color:var(--muted)}
+.pq.c{background:var(--coll-soft);border-color:var(--coll)}
+.pq.p{background:var(--path-soft);border-color:var(--path);box-shadow:0 0 0 2px var(--path-soft)}
+.pq.f{background:var(--ok-soft);border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
+.arr{color:var(--muted);font-size:13px}
+.nil{color:var(--muted);font-size:12px}
+.badge{position:absolute;top:-8px;right:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:var(--path);color:#fff;font:600 10px/16px var(--font-ui);text-align:center}
+.f .badge{background:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:14px 8px}
+.cell{border:1px solid var(--line);border-radius:4px;background:var(--paper)}
+.cell .ci{font-size:11px;color:var(--muted);background:var(--soft);text-align:center;padding:1px 0;border-bottom:1px solid var(--line);border-radius:3px 3px 0 0;font-variant-numeric:tabular-nums}
+.cell .pq,.cell .em{border:0;border-radius:0 0 3px 3px;min-width:0;width:100%;height:54px;box-shadow:none}
+.cell .em{display:block;background:var(--paper)}
+.cell.p{border-color:var(--path);box-shadow:0 0 0 2px var(--path-soft)}
+.cell.f{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
+.cell.c{border-color:var(--coll)}
+.home{font-size:10px;color:var(--coll)}
+.empty{color:var(--muted);font-size:14px;padding:20px 0}
+
+.t-views{padding:6px 14px;border-bottom:1px solid var(--line)}
+.drawer{display:grid;grid-template-columns:repeat(16,1fr);gap:3px}
+.drawer div{aspect-ratio:1.2;border:1px solid var(--line);border-radius:2px;display:grid;place-items:center;font-size:11px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.in-body .field.sm{height:28px}
+
+
 </style>
 
 <div class="app">
   <header class="bar">
-    <div class="brand">Tables de hachage</div>
+    <div class="brand">Dictionnaires et hachage</div>
     <div class="formula" id="formula"></div>
   </header>
-
-  <div class="body">
-    <aside class="alg" aria-label="Algèbre">
-
-      <section class="sec">
-        <h2>Fonction de hachage</h2>
-        <div class="seg" id="seg-hash" style="--cols:3" role="radiogroup" aria-label="Fonction de hachage">
-          <button type="button" role="radio" data-v="div">Division</button>
-          <button type="button" role="radio" data-v="mult">Multiplication</button>
-          <button type="button" role="radio" data-v="digits">Chiffres</button>
-        </div>
-        <p class="desc" id="desc-hash"></p>
-      </section>
-
-      <section class="sec">
-        <h2>Gestion des collisions</h2>
-        <div class="seg" id="seg-method" style="--cols:4" role="radiogroup" aria-label="Gestion des collisions">
-          <button type="button" role="radio" data-v="chain">Chaînage</button>
-          <button type="button" role="radio" data-v="lin">Linéaire</button>
-          <button type="button" role="radio" data-v="quad">Quadr.</button>
-          <button type="button" role="radio" data-v="dbl">Double</button>
-        </div>
-        <p class="desc" id="desc-method"></p>
-      </section>
-
-      <section class="sec">
-        <h2>Paramètres</h2>
-        <div id="host-params"></div>
-        <label class="chk"><input type="checkbox" id="ck-auto"><span>Agrandir la table si α dépasse le seuil</span></label>
-        <div id="host-thr"></div>
-        <div class="btns"><button type="button" class="btn" id="b-regen">Tirer de nouvelles clés</button></div>
-      </section>
-
-      <section class="sec">
-        <h2>Clés (modifiables)</h2>
-        <textarea class="field" id="keys" rows="3" spellcheck="false" autocomplete="off" aria-label="Liste des clés"></textarea>
-        <p class="desc">Entiers ou mots, séparés par des espaces ou des virgules.</p>
-      </section>
-
-      <section class="sec">
-        <h2>Opération sur une clé</h2>
-        <div class="row"><span class="dot" style="--c:var(--path)"></span><label class="name" for="op-key">k</label><span class="eq">=</span><input class="field" id="op-key" type="text" autocomplete="off" spellcheck="false" value="42"></div>
-        <div class="btns">
-          <button type="button" class="btn main" id="b-ins">Insérer</button>
-          <button type="button" class="btn" id="b-find">Rechercher</button>
-          <button type="button" class="btn" id="b-del">Supprimer</button>
-        </div>
-        <p class="msg" id="msg"></p>
-      </section>
-
-      <section class="sec">
-        <h2>Résultats</h2>
-        <div class="res"><span class="dot" style="--c:var(--ui)"></span><span>Taille effective m</span><span class="val" id="r-m"></span></div>
-        <div class="res"><span class="dot" style="--c:var(--ui)"></span><span>Facteur de charge α = n / m</span><span class="val" id="r-a"></span></div>
-        <div class="res"><span class="dot" style="--c:var(--coll)"></span><span>Collisions</span><span class="val" id="r-c"></span></div>
-        <div class="res"><span class="dot" style="--c:var(--path)"></span><span>Sondages par insertion (moy.)</span><span class="val" id="r-p"></span></div>
-        <div class="res"><span class="dot" style="--c:var(--path)"></span><span id="r-l-lab">Plus longue chaîne</span><span class="val" id="r-l"></span></div>
-        <div class="res"><span class="dot" style="--c:var(--ok)"></span><span>Cases vides</span><span class="val" id="r-e"></span></div>
-        <p class="msg err" id="warn" hidden></p>
-      </section>
-
-      <section class="sec">
-        <h2>Clés par case de départ</h2>
-        <svg class="hist" id="hist" viewBox="0 0 320 96" role="img" aria-label="Nombre de clés par valeur de hachage"></svg>
-      </section>
-
-    </aside>
-
-    <main class="view">
-      <div class="vbar" aria-hidden="true">
-        <span><i class="sq"></i>clé à sa case de départ</span>
-        <span><i class="sq c"></i>collision, clé déplacée</span>
-        <span><i class="sq p"></i>sondage</span>
-        <span><i class="sq f"></i>clé trouvée</span>
-      </div>
-      <div class="vis" id="vis"></div>
-    </main>
-  </div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Parties du cours"></nav>
+  <div id="parts" style="flex:1;min-height:0;display:flex;flex-direction:column"></div>
 </div>
 
 <script>
-(function(){
 'use strict';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+function fmt(x,d){d=d===undefined?3:d;if(!isFinite(x))return '–';let r=Math.round(x*Math.pow(10,d))/Math.pow(10,d);if(Object.is(r,-0))r=0;return String(r).replace('.',',');}
+const fmtInt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const q=(root,sel)=>root.querySelector(sel);
+const qa=(root,sel)=>Array.from(root.querySelectorAll(sel));
+
+/* mise en couleur Python très légère */
+function pyhl(code){
+  const KW=/^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue)$/;
+  const BI=/^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|None|True|False)$/;
+  return code.split('\n').map(line=>{
+    let out='',i=0;
+    while(i<line.length){
+      const ch=line[i];
+      if(ch==='#'){out+='<span class="hc">'+esc(line.slice(i))+'</span>';break;}
+      if(ch==='"'||ch==="'"){
+        let j=i+1;while(j<line.length&&line[j]!==ch)j++;
+        out+='<span class="hs">'+esc(line.slice(i,j+1))+'</span>';i=j+1;continue;
+      }
+      let j=i;while(j<line.length&&line[j]!=='#'&&line[j]!=='"'&&line[j]!=="'")j++;
+      let seg=esc(line.slice(i,j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g,(m)=>/^\d/.test(m)?'<span class="hn">'+m+'</span>':KW.test(m)?'<span class="hk">'+m+'</span>':BI.test(m)?'<span class="hf">'+m+'</span>':m);
+      out+=seg;i=j;
+    }
+    return out;
+  });
+}
+function codeBlock(code,on){
+  const lines=pyhl(code);
+  return '<pre class="code">'+lines.map((l,i)=>'<span class="ln'+(on===i+1||(Array.isArray(on)&&on.includes(i+1))?' on':'')+'">'+(l||' ')+'</span>').join('')+'</pre>';
+}
+
+/* curseur + zone numérique, façon GeoGebra */
+let _sid=0;
+function slider(host,o){
+  const id='sld'+(++_sid);
+  const wrap=document.createElement('div');
+  wrap.className='slider';wrap.style.setProperty('--c',o.color||'#6557d2');
+  wrap.innerHTML='<div class="row"><span class="dot"></span><label class="name" for="'+id+'n">'+o.name+'</label><span class="eq">=</span><input class="field num" id="'+id+'n" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><span class="unit">'+(o.note||'')+'</span></div><input type="range" id="'+id+'r" min="'+o.min+'" max="'+o.max+'" step="'+o.step+'" aria-label="'+esc(o.label||o.name)+'">';
+  host.appendChild(wrap);
+  const num=wrap.querySelector('.num'),rg=wrap.querySelector('[type=range]');
+  const dec=o.dec||0;
+  const f=x=>fmt(x,dec);
+  const sync=skip=>{if(skip!==num)num.value=f(o.get());rg.value=o.get();};
+  rg.addEventListener('input',()=>{o.set(parseFloat(rg.value));sync(null);o.on&&o.on(null);});
+  num.addEventListener('input',()=>{
+    const v=parseFloat(num.value.replace(',','.').replace(/ |\s/g,''));
+    if(!isFinite(v)){num.classList.add('bad');return;}
+    num.classList.remove('bad');
+    o.set(clamp(v,o.min,o.max));rg.value=o.get();o.on&&o.on(num);
+  });
+  num.addEventListener('blur',()=>{num.classList.remove('bad');num.value=f(o.get());});
+  sync(null);
+  return {sync,wrap};
+}
+/* boutons radio segmentés */
+function seg(host,items,get,set,cols){
+  host.classList.add('seg');host.style.setProperty('--cols',cols||items.length);host.setAttribute('role','radiogroup');
+  host.innerHTML=items.map(([v,l])=>'<button type="button" role="radio" data-v="'+esc(v)+'">'+l+'</button>').join('');
+  const sync=()=>qa(host,'button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===String(get()))));
+  qa(host,'button').forEach(b=>b.addEventListener('click',()=>{set(b.dataset.v);sync();}));
+  sync();return sync;
+}
+const sec=(title,inner,num)=>'<section class="sec"><h2>'+(num?'<span class="n">'+num+'</span>':'')+title+'</h2>'+inner+'</section>';
+
+/* graphiques SVG */
+const Chart={
+  _ticks(a,b,n){const span=b-a,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),r=raw/p,s=r<1.5?1:r<3?2:r<7?5:10,st=s*p,out=[];for(let v=Math.ceil(a/st-1e-9)*st;v<=b+1e-9;v+=st)out.push(+v.toFixed(10));return out;},
+  _short(v){const a=Math.abs(v);if(a>=1e6)return (v/1e6).toString().replace('.',',')+' M';if(a>=1e3)return (v/1e3).toString().replace('.',',')+' k';return String(+v.toFixed(4)).replace('.',',');},
+  line(svg,o){
+    const W=o.w||520,H=o.h||260,L=o.left||46,R=10,T=14,B=o.bottom||34;
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.classList.add('chart');
+    const lx=o.xlog?Math.log10:x=>x,ly=o.ylog?Math.log10:y=>y;
+    const xmin=o.xmin,xmax=o.xmax,ymin=o.ymin,ymax=o.ymax;
+    const X=x=>L+(lx(x)-lx(xmin))/(lx(xmax)-lx(xmin))*(W-L-R);
+    const Y=y=>H-B-(ly(y)-ly(ymin))/(ly(ymax)-ly(ymin))*(H-B-T);
+    let s='';
+    const xt=o.xlog?Array.from({length:Math.round(lx(xmax)-lx(xmin))+1},(_,i)=>Math.pow(10,Math.round(lx(xmin))+i)):Chart._ticks(xmin,xmax,o.xticks||6);
+    const yt=o.ylog?Array.from({length:Math.round(ly(ymax)-ly(ymin))+1},(_,i)=>Math.pow(10,Math.round(ly(ymin))+i)):Chart._ticks(ymin,ymax,o.yticks||5);
+    yt.forEach(v=>{if(v<ymin||v>ymax)return;const y=Y(v);s+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="#e8e8ee"/><text x="'+(L-6)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10.5" fill="#6a6a78">'+Chart._short(v)+'</text>';});
+    xt.forEach(v=>{if(v<xmin||v>xmax)return;const x=X(v);s+='<line x1="'+x+'" y1="'+T+'" x2="'+x+'" y2="'+(H-B)+'" stroke="#f0f0f4"/><text x="'+x+'" y="'+(H-B+14)+'" text-anchor="middle" font-size="10.5" fill="#6a6a78">'+Chart._short(v)+'</text>';});
+    s+='<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#55555f"/><line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'" stroke="#55555f"/>';
+    if(o.xlabel)s+='<text x="'+((L+W-R)/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="11.5" fill="#1f1f28">'+o.xlabel+'</text>';
+    if(o.ylabel)s+='<text transform="translate(12 '+((T+H-B)/2)+') rotate(-90)" text-anchor="middle" font-size="11.5" fill="#1f1f28">'+o.ylabel+'</text>';
+    (o.series||[]).forEach(se=>{
+      const pts=se.pts.filter(p=>p[0]>=xmin&&p[0]<=xmax&&isFinite(p[1])&&(!o.ylog||p[1]>0));
+      if(!pts.length)return;
+      s+='<polyline fill="none" stroke="'+se.color+'" stroke-width="2"'+(se.dash?' stroke-dasharray="6 4"':'')+' points="'+pts.map(p=>X(p[0]).toFixed(1)+','+clamp(Y(clamp(p[1],ymin,ymax)),T-2,H-B+2).toFixed(1)).join(' ')+'"/>';
+    });
+    (o.marks||[]).forEach(m=>{const x=X(m.x),y=Y(m.y);s+='<circle cx="'+x+'" cy="'+y+'" r="4.5" fill="'+(m.color||'#d93a2b')+'" stroke="#fff" stroke-width="1.5"/>'+(m.label?'<text x="'+x+'" y="'+(y-9)+'" text-anchor="'+(x>W*0.7?'end':'start')+'" font-size="11" fill="#1f1f28">'+m.label+'</text>':'');});
+    const lg=(o.series||[]).filter(se=>se.name);
+    lg.forEach((se,i)=>{const x=L+10,y=T+10+i*15;s+='<line x1="'+x+'" y1="'+y+'" x2="'+(x+16)+'" y2="'+y+'" stroke="'+se.color+'" stroke-width="2"'+(se.dash?' stroke-dasharray="4 3"':'')+'/><text x="'+(x+22)+'" y="'+(y+3.5)+'" font-size="11" fill="#1f1f28">'+se.name+'</text>';});
+    svg.innerHTML=s;
+  },
+  bars(svg,o){
+    const W=o.w||520,H=o.h||240,L=o.left||40,R=8,T=14,B=o.bottom||28;
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.classList.add('chart');
+    const n=o.labels.length,S=o.series.length;
+    const mx=o.ymax||Math.max(1,...o.series.flatMap(se=>se.vals));
+    const Y=v=>H-B-(v/mx)*(H-B-T);
+    let s='';
+    Chart._ticks(0,mx,4).forEach(v=>{const y=Y(v);s+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="#e8e8ee"/><text x="'+(L-5)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10.5" fill="#6a6a78">'+Chart._short(v)+'</text>';});
+    s+='<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#55555f"/>';
+    const gw=(W-L-R)/n,bw=gw*0.8/S;
+    const every=Math.ceil(n/(o.maxLabels||16));
+    o.series.forEach((se,j)=>se.vals.forEach((v,i)=>{
+      const x=L+i*gw+gw*0.1+j*bw,h=(H-B-T)*v/mx;
+      const col=Array.isArray(se.color)?se.color[i]:se.color;
+      if(v>0)s+='<rect x="'+x.toFixed(1)+'" y="'+(H-B-h).toFixed(1)+'" width="'+Math.max(1,bw-1).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+col+'"/>';
+    }));
+    o.labels.forEach((l,i)=>{if(i%every===0)s+='<text x="'+(L+i*gw+gw/2).toFixed(1)+'" y="'+(H-B+13)+'" text-anchor="middle" font-size="10.5" fill="#6a6a78">'+l+'</text>';});
+    if(o.xlabel)s+='<text x="'+((L+W-R)/2)+'" y="'+(H-3)+'" text-anchor="middle" font-size="11.5" fill="#1f1f28">'+o.xlabel+'</text>';
+    o.series.filter(se=>se.name).forEach((se,i)=>{const x=W-R-170,y=T+8+i*15;s+='<rect x="'+x+'" y="'+(y-7)+'" width="12" height="10" fill="'+(Array.isArray(se.color)?se.color[0]:se.color)+'"/><text x="'+(x+18)+'" y="'+(y+2)+'" font-size="11" fill="#1f1f28">'+se.name+'</text>';});
+    svg.innerHTML=s;
+  }
+};
+
+/* parties du cours */
+const PARTS=[];
+function part(p){PARTS.push(p);}
+function mountParts(){
+  const tabs=document.getElementById('tabs'),host=document.getElementById('parts');
+  const done={};
+  PARTS.forEach((p,i)=>{
+    const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.dataset.id=p.id;
+    b.innerHTML='<span class="n">'+(i+1)+'</span>'+p.tab;tabs.appendChild(b);
+    const s=document.createElement('section');s.className='part';s.id=p.id;s.hidden=true;s.setAttribute('role','tabpanel');host.appendChild(s);
+    b.addEventListener('click',()=>show(p.id,true));
+  });
+  function show(id,push){
+    if(!PARTS.some(p=>p.id===id))id=PARTS[0].id;
+    PARTS.forEach(p=>{
+      const s=document.getElementById(p.id),on=p.id===id;
+      s.hidden=!on;
+      const b=tabs.querySelector('[data-id="'+p.id+'"]');b.setAttribute('aria-selected',String(on));
+      if(on){
+        if(!done[p.id]){s.innerHTML='<div class="body">'+p.html+'</div>';done[p.id]=true;try{p.init(s);}catch(e){console.error(p.id,e);}}
+        else if(p.show)p.show(s);
+        document.getElementById('formula').innerHTML=p.formula||'';
+        if(b.scrollIntoView)b.scrollIntoView({block:'nearest',inline:'nearest'});
+      }
+    });
+    if(push){try{history.replaceState(null,'','#'+id);}catch(_){}}
+  }
+  window.addEventListener('hashchange',()=>show(location.hash.slice(1),false));
+  show(location.hash.slice(1),false);
+}
+
+/* clés Python : int, float ou str (les guillemets forcent str ; 1 et 1.0 désignent la même clé) */
+const FLOAT_RE=/^[+-]?(\d+\.\d*|\.\d+|\d+(?=[eE]))([eE][+-]?\d+)?$/;
+function parseKey(text){
+  const t=String(text).trim().slice(0,28);
+  if(!t) return null;
+  const qm=t.match(/^(["'])(.*)\1$/);
+  if(qm&&qm[2].length) return {type:'str',id:'s:'+qm[2],label:t,s:qm[2]};
+  if(/^[+-]?\d+$/.test(t)){const b=BigInt(t.replace(/^\+/,''));return {type:'int',id:'n:'+b,label:t,big:b};}
+  let x=NaN;
+  if(/^[+-]?inf(inity)?$/i.test(t)) x=t[0]==='-'?-Infinity:Infinity;
+  else if(FLOAT_RE.test(t)) x=parseFloat(t);
+  if(!Number.isNaN(x)){
+    if(!Number.isFinite(x)) return {type:'float',id:'f:'+x,label:t,x};
+    if(Number.isInteger(x)) return {type:'float',id:'n:'+BigInt(x),label:t,x,big:BigInt(x)};
+    return {type:'float',id:'f:'+x,label:t,x};
+  }
+  return {type:'str',id:'s:'+t,label:t,s:t};
+}
+const pyRepr=ki=>ki.type==='str'?"'"+ki.s.replace(/'/g,"\\'")+"'":ki.label;
+/* une valeur Python tapée librement : listes et dict ne sont pas hachables */
+const unhashable=v=>/^\s*[\[{]/.test(v)?(/^\s*\[/.test(v)?'list':/^\s*\{.*:/.test(v)?'dict':'set'):null;
+
+/* arithmétique 64 bits à la Python */
+const M64=(1n<<64n)-1n,P61=(1n<<61n)-1n;
+function pyInt(n){const neg=n<0n,a=neg?-n:n;let h=a%P61;if(neg)h=-h;if(h===-1n)h=-2n;return h;}
+function splitmix(h){h^=h>>30n;h=(h*0xbf58476d1ce4e5b9n)&M64;h^=h>>27n;h=(h*0x94d049bb133111ebn)&M64;h^=h>>31n;return h;}
+function strHash64(s,salt){let h=0xcbf29ce484222325n^(salt||0n);for(const b of new TextEncoder().encode(s)){h^=BigInt(b);h=(h*0x100000001b3n)&M64;}return BigInt.asIntN(64,splitmix(h));}
+const bin64=h=>BigInt.asUintN(64,h).toString(2).padStart(64,'0');
+const hex64=h=>'0x'+BigInt.asUintN(64,h).toString(16).padStart(16,'0');
+function randSalt(){const a=new Uint32Array(2);(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(a):(a[0]=Math.random()*4294967296,a[1]=Math.random()*4294967296);return (BigInt(a[0])<<32n)|BigInt(a[1]);}
+function egcd(a,b){let [r0,r1,s0,s1]=[a,b,1n,0n];while(r1!==0n){const qq=r0/r1;[r0,r1]=[r1,r0-qq*r1];[s0,s1]=[s1,s0-qq*s1];}return [r0,s0];}
+function modInv(a,m){const [g,x]=egcd(((a%m)+m)%m,m);return g===1n?((x%m)+m)%m:null;}
+function sci(x,d){d=d===undefined?2:d;if(!isFinite(x))return '∞';if(Math.abs(x)<1e6)return fmtInt(Math.round(x));const e=Math.floor(Math.log10(x)),m=x/Math.pow(10,e);const sup='⁰¹²³⁴⁵⁶⁷⁸⁹';return fmt(m,d)+' × 10'+String(e).split('').map(c=>sup[+c]).join('');}
+
+
+/* ===== p1.js ===== */
+(function(){
+/* Partie 1 : mutabilité, passage par partage d'objet, effets de bord */
+const SC={
+ liste:{label:'append',code:`def ajoute(l):
+    l.append(4)
+L = [1, 2, 3]
+ajoute(L)
+print(L)   # [1, 2, 3, 4]`,steps:[
+  {line:3,g:{L:'o1'},f:null,o:{o1:['list','[1, 2, 3]']},t:'On crée une liste : c\'est l\'objet <b>o1</b>. Le nom <code>L</code> est une étiquette qui y pointe.'},
+  {line:4,g:{L:'o1'},f:{l:'o1'},o:{o1:['list','[1, 2, 3]']},t:'Appel <code>ajoute(L)</code> : le paramètre <code>l</code> reçoit une <b>nouvelle référence vers le même objet</b>. <code>L</code> et <code>l</code> désignent o1.'},
+  {line:2,g:{L:'o1'},f:{l:'o1'},o:{o1:['list','[1, 2, 3, 4]']},t:'<code>l.append(4)</code> modifie l\'objet <b>sur place</b>, car une liste est mutable. Son id n\'a pas changé.'},
+  {line:5,g:{L:'o1'},f:null,o:{o1:['list','[1, 2, 3, 4]']},t:'La fonction se termine, le nom <code>l</code> disparaît. <code>L</code> désigne toujours o1, qui contient maintenant 4 : l\'effet de bord est visible.'}]},
+ entier:{label:'x = x + 1',code:`def ajoute(x):
+    x = x + 1
+a = 5
+ajoute(a)
+print(a)   # 5`,steps:[
+  {line:3,g:{a:'o1'},f:null,o:{o1:['int','5']},t:'Le nom <code>a</code> pointe vers l\'entier 5 (objet o1).'},
+  {line:4,g:{a:'o1'},f:{x:'o1'},o:{o1:['int','5']},t:'Appel <code>ajoute(a)</code> : <code>x</code> reçoit une référence vers le même objet.'},
+  {line:2,g:{a:'o1'},f:{x:'o2'},o:{o1:['int','5'],o2:['int','6']},t:'<code>x = x + 1</code> ne modifie pas l\'entier 5 (immuable) : elle <b>crée un nouvel entier 6</b> (o2) et fait pointer <code>x</code> dessus.'},
+  {line:5,g:{a:'o1'},f:null,o:{o1:['int','5']},t:'Retour : <code>x</code> disparaît, o2 n\'est plus référencé. Le nom <code>a</code> désigne toujours l\'ancien objet : <code>print(a)</code> affiche 5.'}]},
+ chaine:{label:'upper()',code:`def maj(s):
+    s = s.upper()
+texte = "bonjour"
+maj(texte)
+print(texte)   # bonjour`,steps:[
+  {line:3,g:{texte:'o1'},f:null,o:{o1:['str','"bonjour"']},t:'<code>texte</code> pointe vers la chaîne "bonjour" (objet o1).'},
+  {line:4,g:{texte:'o1'},f:{s:'o1'},o:{o1:['str','"bonjour"']},t:'Appel <code>maj(texte)</code> : <code>s</code> désigne le même objet que <code>texte</code>.'},
+  {line:2,g:{texte:'o1'},f:{s:'o2'},o:{o1:['str','"bonjour"'],o2:['str','"BONJOUR"']},t:'<code>upper()</code> <b>crée une nouvelle chaîne</b> (o2), elle ne modifie pas l\'ancienne. <code>s</code> pointe vers o2.'},
+  {line:5,g:{texte:'o1'},f:null,o:{o1:['str','"bonjour"']},t:'Retour : <code>texte</code> désigne toujours "bonjour".'}]},
+ reaffecte:{label:'L = [10, 20]',code:`def f(L):
+    L = [10, 20]
+A = [1, 2]
+f(A)
+print(A)   # [1, 2]`,steps:[
+  {line:3,g:{A:'o1'},f:null,o:{o1:['list','[1, 2]']},t:'<code>A</code> pointe vers la liste [1, 2] (objet o1).'},
+  {line:4,g:{A:'o1'},f:{L:'o1'},o:{o1:['list','[1, 2]']},t:'Appel <code>f(A)</code> : le paramètre <code>L</code> désigne o1.'},
+  {line:2,g:{A:'o1'},f:{L:'o2'},o:{o1:['list','[1, 2]'],o2:['list','[10, 20]']},t:'<b>Réaffecter n\'est pas modifier.</b> <code>L = [10, 20]</code> crée une nouvelle liste (o2) et déplace l\'étiquette <code>L</code>. L\'objet o1 n\'a jamais été modifié.'},
+  {line:5,g:{A:'o1'},f:null,o:{o1:['list','[1, 2]']},t:'Retour : <code>A</code> désigne toujours [1, 2].'}]}
+};
+const TYPES={
+ list:{m:true,t:'list',ex:'a = [1, 2]\na.append(3)',r:'L\'objet est modifié sur place : <code>id(a)</code> ne change pas.'},
+ dict:{m:true,t:'dict',ex:'d = {"a": 1}\nd["b"] = 2',r:'L\'objet est modifié sur place : <code>id(d)</code> ne change pas.'},
+ set:{m:true,t:'set',ex:'s = {1, 2}\ns.add(3)',r:'L\'objet est modifié sur place : <code>id(s)</code> ne change pas.'},
+ int:{m:false,t:'int',ex:'a = 5\na = a + 1',r:'Un nouvel entier est créé : <code>id(a)</code> change.'},
+ float:{m:false,t:'float',ex:'x = 1.5\nx = x * 2',r:'Un nouveau flottant est créé : <code>id(x)</code> change.'},
+ bool:{m:false,t:'bool',ex:'b = True\nb = not b',r:'True et False sont deux objets uniques et immuables.'},
+ str:{m:false,t:'str',ex:'s = "abc"\ns = s.upper()',r:'Une nouvelle chaîne est créée : <code>id(s)</code> change.'},
+ tuple:{m:false,t:'tuple',ex:'t = (1, 2)\nt[0] = 9   # TypeError',r:'Impossible de modifier un tuple : l\'affectation d\'élément est refusée.'}
+};
+part({
+ id:'mutabilite',tab:'Mutabilité',
+ html:`<aside class="alg">
+  ${sec('Scénario','<div id="m-seg"></div><p class="desc" id="m-desc"></p>')}
+  ${sec('Exécution pas à pas','<div id="m-code"></div><div class="btns"><button class="btn" id="m-prev">◀ Précédent</button><button class="btn main" id="m-next">Suivant ▶</button><button class="btn" id="m-reset">↺</button></div><p class="msg" id="m-txt"></p>')}
+  ${sec('Mutable ou immuable ?','<p class="desc" style="margin:0 0 8px">Un objet est <b>mutable</b> si on peut changer sa valeur après sa création, sans nouvelle affectation.</p><div id="m-types" class="seg" style="--cols:4"></div><div id="m-type-out"></div>')}
+ </aside>
+ <main class="view">
+  <div class="vbar"><span><i class="sq" style="background:#fff"></i>nom (étiquette)</span><span><i class="sq"></i>objet en mémoire</span><span><i class="sq p"></i>objet modifié</span><span><i class="sq f"></i>nouvel objet</span></div>
+  <div class="vis"><svg id="m-svg" class="chart" style="max-width:640px"></svg></div>
+ </main>`,
+ init(root){
+  let cur='liste',k=0;
+  const keys=Object.keys(SC);
+  const sg=q(root,'#m-seg');
+  seg(sg,keys.map(c=>[c,SC[c].label]),()=>cur,v=>{cur=v;k=0;render();},4);
+  q(root,'#m-types').innerHTML=Object.keys(TYPES).map(t=>'<button type="button" role="radio" data-v="'+t+'">'+t+'</button>').join('');
+  const tsel=()=>qa(root,'#m-types button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===curT)));
+  let curT='list';
+  qa(root,'#m-types button').forEach(b=>b.addEventListener('click',()=>{curT=b.dataset.v;tsel();typeOut();}));
+  function typeOut(){
+    const T=TYPES[curT];
+    q(root,'#m-type-out').innerHTML='<p class="desc"><span class="tag '+(T.m?'t-str':'t-int')+'">'+(T.m?'mutable':'immuable')+'</span></p>'+codeBlock(T.ex)+'<p class="desc">'+T.r+'</p>';
+  }
+  const addr=id=>17559536+32*(parseInt(id.slice(1),10)-1);
+  function render(){
+    const S=SC[cur],st=S.steps[k],prev=k>0?S.steps[k-1]:null;
+    q(root,'#m-desc').innerHTML={liste:'Objet mutable passé à une fonction : l\'effet de bord est visible.',entier:'Objet immuable : la fonction ne peut pas changer l\'objet de l\'appelant.',chaine:'Une méthode comme <code>upper()</code> renvoie une nouvelle chaîne.',reaffecte:'Affecter un nouveau nom ne modifie pas l\'ancien objet.'}[cur];
+    q(root,'#m-code').innerHTML=codeBlock(S.code,st.line);
+    q(root,'#m-txt').innerHTML='<b>Étape '+(k+1)+' / '+S.steps.length+'.</b> '+st.t;
+    q(root,'#m-prev').disabled=k===0;q(root,'#m-next').disabled=k===S.steps.length-1;
+    // dessin
+    const names=[];
+    Object.entries(st.g).forEach(([n,o])=>names.push({n,o,fr:'global'}));
+    if(st.f)Object.entries(st.f).forEach(([n,o])=>names.push({n,o,fr:'f'}));
+    const ids=Object.keys(st.o);
+    const rowH=64,H=Math.max(names.length,ids.length)*rowH+56,svg=q(root,'#m-svg');
+    svg.setAttribute('viewBox','0 0 620 '+H);
+    const yN=i=>50+i*rowH,yO=i=>50+i*rowH;
+    let s='<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#55555f"/></marker></defs>';
+    s+='<text x="20" y="20" font-size="12" font-weight="600" fill="#6a6a78">NOMS (étiquettes)</text><text x="380" y="20" font-size="12" font-weight="600" fill="#6a6a78">OBJETS (mémoire)</text>';
+    names.forEach((nm,i)=>{
+      const y=yN(i),oi=ids.indexOf(nm.o),yo=yO(oi);
+      s+='<path d="M'+(nm.fr==='f'?190:150)+','+y+' C260,'+y+' 300,'+yo+' 372,'+yo+'" fill="none" stroke="#55555f" stroke-width="1.6" marker-end="url(#ar)"/>';
+    });
+    names.forEach((nm,i)=>{
+      const y=yN(i),f=nm.fr==='f';
+      s+='<rect x="'+(f?100:20)+'" y="'+(y-16)+'" width="'+(f?90:130)+'" height="32" rx="4" fill="'+(f?'#fff3dc':'#fff')+'" stroke="'+(f?'#e08a00':'#55555f')+'" stroke-width="1.5"/><text x="'+((f?100:20)+(f?45:65))+'" y="'+(y+5)+'" text-anchor="middle" font-size="15" font-family="Cambria Math,Georgia,serif" font-style="italic" fill="#1f1f28">'+esc(nm.n)+'</text>';
+      if(f&&(i===names.findIndex(x=>x.fr==='f')))s+='<text x="145" y="'+(y-24)+'" text-anchor="middle" font-size="10.5" fill="#8a5200">variable locale de la fonction</text>';
+    });
+    ids.forEach((id,i)=>{
+      const y=yO(i),[t,v]=st.o[id];
+      const isNew=prev&&!prev.o[id],mut=prev&&prev.o[id]&&prev.o[id][1]!==v;
+      const fill=isNew?'#e3f4ea':mut?'#fff3dc':'#e6effc',stroke=isNew?'#2e8b57':mut?'#e08a00':'#8fa8d8';
+      s+='<rect x="372" y="'+(y-24)+'" width="230" height="48" rx="4" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5"/>';
+      s+='<text x="384" y="'+(y-4)+'" font-size="15" font-weight="600" fill="#1f1f28" font-family="ui-monospace,Menlo,Consolas,monospace">'+esc(v)+'</text>';
+      s+='<text x="384" y="'+(y+14)+'" font-size="11" fill="#6a6a78">'+t+' · id '+addr(id)+'</text>';
+      const refs=names.filter(n=>n.o===id).length;
+      s+='<text x="594" y="'+(y-8)+'" text-anchor="end" font-size="11" fill="#6a6a78">'+refs+' nom'+(refs>1?'s':'')+'</text>';
+    });
+    svg.innerHTML=s;
+  }
+  q(root,'#m-prev').addEventListener('click',()=>{if(k>0){k--;render();}});
+  q(root,'#m-next').addEventListener('click',()=>{if(k<SC[cur].steps.length-1){k++;render();}});
+  q(root,'#m-reset').addEventListener('click',()=>{k=0;render();});
+  tsel();typeOut();render();
+ }
+});
+
+})();
+
+/* ===== p2.js ===== */
+(function(){
+/* Partie 2 : le dictionnaire (définition, création, accès, appartenance, parcours, complexité, exercices) */
+const PRESETS={
+ mdp:{name:'mots_de_passe',text:'"M. Chomette" : "artif"\n"M. Catry" : "ETOPS"'},
+ couleurs:{name:'couleurs',text:'"rouge" : (255, 0, 0)\n"jaune" : (255, 255, 0)\n"blanc" : (255, 255, 255)'},
+ notes:{name:'notes',text:'"Alice" : 14\n"Bruno" : 9\n"Chloé" : 17\n"Alice2" : 14'}
+};
+part({
+ id:'dictionnaire',tab:'Dictionnaire',
+ html:`<aside class="alg">
+  ${sec('Définition','<p class="desc" style="margin:0">Un dictionnaire associe à chaque <b>clé</b> une <b>valeur</b>. Opérations : ajouter, supprimer une association, obtenir la valeur d\'une clé.</p>')}
+  ${sec('Création','<div id="d-pre"></div><p class="desc"><span style="font-family:var(--font-mono)">d = {}</span> ou <span style="font-family:var(--font-mono)">dict()</span> crée un dictionnaire vide.</p><textarea class="field" id="d-text" rows="5" spellcheck="false" autocomplete="off" aria-label="Contenu du dictionnaire"></textarea><p class="desc">Une association par ligne : <span style="font-family:var(--font-mono)">clé : valeur</span>.</p><p class="msg warn" id="d-note" hidden></p>')}
+  ${sec('Opérations sur d','<div class="row"><span class="dot" style="--c:var(--path)"></span><label class="name" for="d-k">k</label><span class="eq">=</span><input class="field mono" id="d-k" value="&quot;M. Catry&quot;" autocomplete="off" spellcheck="false"></div><div class="row"><span class="dot" style="--c:var(--ok)"></span><label class="name" for="d-v">v</label><span class="eq">=</span><input class="field mono" id="d-v" value="&quot;j\'adore les maths&quot;" autocomplete="off" spellcheck="false"></div><div class="btns" id="d-ops"></div>')}
+  ${sec('Console','<pre class="code" id="d-con" style="min-height:90px;padding:8px 10px"></pre><div class="btns"><button class="btn" id="d-clear">Effacer</button></div>')}
+ </aside>
+ <main class="view">
+  <div class="vbar"><span id="d-info"></span><span class="pk">type(d) = dict</span></div>
+  <div class="vis" id="d-vis"></div>
+ </main>`,
+ init(root){
+  const D={name:'d',map:new Map(),pre:'mdp',last:null,con:[]};
+  const $r=s=>q(root,s);
+  const parseDict=text=>{
+    const m=new Map();let notes=[];
+    for(const line of text.split('\n')){
+      const t=line.trim();if(!t) continue;
+      const mm=t.match(/^((?:"[^"]*"|'[^']*'|[^:])+?)\s*:\s*(.*)$/);
+      if(!mm) continue;
+      const ki=parseKey(mm[1]);if(!ki) continue;
+      const u=unhashable(mm[1]);
+      if(u){notes.push('TypeError : unhashable type : \''+u+'\' (clé '+mm[1]+')');continue;}
+      if(m.has(ki.id))notes.push(ki.label+' remplace une clé égale déjà présente');
+      m.set(ki.id,{ki,v:mm[2].trim()});
+    }
+    return {m,notes};
+  };
+  const setNote=n=>{const e=$r('#d-note');e.hidden=!n.length;e.textContent=n.join(' · ');};
+  const items=()=>Array.from(D.map.values());
+  const reprDict=()=>'{'+items().map(e=>pyRepr(e.ki)+': '+e.v).join(', ')+'}';
+  function log(cmd,out,err){D.con.push({cmd,out,err});if(D.con.length>14)D.con.shift();renderCon();}
+  function renderCon(){
+    $r('#d-con').innerHTML=D.con.length?D.con.map(c=>'<span style="display:block;padding:0 10px">'+pyhl('>>> '+c.cmd)[0].replace('&gt;&gt;&gt;','<span class="hc">&gt;&gt;&gt;</span>')+'</span><span style="display:block;padding:0 10px;color:'+(c.err?'var(--bad)':'var(--ink)')+'">'+esc(c.out)+'</span>').join(''):'<span class="hc" style="padding:0 10px">Choisis une opération.</span>';
+    $r('#d-con').scrollTop=1e9;
+  }
+  const getK=()=>parseKey($r('#d-k').value),getV=()=>$r('#d-v').value.trim();
+  const OPS=[
+   ['get','d[k]'],['set','d[k] = v'],['in','k in d'],['notin','k not in d'],['getd','d.get(k, 0)'],['del','del d[k]'],['len','len(d)'],['keys','d.keys()'],['values','d.values()'],['items','d.items()']
+  ];
+  $r('#d-ops').innerHTML=OPS.map(([id,l])=>'<button type="button" class="btn'+(id==='set'?' main':'')+'" data-op="'+id+'">'+esc(l)+'</button>').join('');
+  function doOp(op){
+    const ki=getK(),need=!['len','keys','values','items'].includes(op);
+    if(need&&!ki){log('…','Saisis une clé k.',true);return;}
+    const key=ki?(ki.type==='str'?'"'+ki.s+'"':ki.label):'';
+    const e=ki?D.map.get(ki.id):null;
+    D.last=ki&&need?ki.id:null;
+    if(op==='get'){e?log('d['+key+']',e.v):log('d['+key+']',"KeyError: "+pyRepr(ki),true);}
+    else if(op==='set'){
+      const v=getV()||'None';
+      const u=unhashable(ki.label);if(u){log('d['+key+'] = '+v,"TypeError: unhashable type: '"+u+"'",true);}
+      else{D.map.set(ki.id,{ki:e?e.ki:ki,v});log('d['+key+'] = '+v,e?'(valeur modifiée)':'(clé ajoutée)');syncText();}
+    }
+    else if(op==='in')log(key+' in d',e?'True':'False');
+    else if(op==='notin')log(key+' not in d',e?'False':'True');
+    else if(op==='getd')log('d.get('+key+', 0)',e?e.v:'0');
+    else if(op==='del'){if(e){D.map.delete(ki.id);log('del d['+key+']','(association supprimée)');syncText();}else log('del d['+key+']','KeyError: '+pyRepr(ki),true);}
+    else if(op==='len')log('len(d)',String(D.map.size));
+    else if(op==='keys')log('list(d.keys())','['+items().map(e=>pyRepr(e.ki)).join(', ')+']');
+    else if(op==='values')log('list(d.values())','['+items().map(e=>e.v).join(', ')+']');
+    else if(op==='items')log('list(d.items())','['+items().map(e=>'('+pyRepr(e.ki)+', '+e.v+')').join(', ')+']');
+    renderAll();
+  }
+  qa(root,'[data-op]').forEach(b=>b.addEventListener('click',()=>doOp(b.dataset.op)));
+  $r('#d-clear').addEventListener('click',()=>{D.con=[];renderCon();});
+  const syncText=()=>{$r('#d-text').value=items().map(e=>pyRepr(e.ki).replace(/^'(.*)'$/,'"$1"')+' : '+e.v).join('\n');};
+  seg($r('#d-pre'),Object.keys(PRESETS).map(k=>[k,PRESETS[k].name]),()=>D.pre,v=>{D.pre=v;$r('#d-text').value=PRESETS[v].text;fromText();},3);
+  function fromText(){const r=parseDict($r('#d-text').value);D.map=r.m;setNote(r.notes);D.last=null;renderAll();}
+  $r('#d-text').addEventListener('input',fromText);
+
+  /* ---- vue graphique ---- */
+  function freq(L){const o=new Map();for(const x of L)o.set(x,(o.get(x)||0)+1);return o;}
+  function renderAll(){
+    const it=items();
+    $r('#d-info').innerHTML='<b style="color:var(--ink)">len(d) = '+it.length+'</b>';
+    let h='<div class="h3">Le dictionnaire <span style="font-family:var(--font-mono)">d</span></div>';
+    h+=it.length?'<div class="cards">'+it.map(e=>'<div class="card" style="'+(D.last===e.ki.id?'border-color:var(--ok);background:var(--ok-soft)':'')+'"><div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><span class="tag t-'+e.ki.type+'">'+e.ki.type+'</span><b style="font-family:var(--font-mono)">'+esc(pyRepr(e.ki))+'</b></div><div style="margin-top:4px;font-family:var(--font-mono);font-size:13px;color:var(--ink)">→ '+esc(e.v||'None')+'</div></div>').join('')+'</div>':'<p class="empty">Dictionnaire vide : <span style="font-family:var(--font-mono)">{}</span></p>';
+    h+='<p class="note" style="font-family:var(--font-mono)">d = '+esc(reprDict())+'</p>';
+    /* complexité */
+    h+='<div class="h3" style="margin-top:18px">Complexité des opérations élémentaires</div><div class="tblw"><table class="tbl"><tr><th>Python</th><th>Description</th><th>Complexité</th></tr>'+
+     '<tr><td><code class="code-i">d[k] = v</code></td><td>Ajout (ou modification) d\'une association de k à v</td><td>O(1) en moyenne</td></tr>'+
+     '<tr><td><code class="code-i">d[k]</code></td><td>Accès à la valeur de clé k</td><td>O(1) en moyenne</td></tr>'+
+     '<tr><td><code class="code-i">len(d)</code></td><td>Nombre de clés de d</td><td>O(1) en moyenne</td></tr>'+
+     '<tr><td><code class="code-i">for k in d:</code></td><td>Parcourir les clés k de d</td><td>O(n), n = nombre de clés</td></tr></table></div>';
+    /* parcours */
+    h+='<div class="h3" style="margin-top:18px">Parcours</div>'+codeBlock('for k in d:   # équivalent à d.keys()\n    print(k, "->", d[k])')+'<pre class="code" style="margin-top:6px;padding:8px 10px">'+(it.length?it.map(e=>esc(e.ki.type==='str'?e.ki.s:e.ki.label)+' -> '+esc(e.v)).join('\n'):'(rien)')+'</pre>';
+    /* exercice inverse */
+    const inv=new Map(),dups=[],bad=[];
+    it.forEach(e=>{const u=unhashable(e.v);if(u){bad.push(e.v+' (type '+u+')');return;}const ki=parseKey(e.v);if(!ki)return;if(inv.has(ki.id))dups.push(e.v);inv.set(ki.id,{ki,v:pyRepr(e.ki)});});
+    h+='<div class="h3" style="margin-top:18px">Exercice : inverse(d)</div><p class="note">On veut <code class="code-i">d[k] == v ⇔ d2[v] == k</code>, en supposant que d ne contient pas deux fois la même valeur.</p><div class="cards"><div>'+codeBlock('def inverse(d):\n    d2 = {}                 # nouveau dictionnaire\n    for k in d:             # O(n)\n        v = d[k]            # O(1)\n        d2[v] = k           # O(1)\n    return d2')+'<p class="note" style="margin-top:6px">Version élégante avec <code class="code-i">items</code> :</p>'+codeBlock('def inverse(d):\n    return {v: k for k, v in d.items()}')+'</div><div><div class="h3">d2 = inverse(d)</div>'+
+      (inv.size?'<div class="tblw"><table class="tbl"><tr><th>clé de d2 (= v)</th><th>valeur (= k)</th></tr>'+Array.from(inv.values()).map(e=>'<tr><td><code class="code-i">'+esc(e.ki.label)+'</code></td><td><code class="code-i">'+esc(e.v)+'</code></td></tr>').join('')+'</table></div>':'<p class="empty">Rien à afficher.</p>')+
+      (dups.length?'<p class="msg err"><b>Valeur en double :</b> '+dups.map(esc).join(', ')+'. Une seule association est conservée, la dernière : l\'hypothèse de l\'énoncé n\'est pas vérifiée.</p>':'')+
+      (bad.length?'<p class="msg err"><b>TypeError : unhashable.</b> '+bad.map(esc).join(', ')+' ne peut pas servir de clé : seuls les objets immuables sont hachables.</p>':'')+'</div></div>';
+    /* exercice frequent */
+    h+='<div class="h3" style="margin-top:18px">Exercice : frequent(L) en O(n)</div><div class="row"><label class="name" for="d-L" style="font-size:14px;font-style:normal">L =</label><input class="field mono" id="d-L" value="'+esc(D.L===undefined?'3 1 3 2 1 3 4 1 3':D.L)+'" autocomplete="off" spellcheck="false" aria-label="Liste L, éléments séparés par des espaces"></div><div id="d-freq"></div>';
+    h+='<div class="cards" style="margin-top:8px"><div>'+codeBlock('def frequent(L):\n    if not L:\n        return None\n    occurrences = {}\n    for element in L:\n        if element in occurrences:\n            occurrences[element] += 1\n        else:\n            occurrences[element] = 1\n    plus_frequent = L[0]\n    max_occ = 0\n    for element, compte in occurrences.items():\n        if compte > max_occ:\n            max_occ = compte\n            plus_frequent = element\n    return plus_frequent')+'</div><div>'+codeBlock('def frequent(L):\n    if not L:\n        return None\n    occurrences = {}\n    for element in L:\n        occurrences[element] = occurrences.get(element, 0) + 1\n    return max(occurrences, key=occurrences.get)')+'<p class="note" style="margin-top:6px">Version élégante avec <code class="code-i">get</code> : un seul parcours de L, chaque mise à jour est en O(1).</p></div></div>';
+    $r('#d-vis').innerHTML=h;
+    const inp=$r('#d-L');
+    const upd=()=>{
+      D.L=inp.value;
+      const L=inp.value.split(/[\s,;]+/).filter(Boolean).slice(0,200);
+      const oc=freq(L),arr=Array.from(oc.entries());
+      let best=null,bm=0;arr.forEach(([k,c])=>{if(c>bm){bm=c;best=k;}});
+      $r('#d-freq').innerHTML=L.length?'<div class="tblw"><table class="tbl" style="margin-top:6px"><tr><th>élément</th>'+arr.map(a=>'<td><code class="code-i">'+esc(a[0])+'</code></td>').join('')+'</tr><tr><th>occurrences</th>'+arr.map(a=>'<td class="r" style="'+(a[0]===best?'background:var(--ok-soft);font-weight:600':'')+'">'+a[1]+'</td>').join('')+'</tr></table></div><p class="msg ok">frequent(L) = <b>'+esc(best)+'</b> ('+bm+' fois). Un parcours de L : n = '+L.length+' mises à jour du dictionnaire, chacune en O(1).</p>':'<p class="msg warn">frequent([]) renvoie None.</p>';
+    };
+    inp.addEventListener('input',upd);upd();
+  }
+  $r('#d-text').value=PRESETS.mdp.text;fromText();renderCon();
+  log('d["M. Chomette"]',"'artif'");
+ }
+});
+
+})();
+
+/* ===== p3.js ===== */
+(function(){
+/* Partie 3 : dictionnaire de variables, représentation d'un graphe par dictionnaire */
+const GR={
+ simple:{text:'0 : [1, 2]\n1 : [0, 2]\n2 : [0, 1]\n3 : [4]\n4 : [3]\n5 : []',pos:{0:[250,70],1:[110,200],2:[390,200],3:[150,330],4:[350,330],5:[470,60]}},
+ pond:{text:'0 : {1: 2, 2: 3}\n1 : {0: 2, 2: 1}\n2 : {0: 3, 1: 1}\n3 : {4: 8}\n4 : {3: 8}\n5 : {}',pos:{0:[250,70],1:[110,200],2:[390,200],3:[150,330],4:[350,330],5:[470,60]}}
+};
+part({
+ id:'applications',tab:'Applications',
+ html:`<aside class="alg">
+  ${sec('globals et locals','<p class="desc" style="margin:0 0 8px">Python conserve en mémoire deux dictionnaires de variables : <code>globals()</code> et <code>locals()</code>.</p><div id="a-code"></div><div class="row"><label class="name" for="a-x" style="font-style:normal;font-size:14px">f(</label><input class="field num mono" id="a-x" value="1" aria-label="Argument de f"><span class="eq">)</span></div><p class="msg" id="a-loc"></p>')}
+  ${sec('Représenter un graphe','<div id="a-pre"></div><p class="desc">Au lieu d\'une matrice ou d\'une liste, <code>G[v]</code> donne les voisins du sommet v (liste ou ensemble), ou un dictionnaire <code>{voisin: poids}</code> pour un graphe pondéré.</p><textarea class="field" id="a-text" rows="7" spellcheck="false" autocomplete="off" aria-label="Dictionnaire du graphe"></textarea><p class="msg err" id="a-err" hidden></p>')}
+  ${sec('Interroger G','<div class="row"><span class="dot" style="--c:var(--path)"></span><label class="name" for="a-u">u</label><span class="eq">=</span><input class="field num mono" id="a-u" value="0"><label class="name" for="a-w" style="margin-left:6px">v</label><span class="eq">=</span><input class="field num mono" id="a-w" value="2"></div><p class="msg" id="a-q"></p>')}
+ </aside>
+ <main class="view">
+  <div class="vbar"><span id="a-info"></span><span class="pk">clic sur un sommet : u</span></div>
+  <div class="vis"><svg id="a-svg" class="chart" style="max-width:640px"></svg><p class="note" style="font-family:var(--font-mono)" id="a-repr"></p></div>
+ </main>`,
+ init(root){
+  const $r=s=>q(root,s);
+  let x=1,mode='pond',u='0',w='2',G=null;
+  /* globals / locals */
+  $r('#a-code').innerHTML=codeBlock('a = 10\ndef f(x):\n    y = 2\n    print(locals())\nf(1)   # affiche {\'x\': 1, \'y\': 2}');
+  const updLoc=()=>{
+    const xv=$r('#a-x').value.trim()||'None';
+    $r('#a-loc').innerHTML='<b>locals()</b> dans f : <code>{\'x\': '+esc(xv)+', \'y\': 2}</code><br><b>globals()</b> : <code>{\'a\': 10, \'f\': &lt;function f&gt;, …}</code><br>Une variable locale n\'existe que dans le bloc de la fonction.';
+  };
+  $r('#a-x').addEventListener('input',updLoc);updLoc();
+  /* graphe */
+  function parseG(text){
+    const g=new Map(),errs=[];let weighted=false;
+    for(const line of text.split('\n')){
+      const t=line.trim();if(!t)continue;
+      const m=t.match(/^([^:]+?)\s*:\s*(.*)$/);if(!m){errs.push('Ligne ignorée : '+t);continue;}
+      const v=m[1].trim(),rest=m[2].trim();
+      if(rest.startsWith('[')&&rest.endsWith(']')){
+        const inner=rest.slice(1,-1).trim();
+        g.set(v,new Map((inner?inner.split(/\s*,\s*/):[]).map(n=>[n,null])));
+      }else if(rest.startsWith('{')&&rest.endsWith('}')){
+        const inner=rest.slice(1,-1).trim();const mp=new Map();
+        if(inner)for(const pr of inner.split(/\s*,\s*/)){const mm=pr.match(/^([^:]+?)\s*:\s*(-?[\d.]+)$/);if(!mm){errs.push('Paire ignorée : '+pr);continue;}mp.set(mm[1].trim(),parseFloat(mm[2]));weighted=true;}
+        g.set(v,mp);
+      }else errs.push('Ligne ignorée : '+t);
+    }
+    return {g,errs,weighted};
+  }
+  function render(){
+    const r=parseG($r('#a-text').value);G=r.g;
+    const e=$r('#a-err');e.hidden=!r.errs.length;e.textContent=r.errs.join(' · ');
+    const nodes=Array.from(G.keys());
+    for(const nb of G.values())for(const k of nb.keys())if(!G.has(k)&&!nodes.includes(k))nodes.push(k);
+    const preset=(mode==='pond'||mode==='simple')&&nodes.every(n=>GR.simple.pos[n]);
+    const pos={};
+    nodes.forEach((n,i)=>{
+      if(preset&&$r('#a-text').value===GR[mode].text)pos[n]=GR[mode].pos[n];
+      else{const ang=-Math.PI/2+i*2*Math.PI/Math.max(nodes.length,1);pos[n]=[300+190*Math.cos(ang),215+150*Math.sin(ang)];}
+    });
+    const svg=$r('#a-svg');svg.setAttribute('viewBox','0 0 600 430');
+    let s='<defs><marker id="ga" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#55555f"/></marker></defs>';
+    const edges=[];
+    for(const [a,nb] of G)for(const [b,wt] of nb)edges.push([a,b,wt]);
+    const has=(a,b)=>G.has(a)&&G.get(a).has(b);
+    const drawn=new Set();
+    edges.forEach(([a,b,wt])=>{
+      if(!pos[a]||!pos[b])return;
+      const sym=has(b,a),key=sym?[a,b].sort().join('|'):a+'>'+b;
+      if(drawn.has(key))return;drawn.add(key);
+      const [x1,y1]=pos[a],[x2,y2]=pos[b];
+      if(a===b){s+='<path d="M'+x1+','+(y1-18)+' c-30,-50 30,-50 0,0" fill="none" stroke="#55555f" stroke-width="1.6" marker-end="url(#ga)"/>';return;}
+      const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L;
+      const hl=(a===u&&b!==undefined&&G.get(u)&&G.get(u).has(b))||(sym&&b===u);
+      const col=hl?'#e08a00':'#55555f';
+      s+='<line x1="'+(x1+ux*20)+'" y1="'+(y1+uy*20)+'" x2="'+(x2-ux*(sym?20:23))+'" y2="'+(y2-uy*(sym?20:23))+'" stroke="'+col+'" stroke-width="'+(hl?3:1.8)+'"'+(sym?'':' marker-end="url(#ga)"')+'/>';
+      if(wt!==null)s+='<text x="'+((x1+x2)/2-uy*12)+'" y="'+((y1+y2)/2+ux*12+4)+'" text-anchor="middle" font-size="14" font-weight="600" fill="#1565c0" paint-order="stroke" stroke="#fff" stroke-width="4">'+fmt(wt,2)+'</text>';
+    });
+    nodes.forEach(n=>{
+      const [x,y]=pos[n],on=n===u,nb=G.get(u)&&G.get(u).has(n);
+      s+='<g data-n="'+esc(n)+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="20" fill="'+(on?'#fff3dc':nb?'#e3f4ea':'#e6effc')+'" stroke="'+(on?'#e08a00':nb?'#2e8b57':'#8fa8d8')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+5)+'" text-anchor="middle" font-size="15" font-weight="600" fill="#1f1f28">'+esc(n)+'</text></g>';
+    });
+    svg.innerHTML=s;
+    qa(svg,'[data-n]').forEach(g=>g.addEventListener('click',()=>{u=g.dataset.n;$r('#a-u').value=u;render();}));
+    let ne=0;edges.forEach(([a,b])=>{ne++;});
+    const und=edges.every(([a,b])=>has(b,a));
+    $r('#a-info').innerHTML='<b style="color:var(--ink)">'+nodes.length+' sommets, '+(und?ne/2:ne)+' arêtes'+(und?'':' orientées')+'</b>';
+    $r('#a-repr').textContent='G = {'+Array.from(G).map(([v,nb])=>v+': '+(nb.size&&Array.from(nb.values())[0]!==null?'{'+Array.from(nb).map(([k,wt])=>k+': '+wt).join(', ')+'}':'['+Array.from(nb.keys()).join(', ')+']')).join(', ')+'}';
+    query();
+  }
+  function query(){
+    const nb=G.get(u),el=$r('#a-q');
+    if(!nb){el.className='msg warn';el.innerHTML='Le sommet <code>'+esc(u)+'</code> n\'est pas une clé de G.';return;}
+    const wts=Array.from(nb.values())[0]!==undefined&&Array.from(nb.values())[0]!==null;
+    let h='<code>G['+esc(u)+']</code> = <b>'+esc(wts?'{'+Array.from(nb).map(([k,x])=>k+': '+x).join(', ')+'}':'['+Array.from(nb.keys()).join(', ')+']')+'</b> (degré '+nb.size+'), accès en O(1).';
+    if(nb.has(w))h+='<br><code>'+esc(w)+' in G['+esc(u)+']</code> → True'+(wts?', poids <code>G['+esc(u)+']['+esc(w)+']</code> = <b>'+nb.get(w)+'</b>':'')+'.';
+    else h+='<br><code>'+esc(w)+' in G['+esc(u)+']</code> → False : pas d\'arête de '+esc(u)+' vers '+esc(w)+'.';
+    el.className='msg';el.innerHTML=h;
+  }
+  seg($r('#a-pre'),[['simple','Graphe du cours'],['pond','Graphe pondéré']],()=>mode,v=>{mode=v;$r('#a-text').value=GR[v].text;render();},2);
+  $r('#a-text').value=GR.pond.text;
+  $r('#a-text').addEventListener('input',render);
+  $r('#a-u').addEventListener('input',()=>{u=$r('#a-u').value.trim();render();});
+  $r('#a-w').addEventListener('input',()=>{w=$r('#a-w').value.trim();query();});
+  render();
+ }
+});
+
+})();
+
+/* ===== p4.js ===== */
+(function(){
+/* Partie 4 : exploiter un dictionnaire (liste, dichotomie, dict) */
+const MOTS=['abattre','abeille','abricot','acheter','aimer','amour','arbre','avion','bateau','beurre','bonjour','cadeau','chaise','chapeau','cheval','ciel','citron','dormir','école','fenêtre','fleur','fromage','gare','hôpital','jardin','journal','lait','lune','maison','montagne','musique','nuage','obnubilé','océan','oiseau','orange','papier','plage','pomme','pont','quartier','rivière','soleil','table','train','vélo','voiture','zèbre'].sort();
+const MESURES=[
+ ['Liste, force brute',3e-3,'obnubilé : 3 ms (omnubilé : 5,17 ms)','#d93a2b'],
+ ['Dichotomie écrite à la main',3e-6,'3 µs','#e08a00'],
+ ['bisect_left (bibliothèque)',0.5e-6,'0,5 µs','#8a5200'],
+ ['dict de Python',30e-9,'27 à 34 ns','#2e8b57']
+];
+part({
+ id:'exploitation',tab:'Exploitation',
+ html:`<aside class="alg">
+  ${sec('Source et objectif','<p class="desc" style="margin:0">Pour savoir si un mot est bien orthographié, on cherche s\'il appartient à la liste des mots. La liste du cours (Hunspell français) contient <b>424 579 mots</b> : « obnubilé » y est, « omnubilé » non.</p>')}
+  ${sec('Taille du dictionnaire','<div class="row"><span class="dot" style="--c:var(--ui)"></span><label class="name" for="x-N">N</label><span class="eq">=</span><input class="field num mono" id="x-N" style="width:110px" autocomplete="off"><span class="unit">mots</span></div><div id="x-sl"></div><div class="btns"><button class="btn" id="x-424">424 579 mots (cours)</button><button class="btn" id="x-160">160 000 (Swann)</button></div>')}
+  ${sec('Mot recherché','<div class="row"><span class="dot" style="--c:var(--path)"></span><label class="name" for="x-w">m</label><span class="eq">=</span><input class="field mono" id="x-w" value="obnubilé" autocomplete="off" spellcheck="false"></div><div class="btns"><button class="btn main" id="x-go">Chercher</button><button class="btn" id="x-step">Pas suivant ▶</button><button class="btn" id="x-all">Tout exécuter</button></div><p class="desc">La liste affichée est un extrait de 48 mots triés. Les comparaisons <code>&lt;</code>, <code>==</code> se font caractère par caractère, selon le code Unicode (<code>ord()</code>) : « école » vient donc après « zèbre ».</p><p class="msg" id="x-msg"></p>')}
+  ${sec('Nombre de comparaisons','<div class="res"><span class="dot" style="--c:var(--coll)"></span><span>Séquentielle, pire cas : N</span><span class="val" id="x-lin"></span></div><div class="res"><span class="dot" style="--c:var(--path)"></span><span>Dichotomie : ⌈log₂ N⌉</span><span class="val" id="x-dic"></span></div><div class="res"><span class="dot" style="--c:var(--ok)"></span><span>Table de hachage</span><span class="val">≈ 1</span></div><p class="desc" id="x-k"></p>')}
+ </aside>
+ <main class="view">
+  <div class="vbar"><span><i class="sq"></i>zone de recherche</span><span><i class="sq p"></i>milieu comparé</span><span><i class="sq f"></i>trouvé</span><span><i class="sq" style="background:#ececf1;border-color:#ccc"></i>éliminé</span></div>
+  <div class="vis">
+   <div class="h3">Recherche dichotomique sur la liste triée</div>
+   <div id="x-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:6px"></div>
+   <pre class="code" id="x-code" style="margin-top:10px"></pre>
+   <div class="h3" style="margin-top:18px">Comparaisons en fonction de N (échelle log-log)</div>
+   <svg id="x-chart" style="max-width:640px"></svg>
+   <div class="h3" style="margin-top:18px">Temps mesurés dans le cours (échelle logarithmique)</div>
+   <div id="x-times"></div>
+   <p class="note">Python est interprété, d'où des écarts plus petits que le rapport des nombres de comparaisons : une fonction de bibliothèque est plus efficace qu'une fonction écrite à la main. <code class="code-i">bisect_left</code> renvoie la position où insérer le mot pour garder la liste triée.</p>
+   <p class="msg ok">Analyser « Du côté de chez Swann » (160 000 mots) : <b>15 ms</b> avec un dict, <b>8 min</b> avec la recherche linéaire, soit un rapport d'environ 32 000.</p>
+  </div>
+ </main>`,
+ init(root){
+  const $r=s=>q(root,s);
+  let N=424579,steps=[],k=-1,word='obnubilé';
+  const Nin=$r('#x-N');
+  const setN=v=>{N=clamp(Math.round(v),2,10000000);};
+  const sl=slider($r('#x-sl'),{name:'log₁₀ N',min:1,max:7,step:0.01,dec:2,get:()=>Math.log10(N),set:v=>setN(Math.pow(10,v)),on:()=>{renderN();}});
+  Nin.addEventListener('input',()=>{const v=parseInt(Nin.value.replace(/\s| /g,''),10);if(isFinite(v)){setN(v);sl.sync(null);renderN(true);}});
+  Nin.addEventListener('blur',()=>{Nin.value=fmtInt(N);});
+  $r('#x-424').addEventListener('click',()=>{setN(424579);sl.sync(null);renderN();});
+  $r('#x-160').addEventListener('click',()=>{setN(160000);sl.sync(null);renderN();});
+  function renderN(keep){
+    if(!keep)Nin.value=fmtInt(N);
+    const kk=Math.ceil(Math.log2(N));
+    $r('#x-lin').textContent=fmtInt(N);$r('#x-dic').textContent=kk;
+    $r('#x-k').innerHTML='N → N/2 → N/4 → … → 1 : on a besoin de k étapes avec 2<sup>k</sup> ≥ N, donc k ≈ log₂(N). Pour N = '+fmtInt(N)+', log₂(N) ≈ '+fmt(Math.log2(N),2)+' : au lieu de '+fmtInt(N)+' comparaisons, environ <b>'+kk+'</b>.';
+    const ns=[],lin=[],dic=[],hs=[];
+    for(let e=1;e<=7;e+=0.05){const n=Math.pow(10,e);ns.push(n);lin.push([n,n]);dic.push([n,Math.ceil(Math.log2(n))]);hs.push([n,1]);}
+    Chart.line($r('#x-chart'),{xlog:true,ylog:true,xmin:10,xmax:1e7,ymin:1,ymax:1e7,xlabel:'N (nombre de mots)',ylabel:'comparaisons',h:250,
+      series:[{name:'séquentielle  O(N)',color:'#d93a2b',pts:lin},{name:'dichotomie  O(log N)',color:'#e08a00',pts:dic},{name:'hachage  O(1)',color:'#2e8b57',pts:hs}],
+      marks:[{x:N,y:N,color:'#d93a2b'},{x:N,y:Math.ceil(Math.log2(N)),color:'#e08a00'},{x:N,y:1,color:'#2e8b57',label:'N = '+fmtInt(N)}]});
+  }
+  /* dichotomie pas à pas */
+  function plan(){
+    word=$r('#x-w').value.trim();
+    steps=[];let lo=0,hi=MOTS.length-1;
+    steps.push({lo,hi,mid:null,t:'Zone de recherche : les 48 mots (indices 0 à 47).'});
+    let found=false;
+    while(lo<=hi){
+      const mid=(lo+hi)>>1,c=MOTS[mid];
+      if(c===word){steps.push({lo,hi,mid,res:'eq',t:'liste['+mid+'] = « '+c+' » : égal au mot cherché.'});found=true;break;}
+      if(c<word){steps.push({lo,hi,mid,res:'lt',t:'liste['+mid+'] = « '+c+' » &lt; « '+esc(word)+' » : on élimine la moitié basse.'});lo=mid+1;}
+      else{steps.push({lo,hi,mid,res:'gt',t:'liste['+mid+'] = « '+c+' » &gt; « '+esc(word)+' » : on élimine la moitié haute.'});hi=mid-1;}
+    }
+    steps.push({lo,hi,mid:null,done:true,found,t:found?'<b>Trouvé</b> après '+(steps.length-1)+' comparaison'+(steps.length>2?'s':'')+'.':'<b>Absent</b> : la zone est vide après '+(steps.length-1)+' comparaisons.'});
+    k=0;renderSearch();
+  }
+  function renderSearch(){
+    const st=steps[k]||steps[0];
+    const last=steps[steps.length-1];
+    $r('#x-list').innerHTML=MOTS.map((m,i)=>{
+      const inz=i>=st.lo&&i<=st.hi&&!(st.done);
+      const isMid=st.mid===i,isF=st.done&&st.found&&MOTS[i]===word;
+      const bg=isF?'var(--ok-soft)':isMid?'var(--path-soft)':inz||(!st.done&&k===0)?'var(--occ)':'#ececf1';
+      const bd=isF?'var(--ok)':isMid?'var(--path)':inz||(!st.done&&k===0)?'var(--occ-line)':'#d4d4dc';
+      return '<div style="border:1.5px solid '+bd+';background:'+bg+';border-radius:3px;padding:3px 6px;font-size:13px;'+(inz||isMid||isF||(!st.done&&k===0)?'':'color:#9a9aa8;')+'"><span style="font-size:10px;color:var(--muted)">'+i+'</span> '+esc(m)+'</div>';
+    }).join('');
+    $r('#x-msg').className='msg '+(st.done?(st.found?'ok':'warn'):'');
+    $r('#x-msg').innerHTML='<b>Étape '+k+' / '+(steps.length-1)+'.</b> '+st.t+'<br><span class="unit">Séquentielle : '+(MOTS.includes(word)?(MOTS.indexOf(word)+1):MOTS.length)+' comparaisons sur cet extrait.</span>';
+    $r('#x-step').disabled=k>=steps.length-1;
+    $r('#x-code').innerHTML=codeBlock(`def recherche_dicho(mot, liste):
+    debut = 0
+    fin = len(liste) - 1
+    while debut <= fin:
+        milieu = (debut + fin) // 2
+        if liste[milieu] == mot:
+            return True
+        elif liste[milieu] < mot:
+            debut = milieu + 1
+        else:
+            fin = milieu - 1
+    return False`,st.mid===null?(st.done?(st.found?7:12):3):st.res==='eq'?7:st.res==='lt'?9:11).replace('<pre class="code">','').replace('</pre>','');
+  }
+  $r('#x-go').addEventListener('click',plan);
+  $r('#x-w').addEventListener('keydown',e=>{if(e.key==='Enter')plan();});
+  $r('#x-step').addEventListener('click',()=>{if(k<steps.length-1){k++;renderSearch();}});
+  $r('#x-all').addEventListener('click',()=>{k=steps.length-1;renderSearch();});
+  /* temps mesurés */
+  const lg=t=>Math.log10(t/1e-9);
+  $r('#x-times').innerHTML='<div class="tblw"><table class="tbl" style="min-width:420px">'+MESURES.map(m=>'<tr><td style="width:36%">'+m[0]+'</td><td style="width:20%;white-space:nowrap">'+m[2]+'</td><td><div style="height:14px;border-radius:2px;background:'+m[3]+';width:'+Math.max(2,Math.round(lg(m[1])/7*100))+'%"></div></td></tr>').join('')+'</table></div><p class="unit">Longueur des barres : logarithme du temps, de 1 ns à 10 ms.</p>';
+  renderN();plan();
+ }
+});
+
+})();
+
+/* ===== p5.js ===== */
+(function(){
+/* Partie 5 : table de hachage (atelier) */
+part({
+ id:'table',tab:'Table de hachage',
+ html:"    <aside class=\"alg\" aria-label=\"Algèbre\">\n\n      <section class=\"sec\">\n        <h2>L'idée</h2>\n        <p class=\"desc\" style=\"margin:0 0 8px\">Chercher « Polytechnique » dans un dictionnaire papier : sans hachage, on lit mot après mot depuis la première page. Avec un onglet alphabétique, on « hache » le mot et on saute directement à la bonne section.</p>\n        <p class=\"desc\" style=\"margin:0\">Deux façons de créer un dictionnaire : une <b>table de hachage</b> (Python), accès en O(1) et mémoire O(n + N) où N est la taille de la table, ou un arbre binaire de recherche (option info).</p>\n      </section>\n\n      <section class=\"sec\">\n        <h2><span class=\"n\">1</span>Le hash donne un grand entier</h2>\n        <p class=\"desc\" style=\"margin:0 0 8px\">hash() renvoie toujours un entier de 64 bits, mais chaque type de clé occupe cette plage à sa façon :</p>\n        <ul class=\"rules\">\n          <li><span class=\"tag t-int\">int</span><span>le hash est l'entier lui-même, tant qu'il est dans l'intervalle de ±(2⁶¹ − 1). Sinon, modulo 2⁶¹ − 1.</span></li>\n          <li><span class=\"tag t-float\">float</span><span>deux nombres égaux ont le même hash (1 et 1.0). Sinon, p/q donne p × q⁻¹ modulo 2⁶¹ − 1.</span></li>\n          <li><span class=\"tag t-str\">str</span><span>salage aléatoire, puis un entier réparti sur les 64 bits.</span></li>\n        </ul>\n        <label class=\"chk\"><input type=\"checkbox\" id=\"ck-course\"><span>Valeurs de hash du cours (vache, cochon, poule, veau)</span></label>\n        <label class=\"chk\"><input type=\"checkbox\" id=\"ck-salt\" checked><span>Salage aléatoire des chaînes</span></label>\n        <div class=\"row\" style=\"min-height:30px\"><span class=\"unit\" id=\"salt-val\" style=\"font-family:var(--font-mono);flex:1;min-width:0;overflow-wrap:anywhere\"></span><button type=\"button\" class=\"btn\" id=\"b-salt\">Nouvelle exécution</button></div>\n      </section>\n\n      <section class=\"sec\">\n        <h2><span class=\"n\">2</span>La réduction trouve la case</h2>\n        <div class=\"seg\" id=\"seg-red\" style=\"--cols:3\" role=\"radiogroup\" aria-label=\"Réduction\">\n          <button type=\"button\" role=\"radio\" data-v=\"mod\">Modulo</button>\n          <button type=\"button\" role=\"radio\" data-v=\"mask\">Masque</button>\n          <button type=\"button\" role=\"radio\" data-v=\"mult\">Multiplic.</button>\n        </div>\n        <p class=\"desc\" id=\"desc-red\"></p>\n        <div id=\"host-m\"></div>\n      </section>\n\n      <section class=\"sec\">\n        <h2><span class=\"n\">3</span>Le tableau stocke le paquet</h2>\n        <p class=\"desc\" style=\"margin:0 0 8px\">Chaque case contient le hash, la clé et la valeur. Si deux clés visent la même case, on gère la collision :</p>\n        <div class=\"seg\" id=\"seg-method\" style=\"--cols:4\" role=\"radiogroup\" aria-label=\"Gestion des collisions\">\n          <button type=\"button\" role=\"radio\" data-v=\"chain\">Chaînage</button>\n          <button type=\"button\" role=\"radio\" data-v=\"lin\">Linéaire</button>\n          <button type=\"button\" role=\"radio\" data-v=\"quad\">Quadr.</button>\n          <button type=\"button\" role=\"radio\" data-v=\"dbl\">Double</button>\n        </div>\n        <p class=\"desc\" id=\"desc-method\"></p>\n        <label class=\"chk\"><input type=\"checkbox\" id=\"ck-py\"><span>Règle de Python : agrandir à 2/3 de remplissage, ×4 (×2 au-delà de 50 000 clés)</span></label>\n        <label class=\"chk\"><input type=\"checkbox\" id=\"ck-auto\"><span>Agrandir le tableau si α dépasse le seuil</span></label>\n        <div id=\"host-thr\"></div>\n      </section>\n\n      <section class=\"sec\">\n        <h2>Entrées du dictionnaire</h2>\n        <textarea class=\"field\" id=\"keys\" rows=\"7\" spellcheck=\"false\" autocomplete=\"off\" aria-label=\"Entrées, une par ligne, au format clé : valeur\"></textarea>\n        <p class=\"desc\">Une entrée par ligne, au format <span style=\"font-family:var(--font-mono)\">clé : valeur</span>. La clé est un entier (<span style=\"font-family:var(--font-mono)\">42</span>), un flottant (<span style=\"font-family:var(--font-mono)\">0.375</span>) ou une chaîne (<span style=\"font-family:var(--font-mono)\">pomme</span>, ou <span style=\"font-family:var(--font-mono)\">\"42\"</span> entre guillemets).</p>\n        <p class=\"msg warn\" id=\"dup\" hidden></p>\n        <div id=\"host-n\"></div>\n        <div class=\"btns\"><button type=\"button\" class=\"btn main\" id=\"b-animaux\">Exemple du cours : animaux</button><button type=\"button\" class=\"btn\" id=\"b-regen\">Tirer d'autres entrées</button></div>\n      </section>\n\n      <section class=\"sec\">\n        <h2>Opération sur une clé</h2>\n        <div class=\"row\"><span class=\"dot\" style=\"--c:var(--path)\"></span><label class=\"name\" for=\"op-key\">k</label><span class=\"eq\">=</span><input class=\"field\" id=\"op-key\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\" value=\"0.375\"></div>\n        <div class=\"row\"><span class=\"dot\" style=\"--c:var(--ok)\"></span><label class=\"name\" for=\"op-val\">v</label><span class=\"eq\">=</span><input class=\"field\" id=\"op-val\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\" value=\"30\"></div>\n        <div class=\"btns\">\n          <button type=\"button\" class=\"btn main\" id=\"b-ins\">d[k] = v</button>\n          <button type=\"button\" class=\"btn\" id=\"b-find\">d[k]</button>\n          <button type=\"button\" class=\"btn\" id=\"b-del\">del d[k]</button>\n        </div>\n        <p class=\"msg\" id=\"msg\"></p>\n        <div class=\"steps\" id=\"steps\"></div>\n      </section>\n\n      <section class=\"sec\">\n        <h2>Résultats</h2>\n        <div class=\"res\"><span class=\"dot\" style=\"--c:var(--ui)\"></span><span>Taille effective m</span><span class=\"val\" id=\"r-m\"></span></div>\n        <div class=\"res\"><span class=\"dot\" style=\"--c:var(--ui)\"></span><span>Facteur de charge α = n / m</span><span class=\"val\" id=\"r-a\"></span></div>\n        <div class=\"res\"><span class=\"dot\" style=\"--c:var(--coll)\"></span><span>Collisions</span><span class=\"val\" id=\"r-c\"></span></div>\n        <div class=\"res\"><span class=\"dot\" style=\"--c:var(--path)\"></span><span>Sondages par insertion (moy.)</span><span class=\"val\" id=\"r-p\"></span></div>\n        <div class=\"res\"><span class=\"dot\" style=\"--c:var(--path)\"></span><span id=\"r-l-lab\">Plus longue chaîne</span><span class=\"val\" id=\"r-l\"></span></div>\n        <div class=\"res\"><span class=\"dot\" style=\"--c:var(--ok)\"></span><span>Cases vides</span><span class=\"val\" id=\"r-e\"></span></div>\n        <p class=\"msg err\" id=\"warn\" hidden></p>\n      </section>\n\n      <section class=\"sec\">\n        <h2>Clés par case de départ</h2>\n        <svg class=\"hist\" id=\"hist\" viewBox=\"0 0 320 96\" role=\"img\" aria-label=\"Nombre de clés par indice obtenu à l'étape 2\"></svg>\n      </section>\n\n    </aside>\n\n    <main class=\"view\">\n      <div class=\"t-views\"><div id=\"t-seg\"></div></div>\n      <div class=\"vbar\" id=\"t-leg\" aria-hidden=\"true\">\n        <span><i class=\"sq\"></i>à sa case de départ</span>\n        <span><i class=\"sq c\"></i>collision, déplacée</span>\n        <span><i class=\"sq p\"></i>sondage</span>\n        <span><i class=\"sq f\"></i>trouvée</span>\n        <span class=\"pk\">case = clé / valeur / type et hash</span>\n      </div>\n      <div class=\"vis\" id=\"vis\"></div>\n      <div class=\"vis\" id=\"t-draw\" hidden></div>\n      <div class=\"vis\" id=\"t-code\" hidden></div>\n    </main>",
+ init(root){
+
 const $=id=>document.getElementById(id);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PHI=(Math.sqrt(5)-1)/2;
+const MASK64=(1n<<64n)-1n;
+const P61=(1n<<61n)-1n;
+const WORDS=['pomme','poire','cerise','banane','kiwi','fraise','citron','mangue','orange','prune','figue','melon','raisin','abricot','ananas','pêche','datte','noix','lime','coing','goyave','litchi','mûre','myrtille','papaye','grenade','nectarine','mirabelle','framboise'];
 
 /* ---------- état ---------- */
 const S={
-  hash:'div', method:'chain', m:11,
-  keys:['54','26','93','17','77','31','44','55','20','65'],
+  red:'mod', method:'chain', m:8,
+  entries:[],
+  salted:true, salt:0n, course:false, pyrule:false,
   auto:false, thr:0.75,
-  sel:null, msg:null
+  sel:null, msg:null, dup:''
 };
-const HDESC={
-  div:'h(k) = k mod m. Simple et rapide. Elle répartit bien quand m est premier.',
-  mult:'h(k) = ⌊ m · frac(k · φ) ⌋ avec φ = 0,618… Peu sensible au choix de m.',
-  digits:'h(k) = (somme des chiffres de k) mod m. Mauvaise fonction : les valeurs se concentrent.'
+const RDESC={
+  mod:'indice = hash mod m : le reste de la division euclidienne, entre 0 et m−1.',
+  mask:'indice = hash ET (m−1) : on garde les bits de poids faible. Valable avec m = 2, 4, 8, 16… (méthode de Python).',
+  mult:'indice = ⌊m · frac(x · φ)⌋ où x est formé des 32 bits de poids faible du hash et φ = 0,618…'
 };
 const MDESC={
-  chain:'Chaînage séparé : chaque case contient une liste. Une collision allonge la liste.',
-  lin:'Sondage linéaire : essai des cases h, h+1, h+2… Forme des paquets de cases occupées.',
-  quad:'Sondage quadratique : essai des cases h, h+1², h+2²… Peut échouer si α dépasse 0,5.',
-  dbl:'Double hachage : pas h₂(k) = 1 + k mod (m−1). Le pas change d\'une clé à l\'autre.'
+  chain:'Chaînage séparé : chaque case contient une liste de paquets.',
+  lin:'Sondage linéaire : essai des cases i, i+1, i+2…',
+  quad:'Sondage quadratique : essai des cases i, i+1², i+2²… Peut échouer si α dépasse 0,5.',
+  dbl:'Double hachage : le pas 1 + hash mod (m−1) change d\'une clé à l\'autre.'
 };
-const MNAME={chain:'chaînage séparé',lin:'sondage linéaire',quad:'sondage quadratique',dbl:'double hachage'};
+function newSalt(){
+  const a=new Uint32Array(2);
+  (window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(a):(a[0]=Math.random()*4294967296,a[1]=Math.random()*4294967296);
+  S.salt=(BigInt(a[0])<<32n)|BigInt(a[1]);
+}
+newSalt();
 
-/* ---------- clés ---------- */
-function toNum(key){
-  if(/^\d{1,15}$/.test(key)) return parseInt(key,10);
-  let h=0;
-  for(let i=0;i<key.length;i++) h=(Math.imul(h,31)+key.charCodeAt(i))>>>0;
+/* ---------- les clés : int, float ou str ---------- */
+const FLOAT_RE=/^[+-]?(\d+\.\d*|\.\d+|\d+(?=[eE]))([eE][+-]?\d+)?$/;
+function parseKey(text){
+  const t=String(text).trim().slice(0,24);
+  if(!t) return null;
+  let q=t.match(/^(["'])(.*)\1$/);
+  if(q&&q[2].length) return {type:'str',id:'s:'+q[2],label:t,s:q[2]};
+  if(/^[+-]?\d+$/.test(t)){const b=BigInt(t.replace(/^\+/,''));return {type:'int',id:'n:'+b,label:t,big:b};}
+  let x=NaN;
+  if(/^[+-]?inf(inity)?$/i.test(t)) x=t[0]==='-'?-Infinity:Infinity;
+  else if(FLOAT_RE.test(t)) x=parseFloat(t);
+  if(!Number.isNaN(x)){
+    if(!Number.isFinite(x)) return {type:'float',id:'f:'+x,label:t,x};
+    if(Number.isInteger(x)) return {type:'float',id:'n:'+BigInt(x),label:t,x,big:BigInt(x)};
+    return {type:'float',id:'f:'+x,label:t,x};
+  }
+  return {type:'str',id:'s:'+t,label:t,s:t};
+}
+
+/* ---------- étape 1 : le hash (entier signé de 64 bits) ---------- */
+function pyInt(n){
+  const neg=n<0n,a=neg?-n:n;
+  let h=a%P61;if(neg)h=-h;
+  if(h===-1n)h=-2n;
   return h;
 }
-const isText=k=>!/^\d{1,15}$/.test(k);
-function digitSum(n){let s=0;while(n>0){s+=n%10;n=Math.floor(n/10);}return s;}
-function hv(k,m){
-  const n=toNum(k);
-  if(S.hash==='div') return n%m;
-  if(S.hash==='mult') return Math.floor(m*((n*PHI)%1));
-  return digitSum(n)%m;
+function fracParts(x){
+  const dv=new DataView(new ArrayBuffer(8));dv.setFloat64(0,Math.abs(x));
+  const bits=dv.getBigUint64(0);
+  const e=Number((bits>>52n)&0x7ffn),f=bits&((1n<<52n)-1n);
+  let M,E;
+  if(e===0){M=f;E=-1074;}else{M=f|(1n<<52n);E=e-1075;}
+  let k=-E;
+  while(M%2n===0n&&k>0){M/=2n;k--;}
+  return {M,k};
 }
-function h2(k,m){return 1+toNum(k)%(m-1);}
-function hExpr(k,m){
-  const n=toNum(k);
-  let pre=isText(k)?'k = « '+esc(k)+' » → '+n+'<br>':'';
-  if(S.hash==='div') return pre+'h(k) = '+n+' mod '+m+' = <b>'+(n%m)+'</b>';
-  if(S.hash==='mult') return pre+'h(k) = ⌊'+m+' · frac('+n+' · φ)⌋ = <b>'+hv(k,m)+'</b>';
-  return pre+'h(k) = '+digitSum(n)+' mod '+m+' = <b>'+hv(k,m)+'</b> <span class="unit">(somme des chiffres = '+digitSum(n)+')</span>';
+function splitmix(h){
+  h^=h>>30n;h=(h*0xbf58476d1ce4e5b9n)&MASK64;
+  h^=h>>27n;h=(h*0x94d049bb133111ebn)&MASK64;
+  h^=h>>31n;return h;
 }
-function parseKeys(text){
-  const out=[],seen=new Set();
-  for(const t of text.split(/[\s,;]+/)){
-    if(!t||seen.has(t)) continue;
-    seen.add(t);out.push(t.slice(0,12));
-    if(out.length>=60) break;
+const hcache=new Map();
+const COURSE_H={'vache':-7934638040551621470n,'cochon':2827697250228178582n,'poule':-1481567228724354437n,'veau':577823365052861834n};
+function hashOf(ki){
+  const sk=ki.id+'|'+(ki.type==='str'?String(S.salted?S.salt:0)+'|'+S.course:'');
+  let r=hcache.get(sk);
+  if(r!==undefined) return r;
+  if(ki.type==='int'||ki.big!==undefined) r=pyInt(ki.big);
+  else if(ki.type==='float'){
+    if(ki.x===Infinity) r=314159n;else if(ki.x===-Infinity) r=-314159n;
+    else{
+      const {M,k}=fracParts(ki.x);
+      const inv=2n**BigInt((61-(k%61))%61);
+      r=(M*inv)%P61;
+      if(ki.x<0) r=-r;
+      if(r===-1n) r=-2n;
+    }
+  }else if(S.course&&COURSE_H[ki.s]!==undefined){
+    r=COURSE_H[ki.s];
+  }else{
+    let h=0xcbf29ce484222325n^(S.salted?S.salt:0n);
+    for(const b of new TextEncoder().encode(ki.s)){h^=BigInt(b);h=(h*0x100000001b3n)&MASK64;}
+    r=BigInt.asIntN(64,splitmix(h));
   }
-  return out;
+  if(hcache.size>5000) hcache.clear();
+  hcache.set(sk,r);
+  return r;
 }
-function randomKeys(count,existing){
-  const set=new Set(existing);const out=existing.slice();
-  while(out.length<count){
-    const k=String(Math.floor(Math.random()*1000));
-    if(!set.has(k)){set.add(k);out.push(k);}
+function hashWhy(ki){
+  if(ki.type==='str'&&S.course&&COURSE_H[ki.s]!==undefined) return 'Valeur de hash donnée dans le cours (une exécution de Python).';
+  if(ki.type==='str') return 'Chaîne : salage aléatoire'+(S.salted?' (sel '+S.salt.toString(16).slice(0,8)+'…)':' désactivé')+', puis un entier réparti sur les 64 bits.';
+  if(ki.type==='float'&&ki.x===Infinity) return 'Cas particulier : hash(inf) = 314159.';
+  if(ki.type==='float'&&ki.x===-Infinity) return 'Cas particulier : hash(−inf) = −314159.';
+  if(ki.big!==undefined){
+    const ab=ki.big<0n?-ki.big:ki.big;
+    const pre=ki.type==='float'?'Flottant égal à l\'entier '+ki.big+' : même hash que l\'entier. ':'';
+    if(ab<P61) return pre+'Entier : le hash est égal à lui-même'+(ki.big===-1n?' (sauf −1, qui donne −2)':'')+'.';
+    return pre+'Entier trop grand : modulo 2⁶¹ − 1.';
   }
-  return out;
+  const {M,k}=fracParts(ki.x);
+  const sg=ki.x<0?'−':'';
+  return 'Flottant non entier : '+esc(ki.label)+' = '+sg+M+' / '+(2n**BigInt(k))+', on calcule '+sg+M+' × '+(2n**BigInt(k))+'⁻¹ modulo 2⁶¹ − 1.';
 }
 
-/* ---------- construction de la table ---------- */
+/* ---------- étape 2 : la réduction ---------- */
+const bmod=(h,m)=>((h%BigInt(m))+BigInt(m))%BigInt(m);
+function reduce(h,m){
+  if(S.red==='mod') return Number(bmod(h,m));
+  if(S.red==='mask') return Number(h&BigInt(m-1));
+  return Math.floor(m*((Number(BigInt.asUintN(32,h))*PHI)%1));
+}
+const hv=(ki,m)=>reduce(hashOf(ki),m);
+const h2=(ki,m)=>1+Number(bmod(hashOf(ki),m-1));
+function redExpr(ki,m){
+  const h=hashOf(ki),i=hv(ki,m);
+  if(S.red==='mod') return h+' mod '+m+' = <b>'+i+'</b>';
+  if(S.red==='mask'){
+    let r=h+' ET '+(m-1)+' = <b>'+i+'</b>';
+    if(isPow2(m)&&m>1){const lg=Math.log2(m),low=BigInt.asUintN(64,h).toString(2).slice(-8);r+='<br>bits : …'+low+' ET '+(m-1).toString(2).padStart(8,'0')+' = <b>'+i.toString(2).padStart(lg,'0')+'</b>';}
+    return r;
+  }
+  return '⌊'+m+' · frac('+BigInt.asUintN(32,h)+' · φ)⌋ = <b>'+i+'</b>';
+}
+const isPow2=m=>m>0&&(m&(m-1))===0;
+const isPrime=n=>{if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;};
+
+/* ---------- entrées ---------- */
+function mkEntry(label,v){
+  const ki=parseKey(label);
+  return ki?{ki,id:ki.id,label:ki.label,type:ki.type,v:String(v).trim().slice(0,20)}:null;
+}
+S.entries=[['pomme','12'],['42','7'],['0.375','30'],['1','15'],['"42"','4'],['-7','22'],['poire','9']].map(a=>mkEntry(a[0],a[1]));
+function parseEntries(text){
+  const out=[],seen=new Map();let dup='';
+  for(const line of text.split('\n')){
+    const t=line.trim();if(!t) continue;
+    let kt=t,v='';
+    const mm=t.match(/^((?:"[^"]*"|'[^']*'|[^:=])+?)\s*[:=]\s*(.*)$/);
+    if(mm){kt=mm[1];v=mm[2];}
+    const e=mkEntry(kt,v);
+    if(!e) continue;
+    if(seen.has(e.id)){dup+=(dup?' ; ':'')+e.label+' désigne la même clé que '+seen.get(e.id)+' (ignorée)';continue;}
+    seen.set(e.id,e.label);out.push(e);
+    if(out.length>=60) break;
+  }
+  S.dup=dup;
+  return out;
+}
+const entriesText=()=>S.entries.map(e=>e.label+' : '+e.v).join('\n');
+function addRandom(count){
+  const used=new Set(S.entries.map(e=>e.id));
+  let guard=0;
+  while(S.entries.length<count&&guard++<500){
+    const r=Math.random();let lab;
+    if(r<0.4) lab=WORDS[Math.floor(Math.random()*WORDS.length)];
+    else if(r<0.7) lab=String(Math.floor(Math.random()*200)-50);
+    else lab=String(Math.floor(Math.random()*80)/8+(Math.random()<0.5?0.5:0.125)).slice(0,8);
+    const e=mkEntry(lab,String(1+Math.floor(Math.random()*99)));
+    if(!e||used.has(e.id)) continue;
+    used.add(e.id);S.entries.push(e);
+  }
+}
+const entryOf=id=>S.entries.find(x=>x.id===id)||null;
+
+/* ---------- construction du tableau ---------- */
 function effectiveM(){
   let m=S.m;
-  if(S.auto){
-    while(S.keys.length/m>S.thr&&m<61) m=Math.min(61,2*m+1);
-  }
+  if(S.pyrule){const n=S.entries.length;while(n/m>2/3&&m<4096) m*=(n<50000?4:2);}
+  else if(S.auto){while(S.entries.length/m>S.thr&&m<64) m=Math.min(64,2*m);}
   return m;
 }
-function probeIdx(k,i,m){
-  const h=hv(k,m);
+function probeIdx(ki,i,m){
+  const h=hv(ki,m);
   if(S.method==='lin') return (h+i)%m;
   if(S.method==='quad') return (h+i*i)%m;
-  return (h+i*h2(k,m))%m;
+  return (h+i*h2(ki,m))%m;
 }
 function build(){
-  const m=effectiveM(), chain=S.method==='chain';
+  const m=effectiveM(),chain=S.method==='chain';
   const T=chain?Array.from({length:m},()=>[]):new Array(m).fill(null);
   const info={},failed=[];
   let collisions=0,totalProbes=0,maxProbe=0;
   const home=new Array(m).fill(0);
-  for(const k of S.keys){
-    const h=hv(k,m);home[h]++;
+  for(const e of S.entries){
+    const k=e.id,h=hv(e.ki,m);home[h]++;
     if(chain){
       const probes=T[h].length+1;
       if(T[h].length>0) collisions++;
@@ -318,39 +1039,39 @@ function build(){
     }else{
       let placed=false,probes=0;
       for(let i=0;i<m;i++){
-        const j=probeIdx(k,i,m);probes++;
+        const j=probeIdx(e.ki,i,m);probes++;
         if(T[j]===null){T[j]=k;info[k]={home:h,slot:j,probes,placed:true};placed=true;break;}
       }
       if(T[h]!==null&&(!placed||info[k].slot!==h)) collisions++;
-      if(!placed){failed.push(k);info[k]={home:h,slot:-1,probes,placed:false};}
+      if(!placed){failed.push(e.label);info[k]={home:h,slot:-1,probes,placed:false};}
       totalProbes+=probes;maxProbe=Math.max(maxProbe,probes);
     }
   }
-  const n=S.keys.length;
+  const n=S.entries.length;
   const empty=chain?T.filter(b=>b.length===0).length:T.filter(x=>x===null).length;
   return {m,T,info,failed,collisions,avg:n?totalProbes/n:0,maxProbe,empty,home,chain,n};
 }
-function pathFor(B,k){
-  const m=B.m,path=[];
+function pathFor(B,ki){
+  const m=B.m,path=[],id=ki.id;
   if(B.chain){
-    const h=hv(k,m),b=B.T[h];
+    const h=hv(ki,m),b=B.T[h];
     path.push({b:h,pos:-1});
     for(let i=0;i<b.length;i++){
       path.push({b:h,pos:i});
-      if(b[i]===k) return {path,found:true,probes:i+1};
+      if(b[i]===id) return {path,found:true,probes:i+1};
     }
     return {path,found:false,probes:b.length};
   }
   for(let i=0;i<m;i++){
-    const j=probeIdx(k,i,m);
+    const j=probeIdx(ki,i,m);
     path.push({b:j,pos:0});
-    if(B.T[j]===k) return {path,found:true,probes:i+1};
+    if(B.T[j]===id) return {path,found:true,probes:i+1};
     if(B.T[j]===null) return {path,found:false,probes:i+1};
   }
   return {path,found:false,probes:m};
 }
 
-/* ---------- interface : curseurs ---------- */
+/* ---------- curseurs ---------- */
 const syncs=[];
 function makeSlider(hostId,o){
   const host=$(hostId);
@@ -360,7 +1081,7 @@ function makeSlider(hostId,o){
   wrap.innerHTML='<div class="row"><span class="dot"></span><label class="name" for="'+o.id+'-n">'+o.name+'</label><span class="eq">=</span><input class="field num" id="'+o.id+'-n" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><span class="unit">'+(o.note||'')+'</span></div><input type="range" id="'+o.id+'-r" min="'+o.min+'" max="'+o.max+'" step="'+o.step+'" aria-label="'+o.label+'">';
   host.appendChild(wrap);
   const num=wrap.querySelector('.num'),rg=wrap.querySelector('[type=range]');
-  const dec=o.dec===undefined?0:o.dec;
+  const dec=o.dec||0;
   const fmt=x=>(Math.round(x*Math.pow(10,dec))/Math.pow(10,dec)).toString().replace('.',',');
   rg.addEventListener('input',()=>{o.set(parseFloat(rg.value));render(null);});
   num.addEventListener('input',()=>{
@@ -373,72 +1094,86 @@ function makeSlider(hostId,o){
   num.addEventListener('blur',()=>{num.classList.remove('bad');num.value=fmt(o.get());});
   syncs.push(skip=>{if(skip!==num)num.value=fmt(o.get());rg.value=o.get();});
 }
-makeSlider('host-params',{id:'sl-m',name:'m',label:'Taille de la table',min:3,max:32,step:1,get:()=>S.m,set:v=>{S.m=Math.round(v);},note:'cases'});
-makeSlider('host-params',{id:'sl-n',name:'n',label:'Nombre de clés',min:0,max:40,step:1,get:()=>S.keys.length,set:v=>{
+makeSlider('host-m',{id:'sl-m',name:'m',label:'Taille du tableau',min:2,max:32,step:1,get:()=>S.m,set:v=>{S.m=Math.round(v);},note:'cases'});
+makeSlider('host-n',{id:'sl-n',name:'n',label:'Nombre d\'entrées',min:0,max:40,step:1,get:()=>S.entries.length,set:v=>{
   v=Math.round(v);
-  if(v<S.keys.length) S.keys=S.keys.slice(0,v);
-  else if(v>S.keys.length) S.keys=randomKeys(v,S.keys);
-},note:'clés'});
+  if(v<S.entries.length) S.entries=S.entries.slice(0,v);
+  else if(v>S.entries.length) addRandom(v);
+},note:'entrées'});
 makeSlider('host-thr',{id:'sl-t',name:'seuil',label:'Seuil du facteur de charge',color:'#7a7a88',min:0.3,max:1,step:0.05,dec:2,get:()=>S.thr,set:v=>{S.thr=v;}});
 
-/* ---------- interface : commandes ---------- */
+/* ---------- commandes ---------- */
 function bindSeg(id,key){
   document.querySelectorAll('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{S[key]=b.dataset.v;render(null);}));
 }
-bindSeg('seg-hash','hash');bindSeg('seg-method','method');
+bindSeg('seg-red','red');bindSeg('seg-method','method');
 $('ck-auto').addEventListener('change',e=>{S.auto=e.target.checked;render(null);});
-$('b-regen').addEventListener('click',()=>{S.keys=randomKeys(S.keys.length,[]);S.sel=null;S.msg=null;render(null);});
-$('keys').addEventListener('input',e=>{S.keys=parseKeys(e.target.value);render(e.target);});
-$('keys').addEventListener('blur',()=>{$('keys').value=S.keys.join(', ');});
-
-function opKey(){return $('op-key').value.trim().slice(0,12);}
+$('ck-py').addEventListener('change',e=>{S.pyrule=e.target.checked;render(null);});
+$('ck-course').addEventListener('change',e=>{S.course=e.target.checked;render(null);});
+$('b-animaux').addEventListener('click',()=>{
+  S.entries=[mkEntry('vache','1000'),mkEntry('cochon','6.5'),mkEntry('poule','None')];
+  S.course=true;S.salted=false;S.red='mod';S.method='lin';S.m=8;S.auto=false;S.pyrule=false;
+  $('op-key').value='veau';$('op-val').value='None';S.sel=null;S.msg=null;S.dup='';render(null);
+});
+$('ck-salt').addEventListener('change',e=>{S.salted=e.target.checked;render(null);});
+$('b-salt').addEventListener('click',()=>{newSalt();render(null);});
+$('b-regen').addEventListener('click',()=>{const n=S.entries.length;S.entries=[];addRandom(n);S.sel=null;S.msg=null;S.dup='';render(null);});
+$('keys').addEventListener('input',e=>{S.entries=parseEntries(e.target.value);render(e.target);});
+$('keys').addEventListener('blur',()=>{$('keys').value=entriesText();});
+const opKi=()=>parseKey($('op-key').value);
+const opVal=()=>$('op-val').value.trim().slice(0,20);
 function doInsert(){
-  const k=opKey();if(!k) return;
-  if(S.keys.includes(k)){S.sel=k;S.msg={t:'warn',h:'La clé <b>'+esc(k)+'</b> est déjà dans la table.'};}
-  else if(S.keys.length>=60){S.msg={t:'err',h:'Limite de 60 clés atteinte.'};}
-  else{S.keys.push(k);S.sel=k;S.msg={mode:'ins',k};}
+  const ki=opKi();if(!ki) return;
+  const e=entryOf(ki.id);
+  if(e){e.v=opVal();S.sel=ki.id;S.msg={mode:'upd',ki};}
+  else if(S.entries.length>=60){S.msg={t:'err',h:'Limite de 60 entrées atteinte.'};}
+  else{S.entries.push(mkEntry(ki.label,opVal()));S.sel=ki.id;S.msg={mode:'ins',ki};}
   render(null);
 }
-function doFind(){
-  const k=opKey();if(!k) return;
-  S.sel=k;S.msg={mode:'find',k};render(null);
-}
+function doFind(){const ki=opKi();if(!ki)return;S.sel=ki.id;S.msg={mode:'find',ki};render(null);}
 function doDel(){
-  const k=opKey();if(!k) return;
-  const i=S.keys.indexOf(k);
-  if(i<0){S.sel=k;S.msg={mode:'find',k};}
-  else{S.keys.splice(i,1);S.sel=null;S.msg={t:'ok',h:'Clé <b>'+esc(k)+'</b> supprimée. La table est reconstruite avec les clés restantes.'};}
+  const ki=opKi();if(!ki) return;
+  const i=S.entries.findIndex(x=>x.id===ki.id);
+  if(i<0){S.sel=ki.id;S.msg={mode:'delmiss',ki};}
+  else{S.entries.splice(i,1);S.sel=null;S.msg={t:'ok',h:'Entrée <b>'+esc(ki.label)+'</b> supprimée. Le tableau est reconstruit avec les entrées restantes.'};}
   render(null);
 }
 $('b-ins').addEventListener('click',doInsert);
 $('b-find').addEventListener('click',doFind);
 $('b-del').addEventListener('click',doDel);
+$('op-key').addEventListener('input',()=>renderSteps(build()));
 $('op-key').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doInsert();}});
+$('op-val').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doInsert();}});
 $('vis').addEventListener('click',e=>{
-  const el=e.target.closest('[data-key]');
+  const el=e.target.closest('[data-id]');
   if(!el) return;
-  $('op-key').value=el.dataset.key;
-  S.sel=el.dataset.key;S.msg={mode:'find',k:el.dataset.key};render(null);
+  const en=entryOf(el.dataset.id);if(!en) return;
+  $('op-key').value=en.label;$('op-val').value=en.v;
+  S.sel=en.id;S.msg={mode:'find',ki:en.ki};render(null);
 });
 
 /* ---------- rendu ---------- */
+function pkt(id,cls,badge){
+  const e=entryOf(id),h=hashOf(e.ki);
+  const tail=String(h<0n?-h:h).slice(-5);
+  return '<span class="pq'+cls+'" data-id="'+esc(id)+'" title="'+e.type+', hash = '+h+'"><span class="k">'+esc(e.label)+'</span><span class="v">→ '+esc(e.v===''?'—':e.v)+'</span><span class="hh t-'+e.type+'">'+e.type+' '+(h<0n?'−':'')+'…'+tail+'</span>'+badge+'</span>';
+}
 function renderVis(B,pathInfo){
   const pm=new Map();
   if(pathInfo) pathInfo.path.forEach((p,i)=>pm.set(p.b+':'+p.pos,i));
-  const found=pathInfo&&pathInfo.found?pathInfo.path[pathInfo.path.length-1]:null;
-  const isFound=(b,pos)=>found&&found.b===b&&found.pos===pos;
+  const last=pathInfo&&pathInfo.found?pathInfo.path[pathInfo.path.length-1]:null;
+  const isFound=(b,pos)=>last&&last.b===b&&last.pos===pos;
+  if(B.n===0){$('vis').innerHTML='<p class="empty">Le dictionnaire est vide. Ajoute des entrées avec le curseur n ou la zone de texte.</p>';return;}
   let h='';
-  if(B.n===0){$('vis').innerHTML='<p class="empty">Aucune clé. Ajoute des clés avec le curseur n ou la zone de texte.</p>';return;}
   if(B.chain){
     for(let i=0;i<B.m;i++){
-      const hb=pm.has(i+':-1');
-      h+='<div class="brow"><span class="idx'+(hb?' p':'')+'">'+i+'</span>';
+      h+='<div class="brow"><span class="idx'+(pm.has(i+':-1')?' p':'')+'">'+i+'</span>';
       const b=B.T[i];
       if(!b.length) h+='<span class="nil">∅</span>';
       b.forEach((k,pos)=>{
         const key=i+':'+pos,onp=pm.has(key),f=isFound(i,pos);
-        const cls='node'+(pos>0?' c':'')+(f?' f':onp?' p':'');
-        h+=(pos>0?'<span class="arr">→</span>':'<span class="arr">▸</span>')+'<span class="'+cls+'" data-key="'+esc(k)+'" title="h = '+i+'">'+esc(k)+(onp?'<span class="badge">'+pm.get(key)+'</span>':'')+'</span>';
+        const cls=(pos>0?' c':'')+(f?' f':onp?' p':'');
+        h+='<span class="arr">'+(pos>0?'→':'▸')+'</span>'+pkt(k,cls,onp?'<span class="badge">'+pm.get(key)+'</span>':'');
       });
       if(b.length) h+='<span class="arr">→</span><span class="nil">∅</span>';
       h+='</div>';
@@ -448,9 +1183,11 @@ function renderVis(B,pathInfo){
     for(let j=0;j<B.m;j++){
       const k=B.T[j],key=j+':0',onp=pm.has(key),f=isFound(j,0);
       const coll=k!==null&&B.info[k].home!==j;
-      let cc='cell'+(f?' f':onp?' p':coll?' c':'');
-      let vc='cv'+(k!==null?' o':'')+(coll?' c':'')+(f?' f':onp?' p':'');
-      h+='<div class="'+cc+'"><div class="ci">'+j+'</div><div class="'+vc+'"'+(k!==null?' data-key="'+esc(k)+'"':'')+'>'+(k!==null?esc(k):'')+(coll?'<span class="home">h='+B.info[k].home+'</span>':'')+(onp?'<span class="badge">'+(pm.get(key)+1)+'</span>':'')+'</div></div>';
+      const cc='cell'+(f?' f':onp?' p':coll?' c':'');
+      const pcls=(coll?' c':'')+(f?' f':onp?' p':'');
+      h+='<div class="'+cc+'"><div class="ci">'+j+(isPow2(B.m)&&B.m>1?' · '+j.toString(2).padStart(Math.log2(B.m),'0'):'')+(coll?' <span class="home">(départ '+B.info[k].home+')</span>':'')+'</div>';
+      h+=k!==null?pkt(k,pcls,onp?'<span class="badge">'+(pm.get(key)+1)+'</span>':''):'<span class="em">'+(onp?'<span class="badge">'+(pm.get(key)+1)+'</span>':'')+'</span>';
+      h+='</div>';
     }
     h+='</div>';
   }
@@ -478,31 +1215,46 @@ function renderHist(B){
 function renderMsg(B){
   const el=$('msg'),m=S.msg;
   el.className='msg';
-  if(!m){el.innerHTML='Saisis une clé puis choisis une opération. Un clic sur une clé de la table la recherche.';return;}
+  if(!m){el.innerHTML='Saisis une clé (42, 0.375, pomme, "42"…) et une valeur, puis choisis une opération. Un clic sur un paquet du tableau le recherche.';return;}
   if(m.t){el.className='msg '+m.t;el.innerHTML=m.h;return;}
-  const k=m.k;
-  const pi=pathFor(B,k);
-  let h='<code>'+hExpr(k,B.m)+'</code>';
-  if(S.method==='dbl'&&B.m>1) h+='<br><code>h₂(k) = 1 + k mod '+(B.m-1)+' = '+h2(k,B.m)+'</code>';
+  const ki=m.ki,pi=pathFor(B,ki),inf=B.info[ki.id],unit=B.chain?'comparaison':'sondage';
+  const pl=n=>n+' '+unit+(n>1?'s':'');
+  const en=entryOf(ki.id);
   let t='';
-  if(m.mode==='ins'){
-    const inf=B.info[k];
+  if(m.mode==='ins'||m.mode==='upd'){
     if(inf&&inf.placed){
-      t=B.chain?'Insérée dans la case <b>'+inf.home+'</b>, position '+(inf.pos+1)+' de la liste ('+inf.probes+' comparaison'+(inf.probes>1?'s':'')+').'
-               :'Insérée dans la case <b>'+inf.slot+'</b> après '+inf.probes+' sondage'+(inf.probes>1?'s':'')+'.';
-      el.className='msg '+(inf.probes>1?'warn':'ok');
-    }else{
-      t='<b>Échec</b> : aucune case libre trouvée après '+B.m+' sondages.';
-      el.className='msg err';
-    }
-  }else{
-    if(pi.found){t='Clé <b>trouvée</b> après '+pi.probes+' '+(B.chain?'comparaison':'sondage')+(pi.probes>1?'s':'')+'.';el.className='msg ok';}
-    else{t='Clé <b>absente</b> ('+pi.probes+' '+(B.chain?'comparaison':'sondage')+(pi.probes>1?'s':'')+').';el.className='msg warn';}
+      const where=B.chain?'case <b>'+inf.home+'</b>, position '+(inf.pos+1)+' de la liste':'case <b>'+inf.slot+'</b>';
+      t=(m.mode==='upd'?'Clé déjà présente'+(en&&en.label!==ki.label?' (<b>'+esc(en.label)+'</b> est égale à <b>'+esc(ki.label)+'</b>)':'')+' : valeur mise à jour dans la ':'Paquet rangé dans la ')+where+' ('+pl(inf.probes)+').';
+      el.className='msg '+(inf.probes>1&&m.mode==='ins'?'warn':'ok');
+    }else{t='<b>Échec</b> : aucune case libre trouvée après '+B.m+' sondages.';el.className='msg err';}
+  }else if(m.mode==='find'){
+    if(pi.found){t='d['+esc(ki.label)+'] renvoie <b>'+esc(en&&en.v!==''?en.v:'—')+'</b> ('+pl(pi.probes)+').';el.className='msg ok';}
+    else{t='<b>KeyError</b> : '+esc(ki.label)+' est absente ('+pl(pi.probes)+').';el.className='msg err';}
+  }else if(m.mode==='delmiss'){
+    t='<b>KeyError</b> : '+esc(ki.label)+' est absente, rien à supprimer.';el.className='msg err';
   }
-  el.innerHTML=h+'<br>'+t;
+  el.innerHTML=t;
+}
+function renderSteps(B){
+  const ki=opKi(),el=$('steps');
+  if(!ki){el.innerHTML='';return;}
+  const h=hashOf(ki),i=hv(ki,B.m);
+  const en=entryOf(ki.id);
+  let s3;
+  if(en){
+    const inf=B.info[ki.id];
+    s3=inf.placed?(B.chain?'Case <b>'+inf.home+'</b>, position '+(inf.pos+1)+' : le paquet (hash, clé, valeur) y est rangé.'
+                          :'Case <b>'+inf.slot+'</b> : le paquet (hash, clé, valeur) y est rangé'+(inf.slot!==i?' après collision (case de départ '+i+').':'.')):'Aucune case libre : la clé n\'a pas pu être rangée.';
+  }else{
+    s3='La clé n\'est pas dans le tableau. Elle serait rangée à partir de la case <b>'+i+'</b>.';
+  }
+  el.innerHTML=
+   '<div class="st"><span class="n">1</span><div><span class="t">hash('+esc(ki.label)+') <span class="tag t-'+ki.type+'">'+ki.type+'</span></span><span class="big">'+h+'</span><span class="sub">'+hashWhy(ki)+'</span></div></div>'+
+   '<div class="st"><span class="n">2</span><div><span class="t">Réduction en indice</span><span class="big">'+redExpr(ki,B.m)+'</span></div></div>'+
+   '<div class="st"><span class="n">3</span><div><span class="t">Stockage</span><span class="sub">'+s3+'</span></div></div>';
 }
 function renderStats(B){
-  $('r-m').textContent=B.m+(B.m!==S.m?' (agrandie)':'');
+  $('r-m').textContent=B.m+(B.m!==S.m?' (agrandi)':'');
   $('r-a').textContent=(B.n/B.m).toFixed(2).replace('.',',');
   $('r-c').textContent=B.collisions;
   $('r-p').textContent=B.avg.toFixed(2).replace('.',',');
@@ -510,41 +1262,450 @@ function renderStats(B){
   $('r-l').textContent=B.maxProbe;
   $('r-e').textContent=B.empty+' / '+B.m;
   const notes=[];
-  if(B.failed.length) notes.push('<b>'+B.failed.length+' clé'+(B.failed.length>1?'s':'')+' non placée'+(B.failed.length>1?'s':'')+'</b> : '+B.failed.map(esc).join(', ')+'. '+(B.n>B.m?'Il y a plus de clés que de cases.':'Les sondages ne visitent pas toutes les cases.'));
+  if(B.failed.length) notes.push('<b>'+B.failed.length+' entrée'+(B.failed.length>1?'s':'')+' non rangée'+(B.failed.length>1?'s':'')+'</b> : '+B.failed.map(esc).join(', ')+'. '+(B.n>B.m?'Il y a plus d\'entrées que de cases.':'Les sondages ne visitent pas toutes les cases.'));
+  if(S.red==='mask'&&!isPow2(B.m)) notes.push('Masque : m = '+B.m+' n\'est pas une puissance de 2, certaines cases ne sont jamais visées.');
   if(S.method==='dbl'&&!isPrime(B.m)) notes.push('m = '+B.m+' n\'est pas premier : le double hachage peut ne visiter qu\'une partie des cases.');
   if(S.method==='quad'&&B.n/B.m>0.5&&!B.failed.length) notes.push('α > 0,5 : le sondage quadratique n\'a plus de garantie de trouver une case libre.');
   const w=$('warn');w.hidden=!notes.length;w.innerHTML=notes.join('<br>');
 }
-function isPrime(n){if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;}
 function formulaHtml(m){
-  const f={div:'h(k) = k mod '+m,mult:'h(k) = ⌊'+m+' · frac(k·φ)⌋',digits:'h(k) = Σ chiffres(k) mod '+m}[S.hash];
-  let s=f;
-  if(S.method==='lin') s+=' &nbsp; h(k,i) = (h(k) + i) mod '+m;
-  if(S.method==='quad') s+=' &nbsp; h(k,i) = (h(k) + i²) mod '+m;
-  if(S.method==='dbl') s+=' &nbsp; h(k,i) = (h(k) + i·h₂(k)) mod '+m;
+  let s='i = '+{mod:'hash(k) mod '+m,mask:'hash(k) ET '+(m-1),mult:'⌊'+m+' · frac(x·φ)⌋'}[S.red];
+  if(S.method==='lin') s+=' &nbsp; i<sub>t</sub> = (i + t) mod '+m;
+  if(S.method==='quad') s+=' &nbsp; i<sub>t</sub> = (i + t²) mod '+m;
+  if(S.method==='dbl') s+=' &nbsp; i<sub>t</sub> = (i + t·(1 + hash mod '+(m-1)+')) mod '+m;
   return s;
 }
 function syncControls(skip){
-  document.querySelectorAll('#seg-hash button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===S.hash)));
-  document.querySelectorAll('#seg-method button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===S.method)));
-  $('desc-hash').textContent=HDESC[S.hash];
+  [['seg-red','red'],['seg-method','method']].forEach(([id,key])=>{
+    document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===S[key])));
+  });
+  $('desc-red').textContent=RDESC[S.red];
   $('desc-method').textContent=MDESC[S.method];
-  $('ck-auto').checked=S.auto;
+  $('ck-auto').checked=S.auto;$('ck-py').checked=S.pyrule;$('ck-course').checked=S.course;
+  $('ck-salt').checked=S.salted;
+  $('salt-val').textContent=S.salted?'sel = 0x'+S.salt.toString(16).padStart(16,'0'):'sans sel';
+  const d=$('dup');d.hidden=!S.dup;d.textContent=S.dup;
   syncs.forEach(f=>f(skip));
-  if(skip!==$('keys')) $('keys').value=S.keys.join(', ');
+  if(skip!==$('keys')) $('keys').value=entriesText();
 }
 function render(skip){
   const B=build();
   syncControls(skip||null);
-  if(S.sel&&!S.keys.includes(S.sel)&&!(S.msg&&S.msg.mode==='find')) S.sel=null;
+  if(S.sel&&!entryOf(S.sel)&&!(S.msg&&(S.msg.mode==='find'||S.msg.mode==='delmiss'))) S.sel=null;
   $('formula').innerHTML=formulaHtml(B.m);
   renderStats(B);
   renderHist(B);
   renderMsg(B);
-  renderVis(B,S.sel?pathFor(B,S.sel):null);
+  renderSteps(B);
+  renderVis(B,S.sel?pathFor(B,(S.msg&&S.msg.ki&&S.msg.ki.id===S.sel)?S.msg.ki:entryOf(S.sel).ki):null);
 }
+
+/* ---------- vues supplémentaires ---------- */
+let view='atelier';
+const T_SEG=seg($('t-seg'),[['atelier','Atelier'],['tiroirs','Exercice des 128 tiroirs'],['code','Code du cours']],()=>view,v=>{view=v;showView();},3);
+function showView(){
+  $('vis').hidden=view!=='atelier';$('t-leg').hidden=view!=='atelier';
+  $('t-draw').hidden=view!=='tiroirs';$('t-code').hidden=view!=='code';
+  if(view==='tiroirs')renderDrawers();if(view==='code')renderCode();
+}
+/* --- exercice des tiroirs --- */
+const TITRES=["Les Misérables","Le Petit Prince","L'Étranger","La Peste","Germinal","Candide","Madame Bovary","Le Rouge et le Noir","L'Éducation sentimentale","Notre-Dame de Paris","Le Comte de Monte-Cristo","Les Trois Mousquetaires","Voyage au bout de la nuit","Le Horla","Bel-Ami","Thérèse Raquin","La Bête humaine","L'Assommoir","Nana","Le Père Goriot","Eugénie Grandet","Illusions perdues","La Cousine Bette","Les Fleurs du mal","Cyrano de Bergerac","Le Cid","Phèdre","Tartuffe","Le Misanthrope","Antigone","Huis clos","La Chartreuse de Parme","Les Liaisons dangereuses","La Princesse de Clèves"];
+const DR={strat:'hash',mode:'chain',text:TITRES.join('\n')};
+const DROOT=$('t-draw');
+DROOT.innerHTML='<div class="h3">Petit exercice : ranger des fiches dans 128 tiroirs</div><p class="note">Chaque fiche a pour en-tête le titre d\'un livre. Quelle stratégie pour les retrouver rapidement, si l\'on peut mettre plusieurs fiches par tiroir (chaînage), ou une seule (adressage ouvert) ?</p><div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))"><div><div class="h3">Stratégie</div><div id="dr-seg"></div><div class="h3" style="margin-top:10px">Collisions</div><div id="dr-mode"></div><div class="h3" style="margin-top:10px">Titres (un par ligne)</div><textarea class="field" id="dr-text" rows="8" spellcheck="false" aria-label="Titres des livres"></textarea></div><div><div class="h3">Les 128 tiroirs</div><div class="drawer" id="dr-grid"></div><p class="note" id="dr-sum"></p></div></div><div class="h3" style="margin-top:14px">Comparaison des trois stratégies</div><div class="tblw"><table class="tbl" id="dr-tbl"></table></div><p class="msg" id="dr-msg"></p>';
+seg($('dr-seg'),[['order','Ordre d\'arrivée'],['alpha','Ordre alphabétique'],['hash','Hachage']],()=>DR.strat,v=>{DR.strat=v;renderDrawers();},1);
+seg($('dr-mode'),[['chain','Plusieurs fiches (chaînage)'],['open','Une fiche (adressage ouvert)']],()=>DR.mode,v=>{DR.mode=v;renderDrawers();},1);
+$('dr-text').value=DR.text;
+$('dr-text').addEventListener('input',()=>{DR.text=$('dr-text').value;renderDrawers();});
+const stripAcc=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+function drawerOf(t,strat,i){
+  if(strat==='order')return i%128;
+  if(strat==='alpha'){const c=stripAcc(t).toUpperCase().replace(/[^A-Z]/g,'').charCodeAt(0)-65;return (isFinite(c)&&c>=0?c:0)*4+1;}
+  let s=0;for(const ch of t)s+=ch.charCodeAt(0);return s%128;
+}
+function place(titres,strat,mode){
+  const cnt=new Array(128).fill(0),items=Array.from({length:128},()=>[]);
+  let cost=0,fail=0;
+  titres.forEach((t,i)=>{
+    if(strat==='order'&&mode==='chain'){const d=i%128;items[d].push(t);cnt[d]++;cost+=Math.floor(i/1)+1;return;}
+    const h=drawerOf(t,strat,i);
+    if(mode==='chain'){items[h].push(t);cnt[h]++;cost+=items[h].length;}
+    else{let d=h,p=1;while(items[d].length&&p<=128){d=(d+1)%128;p++;}if(p>128){fail++;return;}items[d].push(t);cnt[d]++;cost+=p;}
+  });
+  /* coût de recherche : pour 'order', il faut parcourir les tiroirs depuis le début */
+  if(strat==='order'){cost=0;titres.forEach((t,i)=>{cost+=i+1;});}
+  const n=titres.length-fail;
+  return {cnt,items,avg:n?cost/n:0,used:cnt.filter(x=>x>0).length,max:Math.max(0,...cnt),fail,n:titres.length};
+}
+function renderDrawers(){
+  const titres=DR.text.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,128);
+  const R=place(titres,DR.strat,DR.mode);
+  const mx=Math.max(1,R.max);
+  $('dr-grid').innerHTML=R.cnt.map((c,i)=>'<div title="tiroir '+i+' : '+R.items[i].map(esc).join(' ; ')+'" style="background:'+(c===0?'#fff':c===1?'#e6effc':c===2?'#fff3dc':'#fdeceb')+';'+(c>2?'border-color:var(--coll)':'')+'">'+(c||'')+'</div>').join('');
+  $('dr-sum').textContent=R.n+' fiches, '+R.used+' tiroirs utilisés sur 128, maximum '+R.max+' dans un tiroir.'+(R.fail?' '+R.fail+' fiches sans place.':'');
+  const rows=[['order','Ordre d\'arrivée'],['alpha','Ordre alphabétique'],['hash','Hachage (somme des lettres mod 128)']].map(([s,l])=>{const r=place(titres,s,s==='order'?'chain':DR.mode);return '<tr style="'+(s===DR.strat?'background:var(--ui-soft)':'')+'"><td>'+l+'</td><td class="r">'+r.used+'</td><td class="r">'+r.max+'</td><td class="r">'+fmt(r.avg,2)+'</td></tr>';}).join('');
+  $('dr-tbl').innerHTML='<tr><th>Stratégie</th><th class="r">Tiroirs utilisés</th><th class="r">Max par tiroir</th><th class="r">Fiches examinées en moyenne</th></tr>'+rows;
+  const msgs={order:'<b>À ne pas faire.</b> Ranger les fiches dans l\'ordre d\'arrivée oblige à fouiller tous les tiroirs plus tard : en moyenne (n+1)/2 fiches examinées.',alpha:'<b>À ne pas faire.</b> Le rangement alphabétique déborde dans certains tiroirs (« L », « L\'art de… ») pendant que « X » ou « Z » restent vides : la répartition est très inégale.',hash:'<b>Fonction de hachage.</b> On additionne la valeur numérique des lettres du titre et on prend le reste de la division par 128. On recalcule instantanément le tiroir, puis on feuillette les quelques fiches (chaînage) ou on regarde les tiroirs suivants un par un jusqu\'à la fiche ou un tiroir vide (adressage ouvert).'};
+  $('dr-msg').className='msg '+(DR.strat==='hash'?'ok':'warn');$('dr-msg').innerHTML=msgs[DR.strat];
+}
+/* --- code du cours : table de hachage par chaînage --- */
+const CC={T:Array.from({length:10},()=>[]),k:'12',v:'"douze"',log:[]};
+[['3','"trois"'],['4','"quatre"'],['5','"cinq"'],['13','"treize"']].forEach(([k,v])=>{CC.T[(Number(k)**2)%10].push([k,v]);});
+const CROOT=$('t-code');
+CROOT.innerHTML='<div class="h3">Implémentation d\'un dictionnaire par chaînage</div><p class="note"><code class="code-i">hash(e)</code> n\'est défini que si <code class="code-i">e</code> est immuable. Utiliser une clé modifiable (une liste, par exemple) changerait son image par la fonction de hachage. <code class="code-i">T[i]</code> contient la liste des associations (k, v) telles que h(k) = i.</p><div id="cc-code"></div><div class="row" style="margin-top:10px"><span class="dot" style="--c:var(--path)"></span><label class="name" for="cc-k">k</label><span class="eq">=</span><input class="field mono" id="cc-k" style="max-width:150px"><span class="dot" style="--c:var(--ok);margin-left:8px"></span><label class="name" for="cc-v">v</label><span class="eq">=</span><input class="field mono" id="cc-v" style="max-width:170px"><button class="btn main" id="cc-add">add(k, v)</button><button class="btn" id="cc-get">get(k)</button></div><p class="msg" id="cc-msg"></p><div id="cc-tbl"></div><p class="note" id="cc-note"></p>';
+$('cc-k').value=CC.k;$('cc-v').value=CC.v;
+const hk=k=>Number((BigInt(k)**2n)%10n);
+function ccKey(){
+  const t=$('cc-k').value.trim();
+  const u=/^\s*\[/.test(t)?'list':/^\s*\{/.test(t)?'dict':null;
+  if(u)return {err:"TypeError: unhashable type: '"+u+"'"};
+  if(!/^[+-]?\d+$/.test(t))return {err:'Cet exemple suppose des clés entières : h(k) = (k**2) % 10.'};
+  return {k:t,kn:BigInt(t)};
+}
+function renderCode(hl){
+  $('cc-code').innerHTML=codeBlock('T = [[] for i in range(10)]   # liste contenant 10 listes vides\n\ndef h(k):\n    return (k**2) % 10          # exemple de fonction de hachage\n\ndef add(k, v):                  # ajoute l\'association k -> v\n    T[h(k)].append((k, v))\n\ndef get(k):                     # valeur associée à la clé k\n    for k_, v in T[h(k)]:\n        if k == k_:\n            return v\n    raise Exception("clé non trouvée")',hl||null);
+  $('cc-tbl').innerHTML='<div class="tblw"><table class="tbl"><tr><th style="width:70px">i</th><th>T[i]</th></tr>'+CC.T.map((b,i)=>'<tr><td>'+i+'</td><td style="font-family:var(--font-mono)">['+b.map(([k,v])=>'<span style="'+(CC.hl&&CC.hl[0]===i&&CC.hl[1]===k?'background:var(--ok-soft);':'')+'">('+esc(k)+', '+esc(v)+')</span>').join(', ')+']</td></tr>').join('')+'</table></div>';
+  const used=CC.T.filter(b=>b.length).length;
+  $('cc-note').innerHTML='Avec <code class="code-i">h(k) = (k**2) % 10</code>, les images possibles sont seulement {0, 1, 4, 5, 6, 9} : les cases 2, 3, 7, 8 ne sont jamais utilisées. Une bonne fonction de hachage doit répartir uniformément (voir la partie 7). Cases utilisées : '+used+' / 10.';
+}
+$('cc-add').addEventListener('click',()=>{
+  const r=ccKey(),m=$('cc-msg');
+  if(r.err){m.className='msg err';m.textContent=r.err;return;}
+  const i=hk(r.k);CC.T[i].push([r.k,$('cc-v').value.trim()]);CC.hl=[i,r.k];
+  m.className='msg ok';m.innerHTML='<code>h('+esc(r.k)+') = ('+esc(r.k)+'**2) % 10 = <b>'+i+'</b></code> : association ajoutée à <code>T['+i+']</code>'+(CC.T[i].length>1?' (collision, la liste s\'allonge)':'')+'.';
+  renderCode([6,7]);
+});
+$('cc-get').addEventListener('click',()=>{
+  const r=ccKey(),m=$('cc-msg');
+  if(r.err){m.className='msg err';m.textContent=r.err;return;}
+  const i=hk(r.k),b=CC.T[i];let n=0,found=null;
+  for(const [k,v] of b){n++;if(k===r.k||BigInt(k)===r.kn){found=v;break;}}
+  CC.hl=found!==null?[i,b[n-1][0]]:null;
+  if(found!==null){m.className='msg ok';m.innerHTML='<code>h('+esc(r.k)+') = '+i+'</code> : on feuillette <code>T['+i+']</code> ('+n+' comparaison'+(n>1?'s':'')+') et on renvoie <b>'+esc(found)+'</b>.';}
+  else{m.className='msg err';m.innerHTML='<code>h('+esc(r.k)+') = '+i+'</code> : '+b.length+' association'+(b.length>1?'s':'')+' examinée'+(b.length>1?'s':'')+', aucune ne correspond. <b>Exception : clé non trouvée</b>.';}
+  renderCode([10,11,12,13,14]);
+});
+renderCode();
+const me=PARTS.find(p=>p.id==='table');me.show=()=>render(null);
+
 render(null);
+ }
+});
+
 })();
+
+/* ===== p6.js ===== */
+(function(){
+/* Partie 6 : la fonction hash (anniversaires, Mersenne, inverse modulaire, chaînes) */
+part({
+ id:'hash',tab:'La fonction hash',
+ html:`<aside class="alg">
+  ${sec('Pourquoi un entier si grand ?','<p class="desc" style="margin:0 0 6px">Sur un ordinateur 64 bits, <code>hash()</code> renvoie un entier de [−2⁶³ , 2⁶³ − 1], soit 2⁶⁴ ≈ 1,8 × 10¹⁹ valeurs : environ 18 milliards de milliards.</p><p class="desc" style="margin:0">Pour éviter le <b>paradoxe des anniversaires</b>. Les quatre démonstrations ci-dessous suivent le cours.</p><div id="h-seg" style="margin-top:10px"></div>')}
+  <div class="sv" data-sv="anniv">
+   ${sec('Paradoxe des anniversaires','<p class="desc" style="margin:0 0 8px">Avec n personnes (les clés) et N jours (les cases), la probabilité d\'avoir au moins deux anniversaires identiques est :</p><p class="desc" style="margin:0 0 8px;font-family:var(--font-math);font-size:15px;color:var(--ink)">P = 1 − (N/N) × ((N−1)/N) × … × ((N−n+1)/N)</p><div class="row"><span class="dot" style="--c:var(--ui)"></span><label class="name" for="h-Ncases">N</label><span class="eq">=</span><input class="field num mono" id="h-Ncases" style="width:120px"></div><div id="h-Nsl"></div><div class="btns"><button class="btn" id="h-365">365 jours</button><button class="btn" id="h-2p20">2²⁰ cases</button><button class="btn" id="h-2p64">2⁶⁴ valeurs</button></div><div class="row"><span class="dot" style="--c:var(--coll)"></span><label class="name" for="h-nkeys">n</label><span class="eq">=</span><input class="field num mono" id="h-nkeys" style="width:120px"></div><div id="h-nsl"></div><div class="btns"><button class="btn main" id="h-sim">Simuler 2 000 tirages</button></div><p class="msg" id="h-simmsg" hidden></p>')}
+  </div>
+  <div class="sv" data-sv="mers" hidden>
+   ${sec('Hash d\'un entier','<p class="desc" style="margin:0 0 8px">Le hash d\'un entier est lui-même tant qu\'il est dans ]−(2⁶¹ − 1), 2⁶¹ − 1[. Sinon, Python applique le modulo <b>M₆₁ = 2⁶¹ − 1</b>, le 9ᵉ nombre premier de Mersenne.</p><div class="row"><label class="name" for="h-int" style="font-style:normal;font-size:14px">hash(</label><input class="field mono" id="h-int" value="2305843009213693952"><span class="eq">)</span></div><div class="btns"><button class="btn" data-int="2305843009213693951">2⁶¹−1</button><button class="btn" data-int="2305843009213693952">2⁶¹</button><button class="btn" data-int="-1">−1</button><button class="btn" data-int="100000000000000000000">10²⁰</button></div><p class="msg" id="h-intmsg"></p>')}
+   ${sec('Le modulo sans division','<p class="desc" style="margin:0 0 8px">Une division entière coûte 30 à 80 cycles d\'horloge. Avec 2<sup>p</sup> − 1 on remplace la division par un décalage de bits et un ET logique : <code>X mod (2^p − 1) ≡ (X ≫ p) + (X &amp; (2^p − 1))</code>.</p><div class="row"><span class="dot" style="--c:var(--ui)"></span><label class="name" for="h-big">X</label><span class="eq">=</span><input class="field mono" id="h-big" value="53"></div><div id="h-psl"></div>')}
+  </div>
+  <div class="sv" data-sv="inv" hidden>
+   ${sec('hash d\'un flottant','<p class="desc" style="margin:0 0 8px">Deux nombres égaux ont le même hash (1 et 1.0). Un flottant non entier p/q est haché par <code>p × q⁻¹ (mod 2⁶¹ − 1)</code>, où q⁻¹ est l\'inverse modulaire de q.</p><div class="row"><label class="name" for="h-x" style="font-style:normal;font-size:14px">x =</label><input class="field mono" id="h-x" value="0.375"></div><p class="msg" id="h-xmsg"></p>')}
+  ${sec('Inverse modulaire en petit','<p class="desc" style="margin:0 0 8px">L\'inverse de q modulo m est l\'unique entier q⁻¹ tel que q × q⁻¹ ≡ 1 (mod m). On cherche à la main pour un petit modulo.</p><div class="row"><span class="dot" style="--c:var(--ui)"></span><label class="name" for="h-q">q</label><span class="eq">=</span><input class="field num mono" id="h-q" value="8"><label class="name" for="h-m" style="margin-left:6px">m</label><span class="eq">=</span><input class="field num mono" id="h-m" value="11"></div><div class="row"><span class="dot" style="--c:var(--ok)"></span><label class="name" for="h-p">p</label><span class="eq">=</span><input class="field num mono" id="h-p" value="3"></div>')}
+  </div>
+  <div class="sv" data-sv="str" hidden>
+   ${sec('Salage aléatoire','<p class="desc" style="margin:0 0 8px"><code>hash("bonjour") = f("bonjour", salt)</code>. Avant le calcul, Python ajoute une graine secrète tirée au démarrage : deux exécutions donnent deux hashs différents pour une même chaîne.</p><label class="chk"><input type="checkbox" id="h-salt" checked><span>Salage actif</span></label><div class="btns"><button class="btn main" id="h-newrun">Nouvelle exécution de Python</button></div><p class="desc" id="h-saltv" style="font-family:var(--font-mono);font-size:12px"></p>')}
+   ${sec('Effet avalanche','<p class="desc" style="margin:0 0 8px">Une très petite modification de la clé doit donner un hash complètement différent.</p><div class="row"><span class="dot" style="--c:var(--blue)"></span><label class="name" for="h-s1">s₁</label><span class="eq">=</span><input class="field mono" id="h-s1" value="bonjour"></div><div class="row"><span class="dot" style="--c:var(--coll)"></span><label class="name" for="h-s2">s₂</label><span class="eq">=</span><input class="field mono" id="h-s2" value="bonjouR"></div>')}
+   ${sec('Attaque Hash DoS','<p class="desc" style="margin:0 0 8px">Un attaquant envoie des milliers de clés conçues pour entrer en collision : l\'accès passe de O(1) à O(N), et l\'insertion de N clés à O(N²).</p><div id="h-dsl"></div><label class="chk"><input type="checkbox" id="h-dsalt"><span>Le serveur utilise un salage aléatoire</span></label>')}
+  </div>
+ </aside>
+ <main class="view">
+  <div class="vbar"><span id="h-info"></span></div>
+  <div class="vis sv" data-sv="anniv" id="h-v-anniv"></div>
+  <div class="vis sv" data-sv="mers" id="h-v-mers" hidden></div>
+  <div class="vis sv" data-sv="inv" id="h-v-inv" hidden></div>
+  <div class="vis sv" data-sv="str" id="h-v-str" hidden></div>
+ </main>`,
+ init(root){
+  const $r=s=>q(root,s);
+  let sv='anniv';
+  const INFO={anniv:'Le paradoxe des anniversaires : des collisions très précoces',mers:'Entiers et nombre de Mersenne',inv:'Flottants et inverse modulaire',str:'Chaînes : salage, avalanche, Hash DoS'};
+  const showSv=()=>{qa(root,'.sv').forEach(e=>e.hidden=e.dataset.sv!==sv);$r('#h-info').innerHTML='<b style="color:var(--ink)">'+INFO[sv]+'</b>';({anniv:rAnniv,mers:rMers,inv:rInv,str:rStr})[sv]();};
+  seg($r('#h-seg'),[['anniv','Anniversaires'],['mers','Mersenne'],['inv','Float'],['str','Chaînes']],()=>sv,v=>{sv=v;showSv();},4);
+
+  /* ---------- A. anniversaires ---------- */
+  let N=365,n=23;
+  const pColl=(n,N)=>{if(n<=1)return 0;if(n>N)return 1;if(n<=3000){let l=0;for(let i=1;i<n;i++)l+=Math.log1p(-i/N);return 1-Math.exp(l);}return 1-Math.exp(-n*(n-1)/(2*N));};
+  const n50=N=>Math.ceil((1+Math.sqrt(1+8*N*Math.LN2))/2);
+  const lg=Math.log10;
+  const Nsl=slider($r('#h-Nsl'),{name:'log₁₀ N',min:1,max:20,step:0.01,dec:2,get:()=>lg(N),set:v=>{N=Math.max(2,Math.round(Math.pow(10,v)));},on:()=>rAnniv()});
+  const nsl=slider($r('#h-nsl'),{name:'log₁₀ n',min:0,max:11,step:0.01,dec:2,color:'#d93a2b',get:()=>lg(Math.max(1,n)),set:v=>{n=Math.max(1,Math.round(Math.pow(10,v)));},on:()=>rAnniv()});
+  const setN=v=>{N=Math.max(2,v);Nsl.sync(null);if(n>3*Math.sqrt(N))n=Math.max(2,Math.round(Math.sqrt(N)));nsl.sync(null);rAnniv();};
+  $r('#h-365').addEventListener('click',()=>{N=365;n=23;Nsl.sync(null);nsl.sync(null);rAnniv();});
+  $r('#h-2p20').addEventListener('click',()=>{N=1048576;n=1206;Nsl.sync(null);nsl.sync(null);rAnniv();});
+  $r('#h-2p64').addEventListener('click',()=>{N=Math.pow(2,64);n=5.1e9;Nsl.sync(null);nsl.sync(null);rAnniv();});
+  const NI=$r('#h-Ncases'),nI=$r('#h-nkeys');
+  NI.addEventListener('input',()=>{const v=Number(NI.value.replace(/\s| /g,'').replace(',','.'));if(isFinite(v)&&v>=2){N=v;Nsl.sync(null);rAnniv(true);}});
+  nI.addEventListener('input',()=>{const v=Number(nI.value.replace(/\s| /g,'').replace(',','.'));if(isFinite(v)&&v>=1){n=Math.round(v);nsl.sync(null);rAnniv(true);}});
+  $r('#h-sim').addEventListener('click',()=>{
+    const m=$r('#h-simmsg');m.hidden=false;
+    if(N>5e7||n>5000){m.className='msg warn';m.textContent='Simulation limitée à N ≤ 5×10⁷ et n ≤ 5 000.';return;}
+    let hit=0;const T=2000;
+    for(let t=0;t<T;t++){const s=new Set();let c=false;for(let i=0;i<n;i++){const v=Math.floor(Math.random()*N);if(s.has(v)){c=true;break;}s.add(v);}if(c)hit++;}
+    m.className='msg ok';m.innerHTML='Sur '+T+' tirages de '+fmtInt(n)+' clés dans '+sci(N)+' cases : au moins une collision dans <b>'+fmt(100*hit/T,1)+' %</b> des cas (calcul : '+fmt(100*pColl(n,N),1)+' %).';
+  });
+  function rAnniv(keep){
+    if(!keep){NI.value=N<1e9?fmtInt(N):sci(N);nI.value=n<1e9?fmtInt(n):sci(n);}
+    const xmax=Math.max(10,Math.ceil(3*Math.sqrt(N))),pts=[];
+    for(let i=0;i<=80;i++){const x=Math.max(1,Math.round(xmax*i/80));pts.push([x,100*pColl(x,N)]);}
+    const p=pColl(n,N),n5=n50(N);
+    const V=$r('#h-v-anniv');
+    V.innerHTML='<div class="h3">Probabilité d\'au moins une collision</div><svg id="h-ch" style="max-width:640px"></svg>'+
+     '<div class="cards" style="margin-top:12px"><div class="card"><div class="h3">Pour n = '+(n<1e9?fmtInt(n):sci(n))+', N = '+(N<1e9?fmtInt(N):sci(N))+'</div><div style="font-size:26px;font-weight:600;color:'+(p>0.5?'var(--coll)':'var(--ok)')+'">'+fmt(100*p,p<0.001?6:1)+' %</div><p class="note">de chances d\'avoir un doublon.</p></div><div class="card"><div class="h3">50 % atteints dès</div><div style="font-size:22px;font-weight:600">n ≈ '+sci(n5)+'</div><p class="note">soit environ 1,18 × √N clés.</p></div></div>'+
+     '<div class="h3" style="margin-top:16px">Valeurs du cours (N = 365 jours)</div><div class="tblw"><table class="tbl"><tr><th>Élèves</th>'+[23,24,36,48].map(k=>'<th class="r">'+k+'</th>').join('')+'</tr><tr><td>P(au moins deux dates égales)</td>'+[23,24,36,48].map(k=>'<td class="r">'+fmt(100*pColl(k,365),1)+' %</td>').join('')+'</tr></table></div>'+
+     '<p class="note">On ne demande pas la chance que quelqu\'un partage <i>votre</i> anniversaire (très faible), mais que <i>deux personnes quelconques</i> aient le même. On calcule la probabilité que toutes les dates soient différentes, puis on prend le complémentaire.</p>'+
+     '<p class="msg warn"><b>En informatique :</b> même avec un grand tableau, les collisions sont inévitables et arrivent très tôt. Avec 2<sup>64</sup> valeurs possibles, il faut de l\'ordre de 5 milliards de clés pour atteindre 50 %.</p>';
+    Chart.line($r('#h-ch'),{xmin:0,xmax:xmax,ymin:0,ymax:100,xlabel:'n (nombre de clés)',ylabel:'probabilité (%)',h:260,series:[{color:'#6557d2',pts}],marks:[{x:clamp(n,0,xmax),y:100*p,label:'n = '+(n<1e9?fmtInt(n):sci(n))},{x:Math.min(n5,xmax),y:50,color:'#2e8b57',label:'50 %'}]});
+  }
+
+  /* ---------- B. Mersenne ---------- */
+  let pexp=4;
+  const psl=slider($r('#h-psl'),{name:'p',min:2,max:61,step:1,get:()=>pexp,set:v=>{pexp=Math.round(v);},on:()=>rMers(),note:'M = 2^p − 1'});
+  const MERS=[2,3,5,7,13,17,19,31,61];
+  const parseBig=s=>{const t=s.trim().replace(/[\s _]/g,'');return /^[+-]?\d{1,60}$/.test(t)?BigInt(t):null;};
+  qa(root,'[data-int]').forEach(b=>b.addEventListener('click',()=>{$r('#h-int').value=b.dataset.int;rMers();}));
+  $r('#h-int').addEventListener('input',()=>rMers());
+  $r('#h-big').addEventListener('input',()=>rMers());
+  function rMers(){
+    const nI=parseBig($r('#h-int').value),m=$r('#h-intmsg');
+    if(nI===null){m.className='msg err';m.textContent='Saisis un entier.';}
+    else{const a=nI<0n?-nI:nI,h=pyInt(nI);
+      m.className='msg';m.innerHTML='<code>hash('+esc(nI)+')</code> = <b>'+h+'</b><br>'+(a<P61?(nI===-1n?'Cas particulier : hash(−1) = −2.':'Dans l\'intervalle : le hash est l\'entier lui-même.'):'|n| ≥ 2⁶¹ − 1 : on applique le modulo 2⁶¹ − 1 = '+P61+'.');}
+    const X=parseBig($r('#h-big').value),V=$r('#h-v-mers');
+    if(X===null||X<0n){V.innerHTML='<p class="msg err">Saisis un entier X positif.</p>';return;}
+    const P=BigInt(pexp),M=(1n<<P)-1n,two=1n<<P;
+    const q=X>>P,r=X&M;
+    const bs=v=>v.toString(2);
+    let h='<div class="h3">Division euclidienne par 2<sup>p</sup> : décalage et ET logique</div><p class="note">Exemple du cours : 53 ÷ 16 = 16 × 3 + 5 (p = 4). Le quotient s\'obtient en enlevant les p derniers bits, le reste en gardant les p bits de poids faible.</p>';
+    h+='<div class="tblw"><table class="tbl"><tr><th>X</th><td style="font-family:var(--font-mono)">'+X+' = ('+bs(X)+')₂</td></tr><tr><th>quotient X ≫ p</th><td style="font-family:var(--font-mono)">('+bs(q)+')₂ = '+q+'</td></tr><tr><th>reste X &amp; (2<sup>p</sup> − 1)</th><td style="font-family:var(--font-mono)">('+bs(r).padStart(pexp,'0')+')₂ = '+r+'</td></tr></table></div>';
+    h+='<div class="h3" style="margin-top:16px">Cas particulier : modulo 2<sup>p</sup> − 1 = '+M+(MERS.includes(pexp)?' <span class="tag t-int">premier de Mersenne</span>':'')+'</div><p class="note">Comme 2<sup>p</sup> ≡ 1 (mod 2<sup>p</sup> − 1), on écrit X = H·2<sup>p</sup> + L avec H = X ≫ p et L = X &amp; (2<sup>p</sup> − 1). Donc X ≡ H + L (mod 2<sup>p</sup> − 1).</p>';
+    let cur=X,rows='',it=0;
+    while(cur>=M&&it<80&&M>0n){const H=cur>>P,L=cur&M,s=H+L;rows+='<tr><td style="font-family:var(--font-mono)">'+bs(cur)+'</td><td style="font-family:var(--font-mono);color:#1565c0">H = '+bs(H)+' ('+H+')</td><td style="font-family:var(--font-mono);color:#d93a2b">L = '+bs(L).padStart(pexp,'0')+' ('+L+')</td><td class="r"><b>'+s+'</b></td></tr>';cur=s;it++;}
+    let res=cur===M?0n:cur;
+    h+='<div class="tblw"><table class="tbl"><tr><th>X (binaire)</th><th>H = X ≫ p</th><th>L = X &amp; M</th><th class="r">H + L</th></tr>'+(rows||'<tr><td colspan="4">X &lt; 2<sup>p</sup> − 1 : déjà réduit.</td></tr>')+'</table></div>';
+    h+='<p class="msg '+(res===X%M?'ok':'err')+'">Résultat : X mod (2<sup>'+pexp+'</sup> − 1) = <b>'+res+'</b>'+(cur===M?' (H + L = 2<sup>p</sup> − 1 vaut 0 modulo M)':'')+'. Division classique : '+(X%M)+'. '+(it?it+' addition'+(it>1?'s':'')+' à la place d\'une division.':'')+'</p>';
+    h+='<p class="note">Résolu en 1 à 2 cycles d\'horloge, contre 30 à 80 pour une division entière : on évite une instruction coûteuse. Python utilise des milliers de dictionnaires en arrière-plan (variables locales et globales, modules importés…), donc ce gain compte.</p>';
+    V.innerHTML=h;
+  }
+
+  /* ---------- C. float / inverse modulaire ---------- */
+  ['#h-q','#h-m','#h-p','#h-x'].forEach(s=>$r(s).addEventListener('input',()=>rInv()));
+  function rInv(){
+    /* hash d'un flottant */
+    const x=parseFloat($r('#h-x').value.replace(',','.')),xm=$r('#h-xmsg'),V=$r('#h-v-inv');
+    let top='';
+    if(!isFinite(x)){xm.className='msg err';xm.textContent='Saisis un nombre décimal fini.';}
+    else if(Number.isInteger(x)){xm.className='msg ok';const h=pyInt(BigInt(x));xm.innerHTML='<b>'+x+'</b> est égal à l\'entier '+x+' : <code>hash('+x+') = hash('+x+'.0) = '+h+'</code>.';}
+    else{
+      const dv=new DataView(new ArrayBuffer(8));dv.setFloat64(0,Math.abs(x));const bits=dv.getBigUint64(0);
+      const e=Number((bits>>52n)&0x7ffn),f=bits&((1n<<52n)-1n);let Mn=e===0?f:f|(1n<<52n),k=(e===0?1074:1075-e);
+      while(Mn%2n===0n&&k>0){Mn/=2n;k--;}
+      const Q=1n<<BigInt(k),inv=modInv(Q,P61),neg=x<0;
+      let h=(Mn*inv)%P61;if(neg)h=-h;if(h===-1n)h=-2n;
+      xm.className='msg';xm.innerHTML=x+' = '+(neg?'−':'')+Mn+' / '+Q+'<br>q⁻¹ = '+Q+'⁻¹ = <b>'+inv+'</b> (mod 2⁶¹ − 1)<br><code>hash('+x+') = '+(neg?'−(':'')+Mn+' × q⁻¹ mod M₆₁'+(neg?')':'')+' = <b>'+h+'</b></code>';
+      top='<div class="card" style="margin-bottom:14px"><div class="h3">Dans le monde modulo M₆₁ = 2⁶¹ − 1</div><p class="note" style="margin:0">hash(<b>'+x+'</b>) = '+(neg?'−':'')+Mn+' × '+Q+'⁻¹ = <b style="font-family:var(--font-mono)">'+h+'</b>. L\'inverse de q = '+Q+' vaut '+inv+' : c\'est ÉNORME. Comme 2⁶¹ ≡ 1, l\'inverse de 2<sup>k</sup> est 2<sup>61−k</sup>.</p></div>';
+    }
+    /* inverse en petit */
+    const Q=BigInt(Math.round(parseFloat($r('#h-q').value)||0)),Mm=BigInt(Math.round(parseFloat($r('#h-m').value)||0)),Pp=BigInt(Math.round(parseFloat($r('#h-p').value)||0));
+    let h='<div class="h3">Exemple p/q dans le monde modulo m</div>';
+    if(Mm<2n||Mm>200n||Q<1n){V.innerHTML=top+h+'<p class="msg err">Choisis 2 ≤ m ≤ 200 et q ≥ 1.</p>';return;}
+    h+='<p class="note">Tous les nombres sont des restes de division par m (de 0 à m − 1). On cherche q⁻¹ tel que q × q⁻¹ ≡ 1 (mod m) en essayant les multiples de q.</p>';
+    const rows=[];let found=null;const qm=Q%Mm;
+    for(let t=1n;t<Mm;t++){const pr=qm*t,rr=pr%Mm;rows.push([t,pr,rr]);if(rr===1n){found=t;break;}}
+    h+='<div class="tblw"><table class="tbl"><tr><th>t</th><th>q × t</th><th>(q × t) mod m</th></tr>'+rows.map(([t,pr,rr])=>'<tr style="'+(rr===1n?'background:var(--ok-soft);font-weight:600':'')+'"><td>'+t+'</td><td>'+Q+' × '+t+' = '+(Q*t)+'</td><td>'+rr+'</td></tr>').join('')+'</table></div>';
+    if(found!==null){const r2=(Pp*found)%Mm;h+='<p class="msg ok">L\'inverse modulaire de '+Q+' pour (mod '+Mm+') est <b>'+found+'</b>, car '+Q+' × '+found+' ≡ 1. Ici p/q = '+Pp+'/'+Q+' devient '+Pp+' × '+found+' = '+(Pp*found)+' ≡ <b>'+r2+'</b> (mod '+Mm+').</p>';}
+    else h+='<p class="msg err">'+Q+' n\'a pas d\'inverse modulo '+Mm+' : q et m ont un diviseur commun. Avec M₆₁ premier, tout dénominateur est inversible.</p>';
+    V.innerHTML=top+h;
+  }
+
+  /* ---------- D. chaînes ---------- */
+  let salt=randSalt(),salted=true,runs=[],dsN=2000,dsSalt=false;
+  const saltOf=()=>salted?salt:0n;
+  $r('#h-salt').addEventListener('change',e=>{salted=e.target.checked;rStr();});
+  $r('#h-newrun').addEventListener('click',()=>{salt=randSalt();rStr();});
+  $r('#h-s1').addEventListener('input',()=>rStr());$r('#h-s2').addEventListener('input',()=>rStr());
+  $r('#h-dsalt').addEventListener('change',e=>{dsSalt=e.target.checked;rStr();});
+  const dsl=slider($r('#h-dsl'),{name:'N',min:100,max:20000,step:100,color:'#d93a2b',get:()=>dsN,set:v=>{dsN=Math.round(v);},on:()=>rStr(),note:'clés envoyées'});
+  const bitGrid=(h,ref)=>'<div style="display:grid;grid-template-columns:repeat(32,1fr);gap:2px;max-width:460px">'+bin64(h).split('').map((b,i)=>{const diff=ref&&bin64(ref)[i]!==b;return '<span title="bit '+(63-i)+'" style="aspect-ratio:1;display:grid;place-items:center;font:10px var(--font-mono);border-radius:2px;border:1px solid '+(diff?'var(--coll)':'var(--line)')+';background:'+(diff?'var(--coll-soft)':b==='1'?'var(--occ)':'#fff')+'">'+b+'</span>';}).join('')+'</div>';
+  function rStr(){
+    $r('#h-saltv').textContent=salted?'sel = '+hex64(salt):'sans sel : le hash est déterministe';
+    const s1=$r('#h-s1').value,s2=$r('#h-s2').value;
+    const h1=strHash64(s1,saltOf()),h2=strHash64(s2,saltOf());
+    let diff=0;const b1=bin64(h1),b2=bin64(h2);for(let i=0;i<64;i++)if(b1[i]!==b2[i])diff++;
+    /* historique de plusieurs exécutions */
+    const runsT=[0,1,2].map(i=>{const sl=i===0?saltOf():randSaltStable(i);return {s:salted?sl:0n,h:strHash64(s1,salted?sl:0n)};});
+    let h='<div class="h3">Salage : le même mot, trois exécutions de Python</div><div class="tblw"><table class="tbl"><tr><th>Exécution</th><th>sel</th><th>hash("'+esc(s1)+'")</th></tr>'+runsT.map((r,i)=>'<tr><td>'+(i===0?'courante':'autre #'+i)+'</td><td style="font-family:var(--font-mono);font-size:12px">'+(salted?hex64(r.s):'—')+'</td><td style="font-family:var(--font-mono);font-size:12px">'+r.h+'</td></tr>').join('')+'</table></div><p class="note">À l\'intérieur d\'une même exécution, le hash d\'une chaîne reste identique. Cela empêche un attaquant de fabriquer facilement de nombreuses collisions.</p>';
+    h+='<div class="h3" style="margin-top:16px">Effet avalanche : « '+esc(s1)+' » et « '+esc(s2)+' »</div><div class="cards"><div><p class="note" style="margin:0 0 4px">s₁ : <span style="font-family:var(--font-mono)">'+hex64(h1)+'</span></p>'+bitGrid(h1)+'</div><div><p class="note" style="margin:0 0 4px">s₂ : <span style="font-family:var(--font-mono)">'+hex64(h2)+'</span></p>'+bitGrid(h2,h1)+'</div></div><p class="msg '+(s1===s2?'warn':'ok')+'"><b>'+diff+' bits sur 64</b> diffèrent'+(s1===s2?' (chaînes identiques)':' : une modification minime change environ la moitié des bits')+'. Les bits en rouge sont ceux qui diffèrent de s₁.</p>';
+    /* Hash DoS */
+    const m=1024,NN=dsN,xs=[],ys=[],zs=[],ws=[];
+    const cnt=new Array(m).fill(0);let cost=0,costRand=0;
+    const cntS=new Array(m).fill(0);let costS=0;
+    const pts=60,step=Math.max(1,Math.floor(NN/pts));
+    let c1=0,c2=0,c3=0,pushed=0;
+    for(let i=1;i<=NN;i++){
+      const b=Math.floor(Math.random()*m);c1+=cnt[b]+1;cnt[b]++;
+      c2+=i;                        /* clés conçues : toutes dans la même case */
+      const b2=dsSalt?Math.floor(Math.random()*m):0;c3+=cntS[b2]+1;cntS[b2]++;
+      if(i%step===0||i===NN){xs.push(i);ys.push([i,c1]);zs.push([i,c2]);ws.push([i,c3]);}
+    }
+    h+='<div class="h3" style="margin-top:16px">Hash DoS : insérer N = '+fmtInt(NN)+' clés dans une table de '+m+' cases</div><svg id="h-dos" style="max-width:640px"></svg>';
+    h+='<p class="msg '+(dsSalt?'ok':'err')+'">Clés ordinaires : <b>'+sci(c1)+'</b> comparaisons. Clés conçues '+(dsSalt?'contre une fonction salée : <b>'+sci(c3)+'</b> (le salage les disperse, l\'attaquant ne peut plus prédire les collisions)':'sans salage : <b>'+sci(c2)+'</b>, soit '+fmt(c2/c1,0)+' fois plus (0 + 1 + 2 + … + N = O(N²))')+'.</p>';
+    h+='<p class="note">Le 28 décembre 2011, au congrès 28C3, A. Klink et J. Wälde dévoilent cette vulnérabilité touchant Python, PHP, Java, Ruby : l\'envoi de quelques mégaoctets de données fige le serveur à 100 % de CPU. Riposte de Python (3.3+) : un <b>salage aléatoire</b> au démarrage (hash seed) et, depuis 3.4, <b>SipHash</b>, un hachage rapide et résistant aux collisions forcées.</p>';
+    $r('#h-v-str').innerHTML=h;
+    Chart.line($r('#h-dos'),{xmin:0,xmax:NN,ymin:0,ymax:Math.max(c2,c1,c3)*1.05,xlabel:'N (clés insérées)',ylabel:'comparaisons cumulées',h:250,left:56,series:[{name:'clés ordinaires',color:'#2e8b57',pts:ys},{name:'clés conçues, sans salage',color:'#d93a2b',pts:zs},{name:'clés conçues, avec salage',color:'#6557d2',pts:ws,dash:true}]});
+  }
+  const _rs={};function randSaltStable(i){return _rs[i]||(_rs[i]=randSalt());}
+  showSv();
+ }
+});
+
+})();
+
+/* ===== p7.js ===== */
+(function(){
+/* Partie 7 : construction d'une bonne fonction de hachage (remplissage, loi de Poisson, modulo premier) */
+part({
+ id:'bonne',tab:'Bonne fonction',
+ formula:'Pr[X<sub>i</sub> = k] ≈ α<sup>k</sup> e<sup>−α</sup> / k!',
+ html:`<aside class="alg">
+  ${sec('Une bonne fonction de hachage','<p class="desc" style="margin:0 0 6px">Les collisions sont inévitables. L\'objectif est de <b>mélanger pour espacer</b> : chaque case a la même probabilité d\'être choisie, et une infime variation de la clé envoie le hash à l\'autre bout du tableau.</p><div id="b-seg" style="margin-top:10px"></div>')}
+  <div class="sv" data-sv="pois">
+   ${sec('Le problème du remplissage','<p class="desc" style="margin:0 0 8px">N tiroirs, M fiches. Soit X<sub>i</sub> le nombre de fiches du tiroir i. Comme ΣX<sub>i</sub> = M, la linéarité de l\'espérance donne <code>E[X<sub>i</sub>] = M / N = α</code>.</p><div id="b-src"></div><p class="desc" id="b-srcd"></p>')}
+   ${sec('Paramètres','<div class="row"><span class="dot" style="--c:var(--ui)"></span><label class="name" for="b-N">N</label><span class="eq">=</span><input class="field num mono" id="b-N" style="width:120px"><span class="unit">tiroirs</span></div><div id="b-Nsl"></div><div class="row"><span class="dot" style="--c:var(--coll)"></span><label class="name" for="b-M">M</label><span class="eq">=</span><input class="field num mono" id="b-M" style="width:120px"><span class="unit">fiches</span></div><div id="b-Msl"></div><div class="btns"><button class="btn main" id="b-redo">Relancer le tirage</button><button class="btn" id="b-course">Données du cours</button></div><p class="desc" id="b-alpha" style="font-size:14px"></p>')}
+   ${sec('Ce qu\'on mesure','<div class="res"><span class="dot" style="--c:var(--ui)"></span><span>Moyenne mesurée</span><span class="val" id="b-r-mean"></span></div><div class="res"><span class="dot" style="--c:var(--ok)"></span><span>Variance mesurée</span><span class="val" id="b-r-var"></span></div><div class="res"><span class="dot" style="--c:var(--path)"></span><span>Tiroirs vides (mesuré)</span><span class="val" id="b-r-e"></span></div><div class="res"><span class="dot" style="--c:var(--path)"></span><span>Tiroirs vides (e<sup>−α</sup>)</span><span class="val" id="b-r-p0"></span></div><div class="res"><span class="dot" style="--c:var(--coll)"></span><span>Plus gros tiroir</span><span class="val" id="b-r-max"></span></div>')}
+  </div>
+  <div class="sv" data-sv="prime" hidden>
+   ${sec('Modulo un nombre premier','<p class="desc" style="margin:0 0 8px">Les clés sont les multiples du pas : s, 2s, 3s… et la case est <code>clé mod N</code>. Si N et s ont un diviseur commun, seules N / pgcd(s, N) cases sont atteignables.</p><div id="b-psl"></div>')}
+   ${sec('Deux tailles de tableau','<div id="b-N1sl"></div><div id="b-N2sl"></div><div class="btns"><button class="btn" id="b-ex">Exemple du cours (4, 8, 12… avec 12 et 11)</button></div>')}
+   ${sec('Rapidité du modulo','<p class="desc" style="margin:0">Pour accélérer le calcul, on choisit une taille de la forme 2<sup>p</sup> − 1 (nombre de Mersenne) : <code>X mod (2^p − 1) ≡ (X ≫ p) + (X &amp; (2^p − 1))</code>. Voir la partie « La fonction hash ».</p>')}
+  </div>
+ </aside>
+ <main class="view">
+  <div class="vbar"><span id="b-info"></span></div>
+  <div class="vis sv" data-sv="pois" id="b-v-pois"></div>
+  <div class="vis sv" data-sv="prime" id="b-v-prime" hidden></div>
+ </main>`,
+ init(root){
+  const $r=s=>q(root,s);
+  let sv='pois';
+  const INFO={pois:'Répartition des fiches dans les tiroirs : loi de Poisson',prime:'Pourquoi une taille de table première'};
+  const showSv=()=>{qa(root,'.sv').forEach(e=>e.hidden=e.dataset.sv!==sv);$r('#b-info').innerHTML='<b style="color:var(--ink)">'+INFO[sv]+'</b>';sv==='pois'?rPois():rPrime();};
+  seg($r('#b-seg'),[['pois','Remplissage'],['prime','N premier']],()=>sv,v=>{sv=v;showSv();},2);
+
+  /* ---------- A. remplissage et loi de Poisson ---------- */
+  let N=1000,M=1000,src='rand',salt=(Math.random()*4294967296)>>>0,data=null;
+  const lg=Math.log10;
+  const SRC={
+   rand:'<code>random.randrange(0, N)</code> : un tirage uniforme, la référence théorique.',
+   hash:'Hash de Python simulé : un mélange de bits (effet avalanche) suivi d\'un modulo N. Se comporte comme une source pseudo-aléatoire.',
+   bad:'Mauvaise fonction : les clés sont les multiples de 4 et la case est <code>clé mod N</code>. Les cases ne sont pas atteintes de façon uniforme.'
+  };
+  seg($r('#b-src'),[['rand','randrange'],['hash','hash (simulé)'],['bad','multiples de 4']],()=>src,v=>{src=v;$r('#b-srcd').innerHTML=SRC[src];sample();},3);
+  $r('#b-srcd').innerHTML=SRC[src];
+  const NI=$r('#b-N'),MI=$r('#b-M');
+  const parseN=el=>Number(el.value.replace(/\s| /g,'').replace(',','.'));
+  const Nsl=slider($r('#b-Nsl'),{name:'log₁₀ N',min:1,max:6.3,step:0.01,dec:2,get:()=>lg(N),set:v=>{N=Math.max(2,Math.round(Math.pow(10,v)));},on:()=>{sample();}});
+  const Msl=slider($r('#b-Msl'),{name:'log₁₀ M',min:1,max:6.3,step:0.01,dec:2,color:'#d93a2b',get:()=>lg(Math.max(1,M)),set:v=>{M=Math.max(1,Math.round(Math.pow(10,v)));},on:()=>{sample();}});
+  NI.addEventListener('input',()=>{const v=parseN(NI);if(isFinite(v)&&v>=2&&v<=4e6){N=Math.round(v);Nsl.sync(null);sample(true);}});
+  MI.addEventListener('input',()=>{const v=parseN(MI);if(isFinite(v)&&v>=1&&v<=4e6){M=Math.round(v);Msl.sync(null);sample(true);}});
+  $r('#b-redo').addEventListener('click',()=>{salt=(Math.random()*4294967296)>>>0;sample();});
+  $r('#b-course').addEventListener('click',()=>{N=1048576;M=424579;Nsl.sync(null);Msl.sync(null);sample();});
+
+  const mix32=x=>{x^=x>>>16;x=Math.imul(x,0x7feb352d);x^=x>>>15;x=Math.imul(x,0x846ca68b);x^=x>>>16;return x>>>0;};
+  function sample(keep){
+    if(!keep){NI.value=fmtInt(N);MI.value=fmtInt(M);}
+    const c=new Uint32Array(N);
+    if(src==='rand'){for(let i=0;i<M;i++)c[(Math.random()*N)|0]++;}
+    else if(src==='hash'){for(let i=0;i<M;i++)c[mix32((i+salt)>>>0)%N]++;}
+    else{for(let i=1;i<=M;i++)c[(4*i)%N]++;}
+    let mx=0;for(let i=0;i<N;i++)if(c[i]>mx)mx=c[i];
+    const eff=new Array(mx+1).fill(0);for(let i=0;i<N;i++)eff[c[i]]++;
+    let s2=0;const mean=M/N;for(let k=0;k<=mx;k++)s2+=eff[k]*(k-mean)*(k-mean);
+    data={eff,mx,mean,vari:s2/N};
+    rPois();
+  }
+  const pois=(k,a)=>{let l=-a+k*Math.log(a);for(let i=2;i<=k;i++)l-=Math.log(i);return N*Math.exp(l);};
+  const binom=(k,Mx,Nx)=>{if(k>Mx)return 0;let l=0;for(let i=0;i<k;i++)l+=Math.log((Mx-i)/(i+1));l+=k*Math.log(1/Nx)+(Mx-k)*Math.log1p(-1/Nx);return Nx*Math.exp(l);};
+  const COURS={rand:[699149,283705,57195,7698,758,68,3],hash:[699474,283159,57332,7755,793,59,4],pois:[699439,283210,57337,7739,783,63,4]};
+  function rPois(){
+    if(!data){sample();return;}
+    const a=M/N,V=$r('#b-v-pois');
+    $r('#b-alpha').innerHTML='α = M / N = <b>'+fmt(a,3)+'</b>';
+    $r('#b-r-mean').textContent=fmt(data.mean,4);
+    $r('#b-r-var').textContent=fmt(data.vari,4)+(src==='bad'?'':' (Poisson : '+fmt(a,3)+')');
+    $r('#b-r-e').textContent=fmt(100*data.eff[0]/N,2)+' %';
+    $r('#b-r-p0').textContent=fmt(100*Math.exp(-a),2)+' %';
+    $r('#b-r-max').textContent=data.mx+' fiches';
+    const kmax=Math.min(14,Math.max(5,data.mx,Math.ceil(a+4*Math.sqrt(a)+2)));
+    const labels=[],mes=[],po=[];
+    for(let k=0;k<=kmax;k++){labels.push(String(k));mes.push(data.eff[k]||0);po.push(pois(k,a));}
+    const tail=data.mx>kmax;
+    let h='<div class="h3">Nombre de tiroirs contenant exactement k fiches</div><svg id="b-ch" style="max-width:680px"></svg>';
+    h+='<div class="tblw"><table class="tbl" style="max-width:680px"><tr><th>k</th><th class="r">Effectif mesuré</th><th class="r">Loi de Poisson</th><th class="r">Binomiale (M, 1/N)</th></tr>';
+    for(let k=0;k<=kmax;k++)h+='<tr><td>'+k+'</td><td class="r">'+fmtInt(mes[k])+'</td><td class="r">'+fmtInt(Math.round(po[k]))+'</td><td class="r">'+fmtInt(Math.round(binom(k,M,N)))+'</td></tr>';
+    h+='</table></div>';
+    if(tail)h+='<p class="note">Il existe aussi des tiroirs de plus de '+kmax+' fiches (jusqu\'à '+data.mx+').</p>';
+    h+='<p class="msg '+(src==='bad'?'err':'ok')+'">'+(src==='bad'
+      ?'Avec ces clés, la variance mesurée ('+fmt(data.vari,2)+') est très loin de α ('+fmt(a,3)+') : des tiroirs sont surchargés pendant que '+fmt(100*data.eff[0]/N,1)+' % restent vides, contre '+fmt(100*Math.exp(-a),1)+' % attendus pour une répartition uniforme.'
+      :'Pour k petit et M, N grands, le nombre de fiches d\'un tiroir suit la loi binomiale de paramètres M et 1/N, que la <b>loi de Poisson</b> approche : Pr[X = k] = α<sup>k</sup> e<sup>−α</sup> / k!. Ici Pr[X = 0] = e<sup>−'+fmt(a,3)+'</sup> = '+fmt(100*Math.exp(-a),1)+' %.')+'</p>';
+    h+='<div class="h3" style="margin-top:16px">Mesures du cours : N = 2<sup>20</sup> = 1 048 576 tiroirs, M = 424 579 mots français (α ≈ 0,405)</div><div class="tblw"><table class="tbl" style="max-width:680px"><tr><th>k</th><th class="r">randrange</th><th class="r">hash de Python</th><th class="r">Poisson</th></tr>';
+    for(let k=0;k<7;k++)h+='<tr><td>'+k+'</td><td class="r">'+fmtInt(COURS.rand[k])+'</td><td class="r">'+fmtInt(COURS.hash[k])+'</td><td class="r">'+fmtInt(COURS.pois[k])+'</td></tr>';
+    h+='</table></div><p class="note">Le hash de Python (SipHash) suit de façon spectaculaire la loi de Poisson : c\'est la preuve empirique qu\'il se comporte comme une source pseudo-aléatoire uniforme. Le bouton « Données du cours » reproduit cette expérience avec ma source simulée.</p>';
+    V.innerHTML=h;
+    Chart.bars($r('#b-ch'),{w:640,h:260,bottom:42,labels,xlabel:'k fiches dans un tiroir',left:54,series:[{name:'mesuré',color:'#6557d2',vals:mes},{name:'Poisson',color:'#e08a00',vals:po}]});
+  }
+
+  /* ---------- B. modulo un nombre premier ---------- */
+  let s=4,K=6,N1=12,N2=11;
+  const isPrime=n=>{if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;};
+  const gcd=(a,b)=>b?gcd(b,a%b):a;
+  const ps=slider($r('#b-psl'),{name:'pas s',min:1,max:24,step:1,get:()=>s,set:v=>{s=Math.round(v);},on:()=>rPrime(),note:'clés s, 2s, 3s…'});
+  const ks=slider($r('#b-psl'),{name:'clés K',min:2,max:40,step:1,color:'#d93a2b',get:()=>K,set:v=>{K=Math.round(v);},on:()=>rPrime()});
+  const n1=slider($r('#b-N1sl'),{name:'N₁',min:2,max:40,step:1,get:()=>N1,set:v=>{N1=Math.round(v);},on:()=>rPrime(),note:'cases'});
+  const n2=slider($r('#b-N2sl'),{name:'N₂',min:2,max:40,step:1,color:'#2e8b57',get:()=>N2,set:v=>{N2=Math.round(v);},on:()=>rPrime(),note:'cases'});
+  $r('#b-ex').addEventListener('click',()=>{s=4;K=6;N1=12;N2=11;[ps,ks,n1,n2].forEach(x=>x.sync(null));rPrime();});
+  function place(Nx){
+    const cnt=new Array(Nx).fill(0),lines=[];
+    for(let i=1;i<=K;i++){const k=s*i,c=k%Nx,coll=cnt[c]>0;cnt[c]++;lines.push({k,c,coll});}
+    return {cnt,lines,used:cnt.filter(x=>x>0).length};
+  }
+  function block(Nx,col){
+    const r=place(Nx),g=gcd(s,Nx),cols=0;
+    let h='<div class="card"><div class="h3" style="color:'+col+'">N = '+Nx+(isPrime(Nx)?' <span class="tag t-float">premier</span>':' <span class="tag t-str">pgcd(s, N) = '+g+'</span>')+'</div>';
+    h+='<div class="drawer" style="grid-template-columns:repeat(auto-fill,minmax(26px,1fr));margin:6px 0 8px">'+r.cnt.map((c,i)=>'<div style="'+(c>1?'background:var(--coll-soft);border-color:var(--coll)':c===1?'background:var(--occ);border-color:var(--occ-line)':'')+'" title="case '+i+'">'+(c?c:'<span style="color:var(--muted)">'+i+'</span>')+'</div>').join('')+'</div>';
+    h+='<div style="font-size:13px;line-height:1.7;margin-bottom:6px">'+r.lines.slice(0,24).map(l=>'<span style="display:inline-block;margin-right:10px;white-space:nowrap;font-family:var(--font-mono);font-size:12px;'+(l.coll?'color:var(--coll)':'')+'">'+l.k+' mod '+Nx+' = '+l.c+(l.coll?' ✗':'')+'</span>').join('')+(r.lines.length>24?'…':'')+'</div>';
+    h+='<div class="res" style="grid-template-columns:1fr auto"><span>Cases utilisées</span><span class="val">'+r.used+' / '+Nx+' ('+fmt(100*r.used/Nx,0)+' %)</span></div>';
+    h+='<div class="res" style="grid-template-columns:1fr auto"><span>Collisions</span><span class="val" style="color:'+(K-r.used>0?'var(--coll)':'var(--ok)')+'">'+(K-r.used)+'</span></div></div>';
+    return h;
+  }
+  function rPrime(){
+    const V=$r('#b-v-prime');
+    let h='<div class="h3">Clés : '+Array.from({length:Math.min(K,8)},(_,i)=>s*(i+1)).join(', ')+(K>8?', …':'')+' (K = '+K+')</div><div class="cards" style="margin-bottom:16px">'+block(N1,'var(--ui)')+block(N2,'var(--ok)')+'</div>';
+    h+='<div class="h3">Clés rangées dans une case distincte, en % de K, selon la taille N (pas s = '+s+', K = '+K+')</div><svg id="b-pch" style="max-width:680px"></svg>';
+    h+='<p class="note"><span class="sq" style="background:#2e8b57;border-color:#2e8b57;display:inline-block;vertical-align:-2px"></span> N premier &nbsp; <span class="sq" style="background:#d93a2b;border-color:#d93a2b;display:inline-block;vertical-align:-2px"></span> N a un diviseur commun avec s &nbsp; <span class="sq" style="display:inline-block;vertical-align:-2px"></span> autre cas</p>';
+    const g1=gcd(s,N1),g2=gcd(s,N2);
+    h+='<p class="msg '+(g2===1&&g1>1?'ok':'')+'">Avec N = '+N1+', pgcd('+s+', '+N1+') = '+g1+' : seules '+(N1/g1)+' cases sur '+N1+' sont atteignables ('+fmt(100/g1,0)+' %). Avec N = '+N2+', pgcd('+s+', '+N2+') = '+g2+' : '+(g2===1?'toutes les cases sont atteignables, car '+(isPrime(N2)?N2+' est premier et ne partage aucun diviseur commun (hormis 1) avec le motif des données.':'les cases sont toutes atteignables.'):'seules '+(N2/g2)+' cases sont atteignables.')+'</p>';
+    V.innerHTML=h;
+    const labels=[],vals=[],cols=[];
+    for(let Nx=2;Nx<=40;Nx++){const r=place(Nx);labels.push(String(Nx));vals.push(100*r.used/K);cols.push(isPrime(Nx)?'#2e8b57':gcd(s,Nx)>1?'#d93a2b':'#8fa8d8');}
+    Chart.bars($r('#b-pch'),{w:640,h:250,bottom:42,labels,xlabel:'taille N du tableau',left:44,ymax:100,maxLabels:20,series:[{color:cols,vals}]});
+  }
+  showSv();
+ }
+});
+
+})();
+
+mountParts();
 </script>
 
 </body></html>
