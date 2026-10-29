@@ -8,4 +8,4 @@ Voici une page permettant d’illustrer les tables de hachage :
 
 Voici une page pour s'entrainer aux algorithmes de tri :
 
-[algorithmes tris](https://siicpgeamansur.github.io/ITC/algorithme_tri.html)
+[algorithmes tris](https://siicpgeamansur.github.io/ITC/algorithmes_tri.html)
