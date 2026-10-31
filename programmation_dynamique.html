@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualisation - Programmation Dynamique</title>
+  
+  <!-- MathJax pour le rendu des formules LaTeX -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --active-bg: #eff6ff;
+      --active-border: #3b82f6;
+      --cell-bg: #ffffff;
+      --cell-current: #fef08a;
+      --cell-dep: #bfdbfe;
+      --cell-done: #bbf7d0;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --active-bg: #1e3a8a;
+      --active-border: #60a5fa;
+      --cell-bg: #0f172a;
+      --cell-current: #854d0e;
+      --cell-dep: #1e40af;
+      --cell-done: #166534;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+    }
+
+    * { box-sizing: border-box; transition: background-color 0.2s, border-color 0.2s; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto 20px auto;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+
+    .theme-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+    }
+
+    nav {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: var(--shadow);
+      height: fit-content;
+    }
+
+    nav h2 { font-size: 1rem; color: var(--text-muted); margin-top: 0; }
+    
+    .nav-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text-main);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .nav-btn:hover { background: var(--bg-color); }
+    .nav-btn.active {
+      background: var(--active-bg);
+      border-color: var(--active-border);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    main { display: flex; flex-direction: column; gap: 20px; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .pill-group {
+      display: flex;
+      gap: 10px;
+      background: var(--bg-color);
+      padding: 4px;
+      border-radius: 8px;
+      width: fit-content;
+      margin-bottom: 15px;
+      border: 1px solid var(--border-color);
+    }
+
+    .pill-btn {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .pill-btn.active {
+      background: var(--card-bg);
+      color: var(--text-main);
+      box-shadow: var(--shadow);
+    }
+
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+    
+    button.action-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.action-btn:hover { background: var(--accent-hover); }
+
+    table.dp-table {
+      border-collapse: collapse;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      display: block;
+    }
+
+    table.dp-table td, table.dp-table th {
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      text-align: center;
+      min-width: 40px;
+      background: var(--cell-bg);
+    }
+
+    td.current { background-color: var(--cell-current) !important; font-weight: bold; }
+    td.dependent { background-color: var(--cell-dep) !important; }
+    td.done { background-color: var(--cell-done) !important; }
+
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+    .log-box {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Programmation Dynamique</h1>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙</button>
+  </header>
+
+  <div class="container">
+    <nav>
+      <h2>Problèmes</h2>
+      <button class="nav-btn active" onclick="loadProblem('mwis')">MWIS (Chemin)</button>
+      <button class="nav-btn" onclick="loadProblem('levenshtein')">Distance de Levenshtein</button>
+      <button class="nav-btn" onclick="loadProblem('knapsack')">Sac à Dos 0/1</button>
+      <button class="nav-btn" onclick="loadProblem('lcs')">Plus Longue Sous-suite (LCS)</button>
+      <button class="nav-btn" onclick="loadProblem('partition')">Partition d'Ensemble</button>
+      <button class="nav-btn" onclick="loadProblem('partition_eq')">Partition Équilibrée</button>
+      <button class="nav-btn" onclick="loadProblem('scheduling')">Ordonnancement Tâches</button>
+      <button class="nav-btn" onclick="loadProblem('floyd')">Floyd-Warshall</button>
+    </nav>
+
+    <main>
+      <div class="card">
+        <h2 id="prob-title">Titre du Problème</h2>
+        <p id="prob-desc" style="color: var(--text-muted);"></p>
+
+        <div class="pill-group">
+          <button class="pill-btn active" id="btn-bu" onclick="setApproach('bottom-up')">Bottom-Up (Tableau)</button>
+          <button class="pill-btn" id="btn-td" onclick="setApproach('top-down')">Top-Down (Mémoïsation)</button>
+        </div>
+
+        <div class="controls">
+          <button class="action-btn" onclick="step()">Étape suivante</button>
+          <button class="action-btn" style="background: var(--text-muted);" onclick="resetSim()">Remise à zéro</button>
+        </div>
+
+        <div id="visualizer"></div>
+      </div>
+
+      <div class="grid-2col">
+        <div class="card">
+          <h3>Équation de récurrence</h3>
+          <div id="math-formula"></div>
+        </div>
+        <div class="card">
+          <h3>Journal d'exécution</h3>
+          <div class="log-box" id="log-box">Prêt.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let currentProblem = 'mwis';
+    let currentApproach = 'bottom-up';
+    let stepIndex = 0;
+
+    const problems = {
+      mwis: {
+        title: "MWIS (Maximum Weight Independent Set)",
+        desc: "Trouver le sous-ensemble indépendant de poids maximum dans un graphe en chemin.",
+        formula: "\\[ A[i] = \\max(A[i-1], A[i-2] + w_i) \\]",
+        init: () => {
+          const weights = [0, 3, 8, 2, 5, 4];
+          return { weights, dp: new Array(weights.length).fill(null) };
+        }
+      },
+      levenshtein: {
+        title: "Distance de Levenshtein",
+        desc: "Nombre minimal d'opérations d'édition (insertion, suppression, substitution) entre deux mots.",
+        formula: "\\[ D[i][j] = \\min(D[i-1][j]+1, D[i][j-1]+1, D[i-1][j-1] + cost) \\]",
+        init: () => ({ s1: "CHAT", s2: "CHATON" })
+      },
+      knapsack: {
+        title: "Sac à Dos 0/1",
+        desc: "Maximiser la valeur totale des objets embarqués sans dépasser la capacité maximale du sac.",
+        formula: "\\[ K[i][w] = \\max(K[i-1][w], K[i-1][w-w_i] + v_i) \\]",
+        init: () => ({ cap: 5, items: [{w:2, v:3}, {w:3, v:4}, {w:4, v:5}] })
+      },
+      lcs: {
+        title: "Plus Longue Sous-suite Commune (LCS)",
+        desc: "Trouver la plus longue séquence de caractères présente dans deux chaînes données.",
+        formula: "\\[ L[i][j] = L[i-1][j-1]+1 \\text{ si } X[i]=Y[j] \\text{ sinon } \\max(L[i-1][j], L[i][j-1]) \\]",
+        init: () => ({ s1: "ABCD", s2: "ACDF" })
+      },
+      partition: {
+        title: "Partition d'Ensemble",
+        desc: "Déterminer si un ensemble d'entiers peut être divisé en deux sous-ensembles de somme égale.",
+        formula: "\\[ P[i][j] = P[i-1][j] \\lor P[i-1][j-arr[i]] \\]",
+        init: () => ({ arr: [1, 5, 11, 5], target: 11 })
+      },
+      partition_eq: {
+        title: "Partition Équilibrée",
+        desc: "Séparer un ensemble en deux sous-ensembles de sommes les plus proches possible.",
+        formula: "\\[ E[i][s] = E[i-1][s] \\lor E[i-1][s - v_i] \\]",
+        init: () => ({ arr: [1, 2, 7] })
+      },
+      scheduling: {
+        title: "Ordonnancement de Tâches Pondérées",
+        desc: "Maximiser le gain obtenu à partir de tâches avec heures de début, de fin et un poids.",
+        formula: "\\[ T[i] = \\max(T[i-1], T[p(i)] + v_i) \\]",
+        init: () => ({ tasks: [] })
+      },
+      floyd: {
+        title: "Algorithme de Floyd-Warshall",
+        desc: "Calculer les plus courts chemins entre tous les couples de sommets dans un graphe orienté.",
+        formula: "\\[ D^{(k)}[i][j] = \\min(D^{(k-1)}[i][j], D^{(k-1)}[i][k] + D^{(k-1)}[k][j]) \\]",
+        init: () => ({ vertices: 4 })
+      }
+    };
+
+    function toggleTheme() {
+      const body = document.body;
+      const isDark = body.getAttribute('data-theme') === 'dark';
+      body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    }
+
+    function setApproach(approach) {
+      currentApproach = approach;
+      document.getElementById('btn-bu').classList.toggle('active', approach === 'bottom-up');
+      document.getElementById('btn-td').classList.toggle('active', approach === 'top-down');
+      resetSim();
+    }
+
+    function loadProblem(probKey) {
+      currentProblem = probKey;
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const p = problems[probKey];
+      document.getElementById('prob-title').innerText = p.title;
+      document.getElementById('prob-desc').innerText = p.desc;
+      document.getElementById('math-formula').innerHTML = p.formula;
+
+      if (window.MathJax) { MathJax.typesetPromise(); }
+      resetSim();
+    }
+
+    function resetSim() {
+      stepIndex = 0;
+      document.getElementById('log-box').innerHTML = `Prêt pour l'approche <b>${currentApproach}</b>.`;
+      renderVisualizer();
+    }
+
+    function step() {
+      stepIndex++;
+      const log = document.getElementById('log-box');
+      log.innerHTML += `<br>Calcul étape ${stepIndex} (${currentApproach})...`;
+      log.scrollTop = log.scrollHeight;
+      renderVisualizer();
+    }
+
+    function renderVisualizer() {
+      const vis = document.getElementById('visualizer');
+      
+      if (currentApproach === 'top-down') {
+        vis.innerHTML = `<p style="color: var(--text-muted); font-style: italic;">
+          Affichage de l'arbre de récursion avec mémoïsation (Étape : ${stepIndex}).
+        </p>`;
+        return;
+      }
+
+      let html = '<table class="dp-table"><tr><th>i</th>';
+      for(let i=0; i<=5; i++) html += `<th>${i}</th>`;
+      html += '</tr><tr><td>A[i]</td>';
+      
+      for(let i=0; i<=5; i++) {
+        let cls = i < stepIndex ? 'done' : (i === stepIndex ? 'current' : '');
+        html += `<td class="${cls}">${i <= stepIndex ? i*2 : '-'}</td>`;
+      }
+      html += '</tr></table>';
+      
+      vis.innerHTML = html;
+    }
+
+    // Initialisation
+    loadProblem('mwis');
+  </script>
+</body>
+</html>
