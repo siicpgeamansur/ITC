@@ -171,6 +171,11 @@ details.quiz div { margin-top: 8px; font-size: .9rem; color: var(--muted); }
 .g-axis { position: relative; height: 16px; margin-left: 72px; font-size: .68rem; color: var(--muted); }
 .g-axis span { position: absolute; transform: translateX(-50%); }
 svg.graph { width: 100%; max-width: 380px; height: auto; display: block; margin: auto; }
+.layer-bar { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; padding: 10px 14px; background: var(--hit); border: 1px solid var(--hit-border); border-radius: 10px; font-size: .86rem; }
+.layer-bar select { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 8px; padding: 6px 8px; }
+.layer-wrap { display: flex; gap: 18px; flex-wrap: wrap; padding: 12px; }
+.layer-box { flex: 1 1 280px; min-width: 0; overflow-x: auto; }
+.layer-title { font-size: .8rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
 footer { max-width: 1450px; margin: 25px auto; padding: 0 22px; color: var(--muted); font-size: .78rem; text-align: center; }
 @media (max-width: 1000px) {
   .layout { grid-template-columns: 1fr; }
@@ -277,6 +282,12 @@ footer { max-width: 1450px; margin: 25px auto; padding: 0 22px; color: var(--mut
       <div class="preview" id="preview" hidden></div>
 
       <div class="stack" id="stack-panel" hidden></div>
+
+      <div class="layer-bar" id="layer-bar" hidden>
+        <label>Couche affichée : <select id="layer-select"></select></label>
+        <label><input type="checkbox" id="layer-auto" checked> suivre l'étape en cours</label>
+        <span>Le tableau de gauche est la couche k−1 (dépendances), celui de droite la couche k.</span>
+      </div>
 
       <h3 class="section-title" id="table-title">Tableau de programmation dynamique</h3>
       <div class="visualization" id="visualization"></div>
@@ -1270,6 +1281,35 @@ function graphSVG(M) {
   return s + "</svg>";
 }
 
+function floydLayered(M, getFin) {
+  const n = M.length, L = n + 1, F = (l, i, j) => `F[${l}][${i}][${j}]`;
+  const sup = x => `<sup>(${x < 0 ? "−" + (-x) : x})</sup>`;
+  return {
+    corner: "i ↓ · j →",
+    cols: range(n).map(String),
+    layers: L,
+    layerName: l => l === 0 ? `D${sup(-1)} : matrice d'adjacence (aucun intermédiaire)` : `D${sup(l - 1)} : intermédiaires dans {${range(l).join(", ")}}`,
+    rowsByLayer: range(L).map(l => range(n).map(i => ({ label: String(i), cells: range(n).map(j => ({ key: F(l, i, j) })) }))),
+    order: range(L).flatMap(l => range(n).flatMap(i => range(n).map(j => F(l, i, j)))),
+    targets: range(n).flatMap(i => range(n).map(j => F(n, i, j))),
+    deps: key => {
+      const [l, i, j] = idx(key);
+      if (l === 0) return [];
+      const k = l - 1;
+      return [...new Set([F(l - 1, i, j), F(l - 1, i, k), F(l - 1, k, j)])];
+    },
+    calc: (key, get) => {
+      const [l, i, j] = idx(key);
+      if (l === 0) return { value: M[i][j], log: `${key} = ${fmtNum(M[i][j])} : poids de l'arc ${i} → ${j} (aucun intermédiaire autorisé).` };
+      const k = l - 1;
+      const old = get(F(l - 1, i, j)), a = get(F(l - 1, i, k)), b = get(F(l - 1, k, j)), via = a + b, v = Math.min(old, via);
+      return { value: v, log: `D${sup(k)}[${i}][${j}] = min( D${sup(k - 1)}[${i}][${j}] = ${fmtNum(old)} ; D${sup(k - 1)}[${i}][${k}] + D${sup(k - 1)}[${k}][${j}] = ${fmtNum(a)} + ${fmtNum(b)} = ${fmtNum(via)} ) = <strong>${fmtNum(v)}</strong> ${via < old ? "(passer par " + k + " raccourcit)" : "(inchangé)"}.` };
+    },
+    finish: () => getFin(),
+    preview: () => graphSVG(M)
+  };
+}
+
 P("floyd", {
   name: "Floyd-Warshall",
   title: "Algorithme de Floyd-Warshall",
@@ -1289,7 +1329,6 @@ P("floyd", {
   },
   formula: String.raw`\[D^{(k)}[i][j]=\min\bigl(D^{(k-1)}[i][j],\;D^{(k-1)}[i][k]+D^{(k-1)}[k][j]\bigr)\]`,
   explanation: "D^(k)[i][j] est la longueur du plus court chemin de i à j dont les sommets intermédiaires sont dans {0, …, k}. À chaque phase k, on teste pour tout couple (i, j) si passer par k raccourcit le chemin.",
-  noTopDown: true,
   parse(v) {
     const rows = String(v.matrix).split(/\n+/).map(r => r.trim()).filter(Boolean);
     const n = rows.length;
@@ -1317,8 +1356,8 @@ P("floyd", {
     }
     const neg = range(n).some(i => D[i][i] < 0);
     const missing = D.reduce((s, r, i) => s + r.filter((x, j) => i !== j && x === INF).length, 0);
-    return {
-      kind: "floyd", n, init: M, events, final: D, noTopDown: true,
+    const obj = {
+      kind: "floyd", n, init: M, events, final: D,
       summary: `Graphe à ${n} sommets (${M.reduce((s, r, i) => s + r.filter((x, j) => i !== j && x !== INF).length, 0)} arcs). Une case ∞ signifie « pas de chemin ».`,
       corner: "i ↓ · j →",
       labels: range(n).map(String),
@@ -1327,19 +1366,23 @@ P("floyd", {
         : `Matrice des plus courts chemins calculée.${missing ? ` ${missing} couple(s) (i, j) sans chemin.` : " Le graphe est fortement connexe."}` },
       preview: () => graphSVG(M)
     };
+    obj.td = floydLayered(M, () => obj.fin);
+    return obj;
   },
   doc: [
     { h: "Le problème", html: `<p>Dans un graphe orienté pondéré (poids éventuellement négatifs, sans cycle de poids négatif), calculer la distance de <strong>chaque</strong> sommet i vers <strong>chaque</strong> sommet j.</p>` },
     { h: "Sous-problème", html: `<p><strong>D⁽ᵏ⁾[i][j]</strong> = longueur du plus court chemin de i à j dont tous les sommets <em>intermédiaires</em> appartiennent à {0, …, k}. D⁽⁻¹⁾ est la matrice d'adjacence (aucun intermédiaire autorisé) ; D⁽ⁿ⁻¹⁾ est la réponse.</p>` },
     { h: "Relation de récurrence", html: `<p>Un plus court chemin de i à j avec intermédiaires dans {0..k} :</p><ul><li><strong>ne passe pas par k</strong> : c'est D⁽ᵏ⁻¹⁾[i][j] ;</li><li><strong>passe par k</strong> (une seule fois) : il se coupe en un chemin i→k et un chemin k→j, tous deux avec intermédiaires dans {0..k−1} : D⁽ᵏ⁻¹⁾[i][k] + D⁽ᵏ⁻¹⁾[k][j].</li></ul>` },
-    { h: "Implémentation en place", html: `<p>On n'a besoin que d'<em>une</em> matrice : pendant la phase k, la ligne k et la colonne k ne changent pas (D[k][k] = 0), donc on peut écraser D au fur et à mesure. La boucle sur k doit être la <strong>boucle extérieure</strong>.</p><div class="callout">Pas de mode Top-Down ici : l'algorithme est naturellement itératif et en place. En revanche, utilisez le bouton « Sommet k suivant » pour avancer phase par phase.</div>` },
+    { h: "Implémentation en place", html: `<p>On n'a besoin que d'<em>une</em> matrice : pendant la phase k, la ligne k et la colonne k ne changent pas (D[k][k] = 0), donc on peut écraser D au fur et à mesure. La boucle sur k doit être la <strong>boucle extérieure</strong>.</p><div class="callout">En mode Bottom-Up, utilisez le bouton « Sommet k suivant » pour avancer phase par phase.</div>` },
+    { h: "Version Top-Down (couches)", html: `<p>On peut écrire la récurrence directement en récursif avec mémoïsation, mais il faut garder <strong>k comme paramètre</strong> : le sous-problème est D⁽ᵏ⁾[i][j], donc <em>trois</em> indices. On obtient n+1 « couches » (matrices) ; chaque case de la couche k dépend de trois cases de la couche k−1.</p><ul><li>Temps : toujours Θ(n³).</li><li>Mémoire : <strong>Θ(n³)</strong> au lieu de Θ(n²) pour la version en place.</li></ul><p>Dans le mode Top-Down de la page, choisissez la couche affichée : à gauche la couche k−1 (dépendances), à droite la couche k.</p>` },
     { h: "Cycles absorbants", html: `<p>S'il existe un cycle de poids négatif, certains D[i][i] deviennent négatifs : c'est le test de détection (essayez le préréglage « Cycle absorbant »).</p>` },
     { h: "Complexité", html: `<p>Θ(n³) en temps, Θ(n²) en mémoire. Pour comparaison : n exécutions de Dijkstra coûtent O(n(m + n) log n) mais exigent des poids positifs. Pour reconstruire les chemins, on tient à jour une matrice de successeurs/prédécesseurs.</p>` }
   ],
   quiz: [
     { q: "Pourquoi la boucle sur k doit-elle être la plus externe ?", a: "L'invariant « D contient D⁽ᵏ⁾ » n'est vrai qu'après avoir traité tous les couples (i, j) pour le sommet k. Avec k à l'intérieur, on mélangerait des phases et on pourrait rater des chemins." },
     { q: "Quels coefficients ne changent pas pendant la phase k ?", a: "Ceux de la ligne k et de la colonne k : D[k][j] ≤ D[k][k] + D[k][j] car D[k][k] = 0 (sans cycle négatif). C'est ce qui justifie l'implémentation en place." },
-    { q: "Comment détecter un cycle absorbant avec Floyd-Warshall ?", a: "À la fin, il existe un sommet i avec D[i][i] < 0." }
+    { q: "Comment détecter un cycle absorbant avec Floyd-Warshall ?", a: "À la fin, il existe un sommet i avec D[i][i] < 0." },
+    { q: "Pourquoi la version en place n'a-t-elle besoin que de Θ(n²) mémoire alors que la version Top-Down a besoin de Θ(n³) ?", a: "Dans la version en place, on écrase la couche k−1 par la couche k : cela marche parce que la ligne k et la colonne k ne changent pas pendant la phase k. La version récursive mémorise toutes les couches car elle ne contrôle pas l'ordre dans lequel les cases sont consultées." }
   ],
   code: `def floyd_warshall(D):
     # D[i][j] = poids de l'arc i->j, float('inf') sinon, D[i][i] = 0
@@ -1377,7 +1420,7 @@ const GENERAL_HTML = `
    Interface
    ============================================================ */
 const $ = id => document.getElementById(id);
-const state = { pid: null, mode: "bottom", step: 0, model: null, events: [], naive: null, inputs: {}, playing: false, timer: null, debounce: null };
+const state = { pid: null, mode: "bottom", step: 0, model: null, view: null, layer: 0, layerAuto: true, events: [], naive: null, inputs: {}, playing: false, timer: null, debounce: null };
 
 function typeset(el) {
   if (window.MathJax && typeof MathJax.typesetPromise === "function") MathJax.typesetPromise(el ? [el] : undefined).catch(() => {});
@@ -1465,7 +1508,6 @@ function applyInputs() {
     const model = p.build(p.parse(vals));
     state.model = model;
     $("error").textContent = "";
-    if (model.noTopDown) state.mode = "bottom";
     $("input-summary").innerHTML = `<strong>Données :</strong> ${model.summary}`;
     computeRun();
   } catch (e) {
@@ -1477,14 +1519,21 @@ function applyInputs() {
 function computeRun() {
   stopPlay();
   const m = state.model;
-  if (m.kind === "floyd") {
-    state.events = m.events;
-    state.naive = null;
+  if (m.kind === "floyd" && state.mode === "bottom") {
+    state.view = m; state.events = m.events; state.naive = null;
   } else {
-    const bu = runBottomUp(m);
-    m.fin = m.finish(k => bu.values.get(k));
-    state.events = state.mode === "top" ? runTopDown(m).events : bu.events;
-    state.naive = naiveCalls(m, bu.values);
+    const v = m.kind === "floyd" ? m.td : m;
+    const bu = runBottomUp(v);
+    v.fin = v.finish(k => bu.values.get(k));
+    state.events = state.mode === "top" ? runTopDown(v).events : bu.events;
+    state.naive = naiveCalls(v, bu.values);
+    state.view = v;
+  }
+  if (state.view.layers) {
+    $("layer-select").innerHTML = range(state.view.layers).map(l => `<option value="${l}">${l === 0 ? "k = −1 : matrice initiale" : "k = " + (l - 1)}</option>`).join("");
+    state.layer = state.view.layers - 1;
+    state.layerAuto = true;
+    $("layer-auto").checked = true;
   }
   state.step = 0;
   updateModeUI();
@@ -1492,13 +1541,15 @@ function computeRun() {
 }
 
 function updateModeUI() {
-  const m = state.model, nt = !!m.noTopDown;
+  const m = state.model, fl = m.kind === "floyd";
   $("bottom-up-btn").classList.toggle("active", state.mode === "bottom");
   $("top-down-btn").classList.toggle("active", state.mode === "top");
-  $("top-down-btn").disabled = nt;
-  $("top-down-btn").title = nt ? "Floyd-Warshall est itératif et en place : pas de version Top-Down naturelle." : "";
-  $("phase-btn").hidden = m.kind !== "floyd";
-  $("mode-note").textContent = nt ? "Floyd-Warshall est un algorithme itératif en place : pas de mode Top-Down."
+  $("top-down-btn").disabled = false;
+  $("top-down-btn").title = "";
+  $("phase-btn").hidden = !(fl && state.mode === "bottom");
+  $("mode-note").textContent = fl
+    ? (state.mode === "bottom" ? "Version classique : une seule matrice, mise à jour en place, phase par phase (k = 0, 1, …)."
+      : "Version récursive : D(k, i, j) dépend de trois cases de la couche k−1. Mémoire Θ(n³) ; choisissez la couche à afficher.")
     : state.mode === "bottom" ? "On remplit toutes les cases dans l'ordre : des petits sous-problèmes vers le grand."
     : "On part de la case finale ; chaque appel récursif mémorise son résultat. Seules les cases nécessaires sont calculées.";
   $("table-title").textContent = "Tableau de programmation dynamique — " + (state.mode === "bottom" ? "Bottom-Up" : "Top-Down");
@@ -1506,7 +1557,6 @@ function updateModeUI() {
 }
 
 function setMode(mode) {
-  if (mode === "top" && state.model.noTopDown) return;
   state.mode = mode;
   computeRun();
 }
@@ -1525,18 +1575,18 @@ function replay(t) {
 
 function render() {
   renderStatus(); renderPreview(); renderStack();
-  if (state.model.kind === "floyd") renderFloyd(); else renderGrid();
-  renderLegend(); renderStats(); renderLog(); renderResult(); renderProgress();
+  if (state.view.kind === "floyd") renderFloyd(); else renderGrid();
+  renderLayerBar(); renderLegend(); renderStats(); renderLog(); renderResult(); renderProgress();
 }
 
 function renderStatus() {
-  const t = state.step, ev = state.events, m = state.model;
+  const t = state.step, ev = state.events, m = state.view;
   const box = $("step-box");
   if (t === 0) {
     box.innerHTML = `<span class="step-tag">Prêt</span> ` + (m.kind === "floyd"
       ? "Pour chaque sommet intermédiaire <b>k</b>, on teste pour tous les couples (i, j) si passer par k raccourcit le chemin."
       : state.mode === "bottom" ? "Mode <b>Bottom-Up</b> : on remplit le tableau dans l'ordre, des cas de base vers la réponse."
-      : "Mode <b>Top-Down</b> : on part de la case finale et on descend récursivement ; chaque résultat est mémorisé.")
+      : "Mode <b>Top-Down</b> : on part de la case finale et on descend récursivement ; chaque résultat est mémorisé." + (m.layers ? " Chaque case D⁽ᵏ⁾[i][j] dépend de trois cases de la couche précédente (tableau de gauche)." : ""))
       + " Cliquez sur « Étape suivante » ou utilisez la touche →.";
     return;
   }
@@ -1546,7 +1596,7 @@ function renderStatus() {
 }
 
 function renderPreview() {
-  const m = state.model, box = $("preview");
+  const m = state.view, box = $("preview");
   if (!m.preview) { box.hidden = true; return; }
   const finished = state.step === state.events.length && state.events.length > 0;
   box.hidden = false;
@@ -1555,7 +1605,7 @@ function renderPreview() {
 
 function renderStack() {
   const box = $("stack-panel");
-  const show = state.mode === "top" && state.model.kind !== "floyd";
+  const show = state.mode === "top" && state.view.kind !== "floyd";
   box.hidden = !show;
   if (!show) return;
   const t = state.step, last = t > 0 ? state.events[t - 1] : null;
@@ -1576,16 +1626,10 @@ function cellClasses(key, hl, computed, pathSet) {
   return c.join(" ");
 }
 
-function renderGrid() {
-  const m = state.model, t = state.step;
-  const { computed, logs } = replay(t);
-  const finished = t === state.events.length && t > 0;
-  const last = t > 0 ? state.events[t - 1] : null;
-  const hl = finished ? null : last;
-  const pathSet = finished ? new Set(m.fin.path) : new Set();
+function tableHTML(m, rows, hl, computed, logs, pathSet) {
   const fv = v => m.fmt ? m.fmt(v) : fmtNum(v);
   let h = `<table class="dp-table"><thead><tr><th>${esc(m.corner)}</th>` + m.cols.map(c => `<th>${c}</th>`).join("") + "</tr></thead><tbody>";
-  m.rows.forEach(row => {
+  rows.forEach(row => {
     h += `<tr><td class="row-header">${row.label}</td>`;
     row.cells.forEach(cell => {
       if (cell.text !== undefined) { h += `<td class="static">${cell.text}</td>`; return; }
@@ -1598,11 +1642,38 @@ function renderGrid() {
     });
     h += "</tr>";
   });
-  $("visualization").innerHTML = h + "</tbody></table>";
+  return h + "</tbody></table>";
+}
+
+const evLayer = e => idx(e.type === "hit" ? e.parent : e.key)[0];
+
+function renderGrid() {
+  const m = state.view, t = state.step;
+  const { computed, logs } = replay(t);
+  const finished = t === state.events.length && t > 0;
+  const last = t > 0 ? state.events[t - 1] : null;
+  const hl = finished ? null : last;
+  const pathSet = finished ? new Set(m.fin.path) : new Set();
+  if (m.layers) {
+    if (state.layerAuto) state.layer = last ? evLayer(last) : m.layers - 1;
+    const l = Math.min(Math.max(state.layer, 0), m.layers - 1);
+    const show = l > 0 ? [l - 1, l] : [0];
+    $("visualization").innerHTML = `<div class="layer-wrap">` + show.map(x =>
+      `<div class="layer-box"><div class="layer-title">${m.layerName(x)}</div>${tableHTML(m, m.rowsByLayer[x], hl, computed, logs, pathSet)}</div>`).join("") + `</div>`;
+  } else {
+    $("visualization").innerHTML = tableHTML(m, m.rows, hl, computed, logs, pathSet);
+  }
+}
+
+function renderLayerBar() {
+  const m = state.view, bar = $("layer-bar");
+  bar.hidden = !m.layers;
+  if (!m.layers) return;
+  $("layer-select").value = String(Math.min(Math.max(state.layer, 0), m.layers - 1));
 }
 
 function renderFloyd() {
-  const m = state.model, t = state.step, n = m.n;
+  const m = state.view, t = state.step, n = m.n;
   const cur = m.init.map(r => r.slice());
   for (let e = 0; e < t; e++) { const ev = state.events[e]; cur[ev.i][ev.j] = ev.value; }
   const finished = t === state.events.length && t > 0;
@@ -1628,7 +1699,7 @@ function renderFloyd() {
 }
 
 function renderLegend() {
-  const m = state.model;
+  const m = state.view;
   let items;
   if (m.kind === "floyd") items = [["lg-current", "Couple (i, j) testé"], ["lg-dependency", "D[i][k] et D[k][j]"], ["lg-pivot", "Ligne et colonne k"], ["lg-improved", "Amélioré pendant la phase"]];
   else {
@@ -1640,7 +1711,7 @@ function renderLegend() {
 }
 
 function renderStats() {
-  const m = state.model, t = state.step, box = $("stats");
+  const m = state.view, t = state.step, box = $("stats");
   if (m.kind === "floyd") {
     let imp = 0;
     for (let e = 0; e < t; e++) if (state.events[e].improved) imp++;
@@ -1659,7 +1730,7 @@ function renderStats() {
 function renderLog() {
   const t = state.step, box = $("log");
   if (t === 0) { box.innerHTML = `<div class="log-entry">Le journal se remplit au fil des étapes.</div>`; return; }
-  const m = state.model;
+  const m = state.view;
   let h = "";
   for (let i = 0; i < t; i++) {
     const e = state.events[i];
@@ -1672,7 +1743,7 @@ function renderLog() {
 
 function renderResult() {
   const finished = state.step === state.events.length && state.events.length > 0;
-  $("result-banner").innerHTML = finished ? `<div class="result-banner">✓ ${state.model.fin.result}</div>` : "";
+  $("result-banner").innerHTML = finished ? `<div class="result-banner">✓ ${state.view.fin.result}</div>` : "";
 }
 
 function renderProgress() {
@@ -1731,6 +1802,8 @@ document.addEventListener("keydown", e => {
 
 /* Initialisation */
 $("general-body").innerHTML = GENERAL_HTML;
+$("layer-select").addEventListener("change", e => { state.layer = +e.target.value; state.layerAuto = false; $("layer-auto").checked = false; render(); });
+$("layer-auto").addEventListener("change", e => { state.layerAuto = e.target.checked; render(); });
 loadProblem("fib");
 </script>
 
