@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,529 +6,182 @@
 <title>Programmation dynamique — Visualiseur</title>
 
 <script>
-MathJax = {
-  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
-};
+(function () {
+  try {
+    var t = localStorage.getItem("pd-theme");
+    if (!t) t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
+})();
+MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] } };
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <style>
 :root {
-  --bg: #f4f6fa;
-  --panel: #ffffff;
-  --text: #172033;
-  --muted: #667085;
-  --border: #e1e6ef;
-  --accent: #3569d4;
-  --accent-light: #edf3ff;
-  --accent-border: #b7cdfb;
-  --current: #ffedb5;
-  --current-border: #e7a008;
-  --done: #e2f5e8;
-  --done-border: #76c893;
-  --dependency: #dceaff;
-  --dependency-border: #83b1f5;
+  --bg: #f4f6fa; --panel: #ffffff; --text: #172033; --muted: #667085; --border: #e1e6ef;
+  --accent: #3569d4; --accent-light: #edf3ff; --accent-border: #b7cdfb;
+  --current: #ffedb5; --current-border: #e7a008;
+  --done: #e2f5e8; --done-border: #76c893;
+  --dependency: #dceaff; --dependency-border: #83b1f5;
+  --hit: #efe3ff; --hit-border: #a77de8;
+  --instack: #e7a008; --path: #1f9d57; --danger: #c0392b;
   --shadow: 0 3px 12px rgba(30, 50, 90, .06);
 }
-
 [data-theme="dark"] {
-  --bg: #111827;
-  --panel: #1c2535;
-  --text: #e8edf6;
-  --muted: #a3afc2;
-  --border: #344156;
-  --accent: #82aaff;
-  --accent-light: #25395d;
-  --accent-border: #4669a8;
-  --current: #5d4518;
-  --current-border: #d9a441;
-  --done: #1e4937;
-  --done-border: #4d9975;
-  --dependency: #263f65;
-  --dependency-border: #5989c6;
+  --bg: #111827; --panel: #1c2535; --text: #e8edf6; --muted: #a3afc2; --border: #344156;
+  --accent: #82aaff; --accent-light: #25395d; --accent-border: #4669a8;
+  --current: #5d4518; --current-border: #d9a441;
+  --done: #1e4937; --done-border: #4d9975;
+  --dependency: #263f65; --dependency-border: #5989c6;
+  --hit: #3b2a63; --hit-border: #9b7bd4;
+  --instack: #d9a441; --path: #5fd49a; --danger: #ff8f8f;
   --shadow: 0 3px 12px rgba(0, 0, 0, .15);
 }
-
 * { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  line-height: 1.55;
-}
-
-header {
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  padding: 20px 28px;
-}
-
-.header-inner {
-  max-width: 1450px;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-
-.brand-icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  background: var(--accent-light);
-  color: var(--accent);
-  border-radius: 12px;
-  font-size: 23px;
-  font-weight: 800;
-}
-
-h1 {
-  font-size: 1.25rem;
-  margin: 0;
-  letter-spacing: -.025em;
-}
-
-.subtitle {
-  color: var(--muted);
-  font-size: .88rem;
-  margin: 2px 0 0;
-}
-
-button, select, input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.theme-button {
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  border-radius: 9px;
-  padding: 9px 13px;
-  font-size: .88rem;
-}
-
-.layout {
-  max-width: 1450px;
-  margin: 26px auto;
-  padding: 0 22px;
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: 22px;
-}
-
-.sidebar {
-  align-self: start;
-  position: sticky;
-  top: 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: var(--shadow);
-}
-
-.sidebar h2 {
-  font-size: .8rem;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--muted);
-  margin: 2px 10px 12px;
-}
-
-.nav-button {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text);
-  border-radius: 9px;
-  padding: 10px;
-  text-align: left;
-  margin: 3px 0;
-  font-size: .91rem;
-}
-
-.nav-button:hover {
-  background: var(--bg);
-}
-
-.nav-button.active {
-  background: var(--accent-light);
-  border-color: var(--accent-border);
-  color: var(--accent);
-  font-weight: 650;
-}
-
-.nav-number {
-  display: grid;
-  place-items: center;
-  width: 25px;
-  height: 25px;
-  border-radius: 7px;
-  background: var(--bg);
-  font-size: .76rem;
-  font-weight: 700;
-}
-
-main {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 23px;
-  box-shadow: var(--shadow);
-}
-
-.problem-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  align-items: start;
-}
-
-.problem-header h2 {
-  font-size: 1.35rem;
-  margin: 0 0 8px;
-}
-
-.description {
-  margin: 0;
-  color: var(--muted);
-  max-width: 800px;
-}
-
-.tag {
-  background: var(--accent-light);
-  color: var(--accent);
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: .78rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.input-summary {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 13px 15px;
-  border-radius: 9px;
-  margin-top: 20px;
-  font-size: .9rem;
-}
-
-.input-summary strong {
-  color: var(--accent);
-}
-
-.section-title {
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0 0 13px;
-}
-
-.mode-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  flex-wrap: wrap;
-  margin-top: 22px;
-}
-
-.segmented {
-  display: flex;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 4px;
-  border-radius: 10px;
-  gap: 4px;
-}
-
-.segmented button {
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--muted);
-  padding: 8px 13px;
-  font-size: .86rem;
-  font-weight: 600;
-}
-
-.segmented button.active {
-  background: var(--panel);
-  color: var(--accent);
-  box-shadow: var(--shadow);
-}
-
-.controls {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.action {
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 9px 14px;
-  font-size: .87rem;
-  font-weight: 650;
-}
-
-.action.primary {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
-
-.action.primary:hover {
-  filter: brightness(.95);
-}
-
-.action:disabled {
-  opacity: .4;
-  cursor: not-allowed;
-}
-
-.progress-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 19px 0 13px;
-}
-
-.progress-track {
-  height: 7px;
-  background: var(--bg);
-  border-radius: 10px;
-  flex: 1;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--accent);
-  width: 0;
-  transition: width .2s;
-  border-radius: 10px;
-}
-
-.progress-text {
-  font-size: .8rem;
-  color: var(--muted);
-  white-space: nowrap;
-  min-width: 78px;
-  text-align: right;
-}
-
-.visualization {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: auto;
-  max-width: 100%;
-  background: var(--panel);
-}
-
-.dp-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: .9rem;
-  width: max-content;
-  min-width: 100%;
-}
-
-.dp-table th,
-.dp-table td {
-  min-width: 48px;
-  padding: 11px 13px;
-  text-align: center;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.dp-table th {
-  background: var(--bg);
-  font-weight: 700;
-}
-
-.dp-table th:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-}
-
-.dp-table td.row-header {
-  position: sticky;
-  left: 0;
-  background: var(--bg);
-  font-weight: 700;
-  z-index: 1;
-}
-
-.dp-table td.current {
-  background: var(--current);
-  box-shadow: inset 0 0 0 2px var(--current-border);
-  font-weight: 800;
-}
-
-.dp-table td.done {
-  background: var(--done);
-}
-
-.dp-table td.dependency {
-  background: var(--dependency);
-  box-shadow: inset 0 0 0 1px var(--dependency-border);
-}
-
-.dp-table td.unknown {
-  color: var(--muted);
-  opacity: .6;
-}
-
-.dp-table td.result {
-  font-weight: 800;
-}
-
-.legend {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-  font-size: .79rem;
-  color: var(--muted);
-  margin-top: 12px;
-}
-
-.legend span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend i {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-}
-
-.legend .lg-current { background: var(--current); }
-.legend .lg-dependency { background: var(--dependency); }
-.legend .lg-done { background: var(--done); }
-
-.bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
-.formula {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 15px;
-  border-radius: 9px;
-  min-height: 90px;
-  overflow-x: auto;
-}
-
-.explanation {
-  font-size: .9rem;
-  color: var(--muted);
-  margin: 12px 0 0;
-}
-
-.log {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  min-height: 90px;
-  max-height: 220px;
-  overflow-y: auto;
-  padding: 12px 14px;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: .81rem;
-}
-
-.log-entry {
-  padding: 4px 0;
-  border-bottom: 1px dashed var(--border);
-}
-
-.log-entry:last-child {
-  border-bottom: none;
-}
-
-.log-entry strong {
-  color: var(--accent);
-}
-
-.result-banner {
-  margin-top: 15px;
-  border: 1px solid var(--done-border);
-  background: var(--done);
-  border-radius: 9px;
-  padding: 13px 15px;
-  font-weight: 650;
-  font-size: .92rem;
-}
-
-footer {
-  max-width: 1450px;
-  margin: 25px auto;
-  padding: 0 22px;
-  color: var(--muted);
-  font-size: .78rem;
-  text-align: center;
-}
-
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 18px 28px; }
+.header-inner { max-width: 1450px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 13px; }
+.brand-icon { display: grid; place-items: center; width: 44px; height: 44px; background: var(--accent-light);
+  color: var(--accent); border-radius: 12px; font-size: 23px; font-weight: 800; }
+h1 { font-size: 1.25rem; margin: 0; letter-spacing: -.025em; }
+.subtitle { color: var(--muted); font-size: .88rem; margin: 2px 0 0; }
+button, select, input, textarea { font: inherit; }
+button { cursor: pointer; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.theme-button { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 9px; padding: 8px 12px; font-size: .86rem; }
+.layout { max-width: 1450px; margin: 24px auto; padding: 0 22px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; }
+.sidebar { align-self: start; position: sticky; top: 16px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+.sidebar h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 2px 10px 12px; }
+.nav-button { display: flex; width: 100%; align-items: center; gap: 10px; border: 1px solid transparent; background: transparent;
+  color: var(--text); border-radius: 9px; padding: 9px 10px; text-align: left; margin: 2px 0; font-size: .9rem; }
+.nav-button:hover { background: var(--bg); }
+.nav-button.active { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent); font-weight: 650; }
+.nav-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 7px; background: var(--bg); font-size: .76rem; font-weight: 700; flex: none; }
+.keys { margin: 14px 8px 2px; padding-top: 12px; border-top: 1px solid var(--border); font-size: .76rem; color: var(--muted); }
+kbd { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; font-size: .74rem; }
+main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); }
+details.card > summary { cursor: pointer; font-weight: 700; }
+.problem-header { display: flex; justify-content: space-between; gap: 20px; align-items: start; }
+.problem-header h2 { font-size: 1.35rem; margin: 0 0 8px; }
+.description { margin: 0; color: var(--muted); max-width: 820px; }
+.tag { background: var(--accent-light); color: var(--accent); border-radius: 8px; padding: 6px 10px; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.section-title { font-size: 1rem; font-weight: 700; margin: 0 0 12px; }
+.params { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 18px; }
+.field label { display: block; font-size: .82rem; font-weight: 700; margin-bottom: 5px; }
+.field input, .field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+  color: var(--text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .92rem; }
+.field input:focus, .field textarea:focus { outline: 2px solid var(--accent-border); border-color: var(--accent); }
+.field textarea { resize: vertical; min-height: 86px; }
+.field small { display: block; color: var(--muted); font-size: .76rem; margin-top: 4px; }
+.preset-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.preset-row .lbl { font-size: .8rem; color: var(--muted); font-weight: 600; }
+.chip-btn { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 999px; padding: 5px 12px; font-size: .8rem; }
+.chip-btn:hover { border-color: var(--accent); color: var(--accent); }
+.error { margin-top: 12px; color: var(--danger); font-size: .86rem; font-weight: 600; min-height: 1.2em; }
+.input-summary { background: var(--bg); border: 1px solid var(--border); padding: 11px 14px; border-radius: 9px; margin-top: 12px; font-size: .88rem; }
+.input-summary strong { color: var(--accent); }
+.mode-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
+.segmented { display: flex; background: var(--bg); border: 1px solid var(--border); padding: 4px; border-radius: 10px; gap: 4px; }
+.segmented button { border: 0; border-radius: 7px; background: transparent; color: var(--muted); padding: 8px 13px; font-size: .86rem; font-weight: 600; }
+.segmented button.active { background: var(--panel); color: var(--accent); box-shadow: var(--shadow); }
+.segmented button:disabled { opacity: .4; cursor: not-allowed; }
+.mode-note { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.action { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 8px; padding: 9px 14px; font-size: .87rem; font-weight: 650; }
+.action.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.action:disabled { opacity: .4; cursor: not-allowed; }
+.controls select { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 8px; padding: 8px 8px; font-size: .84rem; }
+.progress-area { display: flex; align-items: center; gap: 12px; margin: 16px 0 6px; }
+.progress-track { height: 7px; background: var(--bg); border-radius: 10px; flex: 1; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent); width: 0; transition: width .15s; border-radius: 10px; }
+.progress-text { font-size: .8rem; color: var(--muted); white-space: nowrap; min-width: 78px; text-align: right; }
+.step-box { border: 1px solid var(--current-border); background: var(--current); border-radius: 10px; padding: 12px 15px; margin: 14px 0; font-size: .98rem; min-height: 3.4em; }
+.step-tag { display: inline-block; background: var(--current-border); color: #fff; font-size: .72rem; font-weight: 800; border-radius: 5px; padding: 1px 8px; margin-right: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.preview { border: 1px dashed var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; overflow-x: auto; }
+.preview .pv-title { font-size: .76rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; font-weight: 700; }
+.stack { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 0 0 12px; font-size: .82rem; }
+.stack .lbl { color: var(--muted); font-weight: 700; margin-right: 6px; }
+.visualization { border: 1px solid var(--border); border-radius: 10px; overflow: auto; max-width: 100%; background: var(--panel); }
+.dp-table { border-collapse: separate; border-spacing: 0; font-size: .92rem; width: max-content; min-width: 100%; }
+.dp-table th, .dp-table td { min-width: 48px; padding: 10px 12px; text-align: center; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.dp-table th { background: var(--bg); font-weight: 700; }
+.dp-table th:first-child { position: sticky; left: 0; z-index: 2; font-size: .72rem; color: var(--muted); }
+.dp-table td.row-header { position: sticky; left: 0; background: var(--bg); font-weight: 700; z-index: 1; white-space: nowrap; text-align: left; }
+.dp-table td.static { color: var(--muted); background: var(--bg); font-style: italic; }
+.dp-table td.done { background: var(--done); }
+.dp-table td.unknown { color: var(--muted); opacity: .6; }
+.dp-table td.dependency { background: var(--dependency); box-shadow: inset 0 0 0 1px var(--dependency-border); opacity: 1; }
+.dp-table td.pivot { background: var(--accent-light); opacity: 1; }
+.dp-table td.improved { background: var(--done); box-shadow: inset 0 0 0 1px var(--done-border); font-weight: 800; opacity: 1; }
+.dp-table td.instack { outline: 2px dashed var(--instack); outline-offset: -3px; opacity: 1; }
+.dp-table td.hit { background: var(--hit); box-shadow: inset 0 0 0 2px var(--hit-border); font-weight: 800; opacity: 1; }
+.dp-table td.current { background: var(--current); box-shadow: inset 0 0 0 2px var(--current-border); font-weight: 800; opacity: 1; }
+.dp-table td.path { outline: 3px solid var(--path); outline-offset: -3px; font-weight: 800; opacity: 1; }
+.legend { display: flex; gap: 15px; flex-wrap: wrap; font-size: .79rem; color: var(--muted); margin-top: 12px; }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); }
+.lg-current { background: var(--current); } .lg-dependency { background: var(--dependency); } .lg-done { background: var(--done); }
+.lg-hit { background: var(--hit); } .lg-pivot { background: var(--accent-light); } .lg-improved { background: var(--done); border-color: var(--done-border) !important; }
+.lg-instack { border: 2px dashed var(--instack) !important; } .lg-path { border: 2px solid var(--path) !important; }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; font-size: .8rem; }
+.stat b { color: var(--accent); }
+.result-banner { margin-top: 14px; border: 1px solid var(--done-border); background: var(--done); border-radius: 9px; padding: 13px 15px; font-weight: 600; font-size: .94rem; }
+.result-banner small { font-weight: 400; }
+.chip { display: inline-block; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; margin: 2px; font-size: .82rem; font-weight: 500; }
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.formula { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 9px; min-height: 90px; overflow-x: auto; }
+.explanation { font-size: .9rem; color: var(--muted); margin: 12px 0 0; }
+.log { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; min-height: 90px; max-height: 260px; overflow-y: auto; padding: 10px 12px; font-size: .82rem; }
+.log-entry { padding: 4px 4px; border-bottom: 1px dashed var(--border); }
+.log-entry:last-child { border-bottom: none; }
+.log-entry.cur { background: var(--current); border-radius: 5px; }
+.log-entry .n { color: var(--muted); display: inline-block; min-width: 2.2em; }
+.log-entry .t { color: var(--accent); font-weight: 700; }
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
+.doc-sec h4 { margin: 0 0 6px; color: var(--accent); font-size: .98rem; }
+.doc-sec p, .doc-sec li { font-size: .92rem; margin: 0 0 8px; }
+.doc-sec ul, .doc-sec ol { margin: 0 0 8px; padding-left: 20px; }
+.callout { border-left: 4px solid var(--accent); background: var(--accent-light); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: .9rem; }
+.callout.warn { border-left-color: var(--current-border); background: var(--current); }
+table.cmp { border-collapse: collapse; width: 100%; font-size: .88rem; margin: 8px 0; }
+table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+table.cmp th { background: var(--bg); }
+pre { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 14px; overflow: auto; font-size: .82rem; line-height: 1.5; margin: 0; }
+details.quiz { border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px; margin: 8px 0; background: var(--bg); }
+details.quiz summary { cursor: pointer; font-weight: 600; font-size: .92rem; }
+details.quiz div { margin-top: 8px; font-size: .9rem; color: var(--muted); }
+.chain { display: flex; align-items: center; flex-wrap: wrap; }
+.chain-item { display: flex; flex-direction: column; align-items: center; }
+.chain-item small { color: var(--muted); font-size: .7rem; }
+.node { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--accent-border); background: var(--accent-light); font-weight: 700; font-size: .88rem; }
+.node.on { background: var(--done); border-color: var(--path); }
+.link { width: 20px; height: 2px; background: var(--border); margin-bottom: 16px; }
+.g-row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.g-lab { width: 64px; font-size: .76rem; color: var(--muted); flex: none; }
+.g-track { position: relative; flex: 1; height: 22px; background: var(--bg); border-radius: 5px; }
+.g-bar { position: absolute; top: 2px; bottom: 2px; border-radius: 4px; background: var(--dependency); border: 1px solid var(--dependency-border);
+  font-size: .7rem; display: grid; place-items: center; overflow: hidden; white-space: nowrap; }
+.g-bar.on { background: var(--done); border-color: var(--path); font-weight: 700; }
+.g-axis { position: relative; height: 16px; margin-left: 72px; font-size: .68rem; color: var(--muted); }
+.g-axis span { position: absolute; transform: translateX(-50%); }
+svg.graph { width: 100%; max-width: 380px; height: auto; display: block; margin: auto; }
+footer { max-width: 1450px; margin: 25px auto; padding: 0 22px; color: var(--muted); font-size: .78rem; text-align: center; }
 @media (max-width: 1000px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    position: static;
-  }
-  .sidebar nav {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
-  }
-  .sidebar h2 {
-    grid-column: 1 / -1;
-  }
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+  .sidebar nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  .sidebar h2, .keys { grid-column: 1 / -1; }
 }
-
 @media (max-width: 650px) {
-  header { padding: 15px; }
-  .layout { padding: 0 12px; margin-top: 14px; }
-  .card { padding: 15px; }
-  .bottom-grid { grid-template-columns: 1fr; }
-  .problem-header { flex-direction: column; }
-  .sidebar nav { grid-template-columns: 1fr; }
-  h1 { font-size: 1.05rem; }
+  header { padding: 14px; } .layout { padding: 0 12px; margin-top: 14px; } .card { padding: 15px; }
+  .bottom-grid { grid-template-columns: 1fr; } .problem-header { flex-direction: column; }
+  .sidebar nav { grid-template-columns: 1fr; } h1 { font-size: 1.05rem; } .doc-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -542,10 +194,14 @@ footer {
       <div class="brand-icon">DP</div>
       <div>
         <h1>Programmation dynamique</h1>
-        <p class="subtitle">Visualisation interactive des algorithmes</p>
+        <p class="subtitle">Visualiseur interactif — modifiez les données, observez l'algorithme</p>
       </div>
     </div>
-    <button class="theme-button" onclick="toggleTheme()">☼ Mode clair / sombre</button>
+    <div class="header-actions">
+      <button class="theme-button" onclick="zoom(-0.1)" title="Réduire (projection)">A−</button>
+      <button class="theme-button" onclick="zoom(0.1)" title="Agrandir (projection)">A+</button>
+      <button class="theme-button" onclick="toggleTheme()">☼ Clair / sombre</button>
+    </div>
   </div>
 </header>
 
@@ -554,59 +210,78 @@ footer {
   <aside class="sidebar">
     <h2>Problèmes</h2>
     <nav id="problem-nav"></nav>
+    <div class="keys">
+      Raccourcis :<br>
+      <kbd>→</kbd> étape suivante<br>
+      <kbd>←</kbd> étape précédente<br>
+      <kbd>Espace</kbd> lecture / pause
+    </div>
   </aside>
 
   <main>
 
-    <section class="card">
+    <details class="card" id="general">
+      <summary>Rappel : principe général de la programmation dynamique</summary>
+      <div id="general-body" style="margin-top:14px"></div>
+    </details>
+
+    <section class="card" id="problem-card">
       <div class="problem-header">
         <div>
           <h2 id="problem-title"></h2>
           <p class="description" id="problem-description"></p>
         </div>
-        <span class="tag" id="problem-tag">Programmation dynamique</span>
+        <span class="tag" id="problem-tag"></span>
       </div>
 
+      <div class="params" id="params"></div>
+      <div class="preset-row" id="presets"></div>
+      <div class="error" id="error" role="alert"></div>
       <div class="input-summary" id="input-summary"></div>
+    </section>
 
+    <section class="card" id="viz-card">
       <div class="mode-row">
         <div>
           <h3 class="section-title">Méthode de résolution</h3>
           <div class="segmented">
-            <button id="bottom-up-btn" class="active" onclick="setMode('bottom')">
-              Bottom-Up
-            </button>
-            <button id="top-down-btn" onclick="setMode('top')">
-              Top-Down
-            </button>
+            <button id="bottom-up-btn" class="active" onclick="setMode('bottom')">Bottom-Up (itératif)</button>
+            <button id="top-down-btn" onclick="setMode('top')">Top-Down (récursif + mémo)</button>
           </div>
+          <div class="mode-note" id="mode-note"></div>
         </div>
+      </div>
 
-        <div class="controls">
-          <button class="action" onclick="previousStep()" id="previous-btn">← Précédent</button>
-          <button class="action primary" onclick="nextStep()" id="next-btn">Étape suivante →</button>
-          <button class="action" onclick="runAll()">Tout calculer</button>
-          <button class="action" onclick="reset()">Réinitialiser</button>
-        </div>
+      <div class="controls">
+        <button class="action" onclick="previousStep()" id="previous-btn">← Précédent</button>
+        <button class="action primary" onclick="nextStep()" id="next-btn">Étape suivante →</button>
+        <button class="action" onclick="togglePlay()" id="play-btn">▶ Lecture</button>
+        <select id="speed" title="Vitesse de lecture">
+          <option value="1600">Lent</option>
+          <option value="800" selected>Normal</option>
+          <option value="300">Rapide</option>
+          <option value="80">Très rapide</option>
+        </select>
+        <button class="action" onclick="nextPhase()" id="phase-btn" hidden>Sommet k suivant ⏭</button>
+        <button class="action" onclick="runAll()">Tout calculer</button>
+        <button class="action" onclick="reset()">Réinitialiser</button>
       </div>
 
       <div class="progress-area">
-        <div class="progress-track">
-          <div class="progress-bar" id="progress-bar"></div>
-        </div>
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
         <div class="progress-text" id="progress-text">0 / 0</div>
       </div>
 
+      <div class="step-box" id="step-box"></div>
+
+      <div class="preview" id="preview" hidden></div>
+
+      <div class="stack" id="stack-panel" hidden></div>
+
       <h3 class="section-title" id="table-title">Tableau de programmation dynamique</h3>
-
       <div class="visualization" id="visualization"></div>
-
-      <div class="legend">
-        <span><i class="lg-current"></i> Case calculée à cette étape</span>
-        <span><i class="lg-dependency"></i> Dépendance</span>
-        <span><i class="lg-done"></i> Case déjà calculée</span>
-      </div>
-
+      <div class="legend" id="legend"></div>
+      <div class="stats" id="stats"></div>
       <div id="result-banner"></div>
     </section>
 
@@ -616,749 +291,1447 @@ footer {
         <div class="formula" id="formula"></div>
         <p class="explanation" id="formula-explanation"></p>
       </section>
-
       <section class="card">
         <h3 class="section-title">Journal d'exécution</h3>
         <div class="log" id="log"></div>
       </section>
     </div>
 
+    <section class="card">
+      <h3 class="section-title">Comprendre l'algorithme</h3>
+      <div class="doc-grid" id="doc-body"></div>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title">Implémentation Python (à comparer avec la visualisation)</h3>
+      <pre><code id="code"></code></pre>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title">Questions pour réfléchir (réponses repliées)</h3>
+      <div id="quiz"></div>
+    </section>
+
   </main>
 </div>
 
-<footer>
-  Programmation dynamique — Visualiseur pédagogique
-</footer>
+<footer>Programmation dynamique — Visualiseur pédagogique pour la CPGE</footer>
 
 <script>
 "use strict";
 
+/* ENGINE-START */
 /* ============================================================
-   Données et définition des problèmes
+   Utilitaires
    ============================================================ */
+const INF = Infinity;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtNum = v => v === Infinity ? "∞" : v === -Infinity ? "−∞" : String(v);
+const fmtBig = x => x < 1e12 ? x.toLocaleString("fr-FR") : x.toExponential(2).replace("e+", " × 10^");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const idx = k => k.match(/\d+/g).map(Number);
+const K2 = (p, i, j) => `${p}[${i}][${j}]`;
 
-const problems = {
+class InputError extends Error {}
+function fail(m) { throw new InputError(m); }
 
-  mwis: {
-    name: "MWIS (Chemin)",
-    title: "Maximum Weight Independent Set",
-    description:
-      "Trouver le sous-ensemble de poids maximal dans un chemin, sans sélectionner deux sommets adjacents.",
-    formula:
-      "\\[A[i]=\\max(A[i-1], A[i-2]+w_i)\\]",
-    explanation:
-      "On choisit soit de ne pas prendre le sommet i, soit de le prendre. " +
-      "Dans ce dernier cas, le sommet i−1 ne peut pas être sélectionné.",
-    data: { weights: [2, 9, 6, 5, 12, 3] },
+function parseInts(str, label, o = {}) {
+  const { min = -Infinity, max = Infinity, minLen = 1, maxLen = 50 } = o;
+  const toks = String(str).trim().split(/[\s,;]+/).filter(Boolean);
+  if (toks.length < minLen) fail(`${label} : au moins ${minLen} valeur(s) attendue(s).`);
+  if (toks.length > maxLen) fail(`${label} : ${maxLen} valeurs au maximum (pour rester lisible à l'écran).`);
+  return toks.map(t => {
+    if (!/^[+-]?\d+$/.test(t)) fail(`${label} : « ${t} » n'est pas un entier.`);
+    const v = parseInt(t, 10);
+    if (v < min || v > max) fail(`${label} : ${v} doit être compris entre ${min} et ${max}.`);
+    return v;
+  });
+}
+function parseOne(str, label, min, max) {
+  const t = String(str).trim();
+  if (!/^[+-]?\d+$/.test(t)) fail(`${label} : un entier est attendu.`);
+  const v = parseInt(t, 10);
+  if (v < min || v > max) fail(`${label} doit être compris entre ${min} et ${max}.`);
+  return v;
+}
+function parseWord(str, label, maxLen) {
+  const s = Array.from(String(str).trim());
+  if (s.length > maxLen) fail(`${label} : ${maxLen} caractères au maximum.`);
+  return s;
+}
 
-    build(d) {
-      const w = d.weights;
-      const values = [0];
-      const steps = [{
-        key: "A[0]",
-        value: 0,
-        deps: [],
-        log: "Initialisation : A[0] = 0."
-      }];
+function makeRows(prefix, rowLabels, nC) {
+  return rowLabels.map((label, i) => ({ label, cells: Array.from({ length: nC }, (_, j) => ({ key: K2(prefix, i, j) })) }));
+}
+function gridOrder(prefix, nR, nC) {
+  const o = [];
+  for (let i = 0; i < nR; i++) for (let j = 0; j < nC; j++) o.push(K2(prefix, i, j));
+  return o;
+}
+const range = n => Array.from({ length: n }, (_, i) => i);
 
-      if (w.length > 0) {
-        values.push(w[0]);
-        steps.push({
-          key: "A[1]",
-          value: w[0],
-          deps: ["A[0]"],
-          log: `A[1] = max(0, ${w[0]}) = ${w[0]}.`
-        });
-      }
-
-      for (let i = 2; i <= w.length; i++) {
-        const value = Math.max(values[i-1], values[i-2] + w[i-1]);
-        values.push(value);
-        steps.push({
-          key: `A[${i}]`,
-          value,
-          deps: [`A[${i-1}]`, `A[${i-2}]`],
-          log: `A[${i}] = max(${values[i-1]}, ${values[i-2]} + ${w[i-1]}) = ${value}.`
-        });
-      }
-
-      return {
-        steps,
-        rows: [{
-          label: "Poids",
-          values: [0, ...w]
-        }, {
-          label: "A[i]",
-          values
-        }],
-        result: `Poids maximal : ${values[values.length-1]}`,
-        summary: `Poids des sommets : [${w.join(", ")}]`
-      };
-    }
-  },
-
-  levenshtein: {
-    name: "Distance de Levenshtein",
-    title: "Distance de Levenshtein",
-    description:
-      "Calculer le nombre minimal d'insertions, suppressions et substitutions nécessaires pour transformer une chaîne en une autre.",
-    formula:
-      "\\[D[i][j]=\\min\\begin{cases}D[i-1][j]+1\\\\D[i][j-1]+1\\\\D[i-1][j-1]+c\\end{cases}\\]",
-    explanation:
-      "Le coût c vaut 0 si les caractères sont égaux, 1 sinon. " +
-      "Les lignes et colonnes initiales correspondent aux préfixes vides.",
-    data: { s1: "NICE", s2: "LIDAR" },
-
-    build(d) {
-      const a = d.s1;
-      const b = d.s2;
-      const m = a.length;
-      const n = b.length;
-      const D = Array.from({length:m+1}, () => Array(n+1).fill(null));
-      const steps = [];
-
-      for (let i=0; i<=m; i++) {
-        D[i][0] = i;
-        steps.push({
-          key:`D[${i}][0]`,
-          value:i,
-          deps:[],
-          log:`Initialisation : D[${i}][0] = ${i}.`
-        });
-      }
-
-      for (let j=1; j<=n; j++) {
-        D[0][j] = j;
-        steps.push({
-          key:`D[0][${j}]`,
-          value:j,
-          deps:[],
-          log:`Initialisation : D[0][${j}] = ${j}.`
-        });
-      }
-
-      for (let i=1; i<=m; i++) {
-        for (let j=1; j<=n; j++) {
-          const c = a[i-1] === b[j-1] ? 0 : 1;
-          D[i][j] = Math.min(
-            D[i-1][j] + 1,
-            D[i][j-1] + 1,
-            D[i-1][j-1] + c
-          );
-
-          steps.push({
-            key:`D[${i}][${j}]`,
-            value:D[i][j],
-            deps:[
-              `D[${i-1}][${j}]`,
-              `D[${i}][${j-1}]`,
-              `D[${i-1}][${j-1}]`
-            ],
-            log:
-              `D[${i}][${j}] : ${a[i-1]} / ${b[j-1]} ` +
-              `→ min(${D[i-1][j]+1}, ${D[i][j-1]+1}, ` +
-              `${D[i-1][j-1]} + ${c}) = ${D[i][j]}.`
-          });
-        }
-      }
-
-      return {
-        steps,
-        matrix:D,
-        rowLabels:["ε", ...a],
-        colLabels:["ε", ...b],
-        result:`Distance minimale : ${D[m][n]}`,
-        summary:`Chaînes : "${a}" et "${b}"`
-      };
-    }
-  },
-
-  knapsack: {
-    name: "Sac à dos 0/1",
-    title: "Sac à dos 0/1",
-    description:
-      "Maximiser la valeur des objets choisis sans dépasser la capacité du sac.",
-    formula:
-      "\\[K[i][c]=\\max\\left(K[i-1][c],K[i-1][c-w_i]+v_i\\right)\\]",
-    explanation:
-      "Pour chaque objet, on compare la valeur obtenue sans le prendre et celle obtenue en le prenant, si son poids le permet.",
-    data: {
-      cap:6,
-      items:[
-        {w:2,v:3},
-        {w:3,v:4},
-        {w:4,v:5},
-        {w:5,v:8}
-      ]
-    },
-
-    build(d) {
-      const items=d.items;
-      const cap=d.cap;
-      const n=items.length;
-      const K=Array.from({length:n+1},()=>Array(cap+1).fill(0));
-      const steps=[];
-
-      for(let i=0;i<=n;i++){
-        for(let c=0;c<=cap;c++){
-          if(i===0 || c===0){
-            K[i][c]=0;
-          } else {
-            const it=items[i-1];
-            K[i][c]=it.w<=c
-              ?Math.max(K[i-1][c],K[i-1][c-it.w]+it.v)
-              :K[i-1][c];
-          }
-
-          const deps=i>0 && c>0
-            ?[`K[${i-1}][${c}]`,
-              ...(items[i-1].w<=c
-                ?[`K[${i-1}][${c-items[i-1].w}]`]
-                :[])]
-            :[];
-
-          steps.push({
-            key:`K[${i}][${c}]`,
-            value:K[i][c],
-            deps,
-            log:
-              i===0 || c===0
-                ?`K[${i}][${c}] = 0 (initialisation).`
-                :`K[${i}][${c}] = ${K[i][c]}.`
-          });
-        }
-      }
-
-      let c=cap;
-      const chosen=[];
-      for(let i=n;i>0;i--){
-        if(K[i][c]!==K[i-1][c]){
-          chosen.push(items[i-1]);
-          c-=items[i-1].w;
-        }
-      }
-
-      return {
-        steps,
-        matrix:K,
-        rowLabels:["0",...items.map((_,i)=>String(i+1))],
-        colLabels:Array.from({length:cap+1},(_,i)=>String(i)),
-        result:`Valeur maximale : ${K[n][cap]} — Objets choisis : `+
-          chosen.reverse().map(x=>`(poids ${x.w}, valeur ${x.v})`).join(", "),
-        summary:`Capacité : ${cap} — Objets : `+
-          items.map(x=>`(${x.w} kg, ${x.v} €)`).join(", ")
-      };
-    }
-  },
-
-  lcs: {
-    name: "Plus longue sous-suite commune",
-    title: "Plus longue sous-suite commune (LCS)",
-    description:
-      "Trouver une sous-suite de caractères de longueur maximale commune à deux chaînes.",
-    formula:
-      "\\[L[i][j]=\\begin{cases}L[i-1][j-1]+1 & s_1[i]=s_2[j]\\\\\\max(L[i-1][j],L[i][j-1]) & \\text{sinon}\\end{cases}\\]",
-    explanation:
-      "Si les caractères sont identiques, on prolonge la sous-suite. Sinon, on conserve le meilleur résultat obtenu en retirant un caractère d'une des deux chaînes.",
-    data: { s1:"AGGTAB", s2:"GXTXAYB" },
-
-    build(d) {
-      const a=d.s1, b=d.s2;
-      const m=a.length,n=b.length;
-      const L=Array.from({length:m+1},()=>Array(n+1).fill(0));
-      const steps=[];
-
-      for(let i=0;i<=m;i++){
-        for(let j=0;j<=n;j++){
-          if(i>0 && j>0){
-            L[i][j]=a[i-1]===b[j-1]
-              ?L[i-1][j-1]+1
-              :Math.max(L[i-1][j],L[i][j-1]);
-          }
-
-          steps.push({
-            key:`L[${i}][${j}]`,
-            value:L[i][j],
-            deps:i>0&&j>0
-              ?[`L[${i-1}][${j}]`,`L[${i}][${j-1}]`,`L[${i-1}][${j-1}]`]
-              :[],
-            log:`L[${i}][${j}] = ${L[i][j]}.`
-          });
-        }
-      }
-
-      let i=m,j=n,seq="";
-      while(i>0&&j>0){
-        if(a[i-1]===b[j-1]){
-          seq=a[i-1]+seq;
-          i--;j--;
-        }else if(L[i-1][j]>=L[i][j-1]){
-          i--;
-        }else{
-          j--;
-        }
-      }
-
-      return {
-        steps,
-        matrix:L,
-        rowLabels:["ε",...a],
-        colLabels:["ε",...b],
-        result:`Longueur de la LCS : ${L[m][n]} — Sous-suite : "${seq}"`,
-        summary:`Chaînes : "${a}" et "${b}"`
-      };
-    }
-  },
-
-  partition: {
-    name: "Partition (somme cible)",
-    title: "Partition d'ensemble — somme cible",
-    description:
-      "Déterminer si un sous-ensemble des entiers peut atteindre exactement une somme cible.",
-    formula:
-      "\\[P[i][s]=P[i-1][s]\\lor P[i-1][s-v_i]\\]",
-    explanation:
-      "La case P[i][s] vaut vrai si la somme s est réalisable avec les i premiers éléments. On peut ne pas prendre le dernier élément, ou le prendre.",
-    data: { arr:[3,34,4,12,5,2], target:9 },
-
-    build(d) {
-      const arr=d.arr, target=d.target, n=arr.length;
-      const P=Array.from({length:n+1},()=>Array(target+1).fill(false));
-      const steps=[];
-
-      P[0][0]=true;
-
-      for(let i=0;i<=n;i++){
-        for(let s=0;s<=target;s++){
-          if(i===0){
-            P[i][s]=(s===0);
-          }else if(s===0){
-            P[i][s]=true;
-          }else{
-            P[i][s]=P[i-1][s] ||
-              (arr[i-1]<=s && P[i-1][s-arr[i-1]]);
-          }
-
-          steps.push({
-            key:`P[${i}][${s}]`,
-            value:P[i][s]?"V":"F",
-            deps:i>0&&s>0
-              ?[`P[${i-1}][${s}]`,`P[${i-1}][${Math.max(0,s-arr[i-1])}]`]
-              :[],
-            log:`P[${i}][${s}] = ${P[i][s]?"Vrai":"Faux"}.`
-          });
-        }
-      }
-
-      return {
-        steps,
-        matrix:P,
-        rowLabels:["0",...arr.map((_,i)=>String(i+1))],
-        colLabels:Array.from({length:target+1},(_,i)=>String(i)),
-        result:P[n][target]
-          ?`La somme cible ${target} est réalisable.`
-          :`La somme cible ${target} n'est pas réalisable.`,
-        summary:`Entiers : [${arr.join(", ")}] — Cible : ${target}`
-      };
-    }
-  },
-
-  partition_eq: {
-    name: "Partition équilibrée",
-    title: "Partition équilibrée",
-    description:
-      "Répartir les entiers en deux sous-ensembles dont les sommes sont les plus proches possible.",
-    formula:
-      "\\[E[i][s]=E[i-1][s]\\lor E[i-1][s-v_i]\\]",
-    explanation:
-      "On recherche la plus grande somme réalisable inférieure ou égale à la moitié de la somme totale.",
-    data: { arr:[1,5,11,5] },
-
-    build(d) {
-      const arr=d.arr;
-      const total=arr.reduce((a,b)=>a+b,0);
-      const target=Math.floor(total/2);
-      const n=arr.length;
-      const E=Array.from({length:n+1},()=>Array(target+1).fill(false));
-      const steps=[];
-
-      for(let i=0;i<=n;i++){
-        for(let s=0;s<=target;s++){
-          E[i][s]=i===0
-            ?s===0
-            :E[i-1][s] || (arr[i-1]<=s && E[i-1][s-arr[i-1]]);
-
-          steps.push({
-            key:`E[${i}][${s}]`,
-            value:E[i][s]?"V":"F",
-            deps:i>0&&s>0
-              ?[`E[${i-1}][${s}]`,`E[${i-1}][${Math.max(0,s-arr[i-1])}]`]
-              :[],
-            log:`E[${i}][${s}] = ${E[i][s]?"Vrai":"Faux"}.`
-          });
-        }
-      }
-
-      let best=target;
-      while(best>0&&!E[n][best])best--;
-
-      return {
-        steps,
-        matrix:E,
-        rowLabels:["0",...arr.map((_,i)=>String(i+1))],
-        colLabels:Array.from({length:target+1},(_,i)=>String(i)),
-        result:`Sommes : ${best} et ${total-best} — Écart minimal : ${total-2*best}`,
-        summary:`Entiers : [${arr.join(", ")}] — Somme totale : ${total}`
-      };
-    }
-  },
-
-  scheduling: {
-    name: "Ordonnancement",
-    title: "Ordonnancement de tâches pondérées",
-    description:
-      "Choisir des tâches sans chevauchement pour maximiser le gain total.",
-    formula:
-      "\\[T[i]=\\max(T[i-1],T[p(i)]+v_i)\\]",
-    explanation:
-      "Les tâches sont triées par date de fin. p(i) désigne la dernière tâche compatible avec la tâche i.",
-    data: {
-      tasks:[
-        {start:0,end:3,weight:5},
-        {start:1,end:4,weight:6},
-        {start:3,end:5,weight:4},
-        {start:2,end:9,weight:11}
-      ]
-    },
-
-    build(d) {
-      const tasks=d.tasks.slice().sort((a,b)=>a.end-b.end);
-      const n=tasks.length;
-      const T=Array(n+1).fill(0);
-      const p=Array(n+1).fill(0);
-      const steps=[];
-
-      for(let i=1;i<=n;i++){
-        for(let j=i-1;j>=1;j--){
-          if(tasks[j-1].end<=tasks[i-1].start){
-            p[i]=j;
-            break;
-          }
-        }
-        T[i]=Math.max(T[i-1],T[p[i]]+tasks[i-1].weight);
-
-        steps.push({
-          key:`T[${i}]`,
-          value:T[i],
-          deps:[`T[${i-1}]`,`T[${p[i]}]`],
-          log:`T[${i}] = max(T[${i-1}] = ${T[i-1]}, `+
-            `T[${p[i]}] + ${tasks[i-1].weight}) = ${T[i]}.`
-        });
-      }
-
-      let i=n;
-      const chosen=[];
-      while(i>0){
-        if(T[i]===T[i-1]){
-          i--;
-        }else{
-          chosen.push(tasks[i-1]);
-          i=p[i];
-        }
-      }
-
-      return {
-        steps,
-        rows:[{
-          label:"T[i]",
-          values:T
-        },{
-          label:"p(i)",
-          values:p
-        }],
-        result:`Gain maximal : ${T[n]} — Tâches retenues : `+
-          chosen.reverse().map(t=>`[${t.start}, ${t.end}] (gain ${t.weight})`).join(", "),
-        summary:"Tâches : "+tasks.map(t=>`[${t.start},${t.end}] gain ${t.weight}`).join(" ; ")
-      };
-    }
-  },
-
-  floyd: {
-    name: "Floyd-Warshall",
-    title: "Algorithme de Floyd-Warshall",
-    description:
-      "Calculer les distances minimales entre tous les couples de sommets d'un graphe pondéré.",
-    formula:
-      "\\[D^{(k)}[i][j]=\\min\\left(D^{(k-1)}[i][j],D^{(k-1)}[i][k]+D^{(k-1)}[k][j]\\right)\\]",
-    explanation:
-      "À chaque étape, on autorise un nouveau sommet intermédiaire k dans les chemins. La matrice est mise à jour pour tous les couples (i,j).",
-    data: {
-      graph:[
-        [0,3,Infinity,7],
-        [8,0,2,Infinity],
-        [5,Infinity,0,1],
-        [2,Infinity,Infinity,0]
-      ]
-    },
-
-    build(d) {
-      const initial=d.graph;
-      const n=initial.length;
-      let D=initial.map(row=>row.slice());
-      const steps=[];
-
-      for(let k=0;k<n;k++){
-        for(let i=0;i<n;i++){
-          for(let j=0;j<n;j++){
-            const old=D[i][j];
-            const via=(D[i][k]===Infinity||D[k][j]===Infinity)
-              ?Infinity
-              :D[i][k]+D[k][j];
-            const value=Math.min(old,via);
-
-            D[i][j]=value;
-
-            steps.push({
-              key:`D[${i}][${j}]`,
-              value,
-              deps:[`D[${i}][${j}]`,`D[${i}][${k}]`,`D[${k}][${j}]`],
-              log:`Passage par ${k} : D[${i}][${j}] = `+
-                `${fmt(old)} → min(${fmt(old)}, ${fmt(via)}) = ${fmt(value)}.`,
-              phase:k
-            });
-          }
-        }
-      }
-
-      const matrix=D.map(row=>row.map(fmt));
-
-      return {
-        steps,
-        matrix,
-        rowLabels:Array.from({length:n},(_,i)=>String(i)),
-        colLabels:Array.from({length:n},(_,i)=>String(i)),
-        result:"Matrice finale des distances minimales calculée.",
-        summary:`Graphe à ${n} sommets. Les cases ∞ indiquent l'absence de chemin direct.`
-      };
-    }
+/* ============================================================
+   Moteur : Bottom-Up, Top-Down (vraie récursion mémoïsée)
+   ============================================================ */
+function runBottomUp(m) {
+  const values = new Map(), events = [];
+  for (const key of m.order) {
+    const deps = m.deps(key);
+    const r = m.calc(key, k => {
+      if (!values.has(k)) throw new Error("Dépendance non calculée : " + k + " (pour " + key + ")");
+      return values.get(k);
+    });
+    values.set(key, r.value);
+    events.push({ type: "compute", key, deps, value: r.value, log: r.log, stack: [] });
   }
-};
+  return { events, values };
+}
+
+function runTopDown(m) {
+  const values = new Map(), events = [];
+  const fv = v => m.fmt ? m.fmt(v) : fmtNum(v);
+  function solve(key, stack) {
+    const deps = m.deps(key);
+    const st = [...stack, key];
+    if (deps.length > 0) {
+      events.push({ type: "enter", key, deps, stack: st,
+        log: `Appel de <strong>${key}</strong> : pas encore en mémoire. Il faut d'abord obtenir ${deps.map(d => `<strong>${d}</strong>`).join(", ")}.` });
+    }
+    for (const d of deps) {
+      if (values.has(d)) {
+        events.push({ type: "hit", key: d, parent: key, deps: [], value: values.get(d), stack: st,
+          log: `<strong>${d}</strong> est déjà en mémoire (= ${fv(values.get(d))}) : réutilisé pour <strong>${key}</strong>, <em>aucun recalcul</em>.` });
+      } else solve(d, st);
+    }
+    const r = m.calc(key, k => values.get(k));
+    values.set(key, r.value);
+    events.push({ type: "compute", key, deps, value: r.value, log: r.log, stack: st });
+  }
+  for (const t of m.targets) {
+    if (!values.has(t)) solve(t, []);
+    if (m.stopAt && m.stopAt(values.get(t))) break;
+  }
+  return { events, values };
+}
+
+function naiveCalls(m, full) {
+  const memo = new Map();
+  const f = k => {
+    if (memo.has(k)) return memo.get(k);
+    let c = 1;
+    for (const d of m.deps(k)) c += f(d);
+    memo.set(k, c);
+    return c;
+  };
+  let tot = 0;
+  for (const t of m.targets) {
+    tot += f(t);
+    if (m.stopAt && m.stopAt(full.get(t))) break;
+  }
+  return tot;
+}
 
 /* ============================================================
-   État de l'application
+   Fonctions communes (sous-ensembles)
    ============================================================ */
+function subsetCore(arr, target, pf) {
+  const n = arr.length, key = (i, s) => K2(pf, i, s);
+  return {
+    corner: "i ↓ · s →",
+    cols: range(target + 1).map(String),
+    rows: makeRows(pf, ["0 · ∅", ...arr.map((v, i) => `${i + 1} · v=${v}`)], target + 1),
+    order: gridOrder(pf, n + 1, target + 1),
+    fmt: v => v ? "V" : "F",
+    deps: k => {
+      const [i, s] = idx(k);
+      if (i === 0) return [];
+      const v = arr[i - 1];
+      return v <= s ? [key(i - 1, s), key(i - 1, s - v)] : [key(i - 1, s)];
+    },
+    calc: (k, get) => {
+      const [i, s] = idx(k);
+      if (i === 0) return { value: s === 0, log: s === 0
+        ? `${k} = V : la somme 0 est toujours réalisable (sous-ensemble vide).`
+        : `${k} = F : sans aucun élément, on ne peut pas former ${s}.` };
+      const v = arr[i - 1];
+      const a = get(key(i - 1, s));
+      if (v > s) return { value: a, log: `${k} = ${key(i - 1, s)} = ${a ? "V" : "F"} : l'élément ${i} (v=${v}) est trop grand pour ${s}.` };
+      const b = get(key(i - 1, s - v));
+      return { value: a || b, log: `${k} : sans l'élément ${i} → ${key(i - 1, s)} = ${a ? "V" : "F"} ; avec (v=${v}) → ${key(i - 1, s - v)} = ${b ? "V" : "F"} ; OU = <strong>${a || b ? "V" : "F"}</strong>.` };
+    }
+  };
+}
+function subsetTrace(arr, s, get, pf) {
+  let i = arr.length;
+  const idxs = [], path = [];
+  while (i > 0) {
+    path.push(K2(pf, i, s));
+    if (get(K2(pf, i - 1, s))) i--;
+    else { idxs.push(i); s -= arr[i - 1]; i--; }
+  }
+  path.push(K2(pf, 0, s));
+  return { idxs: idxs.reverse(), path };
+}
 
-let currentProblem="mwis";
-let currentMode="bottom";
-let currentStep=0;
-let simulation=null;
-let visibleSteps=[];
-let memo=new Set();
+/* ============================================================
+   Définition des problèmes
+   ============================================================ */
+const problems = {};
+function P(id, def) { def.id = id; problems[id] = def; }
 
-function fmt(value) {
-  return value===Infinity ? "∞" : value;
+/* ---------- 1. Fibonacci ---------- */
+P("fib", {
+  name: "Fibonacci (introduction)",
+  title: "Suite de Fibonacci — pourquoi mémoriser ?",
+  tag: "Tableau 1D · intro",
+  description: "Calcul de F(n) : l'exemple le plus simple pour comprendre ce que la mémoïsation change. Comparez le compteur « appels sans mémoïsation » avec le nombre de cases du tableau.",
+  fields: [{ name: "n", label: "n (0 à 40)", type: "text", help: "Indice du terme à calculer." }],
+  defaults: { n: "8" },
+  presets: [{ name: "n = 5", v: { n: "5" } }, { name: "n = 8", v: { n: "8" } }, { name: "n = 15", v: { n: "15" } }],
+  random: () => ({ n: String(rnd(6, 16)) }),
+  formula: String.raw`\[F(i)=F(i-1)+F(i-2)\qquad F(0)=0,\; F(1)=1\]`,
+  explanation: "Chaque terme est la somme des deux précédents. En Top-Down, observez que la deuxième branche de chaque appel est presque toujours déjà en mémoire (cases violettes).",
+  parse(v) { return { n: parseOne(v.n, "n", 0, 40) }; },
+  build({ n }) {
+    const key = i => `F[${i}]`;
+    return {
+      summary: `n = ${n}`,
+      corner: "i",
+      cols: range(n + 1).map(String),
+      rows: [{ label: "F(i)", cells: range(n + 1).map(i => ({ key: key(i) })) }],
+      order: range(n + 1).map(key),
+      targets: [key(n)],
+      deps: k => { const [i] = idx(k); return i < 2 ? [] : [key(i - 1), key(i - 2)]; },
+      calc: (k, get) => {
+        const [i] = idx(k);
+        if (i < 2) return { value: i, log: `F(${i}) = ${i} (cas de base).` };
+        const a = get(key(i - 1)), b = get(key(i - 2));
+        return { value: a + b, log: `F(${i}) = F(${i - 1}) + F(${i - 2}) = ${a} + ${b} = <strong>${a + b}</strong>.` };
+      },
+      finish: get => ({ result: `F(${n}) = ${get(key(n))}`, path: [], sel: new Set() })
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Calculer le n-ième terme de la suite définie par F(0)=0, F(1)=1 et F(i)=F(i−1)+F(i−2). C'est un problème <em>sans optimisation</em> : on l'utilise uniquement pour voir l'effet de la mémoïsation.</p>` },
+    { h: "Sous-problème", html: `<p><strong>F[i]</strong> = i-ème nombre de Fibonacci. Il y a n+1 sous-problèmes et chacun dépend de deux sous-problèmes plus petits.</p>` },
+    { h: "Pourquoi la récursion naïve est exponentielle", html: `<p>Le nombre d'appels C(n) vérifie C(n)=C(n−1)+C(n−2)+1 : il croît comme φⁿ (φ≈1,618). F(n−2) est recalculé par F(n) <em>et</em> par F(n−1), puis chacun de ses sous-appels aussi : les <strong>sous-problèmes se chevauchent</strong>.</p><div class="callout">Regardez le compteur « Appels sans mémoïsation » sous le tableau.</div>` },
+    { h: "Avec mémoïsation", html: `<p>Chaque F[i] est calculé une seule fois : n+1 additions. En Top-Down, la récursion plonge d'abord jusqu'à F[0], F[1] puis remonte ; les appels suivants trouvent le résultat en mémoire (violet).</p>` },
+    { h: "Complexité", html: `<ul><li>Temps : O(n) additions.</li><li>Espace : O(n) avec le tableau, <strong>O(1)</strong> en ne gardant que les deux dernières valeurs.</li></ul>` }
+  ],
+  quiz: [
+    { q: "Combien d'appels la version naïve effectue-t-elle pour n = 10 ?", a: "177 appels (C(n)=1+C(n−1)+C(n−2), C(0)=C(1)=1). Avec mémoïsation : 11 sous-problèmes. Vérifiez avec n = 10 dans la page." },
+    { q: "Pourquoi, en Top-Down, F[n−2] est-il « gratuit » après le premier sous-appel ?", a: "Parce que le calcul de F[n−1] a déjà rempli F[n−2] (il en dépend). L'ordre des appels garantit que le deuxième sous-problème est déjà en mémoire." },
+    { q: "Comment passer à un espace mémoire O(1) ?", a: "Dans la version itérative, F[i] n'a besoin que de F[i−1] et F[i−2] : deux variables suffisent." }
+  ],
+  code: `def fib(n):
+    F = [0, 1] + [0] * (n - 1)
+    for i in range(2, n + 1):
+        F[i] = F[i-1] + F[i-2]
+    return F[n]
+
+# Version Top-Down : récursion + mémoïsation
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib_memo(n):
+    return n if n < 2 else fib_memo(n-1) + fib_memo(n-2)`
+});
+
+/* ---------- 2. MWIS ---------- */
+P("mwis", {
+  name: "MWIS (chemin)",
+  title: "Ensemble indépendant de poids maximal (chemin)",
+  tag: "Tableau 1D",
+  description: "Dans un chemin dont les sommets ont un poids, choisir des sommets sans en prendre deux adjacents, avec un poids total maximal.",
+  fields: [{ name: "w", label: "Poids des sommets (entiers ≥ 0)", type: "text", help: "De 1 à 14 valeurs séparées par des espaces ou des virgules." }],
+  defaults: { w: "2 9 6 5 12 3" },
+  presets: [
+    { name: "Exemple de base", v: { w: "2 9 6 5 12 3" } },
+    { name: "Le glouton échoue", v: { w: "3 5 3" } },
+    { name: "10 sommets", v: { w: "5 1 8 3 9 2 7 4 6 1" } }
+  ],
+  random: () => ({ w: range(rnd(6, 10)).map(() => rnd(1, 15)).join(" ") }),
+  formula: String.raw`\[A[i]=\max\bigl(A[i-1],\;A[i-2]+w_i\bigr)\qquad A[0]=0,\; A[1]=w_1\]`,
+  explanation: "Pour le dernier sommet i : soit on ne le prend pas (on garde A[i−1]), soit on le prend et on doit alors exclure i−1 (on repart de A[i−2]).",
+  parse(v) { return { w: parseInts(v.w, "Poids", { min: 0, max: 999, minLen: 1, maxLen: 14 }) }; },
+  build({ w }) {
+    const n = w.length, key = i => `A[${i}]`;
+    return {
+      summary: `Poids des sommets : [${w.join(", ")}]`,
+      corner: "i",
+      cols: range(n + 1).map(String),
+      rows: [
+        { label: "Poids wᵢ", cells: [{ text: "–" }, ...w.map(x => ({ text: x }))] },
+        { label: "A[i]", cells: range(n + 1).map(i => ({ key: key(i) })) }
+      ],
+      order: range(n + 1).map(key),
+      targets: [key(n)],
+      deps: k => { const [i] = idx(k); return i === 0 ? [] : i === 1 ? [key(0)] : [key(i - 1), key(i - 2)]; },
+      calc: (k, get) => {
+        const [i] = idx(k);
+        if (i === 0) return { value: 0, log: "A[0] = 0 : aucun sommet, poids nul." };
+        if (i === 1) return { value: w[0], log: `A[1] = max(A[0], w₁) = max(0, ${w[0]}) = <strong>${w[0]}</strong>.` };
+        const x = get(key(i - 1)), a = get(key(i - 2)), y = a + w[i - 1];
+        const v = Math.max(x, y);
+        return { value: v, log: `A[${i}] = max(A[${i - 1}], A[${i - 2}] + w${i}) = max(${x}, ${a} + ${w[i - 1]}) = max(${x}, ${y}) = <strong>${v}</strong> → sommet ${i} ${y > x ? "<strong>pris</strong>" : "non pris"}.` };
+      },
+      finish: get => {
+        const chosen = [], path = [];
+        let i = n;
+        while (i >= 1) {
+          path.push(key(i));
+          if (i === 1) { if (w[0] > 0) chosen.push(1); i = 0; }
+          else if (get(key(i - 1)) >= get(key(i - 2)) + w[i - 1]) i--;
+          else { chosen.push(i); i -= 2; }
+        }
+        path.push(key(0));
+        chosen.reverse();
+        return {
+          result: `Poids maximal : ${get(key(n))} — sommets retenus (positions) : ${chosen.map(i => `${i} (w=${w[i - 1]})`).join(", ") || "aucun"}`,
+          path, sel: new Set(chosen)
+        };
+      },
+      preview: (fin, sel) => `<div class="chain">${w.map((x, i) => `<div class="chain-item"><div class="node${sel.has(i + 1) ? " on" : ""}">${x}</div><small>${i + 1}</small></div>`).join('<div class="link"></div>')}</div>`
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Un chemin v₁ — v₂ — … — vₙ, chaque sommet ayant un poids wᵢ ≥ 0. On cherche un ensemble de sommets <strong>deux à deux non adjacents</strong> de poids total maximal.</p><div class="callout warn">Le glouton « prendre le plus gros poids, exclure ses voisins, recommencer » est faux : pour [3, 5, 3] il prend 5 alors que 3 + 3 = 6.</div>` },
+    { h: "Sous-problème", html: `<p><strong>A[i]</strong> = poids maximal d'un ensemble indépendant dans le sous-chemin formé des <em>i premiers</em> sommets. La réponse est A[n].</p>` },
+    { h: "Relation de récurrence", html: `<p>On raisonne sur le dernier sommet vᵢ :</p><ul><li><strong>vᵢ non pris</strong> : on a une solution du sous-chemin v₁…vᵢ₋₁, soit A[i−1].</li><li><strong>vᵢ pris</strong> : vᵢ₋₁ est interdit, il reste le sous-chemin v₁…vᵢ₋₂ : on gagne wᵢ + A[i−2].</li></ul><p>On garde le meilleur des deux cas : c'est la <em>sous-structure optimale</em>.</p>` },
+    { h: "Cas de base et ordre", html: `<p>A[0] = 0 (chemin vide), A[1] = w₁. Chaque case dépend des deux précédentes : on remplit de gauche à droite.</p>` },
+    { h: "Reconstruction", html: `<p>On remonte depuis A[n] : si A[i−1] ≥ A[i−2] + wᵢ, le sommet i n'est pas pris et on passe à i−1 ; sinon il est pris et on saute à i−2. Les cases encadrées en vert à la fin forment ce chemin.</p>` },
+    { h: "Complexité", html: `<p>O(n) en temps. Le tableau complet n'est nécessaire que pour la reconstruction ; sinon deux variables suffisent.</p>` }
+  ],
+  quiz: [
+    { q: "Pourquoi la récurrence utilise-t-elle A[i−2] et non A[i−1] quand on prend le sommet i ?", a: "Parce que le sommet i−1 est adjacent à i : il ne peut pas être dans la solution. Le meilleur sous-problème disponible ne contient donc que les sommets 1…i−2." },
+    { q: "Comment adapter l'algorithme à un cycle plutôt qu'à un chemin ?", a: "Deux cas : le sommet 1 est exclu (chemin 2…n) ou le sommet n est exclu (chemin 1…n−1). On résout deux chemins et on prend le maximum." },
+    { q: "Que se passe-t-il avec des poids négatifs ?", a: "On ne les prendrait jamais : ils sont écartés par le max. La récurrence reste valable si on autorise « aucun sommet » (A[1] = max(0, w₁))." }
+  ],
+  code: `def mwis(w):
+    n = len(w)
+    A = [0] * (n + 1)
+    if n:
+        A[1] = w[0]
+    for i in range(2, n + 1):
+        A[i] = max(A[i-1], A[i-2] + w[i-1])
+    # remontée : positions choisies
+    S, i = [], n
+    while i >= 1:
+        if i == 1 or A[i-2] + w[i-1] > A[i-1]:
+            S.append(i)
+            i -= 2
+        else:
+            i -= 1
+    return A[n], S[::-1]`
+});
+
+/* ---------- 3. Rendu de monnaie ---------- */
+P("coin", {
+  name: "Rendu de monnaie",
+  title: "Rendu de monnaie — nombre minimal de pièces",
+  tag: "Tableau 1D",
+  description: "Rendre une somme avec le moins de pièces possible, chaque valeur de pièce étant disponible en quantité illimitée. Le glouton peut échouer !",
+  fields: [
+    { name: "coins", label: "Valeurs des pièces", type: "text", help: "1 à 6 entiers distincts entre 1 et 50." },
+    { name: "S", label: "Somme à rendre (1 à 60)", type: "text", help: "" }
+  ],
+  defaults: { coins: "1 3 4", S: "6" },
+  presets: [
+    { name: "Glouton en échec (1, 3, 4)", v: { coins: "1 3 4", S: "6" } },
+    { name: "Système en euros", v: { coins: "1 2 5 10 20 50", S: "38" } },
+    { name: "Impossible", v: { coins: "5 10", S: "7" } }
+  ],
+  random: () => {
+    const s = new Set();
+    while (s.size < 3) s.add(rnd(1, 9));
+    return { coins: [...s].join(" "), S: String(rnd(10, 30)) };
+  },
+  formula: String.raw`\[M[s]=1+\min_{\substack{c\in\text{pièces}\\ c\le s}} M[s-c]\qquad M[0]=0\]`,
+  explanation: "Pour rendre s, on choisit une dernière pièce c puis on rend s−c de façon optimale. M[s] = ∞ si aucune combinaison ne convient.",
+  parse(v) {
+    const coins = [...new Set(parseInts(v.coins, "Pièces", { min: 1, max: 50, minLen: 1, maxLen: 6 }))].sort((a, b) => a - b);
+    return { coins, S: parseOne(v.S, "Somme", 1, 60) };
+  },
+  build({ coins, S }) {
+    const key = s => `M[${s}]`;
+    return {
+      summary: `Pièces : {${coins.join(", ")}} — somme à rendre : ${S}`,
+      corner: "s",
+      cols: range(S + 1).map(String),
+      rows: [{ label: "M[s]", cells: range(S + 1).map(s => ({ key: key(s) })) }],
+      order: range(S + 1).map(key),
+      targets: [key(S)],
+      deps: k => { const [s] = idx(k); return s === 0 ? [] : coins.filter(c => c <= s).map(c => key(s - c)); },
+      calc: (k, get) => {
+        const [s] = idx(k);
+        if (s === 0) return { value: 0, log: "M[0] = 0 : rendre 0 ne demande aucune pièce." };
+        const cs = coins.filter(c => c <= s);
+        if (!cs.length) return { value: INF, log: `M[${s}] = ∞ : aucune pièce n'est ≤ ${s}.` };
+        const parts = cs.map(c => ({ c, v: get(key(s - c)) }));
+        const best = Math.min(...parts.map(x => x.v));
+        const value = best + 1;
+        return { value, log: `M[${s}] = 1 + min( ${parts.map(x => `M[${s - x.c}]=${fmtNum(x.v)} <small>(pièce ${x.c})</small>`).join(" ; ")} ) = 1 + ${fmtNum(best)} = <strong>${fmtNum(value)}</strong>.` };
+      },
+      finish: get => {
+        const total = get(key(S));
+        const greedy = (() => {
+          let r = S; const l = [];
+          for (const c of [...coins].sort((a, b) => b - a)) while (r >= c) { l.push(c); r -= c; }
+          return r === 0 ? l : null;
+        })();
+        if (total === INF) return { result: `Impossible de rendre ${S} avec ces pièces.`, path: [key(S)], sel: new Set() };
+        const path = [], used = [];
+        let s = S;
+        while (s > 0) {
+          path.push(key(s));
+          const c = coins.find(c => c <= s && get(key(s - c)) + 1 === get(key(s)));
+          used.push(c); s -= c;
+        }
+        path.push(key(0));
+        const g = greedy
+          ? `<br><small>Algorithme glouton : ${greedy.join(" + ")} → ${greedy.length} pièce(s) ${greedy.length > total ? "— <strong>le glouton n'est pas optimal ici</strong>." : "(même résultat ici)."}</small>`
+          : `<br><small>Le glouton échoue : il reste une somme impossible à rendre.</small>`;
+        return { result: `Minimum : ${total} pièce(s) — ${used.join(" + ")} = ${S}.${g}`, path, sel: new Set() };
+      }
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Avec des pièces de valeurs données (en quantité illimitée), rendre exactement la somme S avec un <strong>nombre minimal de pièces</strong>.</p><div class="callout warn">Avec {1, 3, 4} et S = 6, le glouton donne 4+1+1 (3 pièces) alors que 3+3 suffit (2 pièces). Le glouton n'est correct que pour certains systèmes « canoniques » (comme l'euro).</div>` },
+    { h: "Sous-problème", html: `<p><strong>M[s]</strong> = nombre minimal de pièces pour rendre la somme s. Une seule dimension suffit car les pièces sont illimitées : on n'a pas besoin de savoir lesquelles ont déjà été utilisées.</p>` },
+    { h: "Relation de récurrence", html: `<p>Dans une solution optimale pour s, regardons <em>une</em> pièce c quelconque de la solution : le reste rend s−c de façon optimale. On teste donc toutes les pièces c ≤ s : <code>M[s] = 1 + min M[s−c]</code>.</p>` },
+    { h: "Cas de base et ordre", html: `<p>M[0] = 0. Si aucune pièce ne convient, ou si tous les M[s−c] valent ∞, alors M[s] = ∞ (impossible). Les dépendances pointent vers des indices plus petits : on remplit de gauche à droite.</p>` },
+    { h: "Reconstruction", html: `<p>À partir de s = S, on cherche une pièce c telle que M[s−c] + 1 = M[s], on l'ajoute à la solution et on continue avec s−c.</p>` },
+    { h: "Complexité", html: `<p>O(S × k) pour k valeurs de pièces. C'est <em>pseudo-polynomial</em> : polynomial en la valeur S, pas en sa taille en bits.</p>` }
+  ],
+  quiz: [
+    { q: "Pourquoi une seule dimension suffit-elle ici, alors que le sac à dos en demande deux ?", a: "Les pièces sont en quantité illimitée : le choix d'une pièce ne change pas l'ensemble des choix futurs. Dans le sac à dos 0/1, chaque objet n'est utilisable qu'une fois, il faut donc mémoriser « jusqu'à quel objet » on a décidé." },
+    { q: "Comment compter le nombre de façons de rendre S (au lieu du minimum) ?", a: "On remplace min par une somme, mais il faut éviter de compter deux fois les mêmes combinaisons dans un ordre différent : on boucle sur les pièces en extérieur et sur s en intérieur : N[s] += N[s−c]." },
+    { q: "Trouvez un autre système de pièces où le glouton échoue.", a: "Par exemple {1, 5, 12} pour S = 15 : le glouton donne 12+1+1+1 (4 pièces), l'optimum est 5+5+5 (3 pièces)." }
+  ],
+  code: `def rendu(pieces, S):
+    INF = float('inf')
+    M = [0] + [INF] * S
+    for s in range(1, S + 1):
+        for c in pieces:
+            if c <= s and M[s-c] + 1 < M[s]:
+                M[s] = M[s-c] + 1
+    return M[S]          # INF si impossible`
+});
+
+/* ---------- 4. Sac à dos ---------- */
+P("knapsack", {
+  name: "Sac à dos 0/1",
+  title: "Sac à dos 0/1",
+  tag: "Tableau 2D",
+  description: "Maximiser la valeur des objets emportés sans dépasser la capacité du sac ; chaque objet est pris au plus une fois.",
+  fields: [
+    { name: "cap", label: "Capacité du sac (1 à 30)", type: "text", help: "" },
+    { name: "items", label: "Objets au format poids:valeur", type: "textarea", rows: 3, help: "Exemple : 2:3, 3:4, 4:5, 5:8 (8 objets maximum)." }
+  ],
+  defaults: { cap: "6", items: "2:3, 3:4, 4:5, 5:8" },
+  presets: [
+    { name: "Exemple de base", v: { cap: "6", items: "2:3, 3:4, 4:5, 5:8" } },
+    { name: "Le glouton échoue", v: { cap: "5", items: "1:60, 2:100, 3:120" } },
+    { name: "Plus grand", v: { cap: "15", items: "3:4, 4:5, 5:8, 7:11, 9:13, 2:3" } }
+  ],
+  random: () => {
+    const cap = rnd(8, 15);
+    return { cap: String(cap), items: range(rnd(4, 6)).map(() => `${rnd(1, Math.ceil(cap / 2) + 2)}:${rnd(1, 20)}`).join(", ") };
+  },
+  formula: String.raw`\[K[i][c]=\begin{cases}K[i-1][c] & \text{si } w_i>c\\[2pt] \max\bigl(K[i-1][c],\;K[i-1][c-w_i]+v_i\bigr) & \text{sinon}\end{cases}\qquad K[0][c]=0\]`,
+  explanation: "K[i][c] est la valeur maximale avec les i premiers objets et une capacité c. On compare « sans l'objet i » et « avec l'objet i » (s'il rentre).",
+  parse(v) {
+    const cap = parseOne(v.cap, "Capacité", 1, 30);
+    const txt = String(v.items);
+    const items = [];
+    const re = /(\d+)\s*:\s*(\d+)/g;
+    let m;
+    while ((m = re.exec(txt)) !== null) {
+      const w = +m[1], val = +m[2];
+      if (w < 1 || w > 99) fail(`Objet « ${m[0]} » : le poids doit être compris entre 1 et 99.`);
+      if (val > 999) fail(`Objet « ${m[0]} » : la valeur doit être ≤ 999.`);
+      items.push({ w, v: val });
+    }
+    if (txt.replace(re, "").replace(/[\s,;]+/g, "") !== "") fail("Objets : format attendu « poids:valeur » séparés par des virgules (ex. 2:3, 3:4).");
+    if (items.length < 1) fail("Objets : au moins un objet attendu.");
+    if (items.length > 8) fail("Objets : 8 objets au maximum.");
+    return { cap, items };
+  },
+  build({ cap, items }) {
+    const n = items.length, key = (i, c) => K2("K", i, c);
+    return {
+      summary: `Capacité : ${cap} — Objets (poids:valeur) : ` + items.map(x => `${x.w}:${x.v}`).join(", "),
+      corner: "i ↓ · c →",
+      cols: range(cap + 1).map(String),
+      rows: makeRows("K", ["0 · ∅", ...items.map((x, i) => `${i + 1} · w=${x.w}, v=${x.v}`)], cap + 1),
+      order: gridOrder("K", n + 1, cap + 1),
+      targets: [key(n, cap)],
+      deps: k => {
+        const [i, c] = idx(k);
+        if (i === 0) return [];
+        const w = items[i - 1].w;
+        return w <= c ? [key(i - 1, c), key(i - 1, c - w)] : [key(i - 1, c)];
+      },
+      calc: (k, get) => {
+        const [i, c] = idx(k);
+        if (i === 0) return { value: 0, log: `${k} = 0 : aucun objet disponible.` };
+        const { w, v } = items[i - 1];
+        const skip = get(key(i - 1, c));
+        if (w > c) return { value: skip, log: `${k} = ${key(i - 1, c)} = ${skip} : l'objet ${i} (poids ${w}) ne rentre pas (c = ${c}).` };
+        const a = get(key(i - 1, c - w)), take = a + v, val = Math.max(skip, take);
+        return { value: val, log: `${k} : sans l'objet ${i} → ${skip} ; avec → ${key(i - 1, c - w)} + ${v} = ${a} + ${v} = ${take} ; max = <strong>${val}</strong>${take > skip ? " (on le prend)" : ""}.` };
+      },
+      finish: get => {
+        let c = cap;
+        const chosen = [], path = [];
+        for (let i = n; i > 0; i--) {
+          path.push(key(i, c));
+          if (get(key(i, c)) !== get(key(i - 1, c))) { chosen.push(i); c -= items[i - 1].w; }
+        }
+        path.push(key(0, c));
+        chosen.reverse();
+        const pw = chosen.reduce((s, i) => s + items[i - 1].w, 0);
+        return {
+          result: `Valeur maximale : ${get(key(n, cap))} — objets : ${chosen.map(i => `n°${i} (w=${items[i - 1].w}, v=${items[i - 1].v})`).join(", ") || "aucun"} — poids total ${pw} ≤ ${cap}`,
+          path, sel: new Set(chosen)
+        };
+      }
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>n objets de poids wᵢ et de valeur vᵢ, un sac de capacité C. On choisit un sous-ensemble d'objets de poids total ≤ C et de valeur totale maximale. Chaque objet est pris <strong>0 ou 1 fois</strong>.</p><div class="callout warn">Le glouton par rapport valeur/poids n'est pas optimal (essayez le préréglage « Le glouton échoue »).</div>` },
+    { h: "Sous-problème", html: `<p><strong>K[i][c]</strong> = valeur maximale en n'utilisant que les <em>i premiers objets</em> avec un sac de capacité <em>c</em>. Deux paramètres : il faut savoir quels objets restent disponibles (i) et la place restante (c).</p>` },
+    { h: "Relation de récurrence", html: `<p>Pour l'objet i :</p><ul><li><strong>non pris</strong> → K[i−1][c] ;</li><li><strong>pris</strong> (possible si wᵢ ≤ c) → vᵢ + K[i−1][c−wᵢ] : il reste c−wᵢ de place pour les i−1 premiers objets.</li></ul><p>On prend le maximum.</p>` },
+    { h: "Cas de base et ordre", html: `<p>K[0][c] = 0 : sans objet, la valeur est nulle. Une case dépend de la ligne du dessus : on remplit ligne par ligne (la colonne c−wᵢ est à gauche dans la ligne précédente).</p>` },
+    { h: "Reconstruction", html: `<p>On part de K[n][C]. À la ligne i : si K[i][c] ≠ K[i−1][c], l'objet i a été pris : on le note et on remplace c par c−wᵢ. Sinon on remonte sans rien prendre.</p>` },
+    { h: "Complexité", html: `<ul><li>Temps et espace : O(n·C) — <strong>pseudo-polynomial</strong> : C est une <em>valeur</em>, pas la taille de l'entrée (le problème est NP-difficile).</li><li>Espace O(C) possible avec une seule ligne en parcourant c <em>par ordre décroissant</em>.</li></ul><div class="callout">En Top-Down, seules les capacités réellement atteintes sont calculées : comptez les cases restées grises.</div>` }
+  ],
+  quiz: [
+    { q: "Pourquoi, en version 1D (une seule ligne), faut-il parcourir c par ordre décroissant ?", a: "Pour que K[c−w] soit encore la valeur de la ligne i−1 au moment de calculer K[c]. En parcourant c croissant, on utiliserait déjà la ligne i : l'objet pourrait être pris plusieurs fois (sac à dos non borné)." },
+    { q: "Comment un algorithme en O(n·C) peut-il résoudre un problème NP-difficile ?", a: "Parce que la taille de l'entrée est n·log C, pas C. Si C est exponentiel en la taille de son écriture, n·C l'est aussi : l'algorithme est pseudo-polynomial." },
+    { q: "Que change l'autorisation de reprendre plusieurs fois le même objet ?", a: "La récurrence devient K[c] = max(K[c], K[c−wᵢ] + vᵢ) sur une seule dimension (le sac à dos non borné) : cf. le rendu de monnaie." }
+  ],
+  code: `def sac_a_dos(items, C):         # items = [(poids, valeur), ...]
+    n = len(items)
+    K = [[0] * (C + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        w, v = items[i-1]
+        for c in range(C + 1):
+            K[i][c] = K[i-1][c]
+            if w <= c:
+                K[i][c] = max(K[i][c], K[i-1][c-w] + v)
+    # remontée
+    pris, c = [], C
+    for i in range(n, 0, -1):
+        if K[i][c] != K[i-1][c]:
+            pris.append(i)
+            c -= items[i-1][0]
+    return K[n][C], pris[::-1]`
+});
+
+/* ---------- 5. Somme cible ---------- */
+P("subset", {
+  name: "Somme cible (SubsetSum)",
+  title: "Somme de sous-ensemble — somme cible",
+  tag: "Tableau 2D · booléens",
+  description: "Déterminer si un sous-ensemble d'entiers a pour somme exactement la cible.",
+  fields: [
+    { name: "arr", label: "Entiers (≥ 1)", type: "text", help: "1 à 10 valeurs entre 1 et 99." },
+    { name: "target", label: "Somme cible (0 à 60)", type: "text", help: "" }
+  ],
+  defaults: { arr: "3 34 4 12 5 2", target: "9" },
+  presets: [
+    { name: "Exemple de base", v: { arr: "3 34 4 12 5 2", target: "9" } },
+    { name: "Non réalisable", v: { arr: "3 5 7", target: "4" } },
+    { name: "Cible plus grande", v: { arr: "7 3 9 5 11 2", target: "27" } }
+  ],
+  random: () => ({ arr: range(rnd(5, 7)).map(() => rnd(2, 15)).join(" "), target: String(rnd(10, 30)) }),
+  formula: String.raw`\[P[i][s]=P[i-1][s]\ \lor\ \bigl(s\ge v_i\ \land\ P[i-1][s-v_i]\bigr)\qquad P[0][0]=\text{Vrai}\]`,
+  explanation: "P[i][s] est vrai si la somme s est réalisable avec les i premiers éléments : soit sans l'élément i, soit en l'utilisant.",
+  parse(v) {
+    return { arr: parseInts(v.arr, "Entiers", { min: 1, max: 99, minLen: 1, maxLen: 10 }), target: parseOne(v.target, "Cible", 0, 60) };
+  },
+  build({ arr, target }) {
+    const n = arr.length, core = subsetCore(arr, target, "P");
+    return {
+      ...core,
+      summary: `Entiers : [${arr.join(", ")}] — Cible : ${target}`,
+      targets: [K2("P", n, target)],
+      finish: get => {
+        if (!get(K2("P", n, target))) return { result: `La somme ${target} n'est <strong>pas</strong> réalisable.`, path: [K2("P", n, target)], sel: new Set() };
+        const t = subsetTrace(arr, target, get, "P");
+        return { result: `La somme ${target} est réalisable : ${t.idxs.map(i => arr[i - 1]).join(" + ") || "0 (ensemble vide)"} = ${target}`, path: t.path, sel: new Set(t.idxs) };
+      }
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Étant donnés des entiers positifs a₁…aₙ et une cible T, existe-t-il un sous-ensemble de somme exactement T ? C'est un problème de <strong>décision</strong> (réponse vrai / faux).</p>` },
+    { h: "Sous-problème", html: `<p><strong>P[i][s]</strong> (booléen) = « la somme s peut être obtenue avec un sous-ensemble des i premiers éléments ». On résout en fait <em>toutes</em> les sommes s ≤ T à la fois.</p>` },
+    { h: "Relation de récurrence", html: `<p>L'élément i est soit inutilisé (P[i−1][s]), soit utilisé (il faut alors que s−aᵢ soit réalisable avec les i−1 premiers : P[i−1][s−aᵢ]). On combine par un <strong>OU</strong>, avec la condition aᵢ ≤ s.</p>` },
+    { h: "Cas de base", html: `<p>P[0][0] = Vrai (ensemble vide) et P[0][s] = Faux pour s > 0. Toute la colonne s = 0 est donc vraie.</p>` },
+    { h: "Reconstruction", html: `<p>Si P[n][T] est vrai : à la ligne i, si P[i−1][s] est vrai, l'élément i n'est pas utilisé ; sinon il l'est (et s ← s − aᵢ).</p>` },
+    { h: "Complexité", html: `<p>O(n·T), pseudo-polynomial (le problème est NP-complet). En Python, un entier peut servir de <em>bitset</em> : <code>b |= b &lt;&lt; a</code>.</p>` }
+  ],
+  quiz: [
+    { q: "Pourquoi la colonne s = 0 est-elle entièrement vraie ?", a: "Parce que la somme 0 est réalisée par l'ensemble vide, quel que soit le nombre d'éléments disponibles." },
+    { q: "Comment obtenir, avec le même tableau, toutes les sommes atteignables ?", a: "Il suffit de lire la dernière ligne : P[n][s] = Vrai pour toutes les sommes réalisables s ≤ T." },
+    { q: "Quel lien avec le sac à dos 0/1 ?", a: "SubsetSum est un sac à dos où valeur = poids, avec la question « peut-on remplir exactement ? » à la place de « maximiser »." }
+  ],
+  code: `def somme_possible(a, cible):
+    n = len(a)
+    P = [[False] * (cible + 1) for _ in range(n + 1)]
+    P[0][0] = True
+    for i in range(1, n + 1):
+        for s in range(cible + 1):
+            P[i][s] = P[i-1][s] or (a[i-1] <= s and P[i-1][s - a[i-1]])
+    return P[n][cible]
+
+# Variante « bitset » : un entier code l'ensemble des sommes atteignables
+def somme_possible_bits(a, cible):
+    b = 1
+    for x in a:
+        b |= b << x
+    return (b >> cible) & 1 == 1`
+});
+
+/* ---------- 6. Partition équilibrée ---------- */
+P("balanced", {
+  name: "Partition équilibrée",
+  title: "Partition équilibrée",
+  tag: "Tableau 2D · booléens",
+  description: "Répartir des entiers en deux groupes dont les sommes sont aussi proches que possible.",
+  fields: [{ name: "arr", label: "Entiers (≥ 1)", type: "text", help: "1 à 10 valeurs entre 1 et 30, somme totale ≤ 120." }],
+  defaults: { arr: "1 5 11 5" },
+  presets: [
+    { name: "Exemple de base", v: { arr: "1 5 11 5" } },
+    { name: "8 valeurs", v: { arr: "3 1 4 1 5 9 2 6" } },
+    { name: "Écart impair", v: { arr: "7 7 7" } }
+  ],
+  random: () => ({ arr: range(rnd(5, 8)).map(() => rnd(1, 15)).join(" ") }),
+  formula: String.raw`\[E[i][s]=E[i-1][s]\ \lor\ \bigl(s\ge v_i\ \land\ E[i-1][s-v_i]\bigr)\qquad s^\ast=\max\{s\le\lfloor S/2\rfloor : E[n][s]\}\]`,
+  explanation: "Même tableau que SubsetSum, limité aux sommes ≤ S/2. La meilleure partition utilise la plus grande somme réalisable s*, l'écart vaut S − 2s*.",
+  parse(v) {
+    const arr = parseInts(v.arr, "Entiers", { min: 1, max: 30, minLen: 1, maxLen: 10 });
+    const S = arr.reduce((a, b) => a + b, 0);
+    if (S > 120) fail(`La somme totale (${S}) dépasse 120 : le tableau serait trop large.`);
+    return { arr };
+  },
+  build({ arr }) {
+    const n = arr.length, S = arr.reduce((a, b) => a + b, 0), t = Math.floor(S / 2);
+    const core = subsetCore(arr, t, "E");
+    return {
+      ...core,
+      summary: `Entiers : [${arr.join(", ")}] — Somme totale : ${S} — On explore les sommes de 0 à ${t}`,
+      targets: range(t + 1).map(k => K2("E", n, t - k)),
+      stopAt: v => v === true,
+      finish: get => {
+        let best = t;
+        while (best > 0 && !get(K2("E", n, best))) best--;
+        const tr = subsetTrace(arr, best, get, "E");
+        const inA = new Set(tr.idxs);
+        const A = tr.idxs.map(i => arr[i - 1]), B = arr.filter((_, i) => !inA.has(i + 1));
+        return { result: `Sommes ${best} et ${S - best} — écart minimal : ${S - 2 * best}<br><small>Groupe 1 : {${A.join(", ") || "∅"}} · Groupe 2 : {${B.join(", ") || "∅"}}</small>`, path: tr.path, sel: inA };
+      }
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Partager a₁…aₙ en deux groupes de sommes S₁ et S₂ avec |S₁ − S₂| minimal. Si S est la somme totale, S₁ + S₂ = S.</p>` },
+    { h: "Réduction à SubsetSum", html: `<p>On peut supposer S₁ ≤ S₂, donc S₁ ≤ S/2. Minimiser S₂ − S₁ = S − 2S₁ revient à <strong>maximiser S₁ ≤ ⌊S/2⌋ réalisable</strong>. On construit donc le tableau E de SubsetSum jusqu'à ⌊S/2⌋.</p>` },
+    { h: "Lecture du résultat", html: `<p>La plus grande case vraie de la dernière ligne donne s*. L'écart est S − 2s*. Le deuxième groupe est le complémentaire du premier.</p>` },
+    { h: "Top-Down", html: `<p>En mode Top-Down, on teste d'abord s = ⌊S/2⌋, puis s−1, etc., et on s'arrête dès qu'une somme est réalisable : on ne calcule pas tout le tableau.</p>` },
+    { h: "Complexité", html: `<p>O(n·S) en temps, pseudo-polynomial. Cas particulier : écart 0 ⇔ la somme S/2 est réalisable (partition « parfaite »).</p>` }
+  ],
+  quiz: [
+    { q: "Pourquoi limite-t-on le tableau à ⌊S/2⌋ colonnes ?", a: "Le groupe le plus léger a une somme ≤ S/2. Chercher au-delà redonnerait la même partition (les deux groupes sont symétriques) et doublerait le travail." },
+    { q: "Quand l'écart minimal est-il forcément non nul ?", a: "Quand S est impair (l'écart a la parité de S), et dans d'autres cas comme {7, 7, 7}." }
+  ],
+  code: `def partition_equilibree(a):
+    S = sum(a)
+    atteignable = [True] + [False] * (S // 2)
+    for x in a:
+        for s in range(S // 2, x - 1, -1):    # ordre décroissant !
+            if atteignable[s - x]:
+                atteignable[s] = True
+    best = max(s for s in range(S // 2 + 1) if atteignable[s])
+    return best, S - best, S - 2 * best`
+});
+
+/* ---------- 7. Ordonnancement ---------- */
+P("scheduling", {
+  name: "Ordonnancement pondéré",
+  title: "Ordonnancement de tâches pondérées",
+  tag: "Tableau 1D · tri",
+  description: "Choisir des tâches deux à deux compatibles (sans chevauchement) pour maximiser le gain total.",
+  fields: [{ name: "tasks", label: "Tâches : une par ligne « début fin gain »", type: "textarea", rows: 5, help: "10 tâches maximum. Une tâche qui commence quand une autre finit est compatible avec elle." }],
+  defaults: { tasks: "0 3 5\n1 4 6\n3 5 4\n2 9 11" },
+  presets: [
+    { name: "Exemple de base", v: { tasks: "0 3 5\n1 4 6\n3 5 4\n2 9 11" } },
+    { name: "Le glouton échoue", v: { tasks: "0 3 2\n2 10 10\n3 6 2" } },
+    { name: "7 tâches", v: { tasks: "0 2 4\n1 5 7\n3 6 5\n5 8 6\n6 10 8\n8 11 3\n9 12 4" } }
+  ],
+  random: () => ({ tasks: range(rnd(5, 7)).map(() => { const s = rnd(0, 10); return `${s} ${s + rnd(2, 6)} ${rnd(1, 12)}`; }).join("\n") }),
+  formula: String.raw`\[T[i]=\max\bigl(T[i-1],\;g_i+T[p(i)]\bigr)\qquad T[0]=0\]`,
+  explanation: "Les tâches sont triées par date de fin. p(i) est l'indice de la dernière tâche (avant i) compatible avec la tâche i. Prendre i interdit toutes les tâches entre p(i)+1 et i−1.",
+  parse(v) {
+    const lines = String(v.tasks).split(/[;\n]+/).map(s => s.trim()).filter(Boolean);
+    if (!lines.length) fail("Tâches : au moins une tâche attendue.");
+    if (lines.length > 10) fail("Tâches : 10 au maximum.");
+    const tasks = lines.map((l, i) => {
+      const t = l.split(/[\s,]+/).filter(Boolean);
+      if (t.length !== 3 || !t.every(x => /^\d+$/.test(x))) fail(`Tâche ${i + 1} : format « début fin gain » attendu (trois entiers positifs).`);
+      const [s, e, g] = t.map(Number);
+      if (s >= e) fail(`Tâche ${i + 1} : le début doit être strictement inférieur à la fin.`);
+      if (e > 99 || g > 999) fail(`Tâche ${i + 1} : valeurs trop grandes (fin ≤ 99, gain ≤ 999).`);
+      return { s, e, g };
+    });
+    return { tasks };
+  },
+  build({ tasks: raw }) {
+    const tasks = raw.map((t, o) => ({ ...t, o })).sort((a, b) => a.e - b.e || a.s - b.s);
+    const n = tasks.length, key = i => `T[${i}]`;
+    const p = Array(n + 1).fill(0);
+    for (let i = 1; i <= n; i++) for (let j = i - 1; j >= 1; j--) if (tasks[j - 1].e <= tasks[i - 1].s) { p[i] = j; break; }
+    const tmax = Math.max(...tasks.map(t => t.e));
+    return {
+      summary: "Tâches triées par fin : " + tasks.map((t, i) => `${i + 1}:[${t.s}→${t.e}] gain ${t.g}`).join(" ; "),
+      corner: "i",
+      cols: range(n + 1).map(String),
+      rows: [
+        { label: "Tâche", cells: [{ text: "∅" }, ...tasks.map(t => ({ text: `${t.s}→${t.e}` }))] },
+        { label: "Gain gᵢ", cells: [{ text: "–" }, ...tasks.map(t => ({ text: t.g }))] },
+        { label: "p(i)", cells: [{ text: "–" }, ...range(n).map(i => ({ text: p[i + 1] }))] },
+        { label: "T[i]", cells: range(n + 1).map(i => ({ key: key(i) })) }
+      ],
+      order: range(n + 1).map(key),
+      targets: [key(n)],
+      deps: k => { const [i] = idx(k); return i === 0 ? [] : [...new Set([key(i - 1), key(p[i])])]; },
+      calc: (k, get) => {
+        const [i] = idx(k);
+        if (i === 0) return { value: 0, log: "T[0] = 0 : aucune tâche, gain nul." };
+        const a = get(key(i - 1)), x = get(key(p[i])), b = x + tasks[i - 1].g, v = Math.max(a, b);
+        return { value: v, log: `T[${i}] = max(T[${i - 1}], g${i} + T[p(${i})]) = max(${a}, ${tasks[i - 1].g} + T[${p[i]}]=${x}) = max(${a}, ${b}) = <strong>${v}</strong> → tâche ${i} ${b > a ? "<strong>retenue</strong>" : "ignorée"}.` };
+      },
+      finish: get => {
+        let i = n;
+        const chosen = [], path = [];
+        while (i > 0) {
+          path.push(key(i));
+          if (get(key(i)) === get(key(i - 1))) i--;
+          else { chosen.push(i); i = p[i]; }
+        }
+        path.push(key(0));
+        chosen.reverse();
+        return { result: `Gain maximal : ${get(key(n))} — tâches retenues : ${chosen.map(i => `n°${i} [${tasks[i - 1].s}→${tasks[i - 1].e}] (gain ${tasks[i - 1].g})`).join(", ")}`, path, sel: new Set(chosen) };
+      },
+      preview: (fin, sel) => {
+        const step = Math.max(1, Math.ceil(tmax / 20));
+        const ticks = []; for (let t = 0; t <= tmax; t += step) ticks.push(t);
+        return `<div class="gantt">` + tasks.map((t, i) => `<div class="g-row"><span class="g-lab">Tâche ${i + 1}</span><div class="g-track"><div class="g-bar${sel.has(i + 1) ? " on" : ""}" style="left:${t.s / tmax * 100}%;width:${(t.e - t.s) / tmax * 100}%">${t.g}</div></div></div>`).join("") +
+          `<div class="g-axis">${ticks.map(t => `<span style="left:${t / tmax * 100}%">${t}</span>`).join("")}</div></div>`;
+      }
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>n tâches, chacune avec un début dᵢ, une fin fᵢ et un gain gᵢ. Deux tâches sont compatibles si leurs intervalles ne se chevauchent pas. Maximiser la somme des gains des tâches retenues.</p><div class="callout warn">Sans gains (tous égaux à 1), le glouton « finir au plus tôt » est optimal. Avec des gains, il ne l'est plus : essayez « Le glouton échoue ».</div>` },
+    { h: "Tri préalable", html: `<p>On trie les tâches par fin croissante. Ainsi, pour la tâche i, les tâches compatibles avec elle parmi les précédentes forment un <em>préfixe</em> 1…p(i).</p>` },
+    { h: "Sous-problème", html: `<p><strong>T[i]</strong> = gain maximal en n'utilisant que les tâches 1…i (dans l'ordre trié).</p>` },
+    { h: "Relation de récurrence", html: `<ul><li><strong>Tâche i ignorée</strong> : T[i−1].</li><li><strong>Tâche i retenue</strong> : gain gᵢ + T[p(i)] ; toutes les tâches entre p(i)+1 et i−1 chevauchent i, donc sont exclues.</li></ul><p>Définition : p(i) = plus grand j &lt; i tel que fⱼ ≤ dᵢ (0 s'il n'y en a pas).</p>` },
+    { h: "Reconstruction et complexité", html: `<p>Remontée : si T[i] = T[i−1], on ignore la tâche i ; sinon on la retient et on saute à p(i).</p><p>Complexité : O(n log n) pour le tri et les p(i) (recherche dichotomique), puis O(n) pour le tableau.</p>` }
+  ],
+  quiz: [
+    { q: "Pourquoi faut-il trier les tâches par date de fin ?", a: "Pour que l'ensemble des tâches compatibles avec la tâche i parmi les précédentes soit un préfixe 1…p(i). La récurrence peut alors se contenter d'un seul indice p(i)." },
+    { q: "Que signifie p(i) = i−1 ?", a: "La tâche i est compatible avec toutes les précédentes : les deux branches du max sont T[i−1] (ignorer) et gᵢ + T[i−1] (prendre) ; on prend donc toujours i (si gᵢ > 0)." },
+    { q: "Comment calculer p(i) efficacement ?", a: "Par dichotomie sur la liste triée des dates de fin (module bisect en Python) : O(log n) par tâche au lieu de O(n)." }
+  ],
+  code: `from bisect import bisect_right
+
+def ordonnancement(taches):          # taches = [(debut, fin, gain), ...]
+    taches = sorted(taches, key=lambda t: t[1])
+    fins = [t[1] for t in taches]
+    n = len(taches)
+    T = [0] * (n + 1)
+    p = [0] * (n + 1)
+    for i in range(1, n + 1):
+        d, f, g = taches[i-1]
+        p[i] = bisect_right(fins, d, 0, i - 1)    # nb de tâches finissant avant d
+        T[i] = max(T[i-1], T[p[i]] + g)
+    return T[n]`
+});
+
+/* ---------- 8. LCS ---------- */
+const charLabel = (ch, i) => i === 0 ? "ε" : `${esc(ch)}<sub>${i}</sub>`;
+P("lcs", {
+  name: "Plus longue sous-suite commune",
+  title: "Plus longue sous-suite commune (LCS)",
+  tag: "Tableau 2D",
+  description: "Trouver une sous-suite (lettres dans l'ordre, pas forcément consécutives) de longueur maximale présente dans deux chaînes.",
+  fields: [
+    { name: "s1", label: "Chaîne s₁ (12 caractères max)", type: "text", help: "" },
+    { name: "s2", label: "Chaîne s₂ (12 caractères max)", type: "text", help: "" }
+  ],
+  defaults: { s1: "AGGTAB", s2: "GXTXAYB" },
+  presets: [
+    { name: "Exemple de base", v: { s1: "AGGTAB", s2: "GXTXAYB" } },
+    { name: "ABCBDAB / BDCABA", v: { s1: "ABCBDAB", s2: "BDCABA" } },
+    { name: "Mots", v: { s1: "DYNAMIQUE", s2: "DYNAMITE" } }
+  ],
+  random: () => ({ s1: range(rnd(6, 9)).map(() => "ABCD"[rnd(0, 3)]).join(""), s2: range(rnd(6, 9)).map(() => "ABCD"[rnd(0, 3)]).join("") }),
+  formula: String.raw`\[L[i][j]=\begin{cases}0 & \text{si } i=0 \text{ ou } j=0\\ L[i-1][j-1]+1 & \text{si } s_1[i]=s_2[j]\\ \max\bigl(L[i-1][j],\;L[i][j-1]\bigr) & \text{sinon}\end{cases}\]`,
+  explanation: "Si les dernières lettres sont égales, on les apparie. Sinon, l'une des deux n'est pas utilisée : on retire la dernière lettre de s₁ ou de s₂ et on garde le meilleur.",
+  parse(v) { return { a: parseWord(v.s1, "s₁", 12), b: parseWord(v.s2, "s₂", 12) }; },
+  build({ a, b }) {
+    const m = a.length, n = b.length, key = (i, j) => K2("L", i, j);
+    return {
+      summary: `s₁ = « ${esc(a.join(""))} » (${m} caractères) · s₂ = « ${esc(b.join(""))} » (${n} caractères)`,
+      corner: "s₁ ↓ · s₂ →",
+      cols: ["ε", ...b].map((ch, j) => charLabel(ch, j)),
+      rows: makeRows("L", ["ε", ...a].map((ch, i) => charLabel(ch, i)), n + 1),
+      order: gridOrder("L", m + 1, n + 1),
+      targets: [key(m, n)],
+      deps: k => {
+        const [i, j] = idx(k);
+        if (i === 0 || j === 0) return [];
+        return a[i - 1] === b[j - 1] ? [key(i - 1, j - 1)] : [key(i - 1, j), key(i, j - 1)];
+      },
+      calc: (k, get) => {
+        const [i, j] = idx(k);
+        if (i === 0 || j === 0) return { value: 0, log: `${k} = 0 : l'un des deux préfixes est vide.` };
+        if (a[i - 1] === b[j - 1]) {
+          const v = get(key(i - 1, j - 1)) + 1;
+          return { value: v, log: `${k} : « ${esc(a[i - 1])} » = « ${esc(b[j - 1])} » → on prolonge : ${key(i - 1, j - 1)} + 1 = <strong>${v}</strong>.` };
+        }
+        const x = get(key(i - 1, j)), y = get(key(i, j - 1)), v = Math.max(x, y);
+        return { value: v, log: `${k} : « ${esc(a[i - 1])} » ≠ « ${esc(b[j - 1])} » → max(${key(i - 1, j)} = ${x}, ${key(i, j - 1)} = ${y}) = <strong>${v}</strong>.` };
+      },
+      finish: get => {
+        let i = m, j = n, seq = "";
+        const path = [];
+        while (i > 0 && j > 0) {
+          path.push(key(i, j));
+          if (a[i - 1] === b[j - 1]) { seq = a[i - 1] + seq; i--; j--; }
+          else if (get(key(i - 1, j)) >= get(key(i, j - 1))) i--;
+          else j--;
+        }
+        path.push(key(i, j));
+        return { result: `Longueur de la LCS : ${get(key(m, n))} — une sous-suite commune : « ${esc(seq)} »`, path, sel: new Set() };
+      }
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Une <strong>sous-suite</strong> s'obtient en supprimant des lettres sans changer l'ordre (≠ sous-chaîne, qui est consécutive). On cherche la plus longue sous-suite présente dans s₁ <em>et</em> dans s₂. Énumérer les 2ᵐ sous-suites de s₁ est exponentiel.</p>` },
+    { h: "Sous-problème", html: `<p><strong>L[i][j]</strong> = longueur d'une LCS des <em>préfixes</em> s₁[1..i] et s₂[1..j]. Les indices en indice sous les lettres des en-têtes vous aident à relier cases et préfixes.</p>` },
+    { h: "Relation de récurrence", html: `<ul><li><strong>Dernières lettres égales</strong> : il existe une LCS qui les apparie (on peut toujours échanger). On prolonge : L[i−1][j−1] + 1.</li><li><strong>Dernières lettres différentes</strong> : au moins une des deux n'apparaît pas dans la LCS. On retire s₁[i] (ligne du dessus) ou s₂[j] (colonne de gauche) et on garde le max.</li></ul>` },
+    { h: "Reconstruction", html: `<p>À partir de (m, n) : si les lettres sont égales, on les ajoute et on remonte en diagonale ; sinon on va vers la case voisine de plus grande valeur. La LCS n'est <strong>pas unique</strong> en général : le choix en cas d'égalité décide laquelle on obtient.</p>` },
+    { h: "Complexité", html: `<p>O(m·n) en temps et en espace ; O(min(m,n)) si on ne veut que la longueur (deux lignes). En Top-Down, quand les lettres sont égales, un seul sous-appel est nécessaire (la diagonale).</p>` }
+  ],
+  quiz: [
+    { q: "Quel est le lien avec la distance d'édition ?", a: "Si on n'autorise que insertions et suppressions (pas de substitution), la distance entre s₁ et s₂ vaut m + n − 2·LCS(s₁, s₂)." },
+    { q: "Pourquoi peut-on apparier directement deux dernières lettres égales ?", a: "Dans toute LCS qui n'utilise pas ces lettres l'une avec l'autre, on peut remplacer la dernière paire appariée par cette paire sans perdre en longueur (argument d'échange)." },
+    { q: "Pourquoi la LCS n'est-elle pas unique ?", a: "Par exemple pour « AB » et « BA », « A » et « B » sont toutes deux des LCS de longueur 1." }
+  ],
+  code: `def lcs(a, b):
+    m, n = len(a), len(b)
+    L = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if a[i-1] == b[j-1]:
+                L[i][j] = L[i-1][j-1] + 1
+            else:
+                L[i][j] = max(L[i-1][j], L[i][j-1])
+    # remontée
+    i, j, s = m, n, []
+    while i > 0 and j > 0:
+        if a[i-1] == b[j-1]:
+            s.append(a[i-1]); i -= 1; j -= 1
+        elif L[i-1][j] >= L[i][j-1]:
+            i -= 1
+        else:
+            j -= 1
+    return L[m][n], ''.join(reversed(s))`
+});
+
+/* ---------- 9. Levenshtein ---------- */
+P("levenshtein", {
+  name: "Distance de Levenshtein",
+  title: "Distance de Levenshtein (distance d'édition)",
+  tag: "Tableau 2D",
+  description: "Nombre minimal d'insertions, suppressions et substitutions de lettres pour transformer une chaîne en une autre.",
+  fields: [
+    { name: "s1", label: "Chaîne source s₁ (12 caractères max)", type: "text", help: "" },
+    { name: "s2", label: "Chaîne cible s₂ (12 caractères max)", type: "text", help: "" }
+  ],
+  defaults: { s1: "NICE", s2: "LIDAR" },
+  presets: [
+    { name: "NICE → LIDAR", v: { s1: "NICE", s2: "LIDAR" } },
+    { name: "KITTEN → SITTING", v: { s1: "KITTEN", s2: "SITTING" } },
+    { name: "CHIEN → NICHE", v: { s1: "CHIEN", s2: "NICHE" } }
+  ],
+  random: () => {
+    const w = ["CHAT", "CHIEN", "NICHE", "MAISON", "RAISON", "ALGO", "LOGIQUE", "GRAPHE", "GRAPPE", "MATRICE", "VECTEUR", "ARBRE"];
+    const a = w[rnd(0, w.length - 1)]; let b = w[rnd(0, w.length - 1)];
+    if (b === a) b = w[(w.indexOf(a) + 1) % w.length];
+    return { s1: a, s2: b };
+  },
+  formula: String.raw`\[D[i][j]=\min\begin{cases}D[i-1][j]+1 & \text{(suppression)}\\ D[i][j-1]+1 & \text{(insertion)}\\ D[i-1][j-1]+c & \text{(substitution ou égalité)}\end{cases}\]`,
+  explanation: "Le coût c vaut 0 si s₁[i] = s₂[j], 1 sinon. Bases : D[i][0] = i (supprimer i lettres) et D[0][j] = j (insérer j lettres).",
+  parse(v) { return { a: parseWord(v.s1, "s₁", 12), b: parseWord(v.s2, "s₂", 12) }; },
+  build({ a, b }) {
+    const m = a.length, n = b.length, key = (i, j) => K2("D", i, j);
+    return {
+      summary: `s₁ = « ${esc(a.join(""))} » → s₂ = « ${esc(b.join(""))} »`,
+      corner: "s₁ ↓ · s₂ →",
+      cols: ["ε", ...b].map((ch, j) => charLabel(ch, j)),
+      rows: makeRows("D", ["ε", ...a].map((ch, i) => charLabel(ch, i)), n + 1),
+      order: gridOrder("D", m + 1, n + 1),
+      targets: [key(m, n)],
+      deps: k => {
+        const [i, j] = idx(k);
+        return (i === 0 || j === 0) ? [] : [key(i - 1, j), key(i, j - 1), key(i - 1, j - 1)];
+      },
+      calc: (k, get) => {
+        const [i, j] = idx(k);
+        if (i === 0 && j === 0) return { value: 0, log: "D[0][0] = 0 : deux mots vides." };
+        if (i === 0) return { value: j, log: `${k} = ${j} : insérer les ${j} premières lettres de s₂.` };
+        if (j === 0) return { value: i, log: `${k} = ${i} : supprimer les ${i} premières lettres de s₁.` };
+        const c = a[i - 1] === b[j - 1] ? 0 : 1;
+        const sup = get(key(i - 1, j)) + 1, ins = get(key(i, j - 1)) + 1, sub = get(key(i - 1, j - 1)) + c;
+        const v = Math.min(sup, ins, sub);
+        return { value: v, log: `${k} (« ${esc(a[i - 1])} » / « ${esc(b[j - 1])} ») : suppression ${sup} · insertion ${ins} · ${c ? "substitution" : "égalité"} ${sub} → min = <strong>${v}</strong>.` };
+      },
+      finish: get => {
+        let i = m, j = n;
+        const ops = [], path = [];
+        while (i > 0 || j > 0) {
+          path.push(key(i, j));
+          const d = get(key(i, j));
+          if (i > 0 && j > 0) {
+            const c = a[i - 1] === b[j - 1] ? 0 : 1;
+            if (d === get(key(i - 1, j - 1)) + c) {
+              ops.push(c ? `substituer ${esc(a[i - 1])} → ${esc(b[j - 1])}` : `garder ${esc(a[i - 1])}`);
+              i--; j--; continue;
+            }
+          }
+          if (i > 0 && d === get(key(i - 1, j)) + 1) { ops.push(`supprimer ${esc(a[i - 1])}`); i--; }
+          else { ops.push(`insérer ${esc(b[j - 1])}`); j--; }
+        }
+        path.push(key(0, 0));
+        ops.reverse();
+        return { result: `Distance de Levenshtein : ${get(key(m, n))}<br><small>Une transformation optimale : ${ops.map(o => `<span class="chip">${o}</span>`).join("")}</small>`, path, sel: new Set() };
+      }
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Transformer s₁ en s₂ avec trois opérations de coût 1 : <strong>insérer</strong> une lettre, <strong>supprimer</strong> une lettre, <strong>substituer</strong> une lettre par une autre. La distance d'édition est le nombre minimal d'opérations. Applications : correction orthographique, alignement de séquences en bio-informatique.</p>` },
+    { h: "Sous-problème", html: `<p><strong>D[i][j]</strong> = distance entre les <em>préfixes</em> s₁[1..i] et s₂[1..j] (les en-têtes affichent la lettre et son indice).</p>` },
+    { h: "Les trois flèches", html: `<p>Pour transformer s₁[1..i] en s₂[1..j], on regarde la dernière lettre :</p><ul><li><strong>↑ (case au-dessus)</strong> : supprimer s₁[i] puis transformer s₁[1..i−1] en s₂[1..j] : D[i−1][j] + 1.</li><li><strong>← (case à gauche)</strong> : insérer s₂[j] à la fin : D[i][j−1] + 1.</li><li><strong>↖ (diagonale)</strong> : aligner s₁[i] avec s₂[j] : D[i−1][j−1] + c (c = 0 si lettres égales, sinon substitution).</li></ul>` },
+    { h: "Cas de base et ordre", html: `<p>Première ligne et colonne : transformer le mot vide en un mot de j lettres coûte j insertions, et réciproquement. Chaque case dépend de ses voisines haut, gauche et diagonale : ligne par ligne.</p>` },
+    { h: "Reconstruction", html: `<p>On remonte de (m, n) à (0, 0) en suivant la case qui a réalisé le minimum : diagonale (garder / substituer), haut (supprimer), gauche (insérer). On obtient un <em>script d'édition</em> optimal (non unique).</p>` },
+    { h: "Complexité", html: `<p>O(m·n) en temps ; espace O(m·n) pour reconstruire, O(min(m, n)) si seule la distance importe (deux lignes). C'est une vraie distance : symétrique, nulle ssi s₁ = s₂, inégalité triangulaire.</p>` }
+  ],
+  quiz: [
+    { q: "Pourquoi D[i][j] ≤ D[i−1][j−1] + 1 ?", a: "Parce qu'une substitution (ou une égalité) permet de passer de s₁[1..i] à s₂[1..j] en une seule opération supplémentaire à partir de la solution des préfixes plus courts." },
+    { q: "Montrez que |m − n| ≤ D(s₁, s₂) ≤ max(m, n).", a: "Il faut au moins |m − n| insertions/suppressions pour égaliser les longueurs ; et on peut toujours transformer en substituant min(m, n) lettres puis en insérant/supprimant le reste : max(m, n) opérations." },
+    { q: "Comment retrouver la distance avec seulement deux lignes en mémoire ?", a: "La ligne i ne dépend que des lignes i et i−1. On garde donc deux lignes (de taille n+1) en les échangeant à chaque étape : O(n) d'espace." }
+  ],
+  code: `def levenshtein(a, b):
+    m, n = len(a), len(b)
+    D = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(m + 1):
+        D[i][0] = i
+    for j in range(n + 1):
+        D[0][j] = j
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            c = 0 if a[i-1] == b[j-1] else 1
+            D[i][j] = min(D[i-1][j] + 1,       # suppression
+                          D[i][j-1] + 1,       # insertion
+                          D[i-1][j-1] + c)     # substitution / égalité
+    return D[m][n]`
+});
+
+/* ---------- 10. Floyd-Warshall ---------- */
+function graphSVG(M) {
+  const n = M.length, W = 380, H = 300, cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 42, r = 17;
+  const pos = range(n).map(i => { const a = -Math.PI / 2 + 2 * Math.PI * i / n; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; });
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img" aria-label="Graphe orienté pondéré"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>`;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    if (i === j || M[i][j] === INF) continue;
+    const [x1, y1] = pos[i], [x2, y2] = pos[j];
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
+    const sx = x1 + ux * r, sy = y1 + uy * r, ex = x2 - ux * (r + 3), ey = y2 - uy * (r + 3);
+    const off = len * 0.16, qx = (x1 + x2) / 2 - uy * off, qy = (y1 + y2) / 2 + ux * off;
+    const lx = 0.25 * sx + 0.5 * qx + 0.25 * ex, ly = 0.25 * sy + 0.5 * qy + 0.25 * ey;
+    s += `<path d="M${sx},${sy} Q${qx},${qy} ${ex},${ey}" fill="none" style="stroke:var(--muted)" stroke-width="1.4" marker-end="url(#arr)"/>`;
+    s += `<text x="${lx}" y="${ly + 4}" text-anchor="middle" font-size="12" style="fill:var(--text);paint-order:stroke;stroke:var(--panel);stroke-width:4px">${M[i][j]}</text>`;
+  }
+  pos.forEach(([x, y], i) => {
+    s += `<circle cx="${x}" cy="${y}" r="${r}" style="fill:var(--accent-light);stroke:var(--accent-border)" stroke-width="2"/><text x="${x}" y="${y + 5}" text-anchor="middle" font-size="14" font-weight="700" style="fill:var(--text)">${i}</text>`;
+  });
+  return s + "</svg>";
+}
+
+P("floyd", {
+  name: "Floyd-Warshall",
+  title: "Algorithme de Floyd-Warshall",
+  tag: "Graphes · matrice",
+  description: "Calculer les distances minimales entre tous les couples de sommets d'un graphe orienté pondéré.",
+  fields: [{ name: "matrix", label: "Matrice d'adjacence pondérée (une ligne par sommet)", type: "textarea", rows: 6,
+    help: "Écrire « inf » (ou ∞, x, -) pour l'absence d'arc. De 2 à 7 sommets, poids de −99 à 999. La diagonale est ramenée à 0." }],
+  defaults: { matrix: "0 3 inf 7\n8 0 2 inf\n5 inf 0 1\n2 inf inf 0" },
+  presets: [
+    { name: "Exemple de base", v: { matrix: "0 3 inf 7\n8 0 2 inf\n5 inf 0 1\n2 inf inf 0" } },
+    { name: "5 sommets, arc négatif", v: { matrix: "0 3 8 inf -4\ninf 0 inf 1 7\ninf 4 0 inf inf\n2 inf -5 0 inf\ninf inf inf 6 0" } },
+    { name: "Cycle absorbant", v: { matrix: "0 1 inf\ninf 0 -3\n1 inf 0" } }
+  ],
+  random: () => {
+    const n = 5;
+    return { matrix: range(n).map(i => range(n).map(j => i === j ? "0" : Math.random() < 0.5 ? String(rnd(1, 9)) : "inf").join(" ")).join("\n") };
+  },
+  formula: String.raw`\[D^{(k)}[i][j]=\min\bigl(D^{(k-1)}[i][j],\;D^{(k-1)}[i][k]+D^{(k-1)}[k][j]\bigr)\]`,
+  explanation: "D^(k)[i][j] est la longueur du plus court chemin de i à j dont les sommets intermédiaires sont dans {0, …, k}. À chaque phase k, on teste pour tout couple (i, j) si passer par k raccourcit le chemin.",
+  noTopDown: true,
+  parse(v) {
+    const rows = String(v.matrix).split(/\n+/).map(r => r.trim()).filter(Boolean);
+    const n = rows.length;
+    if (n < 2 || n > 7) fail("Matrice : entre 2 et 7 lignes attendues (une par sommet).");
+    const M = rows.map((r, i) => {
+      const t = r.split(/[\s,;]+/).filter(Boolean);
+      if (t.length !== n) fail(`Ligne ${i + 1} : ${n} valeurs attendues (matrice carrée), ${t.length} trouvée(s).`);
+      return t.map((x, j) => {
+        if (/^(inf|infini|∞|x|-)$/i.test(x)) return i === j ? 0 : INF;
+        if (!/^[+-]?\d+$/.test(x)) fail(`Ligne ${i + 1} : « ${x} » n'est ni un entier ni « inf ».`);
+        const val = parseInt(x, 10);
+        if (val < -99 || val > 999) fail(`Ligne ${i + 1} : ${val} doit être compris entre −99 et 999.`);
+        return (i === j && val > 0) ? 0 : val;
+      });
+    });
+    return { M };
+  },
+  build({ M }) {
+    const n = M.length, D = M.map(r => r.slice()), events = [];
+    for (let k = 0; k < n; k++) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const old = D[i][j], a = D[i][k], b = D[k][j], via = a + b, improved = via < old;
+      if (improved) D[i][j] = via;
+      events.push({ type: "floyd", k, i, j, old, a, b, via, value: D[i][j], improved, phase: k,
+        log: `Sommet intermédiaire <strong>k = ${k}</strong> · D[${i}][${j}] = ${fmtNum(old)} contre D[${i}][${k}] + D[${k}][${j}] = ${fmtNum(a)} + ${fmtNum(b)} = ${fmtNum(via)} → ${improved ? `<strong>amélioré : ${fmtNum(via)}</strong>` : "inchangé"}.` });
+    }
+    const neg = range(n).some(i => D[i][i] < 0);
+    const missing = D.reduce((s, r, i) => s + r.filter((x, j) => i !== j && x === INF).length, 0);
+    return {
+      kind: "floyd", n, init: M, events, final: D, noTopDown: true,
+      summary: `Graphe à ${n} sommets (${M.reduce((s, r, i) => s + r.filter((x, j) => i !== j && x !== INF).length, 0)} arcs). Une case ∞ signifie « pas de chemin ».`,
+      corner: "i ↓ · j →",
+      labels: range(n).map(String),
+      fin: { path: [], sel: new Set(), result: neg
+        ? "⚠ Cycle de poids négatif détecté (un D[i][i] est négatif) : les distances ne sont plus définies."
+        : `Matrice des plus courts chemins calculée.${missing ? ` ${missing} couple(s) (i, j) sans chemin.` : " Le graphe est fortement connexe."}` },
+      preview: () => graphSVG(M)
+    };
+  },
+  doc: [
+    { h: "Le problème", html: `<p>Dans un graphe orienté pondéré (poids éventuellement négatifs, sans cycle de poids négatif), calculer la distance de <strong>chaque</strong> sommet i vers <strong>chaque</strong> sommet j.</p>` },
+    { h: "Sous-problème", html: `<p><strong>D⁽ᵏ⁾[i][j]</strong> = longueur du plus court chemin de i à j dont tous les sommets <em>intermédiaires</em> appartiennent à {0, …, k}. D⁽⁻¹⁾ est la matrice d'adjacence (aucun intermédiaire autorisé) ; D⁽ⁿ⁻¹⁾ est la réponse.</p>` },
+    { h: "Relation de récurrence", html: `<p>Un plus court chemin de i à j avec intermédiaires dans {0..k} :</p><ul><li><strong>ne passe pas par k</strong> : c'est D⁽ᵏ⁻¹⁾[i][j] ;</li><li><strong>passe par k</strong> (une seule fois) : il se coupe en un chemin i→k et un chemin k→j, tous deux avec intermédiaires dans {0..k−1} : D⁽ᵏ⁻¹⁾[i][k] + D⁽ᵏ⁻¹⁾[k][j].</li></ul>` },
+    { h: "Implémentation en place", html: `<p>On n'a besoin que d'<em>une</em> matrice : pendant la phase k, la ligne k et la colonne k ne changent pas (D[k][k] = 0), donc on peut écraser D au fur et à mesure. La boucle sur k doit être la <strong>boucle extérieure</strong>.</p><div class="callout">Pas de mode Top-Down ici : l'algorithme est naturellement itératif et en place. En revanche, utilisez le bouton « Sommet k suivant » pour avancer phase par phase.</div>` },
+    { h: "Cycles absorbants", html: `<p>S'il existe un cycle de poids négatif, certains D[i][i] deviennent négatifs : c'est le test de détection (essayez le préréglage « Cycle absorbant »).</p>` },
+    { h: "Complexité", html: `<p>Θ(n³) en temps, Θ(n²) en mémoire. Pour comparaison : n exécutions de Dijkstra coûtent O(n(m + n) log n) mais exigent des poids positifs. Pour reconstruire les chemins, on tient à jour une matrice de successeurs/prédécesseurs.</p>` }
+  ],
+  quiz: [
+    { q: "Pourquoi la boucle sur k doit-elle être la plus externe ?", a: "L'invariant « D contient D⁽ᵏ⁾ » n'est vrai qu'après avoir traité tous les couples (i, j) pour le sommet k. Avec k à l'intérieur, on mélangerait des phases et on pourrait rater des chemins." },
+    { q: "Quels coefficients ne changent pas pendant la phase k ?", a: "Ceux de la ligne k et de la colonne k : D[k][j] ≤ D[k][k] + D[k][j] car D[k][k] = 0 (sans cycle négatif). C'est ce qui justifie l'implémentation en place." },
+    { q: "Comment détecter un cycle absorbant avec Floyd-Warshall ?", a: "À la fin, il existe un sommet i avec D[i][i] < 0." }
+  ],
+  code: `def floyd_warshall(D):
+    # D[i][j] = poids de l'arc i->j, float('inf') sinon, D[i][i] = 0
+    n = len(D)
+    D = [ligne[:] for ligne in D]
+    for k in range(n):                 # sommet intermédiaire : boucle extérieure
+        for i in range(n):
+            for j in range(n):
+                if D[i][k] + D[k][j] < D[i][j]:
+                    D[i][j] = D[i][k] + D[k][j]
+    return D                           # un D[i][i] < 0 révèle un cycle négatif`
+});
+
+const GENERAL_HTML = `
+<p>La programmation dynamique résout un problème en le décomposant en <strong>sous-problèmes qui se chevauchent</strong> et dont les solutions optimales se combinent (<strong>sous-structure optimale</strong>). Chaque sous-problème n'est résolu <em>qu'une seule fois</em> ; son résultat est mémorisé puis réutilisé.</p>
+<ol>
+  <li><strong>Définir le sous-problème</strong> : quels paramètres ? que signifie exactement une case ?</li>
+  <li><strong>Écrire la récurrence</strong> : comment une case se déduit de cases « plus petites ».</li>
+  <li><strong>Cas de base</strong> : les cases qui ne dépendent de rien.</li>
+  <li><strong>Ordre de calcul</strong> : un ordre compatible avec les dépendances (sans cycle), ou bien la mémoïsation.</li>
+  <li><strong>Lire la réponse</strong> (souvent la case finale) et <strong>reconstruire</strong> une solution par remontée.</li>
+  <li><strong>Complexité</strong> = (nombre de sous-problèmes) × (coût de calcul d'une case).</li>
+</ol>
+<table class="cmp">
+  <tr><th></th><th>Bottom-Up (itératif)</th><th>Top-Down (récursif + mémoïsation)</th></tr>
+  <tr><td>Principe</td><td>On remplit le tableau dans un ordre topologique, des petits vers les grands.</td><td>On part du problème final ; chaque appel mémorise son résultat (<code>@lru_cache</code>).</td></tr>
+  <tr><td>Sous-problèmes calculés</td><td>Tous.</td><td>Seulement ceux réellement atteints.</td></tr>
+  <tr><td>Avantages</td><td>Pas de récursion, boucles simples, optimisations mémoire faciles.</td><td>Traduction directe de la récurrence, pas besoin de chercher l'ordre.</td></tr>
+  <tr><td>Inconvénients</td><td>Il faut trouver un bon ordre ; calcule parfois des cases inutiles.</td><td>Profondeur de récursion limitée en Python (<code>sys.setrecursionlimit</code>), surcoût des appels.</td></tr>
+</table>
+<div class="callout">Sans mémoïsation, la même récurrence peut être <strong>exponentielle</strong> : voyez le compteur « appels sans mémoïsation » sous chaque tableau.</div>`;
+/* ENGINE-END */
+
+/* ============================================================
+   Interface
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const state = { pid: null, mode: "bottom", step: 0, model: null, events: [], naive: null, inputs: {}, playing: false, timer: null, debounce: null };
+
+function typeset(el) {
+  if (window.MathJax && typeof MathJax.typesetPromise === "function") MathJax.typesetPromise(el ? [el] : undefined).catch(() => {});
 }
 
 function buildNav() {
-  const nav=document.getElementById("problem-nav");
-  nav.innerHTML="";
-
-  Object.entries(problems).forEach(([key,p],i)=>{
-    const button=document.createElement("button");
-    button.className="nav-button"+(key===currentProblem?" active":"");
-    button.innerHTML=`<span class="nav-number">${i+1}</span>${p.name}`;
-    button.onclick=()=>loadProblem(key);
-    nav.appendChild(button);
+  const nav = $("problem-nav");
+  nav.innerHTML = "";
+  Object.entries(problems).forEach(([key, p], i) => {
+    const b = document.createElement("button");
+    b.className = "nav-button" + (key === state.pid ? " active" : "");
+    b.innerHTML = `<span class="nav-number">${i + 1}</span>${esc(p.name)}`;
+    b.onclick = () => loadProblem(key);
+    nav.appendChild(b);
   });
 }
 
-function loadProblem(key) {
-  currentProblem=key;
-  currentStep=0;
-  currentMode="bottom";
-  document.getElementById("bottom-up-btn").classList.add("active");
-  document.getElementById("top-down-btn").classList.remove("active");
+function loadProblem(pid) {
+  stopPlay();
+  state.pid = pid;
+  state.mode = "bottom";
+  const p = problems[pid];
+  if (!state.inputs[pid]) state.inputs[pid] = { ...p.defaults };
   buildNav();
-  reset();
+  $("problem-title").textContent = p.title;
+  $("problem-description").textContent = p.description;
+  $("problem-tag").textContent = p.tag;
+  $("formula").innerHTML = p.formula;
+  $("formula-explanation").textContent = p.explanation;
+  $("doc-body").innerHTML = p.doc.map(s => `<div class="doc-sec"><h4>${s.h}</h4>${s.html}</div>`).join("");
+  $("quiz").innerHTML = p.quiz.map(q => `<details class="quiz"><summary>${q.q}</summary><div>${q.a}</div></details>`).join("");
+  $("code").textContent = p.code;
+  renderForm();
+  applyInputs();
+  typeset();
+}
+
+function renderForm() {
+  const p = problems[state.pid], box = $("params");
+  box.innerHTML = "";
+  p.fields.forEach(f => {
+    const w = document.createElement("div");
+    w.className = "field";
+    const el = f.type === "textarea" ? document.createElement("textarea") : document.createElement("input");
+    if (f.type === "textarea") el.rows = f.rows || 4; else el.type = "text";
+    el.id = "f-" + f.name;
+    el.spellcheck = false;
+    el.value = state.inputs[state.pid][f.name];
+    el.addEventListener("input", () => { clearTimeout(state.debounce); state.debounce = setTimeout(applyInputs, 350); });
+    const lab = document.createElement("label");
+    lab.htmlFor = el.id; lab.textContent = f.label;
+    w.appendChild(lab); w.appendChild(el);
+    if (f.help) { const s = document.createElement("small"); s.textContent = f.help; w.appendChild(s); }
+    box.appendChild(w);
+  });
+  const pr = $("presets");
+  pr.innerHTML = `<span class="lbl">Exemples :</span>`;
+  p.presets.forEach(ps => {
+    const b = document.createElement("button");
+    b.className = "chip-btn"; b.textContent = ps.name;
+    b.onclick = () => { state.inputs[state.pid] = { ...ps.v }; renderForm(); applyInputs(); };
+    pr.appendChild(b);
+  });
+  const rb = document.createElement("button");
+  rb.className = "chip-btn"; rb.textContent = "🎲 Aléatoire";
+  rb.onclick = () => { state.inputs[state.pid] = p.random(); renderForm(); applyInputs(); };
+  pr.appendChild(rb);
+  const db = document.createElement("button");
+  db.className = "chip-btn"; db.textContent = "↺ Valeurs par défaut";
+  db.onclick = () => { state.inputs[state.pid] = { ...p.defaults }; renderForm(); applyInputs(); };
+  pr.appendChild(db);
+}
+
+function readForm() {
+  const p = problems[state.pid], v = {};
+  p.fields.forEach(f => { v[f.name] = $("f-" + f.name).value; });
+  return v;
+}
+
+function applyInputs() {
+  const p = problems[state.pid];
+  const vals = readForm();
+  state.inputs[state.pid] = vals;
+  try {
+    const model = p.build(p.parse(vals));
+    state.model = model;
+    $("error").textContent = "";
+    if (model.noTopDown) state.mode = "bottom";
+    $("input-summary").innerHTML = `<strong>Données :</strong> ${model.summary}`;
+    computeRun();
+  } catch (e) {
+    if (e instanceof InputError) $("error").textContent = "⚠ " + e.message;
+    else throw e;
+  }
+}
+
+function computeRun() {
+  stopPlay();
+  const m = state.model;
+  if (m.kind === "floyd") {
+    state.events = m.events;
+    state.naive = null;
+  } else {
+    const bu = runBottomUp(m);
+    m.fin = m.finish(k => bu.values.get(k));
+    state.events = state.mode === "top" ? runTopDown(m).events : bu.events;
+    state.naive = naiveCalls(m, bu.values);
+  }
+  state.step = 0;
+  updateModeUI();
+  render();
+}
+
+function updateModeUI() {
+  const m = state.model, nt = !!m.noTopDown;
+  $("bottom-up-btn").classList.toggle("active", state.mode === "bottom");
+  $("top-down-btn").classList.toggle("active", state.mode === "top");
+  $("top-down-btn").disabled = nt;
+  $("top-down-btn").title = nt ? "Floyd-Warshall est itératif et en place : pas de version Top-Down naturelle." : "";
+  $("phase-btn").hidden = m.kind !== "floyd";
+  $("mode-note").textContent = nt ? "Floyd-Warshall est un algorithme itératif en place : pas de mode Top-Down."
+    : state.mode === "bottom" ? "On remplit toutes les cases dans l'ordre : des petits sous-problèmes vers le grand."
+    : "On part de la case finale ; chaque appel récursif mémorise son résultat. Seules les cases nécessaires sont calculées.";
+  $("table-title").textContent = "Tableau de programmation dynamique — " + (state.mode === "bottom" ? "Bottom-Up" : "Top-Down");
+  $("viz-card").dataset.mode = state.mode;
 }
 
 function setMode(mode) {
-  currentMode=mode;
-  currentStep=0;
-  document.getElementById("bottom-up-btn").classList.toggle("active",mode==="bottom");
-  document.getElementById("top-down-btn").classList.toggle("active",mode==="top");
-  reset();
+  if (mode === "top" && state.model.noTopDown) return;
+  state.mode = mode;
+  computeRun();
 }
 
-function reset() {
-  const p=problems[currentProblem];
-  simulation=p.build(p.data);
-  visibleSteps=simulation.steps.slice();
-  memo=new Set();
-  currentStep=0;
-
-  document.getElementById("problem-title").textContent=p.title;
-  document.getElementById("problem-description").textContent=p.description;
-  document.getElementById("input-summary").innerHTML=
-    `<strong>Exemple :</strong> ${simulation.summary}`;
-  document.getElementById("formula").innerHTML=p.formula;
-  document.getElementById("formula-explanation").textContent=p.explanation;
-  document.getElementById("table-title").textContent=
-    currentMode==="bottom"
-      ?"Tableau de programmation dynamique — Bottom-Up"
-      :"Tableau de programmation dynamique — Top-Down";
-  document.getElementById("result-banner").innerHTML="";
-  document.getElementById("log").innerHTML=
-    `<div class="log-entry">Prêt. Cliquez sur « Étape suivante ».</div>`;
-
-  if(window.MathJax) MathJax.typesetPromise();
-  render();
+/* ---------- Rendu ---------- */
+function replay(t) {
+  const computed = new Map(), logs = new Map();
+  let hits = 0;
+  for (let i = 0; i < t; i++) {
+    const e = state.events[i];
+    if (e.type === "compute") { computed.set(e.key, e.value); logs.set(e.key, e.log); }
+    else if (e.type === "hit") hits++;
+  }
+  return { computed, logs, hits };
 }
-
-/* ============================================================
-   Visualisation
-   ============================================================ */
 
 function render() {
-  renderTable();
-  renderProgress();
-  renderButtons();
+  renderStatus(); renderPreview(); renderStack();
+  if (state.model.kind === "floyd") renderFloyd(); else renderGrid();
+  renderLegend(); renderStats(); renderLog(); renderResult(); renderProgress();
+}
+
+function renderStatus() {
+  const t = state.step, ev = state.events, m = state.model;
+  const box = $("step-box");
+  if (t === 0) {
+    box.innerHTML = `<span class="step-tag">Prêt</span> ` + (m.kind === "floyd"
+      ? "Pour chaque sommet intermédiaire <b>k</b>, on teste pour tous les couples (i, j) si passer par k raccourcit le chemin."
+      : state.mode === "bottom" ? "Mode <b>Bottom-Up</b> : on remplit le tableau dans l'ordre, des cas de base vers la réponse."
+      : "Mode <b>Top-Down</b> : on part de la case finale et on descend récursivement ; chaque résultat est mémorisé.")
+      + " Cliquez sur « Étape suivante » ou utilisez la touche →.";
+    return;
+  }
+  const e = ev[t - 1];
+  const tag = m.kind === "floyd" ? `k = ${e.k}` : e.type === "enter" ? "Appel" : e.type === "hit" ? "Mémo" : state.mode === "top" ? "Résolution" : "Calcul";
+  box.innerHTML = `<span class="step-tag">${tag}</span> ${e.log}`;
+}
+
+function renderPreview() {
+  const m = state.model, box = $("preview");
+  if (!m.preview) { box.hidden = true; return; }
+  const finished = state.step === state.events.length && state.events.length > 0;
+  box.hidden = false;
+  box.innerHTML = `<div class="pv-title">Aperçu du problème${finished && m.fin.sel && m.fin.sel.size ? " — solution retenue en vert" : ""}</div>` + m.preview(finished, finished ? m.fin.sel : new Set());
+}
+
+function renderStack() {
+  const box = $("stack-panel");
+  const show = state.mode === "top" && state.model.kind !== "floyd";
+  box.hidden = !show;
+  if (!show) return;
+  const t = state.step, last = t > 0 ? state.events[t - 1] : null;
+  const finished = t === state.events.length;
+  const chips = last && !finished && last.stack.length ? last.stack.map(k => `<span class="chip">${k}</span>`).join(" › ") : "—";
+  box.innerHTML = `<span class="lbl">Pile d'appels :</span>${chips}`;
+}
+
+function cellClasses(key, hl, computed, pathSet) {
+  const c = [computed.has(key) ? "done" : "unknown"];
+  if (hl) {
+    const isCur = hl.key === key;
+    if (hl.stack && hl.stack.includes(key) && !isCur) c.push("instack");
+    if (hl.deps && hl.deps.includes(key) && !isCur) c.push("dependency");
+    if (isCur) c.push(hl.type === "hit" ? "hit" : "current");
+  }
+  if (pathSet.has(key)) c.push("path");
+  return c.join(" ");
+}
+
+function renderGrid() {
+  const m = state.model, t = state.step;
+  const { computed, logs } = replay(t);
+  const finished = t === state.events.length && t > 0;
+  const last = t > 0 ? state.events[t - 1] : null;
+  const hl = finished ? null : last;
+  const pathSet = finished ? new Set(m.fin.path) : new Set();
+  const fv = v => m.fmt ? m.fmt(v) : fmtNum(v);
+  let h = `<table class="dp-table"><thead><tr><th>${esc(m.corner)}</th>` + m.cols.map(c => `<th>${c}</th>`).join("") + "</tr></thead><tbody>";
+  m.rows.forEach(row => {
+    h += `<tr><td class="row-header">${row.label}</td>`;
+    row.cells.forEach(cell => {
+      if (cell.text !== undefined) { h += `<td class="static">${cell.text}</td>`; return; }
+      const cls = cellClasses(cell.key, hl, computed, pathSet);
+      let shown = "·";
+      if (computed.has(cell.key)) shown = fv(computed.get(cell.key));
+      else if (hl && hl.key === cell.key && hl.type === "enter") shown = "?";
+      const tip = logs.has(cell.key) ? logs.get(cell.key).replace(/<[^>]+>/g, "") : cell.key;
+      h += `<td class="${cls}" title="${esc(tip)}">${shown}</td>`;
+    });
+    h += "</tr>";
+  });
+  $("visualization").innerHTML = h + "</tbody></table>";
+}
+
+function renderFloyd() {
+  const m = state.model, t = state.step, n = m.n;
+  const cur = m.init.map(r => r.slice());
+  for (let e = 0; e < t; e++) { const ev = state.events[e]; cur[ev.i][ev.j] = ev.value; }
+  const finished = t === state.events.length && t > 0;
+  const last = t > 0 && !finished ? state.events[t - 1] : null;
+  const improved = new Set();
+  if (last) for (let e = 0; e < t; e++) { const ev = state.events[e]; if (ev.phase === last.phase && ev.improved) improved.add(ev.i + "," + ev.j); }
+  let h = `<table class="dp-table"><thead><tr><th>${esc(m.corner)}</th>` + m.labels.map(c => `<th>${c}</th>`).join("") + "</tr></thead><tbody>";
+  for (let i = 0; i < n; i++) {
+    h += `<tr><td class="row-header">${i}</td>`;
+    for (let j = 0; j < n; j++) {
+      let cls = "done";
+      if (last) {
+        if (i === last.k || j === last.k) cls += " pivot";
+        if (improved.has(i + "," + j)) cls += " improved";
+        if ((i === last.i && j === last.k) || (i === last.k && j === last.j)) cls += " dependency";
+        if (i === last.i && j === last.j) cls += " current";
+      }
+      h += `<td class="${cls}">${fmtNum(cur[i][j])}</td>`;
+    }
+    h += "</tr>";
+  }
+  $("visualization").innerHTML = h + "</tbody></table>";
+}
+
+function renderLegend() {
+  const m = state.model;
+  let items;
+  if (m.kind === "floyd") items = [["lg-current", "Couple (i, j) testé"], ["lg-dependency", "D[i][k] et D[k][j]"], ["lg-pivot", "Ligne et colonne k"], ["lg-improved", "Amélioré pendant la phase"]];
+  else {
+    items = [["lg-current", "Case en cours"], ["lg-dependency", "Dépendances"], ["lg-done", "Case déjà calculée"]];
+    if (state.mode === "top") items.push(["lg-instack", "Appel en attente (pile)"], ["lg-hit", "Résultat réutilisé (mémo)"]);
+    items.push(["lg-path", "Chemin de reconstruction (à la fin)"]);
+  }
+  $("legend").innerHTML = items.map(([c, l]) => `<span><i class="${c}"></i> ${l}</span>`).join("");
+}
+
+function renderStats() {
+  const m = state.model, t = state.step, box = $("stats");
+  if (m.kind === "floyd") {
+    let imp = 0;
+    for (let e = 0; e < t; e++) if (state.events[e].improved) imp++;
+    box.innerHTML = `<div class="stat">Couples testés : <b>${t}</b> / ${state.events.length} (n³)</div><div class="stat">Améliorations : <b>${imp}</b></div>`;
+    return;
+  }
+  const { computed, hits } = replay(t);
+  const total = m.order.length;
+  let h = `<div class="stat">Sous-problèmes résolus : <b>${computed.size}</b> / ${total}</div>`;
+  if (state.mode === "top") h += `<div class="stat">Réutilisations (mémo) : <b>${hits}</b></div>`;
+  if (t === state.events.length && state.mode === "top" && computed.size < total) h += `<div class="stat">Cases jamais calculées : <b>${total - computed.size}</b></div>`;
+  h += `<div class="stat">Appels récursifs <u>sans</u> mémoïsation : <b>${fmtBig(state.naive)}</b></div>`;
+  box.innerHTML = h;
+}
+
+function renderLog() {
+  const t = state.step, box = $("log");
+  if (t === 0) { box.innerHTML = `<div class="log-entry">Le journal se remplit au fil des étapes.</div>`; return; }
+  const m = state.model;
+  let h = "";
+  for (let i = 0; i < t; i++) {
+    const e = state.events[i];
+    const tag = m.kind === "floyd" ? "k=" + e.k : e.type === "enter" ? "Appel" : e.type === "hit" ? "Mémo" : state.mode === "top" ? "Résolution" : "Calcul";
+    h += `<div class="log-entry${i === t - 1 ? " cur" : ""}"><span class="n">${i + 1}.</span><span class="t">${tag}</span> ${e.log}</div>`;
+  }
+  box.innerHTML = h;
+  box.scrollTop = box.scrollHeight;
+}
+
+function renderResult() {
+  const finished = state.step === state.events.length && state.events.length > 0;
+  $("result-banner").innerHTML = finished ? `<div class="result-banner">✓ ${state.model.fin.result}</div>` : "";
 }
 
 function renderProgress() {
-  const total=visibleSteps.length;
-  const pct=total===0?100:currentStep/total*100;
-  document.getElementById("progress-bar").style.width=pct+"%";
-  document.getElementById("progress-text").textContent=`${currentStep} / ${total}`;
+  const total = state.events.length, t = state.step;
+  $("progress-bar").style.width = (total ? t / total * 100 : 100) + "%";
+  $("progress-text").textContent = `${t} / ${total}`;
+  $("previous-btn").disabled = t === 0;
+  $("next-btn").disabled = t >= total;
+  $("play-btn").textContent = state.playing ? "⏸ Pause" : "▶ Lecture";
 }
 
-function renderButtons() {
-  document.getElementById("previous-btn").disabled=currentStep===0;
-  document.getElementById("next-btn").disabled=currentStep>=visibleSteps.length;
-}
-
-function renderTable() {
-  const vis=document.getElementById("visualization");
-  const data=simulation;
-  const step=visibleSteps[currentStep-1];
-  const computed=new Map();
-
-  for(let i=0;i<currentStep;i++){
-    computed.set(visibleSteps[i].key,visibleSteps[i].value);
-  }
-
-  let html="<table class='dp-table'>";
-
-  if(data.matrix){
-    html+="<thead><tr><th></th>";
-    data.colLabels.forEach(label=>html+=`<th>${label}</th>`);
-    html+="</tr></thead><tbody>";
-
-    data.matrix.forEach((row,r)=>{
-      html+=`<tr><td class="row-header">${data.rowLabels[r]}</td>`;
-      row.forEach((value,c)=>{
-        const key=matrixKey(r,c);
-        const cls=cellClass(key,step,computed);
-        const shown=computed.has(key)?fmt(computed.get(key)):"·";
-        html+=`<td class="${cls}">${shown}</td>`;
-      });
-      html+="</tr>";
-    });
-
-    html+="</tbody>";
-  }else{
-    html+="<thead><tr><th></th>";
-    const count=data.rows[0].values.length;
-    for(let c=0;c<count;c++)html+=`<th>${c}</th>`;
-    html+="</tr></thead><tbody>";
-
-    data.rows.forEach(row=>{
-      html+=`<tr><td class="row-header">${row.label}</td>`;
-      row.values.forEach((value,c)=>{
-        const key=`${row.label}[${c}]`;
-        const cls=cellClass(key,step,computed);
-        const shown=computed.has(key)?fmt(computed.get(key)):"·";
-        html+=`<td class="${cls}">${shown}</td>`;
-      });
-      html+="</tr>";
-    });
-
-    html+="</tbody>";
-  }
-
-  html+="</table>";
-  vis.innerHTML=html;
-
-  if(currentStep===visibleSteps.length && visibleSteps.length>0){
-    document.getElementById("result-banner").innerHTML=
-      `<div class="result-banner">✓ ${data.result}</div>`;
-  }
-}
-
-function matrixKey(r,c) {
-  const keyPrefix=currentProblem==="levenshtein"?"D":
-    currentProblem==="lcs"?"L":
-    currentProblem==="knapsack"?"K":
-    currentProblem==="partition"?"P":
-    "E";
-  return `${keyPrefix}[${r}][${c}]`;
-}
-
-function cellClass(key,step,computed) {
-  if(step && key===step.key)return "current result";
-  if(step && step.deps && step.deps.includes(key))return "dependency";
-  if(computed.has(key))return "done";
-  return "unknown";
-}
-
-/* ============================================================
-   Étapes et journal
-   ============================================================ */
-
-function nextStep() {
-  if(currentStep>=visibleSteps.length)return;
-
-  const step=visibleSteps[currentStep];
-  currentStep++;
-
-  if(currentMode==="top"){
-    // Représentation de la mémoïsation : chaque sous-problème
-    // calculé est mémorisé et réutilisé par les dépendances.
-    memo.add(step.key);
-  }
-
-  const log=document.getElementById("log");
-  const entry=document.createElement("div");
-  entry.className="log-entry";
-  entry.innerHTML=
-    `<strong>${currentMode==="top"?"Mémoïsation":"Calcul"} :</strong> `+
-    step.log;
-  log.appendChild(entry);
-  log.scrollTop=log.scrollHeight;
-
+/* ---------- Contrôles ---------- */
+function nextStep() { if (state.step >= state.events.length) return; state.step++; render(); }
+function previousStep() { if (state.step <= 0) return; state.step--; render(); }
+function runAll() { stopPlay(); state.step = state.events.length; render(); }
+function reset() { computeRun(); }
+function nextPhase() {
+  const m = state.model;
+  if (m.kind !== "floyd") return;
+  const size = m.n * m.n;
+  const target = (Math.floor(state.step / size) + 1) * size;
+  state.step = Math.min(target, state.events.length);
   render();
 }
-
-function previousStep() {
-  if(currentStep<=0)return;
-  currentStep--;
-  document.getElementById("log").lastElementChild?.remove();
-  document.getElementById("result-banner").innerHTML="";
-  render();
+function stopPlay() { state.playing = false; clearTimeout(state.timer); if ($("play-btn")) $("play-btn").textContent = "▶ Lecture"; }
+function tick() {
+  if (!state.playing) return;
+  if (state.step >= state.events.length) { stopPlay(); return; }
+  nextStep();
+  state.timer = setTimeout(tick, +$("speed").value);
+}
+function togglePlay() {
+  if (state.playing) { stopPlay(); return; }
+  if (state.step >= state.events.length) { state.step = 0; render(); }
+  state.playing = true;
+  $("play-btn").textContent = "⏸ Pause";
+  state.timer = setTimeout(tick, 200);
 }
 
-function runAll() {
-  while(currentStep<visibleSteps.length)nextStep();
-}
-
+let zoomLevel = 1;
+function zoom(d) { zoomLevel = Math.min(1.6, Math.max(0.8, +(zoomLevel + d).toFixed(2))); document.body.style.zoom = zoomLevel; }
 function toggleTheme() {
-  const dark=document.body.getAttribute("data-theme")==="dark";
-  document.body.setAttribute("data-theme",dark?"light":"dark");
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  const t = dark ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("pd-theme", t); } catch (e) {}
 }
+
+document.addEventListener("keydown", e => {
+  const tag = e.target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  if (e.key === "ArrowRight") { e.preventDefault(); stopPlay(); nextStep(); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); stopPlay(); previousStep(); }
+  else if (e.key === " " && tag !== "BUTTON") { e.preventDefault(); togglePlay(); }
+});
 
 /* Initialisation */
-buildNav();
-loadProblem("mwis");
+$("general-body").innerHTML = GENERAL_HTML;
+loadProblem("fib");
 </script>
 
 </body>
