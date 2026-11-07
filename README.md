@@ -10,6 +10,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 - [Structures de données](#structures-de-données)
 - [Algorithmique](#algorithmique)
+- [Intelligence artificielle](#intelligence-artificielle)
 - [Bases de données](#bases-de-données)
 - [Utilisation en local](#utilisation-en-local)
 - [Contribuer](#contribuer)
@@ -30,11 +31,18 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | [Algorithmes de tri](https://siicpgeamansur.github.io/ITC/algorithmes_tri.html) | Page pour s'entraîner aux algorithmes de tri. |
 | [Programmation dynamique](https://siicpgeamansur.github.io/ITC/programmation_dynamique.html) | Illustration de la résolution de certains types de problèmes par programmation dynamique. |
 
+## Intelligence artificielle
+
+| Outil | Description |
+|---|---|
+| [IA](https://siicpgeamansur.github.io/ITC/ia.html) | Atelier complet sur l'intelligence artificielle et l'apprentissage automatique : données, attributs et étiquettes, k plus proches voisins sur un jeu de données réglable (taille et équilibre), k-moyennes non supervisées, régression linéaire et descente de gradient avec courbe du coût et rôle du taux d'apprentissage α, arbres de décision et entropie, évaluation des modèles (matrice de confusion, précision, rappel, surapprentissage), perceptron et portes logiques (ET, OU, XOR), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
+
+
 ## Bases de données
 
 | Outil | Description |
 |---|---|
-| [Atelier SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Atelier complet sur SQL et les bases de données relationnelles : modèle relationnel et algèbre (π, σ, ⋈), console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
+| [SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Atelier complet sur SQL et les bases de données relationnelles : modèle relationnel et algèbre (π, σ, ⋈), console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
 
 ---
 
