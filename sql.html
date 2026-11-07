@@ -164,7 +164,7 @@ const LSOK=(()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__
 const MEM={};
 function lsGet(k,d){try{const v=LSOK?localStorage.getItem(k):MEM[k];return v?JSON.parse(v):d;}catch(e){return d;}}
 function lsSet(k,v){try{const s=JSON.stringify(v);if(LSOK)localStorage.setItem(k,s);else MEM[k]=s;}catch(e){MEM[k]=JSON.stringify(v);}}
-const cm=t=>'<code class="k">'+t+'</code>';
+const cm=t=>'<code class="k">'+esc(t)+'</code>';
 const fmt=n=>(Math.round(n*100)/100).toString().replace('.',',');
 
 /* ===== base de données : scolarité (style concours) ===== */
@@ -176,7 +176,6 @@ const DB={
  notes:{cols:['etudiant','module','valeur'],pk:null,
   rows:[[1,'MA101',14],[1,'AN201',11],[1,'IN301',16],[2,'MA101',9],[2,'AN201',12],[2,'ECO201',7],[3,'MA101',17],[3,'AN201',15],[3,'IN301',18],[3,'PH101',13],[4,'PH101',11],[5,'AN201',13],[5,'ECO201',15],[6,'MA101',12],[6,'IN301',10],[8,'MA101',15],[8,'PH101',16]]}
 };
-const SCHEMA_NOTE='notes(<i>etudiant</i>, <i>module</i>, valeur)  — clé primaire (etudiant, module)';
 
 /* ===== mini moteur SQL (testé) ===== */
 const sqlErr=m=>{throw new Error(m);};
@@ -400,11 +399,9 @@ function runQuery(sql){
   }else if(anyAgg)ctxs=[rows];
   else ctxs=rows.map(r=>[r]);
   stats.groups=ctxs.length;
-  const groupRows=JSON.parse(JSON.stringify(ctxs.map(g=>g[0])));
 
   if(Q.having)ctxs=ctxs.filter(g=>evalExpr(Q.having,g[0],g));
   stats.having=ctxs.length;
-  const havingRows=JSON.parse(JSON.stringify(ctxs.map(g=>g[0])));
 
   const cols=Q.select.map(s=>s.alias||(s.e.k==='col'?s.e.name:exprText(s.e)));
   let recs=ctxs.map(g=>({vals:Q.select.map(s=>evalExpr(s.e,g[0],g)),g}));
@@ -418,7 +415,7 @@ function runQuery(sql){
   }
   if(Q.limit!==null)recs=recs.slice(0,Q.limit);
   stats.result=recs.length;
-  return {cols,rows:recs.map(r=>r.vals),stats,q:Q,groups:recs.map(r=>r.g),snapshots:{fromRows,whereRows,groupRows,havingRows}};
+  return {cols,rows:recs.map(r=>r.vals),stats,q:Q,groups:recs.map(r=>r.g),snapshots:{fromRows,whereRows}};
 }
 
 /* ===== coloration SQL ===== */
@@ -469,7 +466,7 @@ function ws(o){WORKSHOPS.push(o);}
 /* ---------- Atelier 1 : schéma & algèbre relationnelle ---------- */
 ws({id:'rel',label:'Modèle & algèbre',hint:'Le modèle relationnel : tables, clés, et les opérations de l\'algèbre (π, σ, ⋈).',mount(root){
   root.append(h('h2',null,'Modèle relationnel et algèbre'),
-    h('p',null,'Une base relationnelle est un ensemble de ',h('b',null,'tables'), ' (relations). Chaque table a un ',h('b',null,'schéma'), ' (ses attributs) et une ',h('b',null,'instance'), ' (ses lignes). Notre base d\'exemple : ',cm('etudiants'), ', ',cm('modules'), ', ',cm('notes'), '.'),
+    h('p',null,'Une base relationnelle est un ensemble de ',h('b',null,'tables'), ' (relations). Chaque table a un ',h('b',null,'schéma'), ' (ses attributs) et une ',h('b',null,'instance'), ' (ses lignes). Notre base d\'exemple : ',h('span',{html:cm('etudiants')}), ', ',h('span',{html:cm('modules')}), ', ',h('span',{html:cm('notes')}), '.'),
     h('p',{class:'formula'},'etudiants(ine, nom, ville) · modules(code, intitule, credits) · notes(etudiant, module, valeur)'));
   root.append(h('div',{class:'gstats'},
     h('div',{class:'stat'},h('span',null,'etudiants'),h('b',null,'8 lignes · clé ine')),
@@ -501,6 +498,7 @@ ws({id:'rel',label:'Modèle & algèbre',hint:'Le modèle relationnel : tables, c
   const segB=h('div',{class:'chips'});
   OPS.forEach(o=>{const c=h('button',{type:'button',class:'chip'+(o.id===cur?' on':''),onclick:()=>{cur=o.id;$$('.chip',segB).forEach(b=>b.classList.remove('on'));c.classList.add('on');render();}},o.lab);segB.append(c);});
   root.append(segB,box);
+  render();
   root.append(h('div',{class:'retain'},'À retenir : toute requête SQL, même compliquée, se décompose en π, σ, ⋈ et renommages composés. Le résultat de chaque opération est... une table.'));
 }});
 
@@ -520,7 +518,6 @@ ws({id:'sql',label:'Console SQL',hint:'Écris tes requêtes SQL, inspecte la bas
   root.append(h('h2',null,'Console SQL interactive'),
     h('p',null,'Modifie la requête ou charge un exemple, puis exécute. Tu peux aussi inspecter les tables de la base de données en direct et cliquer sur chaque étape d\'évaluation pour voir l\'état intermédiaire des données.'));
   
-  // Panneau interactif de visualisation des tables (demandé par l'utilisateur)
   const dbInspector=h('div',{class:'widget',style:'margin-bottom:12px'},
     h('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'},
       h('b',null,'📂 Visualiseur de la Base de Données (Scolarité)'),
@@ -612,7 +609,7 @@ ws({id:'sql',label:'Console SQL',hint:'Écris tes requêtes SQL, inspecte la bas
 /* ---------- Atelier 3 : jointures ---------- */
 ws({id:'join',label:'Jointures',hint:'Comprendre ce que fait vraiment une jointure : croisement de lignes puis filtre ON.',mount(root){
   root.append(h('h2',null,'Jointures : que se passe-t-il vraiment ?'),
-    h('p',null,'Une jointure croise ',h('b',null,'chaque ligne de A avec chaque ligne de B'), ' (produit cartésien), puis garde les paires qui vérifient la condition ',cm('ON'), ' (l\'égalité clé étrangère = clé primaire).'));
+    h('p',null,'Une jointure croise ',h('b',null,'chaque ligne de A avec chaque ligne de B'), ' (produit cartésien), puis garde les paires qui vérifient la condition ',h('span',{html:cm('ON')}), ' (l\'égalité clé étrangère = clé primaire).'));
   const JT={
     inner:{lab:'JOIN (interne)',sql:'SELECT e.nom, n.module, n.valeur\nFROM etudiants e JOIN notes n ON e.ine = n.etudiant;',why:'On ne garde que les paires vérifiant e.ine = n.etudiant. Gaël (aucune note) disparaît : le résultat ne parle que des étudiants notés.'},
     left:{lab:'LEFT JOIN',sql:'SELECT e.nom, n.valeur\nFROM etudiants e LEFT JOIN notes n ON e.ine = n.etudiant;',why:'On garde toutes les lignes de gauche ; pour Gaël, les colonnes de notes sont complétées par NULL. Indispensable pour chercher « les étudiants sans note » (WHERE n.valeur IS NULL).'},
@@ -641,13 +638,14 @@ ws({id:'join',label:'Jointures',hint:'Comprendre ce que fait vraiment une jointu
     chips.append(c);
   });
   root.append(chips,box);
+  render(); // Exécution directe au chargement pour que l'onglet sélectionné ne soit pas vide
   root.append(h('div',{class:'retain'},'Astuce : pour compter les lignes qu\'une jointure « perd », compare COUNT(*) avant jointure (17 notes) et après jointure avec une table : chaque note a exactement un étudiant, donc rien ne se perd ici ; en revanche les étudiants sans note n\'apparaissent qu\'avec LEFT JOIN.'));
 }});
 
 /* ---------- Atelier 4 : agrégation ---------- */
 ws({id:'agg',label:'Agrégats & HAVING',hint:'GROUP BY découpe les lignes en paquets ; chaque paquet devient une ligne de résultat.',mount(root){
   root.append(h('h2',null,'Agrégation : GROUP BY et HAVING'),
-    h('p',null,'Une fonction d\'agrégation (',cm('COUNT'), ', ',cm('SUM'), ', ',cm('AVG'), ', ',cm('MIN'), ', ',cm('MAX'), ') résume un ',h('b',null,'ensemble de lignes'), ' en une valeur. ',cm('GROUP BY'), ' découpe la table en paquets selon un attribut : chaque paquet donne ',h('b',null,'une ligne'), ' de résultat. ',cm('HAVING'), ' filtre les paquets, comme WHERE filtre les lignes.'));
+    h('p',null,'Une fonction d\'agrégation (',h('span',{html:cm('COUNT')}), ', ',h('span',{html:cm('SUM')}), ', ',h('span',{html:cm('AVG')}), ', ',h('span',{html:cm('MIN')}), ', ',h('span',{html:cm('MAX')}), ') résume un ',h('b',null,'ensemble de lignes'), ' en une valeur. ',h('span',{html:cm('GROUP BY')}), ' découpe la table en paquets selon un attribut : chaque paquet donne ',h('b',null,'une ligne'), ' de résultat. ',h('span',{html:cm('HAVING')}), ' filtre les paquets, comme WHERE filtre les lignes.'));
   root.append(h('table',{class:'ctable',html:'<tr><th>WHERE</th><th>HAVING</th></tr><tr><td>filtre des <b>lignes</b> avant regroupement</td><td>filtre des <b>groupes</b> après agrégation</td></tr><tr><td>peut utiliser les colonnes, pas les agrégats</td><td>peut utiliser les agrégats (AVG, COUNT...)</td></tr></table>'}));
   const opts={col:'module',having:false};
   const box=h('div'),chips=h('div',{class:'chips'});
@@ -673,12 +671,13 @@ ws({id:'agg',label:'Agrégats & HAVING',hint:'GROUP BY découpe les lignes en pa
   const c2=h('button',{type:'button',class:'chip',onclick:()=>{opts.having=!opts.having;c2.classList.toggle('on',opts.having);render();}},'HAVING AVG < 12');
   chips.append(c1,c2);
   root.append(chips,box);
+  render();
 }});
 
 /* ---------- Atelier 5 : SQL en Python ---------- */
 ws({id:'py',label:'SQL en Python',hint:'Le module sqlite3 : connecter, exécuter, lire, valider, se protéger.',mount(root){
   root.append(h('h2',null,'SQL en Python : le module sqlite3'),
-    h('p',null,'Les données vivent dans la base ; le programme Python les interroge et les met à jour. ',cm('sqlite3'), ' est dans la bibliothèque standard.'));
+    h('p',null,'Les données vivent dans la base ; le programme Python les interroge et les met à jour. ',h('span',{html:cm('sqlite3')}), ' est dans la bibliothèque standard.'));
   const SC={
     lire:{lab:'Lire des données',
       code:'import sqlite3\nconnexion = sqlite3.connect("scolarite.db")\ncurseur = connexion.cursor()\ncurseur.execute("SELECT nom, ville FROM etudiants")\nresultats = curseur.fetchall()\nprint(resultats[0])\ncurseur.close()\nconnexion.close()',
@@ -749,7 +748,7 @@ const EXOS=[
  {id:'e2',t:'Liste des modules avec leurs crédits, triée par intitulé.',sol:'SELECT intitule, credits FROM modules ORDER BY intitule;'},
  {id:'e3',t:'Nombre total de notes et moyenne générale (arrondie à 2 décimales).',sol:'SELECT COUNT(*) AS nb, ROUND(AVG(valeur), 2) AS moyenne FROM notes;'},
  {id:'e4',t:'Pour chaque étudiant : son nom et sa moyenne (arrondie à 2 décimales), triée par moyenne décroissante. Colonnes attendues : nom, moyenne.',sol:'SELECT e.nom, ROUND(AVG(n.valeur), 2) AS moyenne\nFROM notes n JOIN etudiants e ON n.etudiant = e.ine\nGROUP BY e.nom\nORDER BY moyenne DESC;'},
- {id:'e5',t:'Les modules dont la moyenne est strictement inférieure à 12 : intitulé et moyenne arrondie à 2 décimales (sans tri imposé).',sol:'SELECT m.intitule, ROUND(AVG(n.valeur), 2) AS moyenne\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nHAVING AVG(n.valeur) < 12;'},
+ {id:'e5',t:'Les modules dont la moyenne est strictly inférieure à 12 : intitulé et moyenne arrondie à 2 décimales (sans tri imposé).',sol:'SELECT m.intitule, ROUND(AVG(n.valeur), 2) AS moyenne\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nHAVING AVG(n.valeur) < 12;'},
  {id:'e6',t:'Noms (sans doublon) des étudiants ayant une note supérieure ou égale à 15.',sol:'SELECT DISTINCT e.nom\nFROM etudiants e JOIN notes n ON e.ine = n.etudiant\nWHERE n.valeur >= 15;'},
  {id:'e7',t:'Les étudiants qui n\'ont aucune note (LEFT JOIN et IS NULL).',sol:'SELECT e.nom\nFROM etudiants e LEFT JOIN notes n ON e.ine = n.etudiant\nWHERE n.valeur IS NULL;'},
  {id:'e8',t:'Pour chaque module : intitulé et nombre d\'étudiants notés, trié par effectif décroissant.',sol:'SELECT m.intitule, COUNT(*) AS nb\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nORDER BY nb DESC;'},
@@ -974,7 +973,7 @@ function mountHelp(){
       h('h3',null,'Ateliers'),
       h('p',null,'La barre d\'ateliers propose 6 manipulations : modèle relationnel et algèbre, console SQL, jointures, agrégats, SQL en Python, exercices guidés.'),
       h('h3',null,'Console et visualiseur de BDD'),
-      h('p',null,'Dans la console SQL, tu peux désormais consulter les tables de la base de données en direct via le visualiseur interactif. De plus, chaque étape d\'exécution du SGBD est cliquable pour voir l\'état intermédiaire des données !'),
+      h('p',null,'Dans la console SQL, tu peux consulter les tables de la base de données en direct via le visualiseur interactif. De plus, chaque étape d\'exécution du SGBD est cliquable pour voir l\'état intermédiaire des données !'),
       h('h3',null,'Activité et Cours'),
       h('p',null,'Le panneau Activité mémorise tes réponses au QCM et les exercices résolus. Le bouton Cours donne accès au cours théorique complet.')),
     h('footer',null,h('button',{class:'btn pri',type:'button',onclick:()=>{dlg.hidden=true;}},'Compris'))));
