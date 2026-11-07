@@ -143,7 +143,7 @@ svg.line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 </div>
 <div id="dlg" hidden></div>
 <div id="toast" hidden></div>
-<>
+<script>
 (function(){
   function banner(bg,msg){
     try{
@@ -162,12 +162,12 @@ svg.line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     banner('#c0281f','Erreur JS : '+errs.join(' | '));
   });
   window.setTimeout(function(){
-    if(!window.__IA_OK&&!window.__IA_ERR)banner('#9a5b00','Le  principal ne s’est pas exécuté (aucune erreur signalée) : Java bloqué ?');
+    if(!window.__IA_OK&&!window.__IA_ERR)banner('#9a5b00','Le script principal ne s’est pas exécuté (aucune erreur signalée) : JavaScript bloqué ?');
   },800);
 })();
-</>
+</script>
 
-<>
+<script>
 'use strict';
 /* v1.1 : correctifs perceptron + rendu initial atelier 5 */
 const $=(s,r)=>(r||document).querySelector(s);
