@@ -14,18 +14,18 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 - [Utilisation en local](#utilisation-en-local)
 - [Contribuer](#contribuer)
 
-—
+---
 
 ## Structures de données
 
 | Outil | Description |
-|—|—|
+|---|---|
 | [Tables de hachage](https://siicpgeamansur.github.io/ITC/Tables_de_hachage.html) | Page illustrant le fonctionnement des tables de hachage. |
 
 ## Algorithmique
 
 | Outil | Description |
-|—|—|
+|---|---|
 | [Parcours de graphes](https://siicpgeamansur.github.io/ITC/Parcours_de_graphes_animation.html) | Animation des différents parcours de graphes au programme de CPGE en deuxième année. |
 | [Algorithmes de tri](https://siicpgeamansur.github.io/ITC/algorithmes_tri.html) | Page pour s'entraîner aux algorithmes de tri. |
 | [Programmation dynamique](https://siicpgeamansur.github.io/ITC/programmation_dynamique.html) | Illustration de la résolution de certains types de problèmes par programmation dynamique. |
@@ -33,10 +33,10 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 ## Bases de données
 
 | Outil | Description |
-|—|—|
+|---|---|
 | [Atelier SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Atelier complet sur SQL et les bases de données relationnelles : modèle relationnel et algèbre (π, σ, ⋈), console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
 
-—
+---
 
 ## Utilisation en local
 
