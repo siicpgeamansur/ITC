@@ -1,0 +1,985 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --term-bg:#121a22;--term-fg:#d5e0ea;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--panel);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+#act .pbody{font-size:13.5px}
+code.k{font-family:var(--font-mono);background:var(--panel2);padding:0 4px;border-radius:4px;font-size:12.5px;white-space:nowrap}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding:14px 16px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px}
+.cbody h2{font-size:26px;margin:2px 0 12px}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox footer{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;border-top:1px solid var(--line)}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p{margin:4px 0;font-size:13.5px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.widget{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0 14px;background:var(--panel)}
+.verdict{border-radius:8px;padding:9px 12px;margin-top:10px;font-size:14px}
+.verdict.yes{background:rgba(30,122,46,.15)}.verdict.no{background:rgba(192,40,31,.13)}
+.small{font-size:12.5px;color:var(--muted)}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.term{background:var(--term-bg);color:var(--term-fg);border-radius:8px;font:12.5px/1.5 var(--font-mono);padding:10px;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
+.term .ok{color:#6fdc9a}.term .err{color:#ff9a94}.term .dim{color:#8da0b5}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0;max-height:360px}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.dt thead th{position:sticky;top:0;background:var(--panel2);font-weight:600;z-index:1}
+.dt td.num{text-align:right;font-variant-numeric:tabular-nums}
+.dt .hl{background:rgba(46,109,164,.12)}
+.dt .pos td{background:rgba(30,122,46,.10)}.dt .neg td{background:rgba(192,40,31,.08)}
+.dt tr.sel td{background:var(--accent-soft)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:15px}
+.plot{position:relative;width:400px;max-width:100%;aspect-ratio:1/1;border:1px solid var(--line);border-radius:8px;background:linear-gradient(var(--panel2) 1px,transparent 1px),linear-gradient(90deg,var(--panel2) 1px,transparent 1px);background-size:40px 40px;cursor:crosshair;overflow:hidden}
+.pt{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,50%);border:1.5px solid #fff;box-shadow:0 0 2px rgba(0,0,0,.4)}
+.pt.pos{background:#1e7a2e}.pt.neg{background:#c0281f}
+.pt.q{background:#2e6da4;border:2px solid #fff;z-index:3}
+.pt.nn{outline:2.5px solid #e0a028;outline-offset:1.5px;z-index:2}
+.plabel{position:absolute;font:11px var(--font-mono);color:var(--muted)}
+.axisl{font:11px var(--font-ui);fill:var(--muted)}
+svg.line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.bars{display:flex;flex-direction:column;gap:6px;margin-top:10px}.bars>div{display:flex;align-items:center;gap:8px}
+.bars .bl{width:110px;flex:none;font-size:12.5px;color:var(--muted)}
+.bars .bar{display:inline-block;height:14px;background:var(--accent);border-radius:3px}
+.mgrid{border-collapse:collapse;margin:8px 0}
+.mgrid th,.mgrid td{border:1px solid var(--line);padding:8px 14px;text-align:center;font-family:var(--font-mono)}
+.mgrid th{background:var(--panel2)}
+.mgrid td.tp{background:rgba(30,122,46,.15)}.mgrid td.fp{background:rgba(154,91,0,.13)}.mgrid td.fn{background:rgba(192,40,31,.13)}.mgrid td.tn{background:rgba(46,109,164,.10)}
+.exo{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0;background:var(--panel)}
+.exo.done{border-color:var(--ok)}
+.exo .enonce{margin:0 0 8px}
+.exo input[type=text]{max-width:220px;font-family:var(--font-mono)}
+@media (max-width:820px){
+  .work{flex-direction:column;gap:8px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28)}
+  .ctoc{display:none}.cwrap{flex-direction:column}
+}
+</style></head><body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">Atelier Intelligence artificielle <small>ITC · CPGE 2e année</small></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+<script>
+(function(){
+  function banner(bg,msg){
+    try{
+      var d=document.getElementById('diag')||document.createElement('div');
+      d.id='diag';
+      d.setAttribute('style','position:fixed;top:0;left:0;right:0;z-index:9999;background:'+bg+';color:#fff;padding:10px 14px;font:12.5px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word');
+      d.textContent=msg;
+      (document.body||document.documentElement).appendChild(d);
+    }catch(e){}
+  }
+  var errs=[];
+  window.__iaBanner=banner;
+  window.addEventListener('error',function(e){
+    errs.push(((e&&e.message)?e.message:'inconnue')+((e&&e.lineno)?' (ligne '+e.lineno+')':''));
+    window.__IA_ERR=true;
+    banner('#c0281f','Erreur JS : '+errs.join(' | '));
+  });
+  window.setTimeout(function(){
+    if(!window.__IA_OK&&!window.__IA_ERR)banner('#9a5b00','Le script principal ne s’est pas exécuté (aucune erreur signalée) : JavaScript bloqué ?');
+  },800);
+})();
+</script>
+
+<script>
+'use strict';
+/* v1.1 : correctifs perceptron + rendu initial atelier 5 */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function h(tag,attrs,...kids){
+  const el=document.createElement(tag);
+  if(attrs)for(const[k,v]of Object.entries(attrs)){
+    if(v===false||v==null)continue;
+    if(k==='class')el.className=v;
+    else if(k==='html')el.innerHTML=v;
+    else if(k.startsWith('on'))el.addEventListener(k.slice(2),v);
+    else if(v===true)el.setAttribute(k,'');
+    else el.setAttribute(k,v);
+  }
+  for(const k of kids.flat())if(k!=null&&k!==false)el.append(k.nodeType?k:document.createTextNode(k));
+  return el;
+}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},3000);}
+const KEYS={act:'atelier-ia-itc-v1'};
+const LSOK=(()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true;}catch(e){return false;}})();
+const MEM={};
+function lsGet(k,d){try{const v=LSOK?localStorage.getItem(k):MEM[k];return v?JSON.parse(v):d;}catch(e){return d;}}
+function lsSet(k,v){try{const s=JSON.stringify(v);if(LSOK)localStorage.setItem(k,s);else MEM[k]=s;}catch(e){MEM[k]=JSON.stringify(v);}}
+const cm=t=>h('code',{class:'k'},t);
+const fmt=n=>(Math.round(n*1000)/1000).toString().replace('.',',');
+const fmt2=n=>(Math.round(n*100)/100).toString().replace('.',',');
+const LOG2=Math.log(2);
+function entrop(p){if(p<=0||p>=1)return 0;return -(p*LOG2_p(p)+(1-p)*LOG2_p(1-p));}
+function LOG2_p(x){return Math.log(x)/LOG2;}
+function entropy2(npos,nneg){const n=npos+nneg;if(n===0)return 0;return entrop(npos/n);}
+
+/* ===== jeu de données : admission en école d’ingénieurs ===== */
+/* [moyenne maths, moyenne info, 1 = admis, 0 = refusé] */
+const PTS=[
+ [16,15,1],[14,13,1],[12,14,1],[15,11,1],[13,16,1],[17,9,1],[18,14,1],[11,12,1],[10,15,1],[16,10,1],[9,17,1],[19,12,1],
+ [8,7,0],[6,10,0],[10,5,0],[5,8,0],[12,6,0],[7,12,0],[9,9,0],[11,7,0],[14,8,0],[6,5,0]
+];
+function dist(a,b){return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2);}
+function knn(k,q,pts){
+  const ns=pts.map(p=>({p,d:dist(p,q)})).sort((a,b)=>a.d-b.d).slice(0,k);
+  const npos=ns.filter(x=>x.p[2]===1).length;
+  return {label:npos*2>k?'Admis':'Refusé',npos,nneg:k-npos,ns};
+}
+
+/* ===== ateliers ===== */
+const WORKSHOPS=[];
+function ws(o){WORKSHOPS.push(o);}
+
+/* ---------- Atelier 1 : données et apprentissage ---------- */
+ws({id:'data',label:'Données & apprentissage',hint:'Un modèle apprend à partir d’exemples étiquetés : features, étiquettes, ensemble d’apprentissage et de test.',mount(root){
+  root.append(h('h2',null,'Données et apprentissage'),
+    h('p',null,'Un algorithme d’apprentissage ne programme pas une règle : il la ',h('b',null,'découvre dans des données'), '. Notre fil rouge tout au long de l’atelier : prédire si un dossier est ',h('b',null,'admis'), ' ou ',h('b',null,'refusé'), ' en école d’ingénieurs, à partir de deux attributs : les moyennes de maths et d’informatique.'));
+  root.append(h('div',{class:'gstats'},
+    h('div',{class:'stat'},h('span',null,'exemples'),h('b',null,PTS.length+' dossiers')),
+    h('div',{class:'stat'},h('span',null,'attributs (features)'),h('b',null,'2 : maths, info')),
+    h('div',{class:'stat'},h('span',null,'étiquettes (labels)'),h('b',null,PTS.filter(p=>p[2]===1).length+' admis · '+PTS.filter(p=>p[2]===0).length+' refusés')),
+    h('div',{class:'stat'},h('span',null,'classes'),h('b',null,'2 (binaire)'))));
+  root.append(h('h3',null,'Le jeu de données'));
+  root.append(h('div',{html:tablePts(PTS)}));
+  root.append(h('p',{class:'small'},'Vert : admis. Rouge : refusé. Chaque ligne est un ',h('b',null,'exemple'), ' : deux valeurs d’entrée (les attributs) et une valeur de sortie (l’étiquette).'));
+  /* split apprentissage / test */
+  let split=lsGet(KEYS.act+'/split',{tr:15,te:PTS.length-15,idx:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]});
+  const box=h('div');
+  function render(){
+    box.innerHTML='';
+    box.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'ensemble d’apprentissage'),h('b',null,split.tr+' exemples')),
+      h('div',{class:'stat'},h('span',null,'ensemble de test'),h('b',null,split.te+' exemples'))));
+    const tr=split.idx.slice(0,split.tr),te=split.idx.slice(split.tr);
+    box.append(h('p',{class:'small'},'Apprentissage ('+split.tr+') :'),h('div',{html:tablePts(tr.map(i=>PTS[i]))}));
+    box.append(h('p',{class:'small'},'Test ('+split.te+') : ces exemples servent uniquement à mesurer la qualité du modèle, jamais à l’entraîner.'),h('div',{html:tablePts(te.map(i=>PTS[i]))}));
+  }
+  function shuffle(){
+    const idx=[...PTS.keys()];
+    for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+    split={tr:15,te:PTS.length-15,idx};
+    lsSet(KEYS.act+'/split',split);render();
+  }
+  root.append(h('h3',null,'Apprentissage et test : pourquoi séparer ?'),
+    h('p',null,'On entraîne le modèle sur l’ensemble d’apprentissage, puis on l’évalue sur des exemples qu’il n’a jamais vus. Sinon, on note un élève sur les exercices dont il connaît les corrections par cœur.'),
+    h('div',{class:'chips'},h('button',{class:'btn pri',type:'button',onclick:shuffle},'Tirer une nouvelle répartition')),box);
+  render();
+  root.append(h('div',{class:'retain'},'À retenir : apprendre, c’est ajuster un modèle sur des données d’apprentissage ; mesurer, c’est interroger le modèle sur des données de test qu’il n’a jamais vues.'));
+}});
+
+function tablePts(list){
+  let t='<div class="dwrap"><table class="dt"><thead><tr><th>#</th><th>maths</th><th>info</th><th>décision</th></tr></thead><tbody>';
+  list.forEach((p,i)=>{t+='<tr class="'+(p[2]===1?'pos':'neg')+'"><td>'+(i+1)+'</td><td class="num">'+p[0]+'</td><td class="num">'+p[1]+'</td><td>'+(p[2]===1?'Admis':'Refusé')+'</td></tr>';});
+  t+='</tbody></table></div>';
+  return t;
+}
+
+/* ---------- Atelier 2 : k plus proches voisins ---------- */
+ws({id:'knn',label:'k plus proches voisins',hint:'Clique dans le plan pour tester un dossier : ses k voisins votent. Règle aussi la taille et l’équilibre du jeu de données.',mount(root){
+  root.append(h('h2',null,'Les k plus proches voisins (k-NN)'),
+    h('p',null,'Idée : pour classer un nouveau dossier, on regarde les ',h('b',null,'k dossiers les plus proches'), ' dans le jeu de données, et on leur fait voter. C’est un modèle ',h('b',null,'paresseux'), ' : il n’apprend rien, il mémorise tout.'));
+  const W=400;
+  const plot=h('div',{class:'plot','aria-label':'Plan maths-info, clique pour tester un dossier'});
+  const info=h('div'),ntab=h('div');
+  const kk={v:3};
+  let q=null;
+  const data={pts:PTS.map(p=>[p[0],p[1],p[2]])};
+  const dstats=h('div');
+  const nb={v:data.pts.length},sh={v:Math.round(100*data.pts.filter(p=>p[2]===1).length/data.pts.length)};
+  function gen(){
+    const nA=Math.round(nb.v*sh.v/100),nR=nb.v-nA,pts=[];
+    for(let i=0;i<nA;i++)pts.push([10+Math.floor(Math.random()*10),8+Math.floor(Math.random()*11),1]);
+    for(let i=0;i<nR;i++)pts.push([4+Math.floor(Math.random()*10),3+Math.floor(Math.random()*10),0]);
+    data.pts=pts;
+    draw();
+  }
+  const nbR=h('input',{type:'range',min:8,max:60,step:1,value:nb.v,'aria-label':'Nombre de dossiers'});
+  const shR=h('input',{type:'range',min:20,max:80,step:5,value:sh.v,'aria-label':'Part d’admis dans le jeu'});
+  nbR.addEventListener('input',()=>{nb.v=+nbR.value;gen();});
+  shR.addEventListener('input',()=>{sh.v=+shR.value;gen();});
+  function px(p){return (p[0]/20*W).toFixed(1)+'px';}
+  function py(p){return ((1-p[1]/20)*W).toFixed(1)+'px';}
+  function draw(){
+    plot.innerHTML='';
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','line');svg.setAttribute('viewBox','0 0 400 400');
+    plot.append(svg);
+    data.pts.forEach(p=>{
+      const d=h('div',{class:'pt '+(p[2]===1?'pos':'neg'),style:'left:'+px(p)+';top:'+py(p),title:'('+p[0]+' ; '+p[1]+')'});
+      plot.append(d);
+    });
+    const xl=h('div',{class:'plabel',style:'left:8px;top:4px'},'info 20');
+    const xl2=h('div',{class:'plabel',style:'left:8px;bottom:4px'},'0');
+    const yl=h('div',{class:'plabel',style:'right:6px;bottom:4px'},'maths →');
+    plot.append(xl,xl2,yl);
+    const na=data.pts.filter(p=>p[2]===1).length;
+    dstats.innerHTML='';
+    dstats.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'dossiers'),h('b',null,String(data.pts.length))),
+      h('div',{class:'stat'},h('span',null,'admis'),h('b',null,String(na))),
+      h('div',{class:'stat'},h('span',null,'refusés'),h('b',null,String(data.pts.length-na)))));
+    if(q){
+      const qd=h('div',{class:'pt q',style:'left:'+px(q)+';top:'+py(q),title:'Nouveau dossier'});
+      plot.append(qd);
+      const r=knn(kk.v,q,data.pts);
+      r.ns.forEach(n=>{
+        const d=h('div',{class:'pt '+(n.p[2]===1?'pos nn':'neg nn'),style:'left:'+px(n.p)+';top:'+py(n.p),title:'voisin à d = '+fmt2(n.d)});
+        plot.append(d);
+      });
+      info.innerHTML='';
+      info.append(h('div',{class:'gstats'},
+        h('div',{class:'stat'},h('span',null,'k'),h('b',null,String(kk.v))),
+        h('div',{class:'stat'},h('span',null,'voisins admis'),h('b',null,String(r.npos))),
+        h('div',{class:'stat'},h('span',null,'voisins refusés'),h('b',null,String(r.nneg))),
+        h('div',{class:'stat'},h('span',null,'prédiction'),h('b',null,r.label))));
+      let t='<div class="dwrap"><table class="dt"><thead><tr><th>rang</th><th>maths</th><th>info</th><th>distance</th><th>classe</th></tr></thead><tbody>';
+      r.ns.forEach((n,i)=>{t+='<tr><td>'+(i+1)+'</td><td class="num">'+n.p[0]+'</td><td class="num">'+n.p[1]+'</td><td class="num">'+fmt2(n.d)+'</td><td>'+(n.p[2]===1?'Admis':'Refusé')+'</td></tr>';});
+      t+='</tbody></table></div>';
+      ntab.innerHTML=t;
+    }
+  }
+  plot.addEventListener('click',e=>{
+    const r=plot.getBoundingClientRect();
+    const x1=Math.min(20,Math.max(0,(e.clientX-r.left)/r.width*20));
+    const x2=Math.min(20,Math.max(0,(1-(e.clientY-r.top)/r.height)*20));
+    q=[Math.round(x1),Math.round(x2)];
+    draw();
+  });
+  const kc=h('div',{class:'chips'});
+  [1,3,5,7,9].forEach(k=>{
+    kc.append(h('button',{type:'button',class:'chip'+(kk.v===k?' on':''),onclick:function(){kk.v=k;$$('.chip',kc).forEach(b=>b.classList.remove('on'));this.classList.add('on');draw();}},'k = '+k));
+  });
+  const reset=h('button',{class:'btn',type:'button',onclick:()=>{q=null;draw();info.innerHTML='';ntab.innerHTML='';}},'Effacer le dossier test');
+  root.append(h('h3',null,'Ton jeu de données'),
+    h('label',{class:'fld'},h('span',null,'nombre de dossiers (8 à 60)'),nbR),
+    h('label',{class:'fld'},h('span',null,'part d’admis (le reste : refusés)'),shR),
+    h('div',{class:'chips'},h('button',{class:'btn',type:'button',onclick:gen},'Nouveau tirage')),dstats);
+  root.append(kc,plot,h('p',{class:'small'},'Clique dans le plan : le dossier bleu est placé, ses k voisins s’entourent d’un anneau orange.'),info,ntab,reset,
+    h('div',{class:'retain'},'k petit : modèle sensible au bruit. k grand : frontière plus lisse, mais vote noyé dans la masse. On choisit k impair (pas d’égalité) et on pense à normaliser les attributs : ici, un écart de 1 en maths pèse autant qu’un écart de 1 en info.'));
+  draw();
+}});
+
+/* ---------- Atelier 2bis : k-moyennes ---------- */
+ws({id:'kmeans',label:'k-moyennes',hint:'Sans étiquettes : l’algorithme découvre seul des groupes en déplaçant des barycentres. Règle k, itère, observe l’inertie.',mount(root){
+  root.append(h('h2',null,'Les k-moyennes : apprendre sans étiquettes'),
+    h('p',null,'Le k-NN avait besoin de dossiers ',h('b',null,'déjà étiquetés'), ' : c’est l’apprentissage ',h('b',null,'supervisé'), '. Les k-moyennes font le contraire : ',h('b',null,'aucune étiquette'), ', l’algorithme découvre seul une structure en groupes. C’est l’apprentissage ',h('b',null,'non supervisé'), '.'));
+  const plot=h('div',{class:'plot','aria-label':'Plan des dossiers, groupes et barycentres'});
+  const info=h('div');
+  const COLS=['#1e7a2e','#2e6da4','#c0281f','#9a5b00'];
+  const st={k:3,cent:[],as:[],steps:0,conv:false,inertia:[]};
+  let data=[];
+  function newData(){
+    data=[];
+    [[5,5],[15,7],[9,16]].forEach(c=>{const n=8+Math.floor(Math.random()*5);for(let i=0;i<n;i++)data.push([Math.max(0,Math.min(20,c[0]+Math.round((Math.random()-.5)*7))),Math.max(0,Math.min(20,c[1]+Math.round((Math.random()-.5)*7)))]);});
+  }
+  function init(){
+    st.cent=[];const idx=[...data.keys()];
+    for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+    for(let i=0;i<st.k;i++)st.cent.push([data[idx[i]][0],data[idx[i]][1]]);
+    st.as=new Array(data.length).fill(-1);st.steps=0;st.conv=false;st.inertia=[];
+  }
+  function assign(){
+    let inw=0;
+    st.as=data.map(p=>{let bi=0,bd=1e9;st.cent.forEach((c,i)=>{const d=(p[0]-c[0])**2+(p[1]-c[1])**2;if(d<bd){bd=d;bi=i;}});inw+=bd;return bi;});
+    st.inertia.push(inw/data.length);
+  }
+  function move(){
+    const old=st.cent.map(c=>[c[0],c[1]]);
+    st.cent=st.cent.map((c,i)=>{const mine=data.filter((p,j)=>st.as[j]===i);if(!mine.length)return c;return [mine.reduce((s,p)=>s+p[0],0)/mine.length,mine.reduce((s,p)=>s+p[1],0)/mine.length];});
+    let mv=0;for(let i=0;i<st.k;i++)mv=Math.max(mv,Math.hypot(st.cent[i][0]-old[i][0],st.cent[i][1]-old[i][1]));
+    return mv;
+  }
+  function step(n){
+    for(let i=0;i<n;i++){
+      if(st.conv)break;
+      assign();
+      const mv=move();
+      st.steps++;
+      if(mv<0.05)st.conv=true;
+    }
+    draw();
+    if(st.conv)toast('Convergence : les barycentres ne bougent plus.');
+  }
+  function draw(){
+    plot.innerHTML='';
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','line');svg.setAttribute('viewBox','0 0 400 400');
+    const PX=v=>v/20*400,PY=v=>400-v/20*400;
+    data.forEach((p,j)=>{const ci=st.as[j];if(ci>=0){const c=st.cent[ci];svg.innerHTML+='<line x1="'+PX(p[0])+'" y1="'+PY(p[1])+'" x2="'+PX(c[0])+'" y2="'+PY(c[1])+'" stroke="'+COLS[ci]+'" stroke-opacity=".35" stroke-width="1"/>';}});
+    data.forEach((p,j)=>{svg.innerHTML+='<circle cx="'+PX(p[0])+'" cy="'+PY(p[1])+'" r="5" fill="'+(st.as[j]>=0?COLS[st.as[j]]:'#5a6068')+'"/>';});
+    st.cent.forEach((c,i)=>{svg.innerHTML+='<path d="M '+(PX(c[0])-8)+' '+(PY(c[1])-8)+' L '+(PX(c[0])+8)+' '+(PY(c[1])+8)+' M '+(PX(c[0])+8)+' '+(PY(c[1])-8)+' L '+(PX(c[0])-8)+' '+(PY(c[1])+8)+'" stroke="'+COLS[i]+'" stroke-width="3.5"/>';});
+    plot.append(svg);
+    info.innerHTML='';
+    info.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'k (groupes)'),h('b',null,String(st.k))),
+      h('div',{class:'stat'},h('span',null,'itérations'),h('b',null,String(st.steps))),
+      h('div',{class:'stat'},h('span',null,'inertie intra-groupe'),h('b',null,st.inertia.length?fmt2(st.inertia[st.inertia.length-1]):'')),
+      h('div',{class:'stat'},h('span',null,'statut'),h('b',null,st.conv?'convergé':'en cours'))));
+  }
+  const kc=h('div',{class:'chips'});
+  [2,3,4].forEach(k=>{
+    kc.append(h('button',{type:'button',class:'chip'+(st.k===k?' on':''),onclick:function(){st.k=k;$$('.chip',kc).forEach(b=>b.classList.remove('on'));this.classList.add('on');init();draw();}},'k = '+k));
+  });
+  root.append(kc,plot,info,
+    h('div',{class:'chips'},
+      h('button',{class:'btn pri',type:'button',onclick:()=>step(1)},'1 itération'),
+      h('button',{class:'btn',type:'button',onclick:()=>step(10)},'10 itérations'),
+      h('button',{class:'btn',type:'button',onclick:()=>{init();draw();}},'↺ Recommencer'),
+      h('button',{class:'btn',type:'button',onclick:()=>{newData();init();draw();}},'Nouveau jeu de données')),
+    h('p',{class:'small'},'Chaque itération : (1) chaque dossier rejoint le barycentre (le ×) le plus proche ; (2) chaque barycentre se déplace au centre de gravité de son groupe. Recommence jusqu’à ce que plus rien ne bouge.'));
+  newData();init();draw();
+  root.append(h('div',{class:'retain'},'Contrairement au k-NN, aucune étiquette n’intervient : l’algorithme minimise l’inertie intra-groupe, une mesure de compacité qui descend à chaque itération. Le nombre de groupes k reste un choix humain : l’algorithme ne le devine pas, et un mauvais k découpe les données artificiellement.'));
+}});
+
+/* ---------- Atelier 3 : régression linéaire, descente de gradient ---------- */
+const REGR=[[1,2.7],[2,3.4],[3,4.6],[4,4.2],[5,5.8],[6,6.3],[7,7.1],[8,7.9],[9,8.4]];
+ws({id:'reg',label:'Régression & gradient',hint:'Ajuster y = wx + b en minimisant l’erreur quadratique moyenne, pas à pas.',mount(root){
+  root.append(h('h2',null,'Régression linéaire et descente de gradient'),
+    h('p',null,'Ici on prédit une valeur continue : la note obtenue en informatique ',cm('y'), ' en fonction du temps de travail hebdomadaire ',cm('x'), ' (heures). Le modèle est une droite ',cm('y = w·x + b'), '. Apprendre, c’est choisir ',cm('w'), ' et ',cm('b'), ' qui minimisent l’erreur quadratique moyenne.'));
+  root.append(h('p',{class:'formula'},'EQM(w, b) = (1/n) Σ (yᵢ − (w·xᵢ + b))² ; on descend la pente : w ← w − α · ∂EQM/∂w'));
+  const W=400,H=300;
+  const plot=h('div',{class:'plot',style:'width:400px;aspect-ratio:4/3','aria-label':'Nuage de points et droite de régression'});
+  const st={w:0,b:0,hist:[]};
+  const info=h('div'),ntab=h('div');
+  function mse(w,b){let s=0;for(const[x,y]of REGR){const e=y-(w*x+b);s+=e*e;}return s/REGR.length;}
+  function grads(w,b){let gw=0,gb=0;for(const[x,y]of REGR){const e=y-(w*x+b);gw+=-2*x*e;gb+=-2*e;}return [gw/REGR.length,gb/REGR.length];}
+  function draw(){
+    plot.innerHTML='';
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','line');svg.setAttribute('viewBox','0 0 400 300');
+    svg.innerHTML=REGR.map(p=>'<circle cx="'+(p[0]/10*380+10)+'" cy="'+(290-p[1]/10*260)+'" r="5" fill="#2e6da4"/>').join('');
+    const x1=10,y1=290-st.b/10*260,x2=390,y2=290-(st.w*9+st.b)/10*260;
+    svg.innerHTML+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#c0281f" stroke-width="2.5"/>';
+    plot.append(svg);
+    info.innerHTML='';
+    info.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'pente w'),h('b',null,fmt2(st.w))),
+      h('div',{class:'stat'},h('span',null,'ordonnée b'),h('b',null,fmt2(st.b))),
+      h('div',{class:'stat'},h('span',null,'EQM'),h('b',null,fmt2(mse(st.w,st.b)))),
+      h('div',{class:'stat'},h('span',null,'pas effectués'),h('b',null,String(st.hist.length)))));
+    const bars=h('div',{class:'bars'});
+    const m=Math.max(...st.hist.slice(-12),0.01);
+    st.hist.slice(-12).forEach(v=>{bars.append(h('div',null,h('span',{class:'bl'},'EQM'),h('span',{class:'bar',style:'width:'+Math.max(2,Math.round(v/m*180))+'px'}),h('span',null,fmt2(v))));});
+    ntab.innerHTML='';ntab.append(bars);
+  }
+  function step(n){for(let i=0;i<n;i++){const [gw,gb]=grads(st.w,st.b);st.w-=0.01*gw;st.b-=0.01*gb;st.hist.push(mse(st.w,st.b));}draw();}
+  const reset=h('button',{class:'btn',type:'button',onclick:()=>{st.w=0;st.b=0;st.hist=[];draw();}},'↺ Recommencer');
+  root.append(plot,h('div',{class:'chips'},
+    h('button',{class:'btn pri',type:'button',onclick:()=>step(1)},'1 pas de gradient'),
+    h('button',{class:'btn',type:'button',onclick:()=>step(10)},'10 pas'),
+    h('button',{class:'btn',type:'button',onclick:()=>step(100)},'100 pas'),reset),info,ntab,
+    h('p',{class:'small'},'Chaque pas suit la pente de l’erreur, proportionnellement au taux d’apprentissage α = 0,01. La droite s’ajuste, l’EQM descend puis se stabilise : le minimum. Avec α trop grand, on sauterait de vallée en vallée sans converger.'));
+  draw();
+  root.append(h('h3',null,'La courbe du coût et le rôle de α'),
+    h('p',null,'Pour voir ce qui se passe, simplifions : une seule paramètre ',cm('w'), ' (données centrées, modèle ',cm('y = w·x'), '). Le coût ',cm('EQM(w)'), ' dessine une vallée, et chaque pas de gradient saute le long de cette courbe : ',cm('w ← w − α · ∂EQM/∂w'), '.'));
+  const CX=REGR.map(p=>[p[0]-5,p[1]-5.6]);
+  const SXX=CX.reduce((s,p)=>s+p[0]*p[0],0),SXY=CX.reduce((s,p)=>s+p[0]*p[1],0),SYY=CX.reduce((s,p)=>s+p[1]*p[1],0);
+  const WSTAR=SXY/SXX;
+  const cq=w=>(SYY-2*w*SXY+w*w*SXX)/CX.length;
+  const gq=w=>2*(w*SXX-SXY)/CX.length;
+  const gd={w:0,al:0.05,trail:[],steps:0};
+  const gplot=h('div',{class:'plot',style:'width:400px;aspect-ratio:4/3','aria-label':'Courbe du coût EQM en fonction de w'});
+  const ginfo=h('div'),gbox=h('div');
+  const GX=w=>((w+0.6)/2.7*380+10),GY=v=>(290-Math.max(0,v)/12*260);
+  function gdraw(){
+    gplot.innerHTML='';
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','line');svg.setAttribute('viewBox','0 0 400 300');
+    let d='';
+    for(let i=0;i<=100;i++){const w=-0.6+2.7*i/100;d+=(i?'L':'M')+GX(w).toFixed(1)+' '+GY(cq(w)).toFixed(1)+' ';}
+    svg.innerHTML='<path d="'+d+'" fill="none" stroke="#1b4a76" stroke-width="2.5"/>';
+    svg.innerHTML+='<circle cx="'+GX(WSTAR).toFixed(1)+'" cy="'+GY(cq(WSTAR)).toFixed(1)+'" r="4" fill="#1e7a2e"/>';
+    const pts=gd.trail.concat([gd.w]).filter(x=>x>-0.6&&x<2.1);
+    for(let i=1;i<pts.length;i++)svg.innerHTML+='<line x1="'+GX(pts[i-1]).toFixed(1)+'" y1="'+GY(cq(pts[i-1])).toFixed(1)+'" x2="'+GX(pts[i]).toFixed(1)+'" y2="'+GY(cq(pts[i])).toFixed(1)+'" stroke="#e0a028" stroke-width="1.6" stroke-dasharray="4 3"/>';
+    svg.innerHTML+='<circle cx="'+GX(gd.w).toFixed(1)+'" cy="'+GY(cq(gd.w)).toFixed(1)+'" r="7" fill="#c0281f"/>';
+    gplot.append(svg);
+    ginfo.innerHTML='';
+    const divg=Math.abs(gd.w)>2.1||!isFinite(gd.w);
+    ginfo.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'α (taux)'),h('b',null,fmt(gd.al))),
+      h('div',{class:'stat'},h('span',null,'w'),h('b',null,fmt2(gd.w))),
+      h('div',{class:'stat'},h('span',null,'EQM'),h('b',null,fmt2(cq(gd.w)))),
+      h('div',{class:'stat'},h('span',null,'pas'),h('b',null,String(gd.steps)))));
+    gbox.innerHTML='';
+    gbox.append(h('p',{class:'small'},divg?'α trop grand : on saute d’un versant à l’autre, de plus en plus haut. La descente diverge, w sort du cadre.':(gd.al<=0.01?'α très petit : chaque pas est minuscule, il en faut des dizaines pour atteindre le fond (le point vert).':(gd.al>=0.15?'α dépasse la limite (≈ 0,15 ici) : les sauts traversent la vallée au lieu de descendre.':'α bien réglé : les sauts raccourcissent en arrivant sur le fond, la convergence est rapide.'))));
+  }
+  function gstep(n){
+    for(let i=0;i<n;i++){
+      gd.trail.push(gd.w);
+      gd.w-=gd.al*gq(gd.w);
+      gd.steps++;
+      if(!isFinite(gd.w)||Math.abs(gd.w)>1e4)break;
+    }
+    if(gd.trail.length>50)gd.trail=gd.trail.slice(-50);
+    gdraw();
+  }
+  const gaR=h('input',{type:'range',min:1,max:60,step:1,value:Math.round(gd.al*200),'aria-label':'Taux d’apprentissage alpha'});
+  gaR.addEventListener('input',()=>{gd.al=+gaR.value/200;gd.trail=[];gdraw();});
+  root.append(h('label',{class:'fld'},h('span',null,'taux d’apprentissage α (0,005 à 0,3)'),gaR),
+    h('div',{class:'chips'},
+      h('button',{class:'btn pri',type:'button',onclick:()=>gstep(1)},'1 pas'),
+      h('button',{class:'btn',type:'button',onclick:()=>gstep(10)},'10 pas'),
+      h('button',{class:'btn',type:'button',onclick:()=>gstep(100)},'100 pas'),
+      h('button',{class:'btn',type:'button',onclick:()=>{gd.w=0;gd.trail=[];gd.steps=0;gdraw();}},'↺ Recommencer')),
+    gplot,ginfo,gbox,
+    h('p',{class:'small'},'La croix rouge est w ; le point vert, le minimum (w* ≈ 0,72) ; les pointillés orange, ta trajectoire de descente. La limite de divergence est ici α ≈ 0,15.'));
+  gdraw();
+  root.append(h('div',{class:'retain'},'La descente de gradient est LA brique de base de l’apprentissage : perceptron, réseaux de neurones, la plupart des modèles l’utilisent sous une forme ou une autre.'));
+}});
+
+/* ---------- Atelier 4 : arbres de décision et entropie ---------- */
+ws({id:'tree',label:'Arbres & entropie',hint:'Où couper ? La bonne question est celle qui rend les paquets les plus purs.',mount(root){
+  root.append(h('h2',null,'Arbres de décision : couper où ça clarifie'),
+    h('p',null,'Un arbre de décision pose des questions du type ',cm('info ≥ t ?'), ' et répartit les exemples en deux paquets. La meilleure question est celle qui rend les paquets ',h('b',null,'les plus purs'), '. On mesure ce désordre avec l',h('b',null,'entropie'), ' :'));
+  root.append(h('p',{class:'formula'},'H(paquet) = −p log₂ p − (1−p) log₂ (1−p)   (p = proportion d’admis ; H = 0 si pur, H = 1 si 50/50)'));
+  const np=PTS.filter(p=>p[2]===1).length,nn=PTS.length-np;
+  const HP=entropy2(np,nn);
+  const st={t:10};
+  const info=h('div'),ntab=h('div');
+  function splitAt(t){
+    const L=PTS.filter(p=>p[1]<t),R=PTS.filter(p=>p[1]>=t);
+    return {L,R};
+  }
+  function render(){
+    info.innerHTML='';ntab.innerHTML='';
+    const {L,R}=splitAt(st.t);
+    const lpos=L.filter(p=>p[2]===1).length,lneg=L.length-lpos;
+    const rpos=R.filter(p=>p[2]===1).length,rneg=R.length-rpos;
+    const HL=entropy2(lpos,lneg),HR=entropy2(rpos,rneg);
+    const Hw=(L.length/PTS.length)*HL+(R.length/PTS.length)*HR;
+    const gain=HP-Hw;
+    info.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'entropie parent'),h('b',null,fmt(HP)+' bits')),
+      h('div',{class:'stat'},h('span',null,'paquet gauche ('+L.length+')'),h('b',null,fmt(HL)+' bits · '+lpos+' admis / '+lneg)),
+      h('div',{class:'stat'},h('span',null,'paquet droit ('+R.length+')'),h('b',null,fmt(HR)+' bits · '+rpos+' admis / '+rneg)),
+      h('div',{class:'stat'},h('span',null,'entropie pondérée'),h('b',null,fmt(Hw)+' bits')),
+      h('div',{class:'stat'},h('span',null,'gain d’information'),h('b',null,fmt(gain)+' bits'))));
+    let t='<div class="dwrap"><table class="dt"><thead><tr><th colspan="4">info &lt; '+st.t+' → gauche</th><th colspan="4">info ≥ '+st.t+' → droite</th></tr></thead><tbody>';
+    const n=Math.max(L.length,R.length);
+    for(let i=0;i<n;i++){
+      t+='<tr>';
+      for(let j=0;j<2;j++){
+        const p=(j===0?L:R)[i];
+        if(p)t+='<td class="num">'+p[1]+'</td><td class="num">'+p[0]+'</td><td>'+(p[2]===1?'Admis':'Refusé')+'</td><td></td>';
+        else t+='<td></td><td></td><td></td><td></td>';
+      }
+      t+='</tr>';
+    }
+    t+='</tbody></table></div>';
+    ntab.innerHTML=t;
+  }
+  const rg=h('input',{type:'range',min:1,max:19,step:1,value:st.t,'aria-label':'Seuil t sur la note d’informatique'});
+  rg.addEventListener('input',()=>{st.t=+rg.value;render();});
+  root.append(h('h3',null,'Choisir le seuil : glisse et observe'),
+    h('p',null,'Question : ',cm('note d’informatique ≥ t ?'), ' fait-elle de bons paquets ?'),
+    h('label',{class:'fld'},h('span',null,'seuil t'),rg),info,ntab);
+  const best=h('div');
+  function scan(){
+    let bestT=null,bestG=-1;
+    for(let t=1;t<20;t++){
+      const {L,R}=splitAt(t);
+      if(!L.length||!R.length)continue;
+      const HL=entropy2(L.filter(p=>p[2]===1).length,L.filter(p=>p[2]===0).length);
+      const HR=entropy2(R.filter(p=>p[2]===1).length,R.filter(p=>p[2]===0).length);
+      const Hw=(L.length/PTS.length)*HL+(R.length/PTS.length)*HR;
+      if(HP-Hw>bestG){bestG=HP-Hw;bestT=t;}
+    }
+    best.innerHTML='';
+    best.append(h('div',{class:'verdict yes'},'Le meilleur seuil sur l’attribut info est t = '+bestT+' (gain = '+fmt(bestG)+' bits). En recommençant récursivement dans chaque paquet, on construit l’arbre complet.'));
+    st.t=bestT;rg.value=bestT;render();
+  }
+  root.append(h('div',{class:'chips'},h('button',{class:'btn pri',type:'button',onclick:scan},'Chercher le meilleur seuil')),best,
+    h('div',{class:'retain'},'Gain d’information = entropie du parent − entropie pondérée des enfants. Un arbre de décision choisit à chaque nœud la question au gain maximal, puis recommence dans chaque paquet. Limite : trop profond, il apprend le bruit (surapprentissage), on l’élague.'));
+}});
+
+/* ---------- Atelier 5 : évaluer un modèle ---------- */
+const SCORED=[[0.9,1],[0.8,1],[0.95,1],[0.6,1],[0.65,1],[0.85,1],[0.75,1],[0.55,0],[0.7,1],[0.62,1],[0.4,0],[0.35,0],[0.2,0],[0.5,0],[0.45,0],[0.3,0],[0.1,0],[0.25,0],[0.58,0],[0.15,0]];
+ws({id:'eval',label:'Évaluer un modèle',hint:'Juste/exact, précision/rappel, et le piège du surapprentissage.',mount(root){
+  root.append(h('h2',null,'Évaluer un modèle : au-delà du taux de bonnes réponses'),
+    h('p',null,'Un modèle de détection de fraude renvoie un ',h('b',null,'score'), ' entre 0 et 1 pour chaque dossier. En fixant un ',h('b',null,'seuil'), ', on transforme le score en décision, et on peut compter les réussites et les erreurs dans la ',h('b',null,'matrice de confusion'), '.'));
+  const st={thr:0.5};
+  const info=h('div'),mbox=h('div');
+  function metrics(){
+    let tp=0,fp=0,tn=0,fn=0;
+    for(const[s,y]of SCORED){const pred=s>=st.thr?1:0;if(pred===1&&y===1)tp++;else if(pred===1&&y===0)fp++;else if(pred===0&&y===0)tn++;else fn++;}
+    const acc=(tp+tn)/SCORED.length;
+    const pre=tp+fp?tp/(tp+fp):1;
+    const rec=tp+fn?tp/(tp+fn):1;
+    const f1=pre+rec?2*pre*rec/(pre+rec):0;
+    return {tp,fp,tn,fn,acc,pre,rec,f1};
+  }
+  function render(){
+    const m=metrics();
+    info.innerHTML='';
+    info.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'exactitude (accuracy)'),h('b',null,fmt2(m.acc*100)+' %')),
+      h('div',{class:'stat'},h('span',null,'précision'),h('b',null,fmt2(m.pre*100)+' %')),
+      h('div',{class:'stat'},h('span',null,'rappel'),h('b',null,fmt2(m.rec*100)+' %')),
+      h('div',{class:'stat'},h('span',null,'F1'),h('b',null,fmt2(m.f1*100)+' %'))));
+    mbox.innerHTML='<table class="mgrid"><tr><th></th><th>prédit : fraude</th><th>prédit : honnête</th></tr>'+
+      '<tr><th>réel : fraude</th><td class="tp">'+m.tp+' (VP)</td><td class="fn">'+m.fn+' (FN)</td></tr>'+
+      '<tr><th>réel : honnête</th><td class="fp">'+m.fp+' (FP)</td><td class="tn">'+m.tn+' (VN)</td></tr></table>'+
+      '<p class="small">VP : fraudes détectées · FN : fraudes manquées · FP : honnêtes accusés à tort · VN : honnêtes reconnus.</p>';
+  }
+  const rg=h('input',{type:'range',min:0,max:100,step:1,value:50,'aria-label':'Seuil de décision'});
+  rg.addEventListener('input',()=>{st.thr=+rg.value/100;render();});
+  root.append(h('h3',null,'Le seuil, un vrai choix'),h('label',{class:'fld'},h('span',null,'seuil de décision'),rg),mbox,info,
+    h('p',{class:'small'},'Baisser le seuil : on attrape plus de fraudes (rappel ↑) mais on accuse plus d’honnêtes (précision ↓). Selon le coût d’une fraude manquée et celui d’une fausse accusation, le bon seuil change : c’est un arbitrage, pas un calcul.'));
+  /* surapprentissage */
+  root.append(h('h3',null,'Sur et sous-apprentissage'));
+  const OBT=[[0.05,0.532],[0.12,0.839],[0.2,0.99],[0.28,0.861],[0.35,0.601],[0.45,0.13],[0.5,0.04],[0.58,0.25],[0.65,0.611],[0.75,0.944],[0.85,1.01],[0.92,0.811],[0.15,0.681],[0.4,0.331],[0.8,1.05]];
+  const OBTE=[[0.08,0.611],[0.22,0.947],[0.3,0.759],[0.42,0.206],[0.52,0.031],[0.6,0.35],[0.7,0.78],[0.88,0.92],[0.1,0.552],[0.95,0.72]];
+  function fit(d){
+    const n=d+1;
+    const A=[],B=[];
+    for(let i=0;i<n;i++){A.push(new Array(n).fill(0));B.push(0);}
+    for(const[x,y]of OBT)for(let i=0;i<n;i++){for(let j=0;j<n;j++)A[i][j]+=Math.pow(x,i+j);B[i]+=y*Math.pow(x,i);}
+    for(let c=0;c<n;c++){
+      let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[piv][c]))piv=r;
+      [A[c],A[piv]]=[A[piv],A[c]];[B[c],B[piv]]=[B[piv],B[c]];
+      for(let r=c+1;r<n;r++){const f=A[r][c]/A[c][c];for(let k=c;k<n;k++)A[r][k]-=f*A[c][k];B[r]-=f*B[c];}
+    }
+    const z=new Array(n);
+    for(let r=n-1;r>=0;r--){let s=B[r];for(let k=r+1;k<n;k++)s-=A[r][k]*z[k];z[r]=s/A[r][r];}
+    return z;
+  }
+  function mseOf(z,set){let s=0;for(const[x,y]of set){let p=0;for(let i=0;i<z.length;i++)p+=z[i]*Math.pow(x,i);s+=(y-p)**2;}return s/set.length;}
+  const deg={v:1};const dbox=h('div');
+  function drawFit(){
+    dbox.innerHTML='';
+    const z=fit(deg.v);
+    const et=mseOf(z,OBT),ee=mseOf(z,OBTE);
+    dbox.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'erreur d’apprentissage'),h('b',null,fmt2(et))),
+      h('div',{class:'stat'},h('span',null,'erreur de test'),h('b',null,fmt2(ee)))));
+    const msg=deg.v===1?'Degré 1 : le modèle est trop simple, il rate la structure des données (sous-apprentissage).':deg.v===3?'Degré 3 : bon compromis, les deux erreurs sont proches et faibles.':'Degré 9 : erreur d’apprentissage quasi nulle... mais erreur de test explosive : le modèle apprend le bruit (surapprentissage).';
+    dbox.append(h('p',{class:'small'},msg));
+    let t='<div class="dwrap"><table class="dt"><thead><tr><th>x</th><th>y observé (test)</th><th>y prédit</th></tr></thead><tbody>';
+    for(const[x,y]of OBTE.slice(0,5)){let p=0;for(let i=0;i<z.length;i++)p+=z[i]*Math.pow(x,i);t+='<tr><td class="num">'+x+'</td><td class="num">'+fmt2(y)+'</td><td class="num">'+fmt2(p)+'</td></tr>';}
+    t+='</tbody></table></div>';
+    dbox.append(h('div',{html:t}));
+  }
+  const dc=h('div',{class:'chips'});
+  [1,3,9].forEach(d=>{
+    dc.append(h('button',{type:'button',class:'chip'+(deg.v===d?' on':''),onclick:function(){deg.v=d;$$('.chip',dc).forEach(b=>b.classList.remove('on'));this.classList.add('on');drawFit();}},'degré '+d));
+  });
+  root.append(h('p',null,'On ajuste un polynôme de degré ',cm('d'), ' sur 15 points (courbe en cloche bruitée). Compare l’erreur sur les données d’apprentissage et sur des points jamais vus :'),dc,dbox,
+    h('div',{class:'retain'},'Sous-apprentissage : modèle trop simple, échoue partout. Surapprentissage : modèle trop souple, récite son apprentissage et échoue sur du nouveau. La bonne complexité minimise l’erreur de test, pas l’erreur d’apprentissage.'));
+  render();drawFit();
+}});
+
+/* ---------- Atelier 6 : perceptron ---------- */
+ws({id:'perc',label:'Perceptron & neurones',hint:'Le neurone artificiel vote, se trompe, se corrige : jusqu’où peut-il apprendre ?',mount(root){
+  root.append(h('h2',null,'Le perceptron : un neurone qui apprend de ses erreurs'),
+    h('p',null,'Un perceptron calcule ',cm('ŷ = 1 si w·x + b > 0, sinon 0'), ' : somme pondérée des entrées, seuil. La règle d’apprentissage de Rosenblatt : si l’exemple est mal classé, ',cm('w ← w + α·(y − ŷ)·x'), '. Essaie sur les portes logiques :'));
+  const GATES={
+    AND:{lab:'ET (AND)',data:[[0,0,-1],[0,1,-1],[1,0,-1],[1,1,1]]},
+    OR:{lab:'OU (OR)',data:[[0,0,-1],[0,1,1],[1,0,1],[1,1,1]]},
+    XOR:{lab:'OU-EXCLUSIF (XOR)',data:[[0,0,-1],[0,1,1],[1,0,1],[1,1,-1]]}
+  };
+  const st={gate:'AND',w:[0,0],b:0,steps:0,done:false,log:[]};
+  const plot=h('div',{class:'plot',style:'width:340px'});
+  const info=h('div'),log=h('div');
+  function draw(){
+    plot.innerHTML='';
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','line');svg.setAttribute('viewBox','0 0 340 340');
+    const X=x=>x*300+20,Y=y=>340-(y*300+20);
+    if(st.w[0]!==0||st.w[1]!==0||st.b!==0){
+      const z1=-(st.b+st.w[1]*0)/st.w[0],z2=-(st.b+st.w[1]*1)/st.w[0];
+      let xa,ya,xb,yb;
+      if(Math.abs(st.w[0])>=Math.abs(st.w[1])){xa=X(Math.max(0,Math.min(1,z1)));ya=Y(0);xb=X(Math.max(0,Math.min(1,z2)));yb=Y(1);}
+      else{xa=X(0);ya=Y(Math.max(0,Math.min(1,-(st.b+st.w[0]*0)/st.w[1])));xb=X(1);yb=Y(Math.max(0,Math.min(1,-(st.b+st.w[0]*1)/st.w[1])));}
+      svg.innerHTML='<line x1="'+xa+'" y1="'+ya+'" x2="'+xb+'" y2="'+yb+'" stroke="#1b4a76" stroke-width="3"/>';
+    }
+    for(const[x1,x2,y]of GATES[st.gate].data){
+      svg.innerHTML+='<circle cx="'+X(x1)+'" cy="'+Y(x2)+'" r="13" fill="'+(y===1?'#1e7a2e':'#c0281f')+'"/>';
+      svg.innerHTML+='<text x="'+X(x1)+'" y="'+(Y(x2)+4)+'" text-anchor="middle" font="11" fill="#fff">'+(y===1?'+1':'−1')+'</text>';
+    }
+    plot.append(svg);
+    info.innerHTML='';
+    let err=0;
+    for(const[x1,x2,y]of GATES[st.gate].data){const s=st.w[0]*x1+st.w[1]*x2+st.b;if(y*s<=0)err++;}
+    info.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'w₁'),h('b',null,fmt2(st.w[0]))),
+      h('div',{class:'stat'},h('span',null,'w₂'),h('b',null,fmt2(st.w[1]))),
+      h('div',{class:'stat'},h('span',null,'b'),h('b',null,fmt2(st.b))),
+      h('div',{class:'stat'},h('span',null,'erreurs'),h('b',null,err+' / 4')),
+      h('div',{class:'stat'},h('span',null,'mises à jour'),h('b',null,String(st.steps)))));
+    log.innerHTML='<div class="term">'+(st.log.length?st.log.slice(-14).join('\n'):'(aucune mise à jour pour l’instant)')+'</div>';
+  }
+  function oneStep(){
+    if(st.done)return;
+    const data=GATES[st.gate].data;
+    const i=st.steps%data.length;
+    const[x1,x2,y]=data[i];
+    const s=st.w[0]*x1+st.w[1]*x2+st.b;
+    const pred=s>0?1:-1;
+    if(y*s<=0){
+      st.w[0]+=y*x1;st.w[1]+=y*x2;st.b+=y;
+      st.log.push('exemple ('+x1+','+x2+') attendu '+y+' : corrigé → w = ('+st.w[0]+' ; '+st.w[1]+'), b = '+st.b);
+    }else{
+      st.log.push('exemple ('+x1+','+x2+') attendu '+y+' : déjà bien classé');
+    }
+    st.steps++;
+    if(st.gate==='XOR'&&st.steps>=40&&!st.done){
+      st.done=true;
+      st.log.push('Arrêt après 40 mises à jour : impossible ! XOR n’est pas séparable par une seule droite.');
+    }
+    draw();
+    if(st.done)toast('XOR résiste : une seule droite ne suffit pas.');
+  }
+  function runEpochs(n){for(let i=0;i<n;i++)oneStep();if(st.gate==='XOR'&&st.steps>=40)st.done=true;}
+  function reset(){st.w=[0,0];st.b=0;st.steps=0;st.done=false;st.log=[];draw();}
+  const gc=h('div',{class:'chips'});
+  Object.keys(GATES).forEach(g=>{
+    gc.append(h('button',{type:'button',class:'chip'+(st.gate===g?' on':''),onclick:()=>{st.gate=g;reset();$$('.chip',gc).forEach(x=>x.classList.remove('on'));gc.children[Object.keys(GATES).indexOf(g)].classList.add('on');}},GATES[g].lab));
+  });
+  root.append(gc,plot,
+    h('div',{class:'chips'},
+      h('button',{class:'btn pri',type:'button',onclick:oneStep},'1 exemple'),
+      h('button',{class:'btn',type:'button',onclick:()=>runEpochs(12)},'1 époque'),
+      h('button',{class:'btn',type:'button',onclick:()=>{runEpochs(40);draw();}},'Jusqu’à convergence (XOR : 40 max)'),
+      h('button',{class:'btn',type:'button',onclick:reset},'↺')),info,log,
+    h('p',{class:'small'},'Le trait bleu est la frontière w·x + b = 0. Sur ET et OU, elle finit par séparer les quatre points. Sur XOR, aucune droite n’y arrive : il faut empiler des neurones en couches (réseau de neurones), chaque couche apprenant une représentation intermédiaire.'));
+  draw();
+  root.append(h('div',{class:'retain'},'Un neurone = somme pondérée + seuil. Un réseau = des neurones en couches, entraînés par descente de gradient. Toutes les IA modernes, des visionneuses d’images aux grands modèles de langage, sont à cette brique près.'));
+}});
+
+/* ---------- Atelier 7 : exercices ---------- */
+const EXOS=[
+ {id:'e1',t:'Un jeu équilibré à pile ou face : quelle est l’entropie, en bits, de la variable (pile / face) ?',kind:'num',exp:1,tol:0.01,hint:'H = −p log₂ p − (1−p) log₂ (1−p) avec p = 1/2.',sol:'−(0,5 log₂ 0,5 + 0,5 log₂ 0,5) = −log₂ 0,5 = 1 bit.'},
+ {id:'e2',t:'Un paquet contient 3 admis et 1 refusé. Entropie du paquet, en bits (arrondi à 0,01) ?',kind:'num',exp:0.811,tol:0.015,hint:'p = 3/4 : H = −(0,75 log₂ 0,75 + 0,25 log₂ 0,25).',sol:'H = 0,811 bits (moins désordonné que 50/50).'},
+ {id:'e3',t:'Matrice de confusion : VP = 18, FP = 4, FN = 3, VN = 25. Taux de bonnes réponses (exactitude), en % ?',kind:'num',exp:86,tol:0.3,hint:'accuracy = (VP + VN) / total ; total = 50.',sol:'(18 + 25) / 50 = 0,86 = 86 %.'},
+ {id:'e4',t:'Même matrice (VP = 18, FP = 4, FN = 3, VN = 25) : précision, en % (arrondi à 0,1) ?',kind:'num',exp:81.8,tol:0.3,hint:'précision = VP / (VP + FP) : parmi les prédictions positives.',sol:'18 / (18 + 4) = 0,818 ≈ 81,8 %.'},
+ {id:'e5',t:'Même matrice : rappel, en % (arrondi à 0,1) ?',kind:'num',exp:85.7,tol:0.3,hint:'rappel = VP / (VP + FN) : parmi les vrais positifs.',sol:'18 / (18 + 3) = 0,857 ≈ 85,7 %.'},
+ {id:'e6',t:'Prédictions : 2, 4, 6 pour des valeurs observées 1, 4, 7. Erreur quadratique moyenne (arrondi à 0,01) ?',kind:'num',exp:0.667,tol:0.011,hint:'EQM = moyenne des carrés des écarts : (−1)² + 0² + 1², le tout divisé par 3.',sol:'((2−1)² + (4−4)² + (6−7)²)/3 = 2/3 ≈ 0,67.'},
+ {id:'e7',t:'k-NN avec k = 3 sur le jeu de l’atelier : un dossier a pour voisins (rang 1, 2, 3) deux refusés à d = 2 et 2,5, puis un admis à d = 3,1. Quelle est la prédiction ?',kind:'choice',opts:['Admis','Refusé','Égalité, indécidable'],a:1,sol:'2 voisins refusés contre 1 admis : la classe majoritaire l’emporte, donc Refusé.'},
+ {id:'e8',t:'Descente de gradient : w = 1, b = 0, un seul point (x = 2, y = 3), α = 0,1. Nouvelle valeur de w après un pas (arrondi à 0,01) ?',kind:'num',exp:1.4,tol:0.011,hint:'ŷ = w·x + b = 2 ; ∂EQM/∂w = −2x(y − ŷ) = −2·2·1 = −4 ; w ← w − α·(−4).',sol:'w ← 1 − 0,1 × (−4) = 1,4 (et b ← 0 + 0,2).'},
+ {id:'e9',t:'Perceptron (α = 1) : w = (0 ; 0), b = 0. L’exemple x = (2 ; 1), étiquette +1, est mal classé. Nouvelles valeurs de w₁, w₂ et b ?',kind:'choice',opts:['w = (2 ; 1), b = 1','w = (1 ; 1), b = 0','w = (0 ; 0), b = 1'],a:0,sol:'w ← w + y·x = (2 ; 1) et b ← b + y = 1.'},
+ {id:'e10',t:'Parent : 50/50 (H = 1 bit). Un seuil donne deux paquets de 5 : gauche 4 admis + 1 refusé, droite 1 admis + 4 refusés. Gain d’information, en bits (arrondi à 0,01) ?',kind:'num',exp:0.278,tol:0.015,hint:'H(0,8) ≈ 0,722 ; gain = 1 − (0,5 × 0,722 + 0,5 × 0,722).',sol:'Gain = 1 − 0,722 = 0,278 bits.'}
+];
+ws({id:'exo',label:'Exercices',hint:'Réponds : la vérification est automatique et ta progression est mémorisée.',mount(root){
+  const store=lsGet(KEYS.act+'/exo',{});
+  root.append(h('h2',null,'Exercices guidés'));
+  const done=EXOS.filter(e=>store[e.id]).length;
+  const score=h('p',{class:'score'},done+' / '+EXOS.length+' exercices résolus');
+  root.append(score);
+  EXOS.forEach(e=>{
+    const fb=h('div'),box=h('div',{class:'exo'+(store[e.id]?' done':'')});
+    let input;
+    if(e.kind==='num')input=h('input',{type:'text',placeholder:'ta réponse','aria-label':'Ta réponse pour l’exercice '+e.id});
+    else{
+      input=h('div');
+      e.opts.forEach((o,j)=>{input.append(h('label',{class:'opt'},h('input',{type:'radio',name:e.id,value:String(j)}),h('span',null,o)));});
+    }
+    function check(){
+      fb.innerHTML='';
+      let ok=false;
+      if(e.kind==='num'){
+        const x=parseFloat(String(input.value).trim().replace(',','.'));
+        ok=!isNaN(x)&&(Math.abs(x-e.exp)<=e.tol||(e.exp>=2&&Math.abs(x-e.exp/100)<=e.tol));
+      }else{
+        const sel=$$('input:checked',input);
+        ok=sel.length===1&&+sel[0].value===e.a;
+      }
+      if(ok){
+        if(!store[e.id]){store[e.id]=true;lsSet(KEYS.act+'/exo',store);box.classList.add('done');score.textContent=EXOS.filter(x=>store[x.id]).length+' / '+EXOS.length+' exercices résolus';toast('Bien joué !');}
+        fb.append(h('div',{class:'verdict yes'},'Correct : '+e.sol));
+      }else{
+        fb.append(h('div',{class:'verdict no'},e.hint?'Pas encore. Indice : '+e.hint:'Pas encore.'));
+      }
+    }
+    box.append(h('p',{class:'enonce'},h('b',null,e.id.toUpperCase()+' · '),e.t),input,
+      h('div',{class:'chips'},
+        h('button',{class:'btn pri',type:'button',onclick:check},'Vérifier'),
+        h('button',{class:'btn',type:'button',onclick:()=>{if(fb.querySelector('.verdict.yes'))return;fb.append(h('details',{class:'defi'},h('summary',null,'Voir la solution'),h('div',null,e.sol)));}},'Indice')));
+    box.append(fb);
+    root.append(box);
+  });
+}});
+
+/* ===== panneau Activité : quizz ===== */
+function mountAct(){
+  const act=$('#act');
+  const QCM=[
+    {id:'q1',q:'Un problème d’apprentissage supervisé, c’est :',
+     opts:['des données sans étiquettes, à regrouper','des couples (entrée, étiquette) à partir desquels prédire l’étiquette de nouvelles entrées','un programme qui explore toutes les solutions possibles'],
+     a:1,why:'Le supervisé apprend depuis des exemples étiquetés ; sans étiquettes, c’est du non supervisé (regroupement, par exemple).'},
+    {id:'q2',q:'En classification binaire, on choisit souvent k impair dans k-NN parce que :',
+     opts:['le calcul est plus rapide','il ne peut pas y avoir d’égalité entre les deux classes lors du vote','un k pair surapprend toujours'],
+     a:1,why:'Avec k impair, les deux classes ne peuvent pas obtenir le même nombre de voix : la prédiction est toujours tranchée.'},
+    {id:'q3',q:'Un paquet a une entropie proche de 0. Cela signifie :',
+     opts:['il est presque pur : une classe domine très largement','il contient exactement autant d’exemples des deux classes','il contient très peu d’exemples'],
+     a:0,why:'L’entropie mesure le désordre : elle vaut 0 quand tous les exemples sont dans la même classe, 1 quand c’est 50/50.'},
+    {id:'q4',q:'Un modèle a une erreur d’apprentissage très faible et une erreur de test élevée. C’est :',
+     opts:['du sous-apprentissage','du surapprentissage : il a mémorisé le bruit de l’ensemble d’apprentissage','la preuve qu’il faut plus de données d’apprentissage et aucune autre cause possible'],
+     a:1,why:'C’est la signature du surapprentissage : le modèle récite son apprentissage au lieu d’en extraire la structure. Solutions : plus de données, modèle plus simple, régularisation.'},
+    {id:'q5',q:'Le perceptron simple (une seule droite) ne peut pas apprendre XOR parce que :',
+     opts:['son taux d’apprentissage est trop petit','XOR n’est pas séparable linéairement : aucune droite ne sépare les classes','XOR nécessite des étiquettes autres que 0 et 1'],
+     a:1,why:'Les quatre points de XOR ne sont pas séparables par une droite. Il faut au moins une couche cachée : c’est la motivation des réseaux de neurones.'},
+    {id:'q6',q:'Rappel élevé mais précision faible, pour une détection de fraude :',
+     opts:['le modèle rate peu de fraudes mais accuse beaucoup d’honnêtes à tort','le modèle accuse peu d’honnêtes mais rate beaucoup de fraudes','le modèle est parfait'],
+     a:0,why:'Rappel = part des fraudes détectées ; précision = part des alertes justifiées. Rappel haut + précision basse : on attrape presque tout, au prix de fausses alertes.'}
+  ];
+  const store=lsGet(KEYS.act+'/qcm',{});
+  act.innerHTML='';
+  act.append(h('div',{class:'phead'},h('b',null,'Activité'),h('span',{class:'sub'},'Objectif · questions')));
+  const body=h('div',{class:'pbody'});
+  body.append(h('div',{class:'goal'},'Objectif : distinguer les principaux algorithmes d’apprentissage (k-NN, k-moyennes, arbres, régression, perceptron), savoir évaluer un modèle (exactitude, précision, rappel, surapprentissage) et discuter leurs limites.'));
+  body.append(h('ul',{class:'steps'},
+    h('li',null,'Parcours les ateliers : données, k-NN, k-moyennes, régression et gradient, arbres et entropie, évaluation, perceptron.'),
+    h('li',null,'Termine les 10 exercices guidés dans l’atelier « Exercices ».'),
+    h('li',null,'Réponds au QCM ci-dessous : tes réponses sont mémorisées.')));
+  const score=h('p',{class:'score'});
+  body.append(score);
+  function upd(){
+    const ok=QCM.filter(q=>store[q.id]===q.a).length;
+    const done=QCM.filter(q=>store[q.id]!=null).length;
+    score.textContent=done?('Score : '+ok+' / '+QCM.length+(done===QCM.length?' (terminé)':'')):'';
+  }
+  QCM.forEach(q=>{
+    const fs=h('fieldset',{class:'q'},h('legend',null,q.q));
+    q.opts.forEach((lab,j)=>{
+      const chosen=store[q.id];
+      const good=chosen!=null&&j===q.a,bad=chosen!=null&&j===chosen&&j!==q.a;
+      const labEl=h('label',{class:'opt'+(good?' good':bad?' bad':'')},
+        h('input',{type:'radio',name:'r-'+q.id,checked:chosen===j,disabled:chosen!=null,onclick:()=>{store[q.id]=j;lsSet(KEYS.act+'/qcm',store);mountAct();}}),
+        h('span',{style:chosen!=null&&j===q.a?'font-weight:600':'',html:esc(lab)+(chosen!=null&&j===q.a?' ✓':'')}));
+      fs.append(labEl);
+    });
+    if(store[q.id]!=null)fs.append(h('p',{class:'why'},q.why));
+    body.append(fs);
+  });
+  upd();
+  act.append(body);
+}
+
+/* ===== cours ===== */
+function mountCourse(){
+  const SEC=[
+   {id:'c1',t:'1. Qu’est-ce que l’apprentissage automatique ?',html:`
+    <p>Un programme classique est <b>écrit</b> : on code la règle. Un programme qui <b>apprend</b> ajuste ses paramètres sur des données pour que ses prédictions collent à la réalité. Cette idée, née dans les années 1950 avec le perceptron, est le cœur de l’intelligence artificielle actuelle.</p>
+    <table class="ctable"><tr><th></th><th>Programmation classique</th><th>Apprentissage automatique</th></tr>
+    <tr><td>on écrit</td><td>les règles</td><td>un modèle à paramètres + un critère d’erreur</td></tr>
+    <tr><td>les données servent à</td><td>rien (ou presque)</td><td>régler les paramètres</td></tr>
+    <tr><td>exemple</td><td>si note ≥ 10 alors admis</td><td>k-NN, arbre, droite ajustée par gradient</td></tr></table>
+    <div class="retain">Apprentissage supervisé : on apprend depuis des exemples étiquetés. Non supervisé : on structure des données sans étiquettes (regroupement). Renforcement : on apprend par essais et récompenses.</div>`},
+   {id:'c2',t:'2. Données, attributs, étiquettes',html:`
+    <p>Un <b>jeu de données</b> est une table : chaque ligne est un <b>exemple</b>, chaque colonne d’entrée un <b>attribut</b> (feature), la colonne à prédire l'<b>étiquette</b> (label). Classer = prédire une étiquette discrète ; régresser = prédire une valeur continue.</p>
+    <p class="formula">jeu d’apprentissage (ajuster) · jeu de validation (régler) · jeu de test (noter)</p>
+    <p>On sépare toujours les données : évaluer un modèle sur ses données d’apprentissage, c’est noter un élève sur les exercices dont il connaît les corrections.</p>
+    <div class="retain">La qualité d’un modèle plafonne à celle des données : attributs non pertinents, déséquilibre des classes, biais de collecte, aucune algorithme ne les répare.</div>`},
+   {id:'c3',t:'3. k plus proches voisins',html:`
+    <p>Pour classer un nouvel exemple, k-NN regarde les k exemples d’apprentissage les plus proches (distance euclidienne) et fait voter leurs étiquettes.</p>
+    <p class="formula">d(a, b) = √(Σ (aᵢ − bᵢ)²) · prédiction = classe majoritaire parmi les k voisins</p>
+    <ul>
+      <li>k trop petit : sensible au bruit ; k trop grand : frontière trop grossière ; on prend k impair pour éviter les égalités ;</li>
+      <li>les attributs doivent être <b>comparables</b> : on normalise (centrer-réduire) quand les échelles diffèrent ;</li>
+      <li>modèle « paresseux » : rien n’est calculé à l’apprentissage, tout au moment de la prédiction.</li>
+    </ul>
+    <div class="retain">k-NN illustre l’idée géométrique de l’apprentissage : des exemples proches dans l’espace des attributs partagent en général la même étiquette.</div>`},
+   {id:'c4',t:'4. Arbres de décision et entropie',html:`
+    <p>Un arbre pose des questions successives. À chaque nœud, on choisit la question qui rend les paquets les plus purs, mesurée par l'<b>entropie</b> :</p>
+    <p class="formula">H = −p log₂ p − (1−p) log₂ (1−p) · gain = H(parent) − H pondérée des enfants</p>
+    <p>H vaut 0 si le paquet est pur, 1 s’il est à 50/50. On choisit le découpage au <b>gain d’information</b> maximal, puis on recommence récursivement.</p>
+    <div class="retain">Un arbre profond mémorise le bruit (surapprentissage) : on limite la profondeur ou on élague. L’entropie, venue de la théorie de l’information, mesure ici l’incertitude sur l’étiquette.</div>`},
+   {id:'c5',t:'5. Régression linéaire et descente de gradient',html:`
+    <p>Le modèle le plus simple pour prédire une valeur : <code class="k">y = w·x + b</code>. On mesure l’écart avec l’erreur quadratique moyenne :</p>
+    <p class="formula">EQM(w, b) = (1/n) Σ (yᵢ − (w·xᵢ + b))²</p>
+    <p>Minimiser, c’est descendre la surface d’erreur dans la direction de la pente :</p>
+    <p class="formula">w ← w − α · ∂EQM/∂w · b ← b − α · ∂EQM/∂b (α : taux d’apprentissage)</p>
+    <div class="retain">α trop petit : convergence lente. α trop grand : on saute le minimum, l’erreur explose. La descente de gradient est le moteur d’entraînement de presque tous les modèles modernes.</div>`},
+   {id:'c6',t:'6. Perceptron et réseaux de neurones',html:`
+    <p>Un <b>neurone artificiel</b> calcule une somme pondérée de ses entrées puis applique un seuil :</p>
+    <p class="formula">ŷ = 1 si w·x + b > 0, sinon 0 ; correction : w ← w + α·(y − ŷ)·x</p>
+    <p>Le perceptron converge si les données sont <b>séparables linéairement</b> (ET, OU) mais échoue sur XOR : aucune droite ne sépare ses quatre points. Empiler des neurones en <b>couches</b>, entraînés par descente de gradient, lève cette limite : c’est un réseau de neurones.</p>
+    <div class="retain">Brique unique (somme pondérée + seuil), composition puissante : les grands modèles actuels sont des réseaux profonds de cette même brique, à très grande échelle.</div>`},
+   {id:'c7',t:'7. Évaluer un modèle',html:`
+    <table class="ctable"><tr><th></th><th>prédit +</th><th>prédit −</th></tr>
+    <tr><th>réel +</th><td>VP (vrai positif)</td><td>FN (faux négatif)</td></tr>
+    <tr><th>réel −</th><td>FP (faux positif)</td><td>VN (vrai négatif)</td></tr></table>
+    <p class="formula">exactitude = (VP+VN)/total · précision = VP/(VP+FP) · rappel = VP/(VP+FN) · F1 = 2·P·R/(P+R)</p>
+    <ul>
+      <li>l’exactitude seule trompe : sur 1 % de fraudes, un modèle qui répond toujours « honnête » atteint 99 % ;</li>
+      <li>précision : quand le modèle dit +, a-t-il raison ? rappel : quelle part des + réels attrape-t-on ?</li>
+      <li>le seuil de décision arbitre entre les deux selon les coûts d’erreur ;</li>
+      <li><b>sous-apprentissage</b> : erreurs élevées partout ; <b>surapprentissage</b> : erreur d’apprentissage faible, erreur de test élevée.</li>
+    </ul>
+    <div class="retain">On choisit un modèle sur l’erreur de test, jamais sur l’erreur d’apprentissage ; et une métrique en fonction du problème, pas une seule pour tout.</div>`},
+   {id:'c8',t:'8. Glossaire et limites',html:`
+    <dl class="gloss">
+    <dt>Apprentissage supervisé</dt><dd>apprendre depuis des exemples étiquetés.</dd>
+    <dt>Attribut / feature</dt><dd>colonne d’entrée d’un exemple.</dd>
+    <dt>Étiquette / label</dt><dd>valeur à prédire (classe ou nombre).</dd>
+    <dt>k-NN</dt><dd>classification par vote des k plus proches voisins.</dd>
+    <dt>k-moyennes</dt><dd>regroupement non supervisé : k barycentres, assignation puis moyenne, itéré.</dd>
+    <dt>Entropie</dt><dd>mesure d’incertitude (0 : pur, 1 : 50/50 en binaire).</dd>
+    <dt>Gain d’information</dt><dd>baisse d’entropie apportée par un découpage.</dd>
+    <dt>Descente de gradient</dt><dd>minimisation itérative en suivant la pente de l’erreur.</dd>
+    <dt>Surapprentissage</dt><dd>mémoriser le bruit de l’apprentissage, échouer sur du nouveau.</dd>
+    <dt>Perceptron</dt><dd>neurone à seuil ; ne sépare que le linéairement séparable.</dd>
+    <dt>Biais de données</dt><dd>données non représentatives → modèle discriminant ou erroné, quelle que soit sa précision apparente.</dd>
+    </dl>
+    <p>Un modèle entraîné sur des données biaisées reproduit et amplifie ces biais : l’évaluation doit donc inclure la question « sur qui le modèle se trompe-t-il ? », pas seulement « combien d’erreurs ? ».</p>`}
+  ];
+  const course=$('#course');
+  course.innerHTML='';
+  course.append(h('div',{class:'ctop'},h('b',null,'Cours : intelligence artificielle et apprentissage'),h('span',{class:'small'},'ITC · CPGE 2e année')));
+  const toc=h('div',{class:'ctoc'}),body=h('div',{class:'cbody'});
+  let cur=SEC[0].id;
+  function show(s){
+    body.innerHTML='<h2>'+s.t+'</h2>'+s.html;
+    $$('button',toc).forEach(b=>b.classList.toggle('on',b.dataset.id===s.id));
+  }
+  SEC.forEach(s=>{toc.append(h('button',{type:'button','data-id':s.id,onclick:()=>show(s)},s.t));});
+  course.append(h('div',{class:'cwrap'},toc,body));
+  show(SEC[0]);
+}
+
+/* ===== aide ===== */
+function mountHelp(){
+  const dlg=$('#dlg');
+  dlg.innerHTML='';
+  dlg.append(h('div',{class:'dlgbox'},
+    h('header',null,h('b',null,'Aide'),h('button',{class:'btn',type:'button',onclick:()=>{dlg.hidden=true;}},'Fermer')),
+    h('div',{class:'dbody'},
+      h('h3',null,'Ateliers'),
+      h('p',null,'La barre d’ateliers propose 8 manipulations : données, k plus proches voisins, k-moyennes, régression et descente de gradient, arbres et entropie, évaluation des modèles, perceptron, exercices.'),
+      h('h3',null,'Manipulations'),
+      h('p',null,'Tout est calculé réellement dans la page : voisins k-NN, groupes k-moyennes, entropies, gradient, matrices de confusion, entraînement du perceptron. Clique, glisse les curseurs, observe.'),
+      h('h3',null,'Exercices et QCM'),
+      h('p',null,'Les 10 exercices se vérifient automatiquement (tolérance d’arrondi 0,01 ; accepte la virgule décimale). Ta progression et tes réponses au QCM sont mémorisées.'),
+      h('h3',null,'Cours'),
+      h('p',null,'Le bouton Cours remplace l’atelier par le cours complet avec sommaire.')),
+    h('footer',null,h('button',{class:'btn pri',type:'button',onclick:()=>{dlg.hidden=true;}},'Compris'))));
+  dlg.hidden=false;
+}
+
+/* ===== lancement ===== */
+function mountWorkshops(){
+  const seg=$('#wsSeg'),stage=$('#ws');
+  let cur=WORKSHOPS[0].id;
+  WORKSHOPS.forEach(w=>{
+    const b=h('button',{type:'button',id:'tab-'+w.id,'aria-pressed':String(w.id===cur)},w.label);
+    b.addEventListener('click',()=>{cur=w.id;$$('button',seg).forEach(x=>x.setAttribute('aria-pressed',String(x===b)));show(w);});
+    seg.append(b);
+  });
+  function show(w){
+    $('#hint').textContent=w.hint||'';
+    stage.innerHTML='';
+    w.mount(stage);
+    $('#scroller').scrollTop=0;
+  }
+  show(WORKSHOPS[0]);
+}
+mountWorkshops();
+mountAct();
+mountCourse();
+function setMode(course){
+  const c=$('#course'),w=$('#work');
+  c.hidden=!course;w.hidden=course;
+  $('#bCourse').setAttribute('aria-pressed',String(course));
+  $('#bAct').setAttribute('aria-pressed',String(!$('#act').hidden));
+}
+$('#bAct').addEventListener('click',()=>{
+  const a=$('#act');
+  const wasCourse=!$('#course').hidden;
+  setMode(false);
+  a.hidden=wasCourse?false:!a.hidden;
+  $('#bAct').setAttribute('aria-pressed',String(!a.hidden));
+});
+$('#bCourse').addEventListener('click',()=>{setMode($('#course').hidden);});
+$('#bHelp').addEventListener('click',mountHelp);
+window.__IA_OK=true;
+try{if(window.__iaBanner){window.__iaBanner('#1e7a2e','Script chargé : OK');window.setTimeout(function(){var d=document.getElementById('diag');if(d&&d.textContent.indexOf('Script chargé')===0)d.remove();},4000);}}catch(e){}
+</script>
+</body></html>
