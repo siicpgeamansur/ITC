@@ -1,0 +1,938 @@
+<!doctype html><html lang="fr"><head><meta charset="utf8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --term-bg:#121a22;--term-fg:#d5e0ea;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws p{margin:8px 0}
+#ws ul{padding-left:22px}
+code.k{font-family:var(--font-mono);background:var(--panel2);padding:0 4px;border-radius:4px;font-size:12.5px;white-space:nowrap}
+.small{font-size:12.5px;color:var(--muted);margin:0 0 9px}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{overflow:auto;padding:12px;font-size:13.5px;flex:1;min-height:0}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px;font-size:13.5px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px;font-size:13.5px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0;font-size:13.5px}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%;font-size:13.5px}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:13.5px}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1}
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.ctable td.on1{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;font-family:var(--font-mono)}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px}.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:15px}
+.widget{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0 14px;background:var(--panel)}
+.bars{display:flex;flex-direction:column;gap:6px;margin-top:10px}.bars>div{display:flex;align-items:center;gap:8px}
+.bars .bl{width:110px;flex:none;font-size:12.5px;color:var(--muted)}.bars .bar{display:inline-block;height:14px;background:var(--accent);border-radius:3px}.bars .bv{font:13px var(--font-mono)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0;max-height:360px}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.dt thead th{position:sticky;top:0;background:var(--panel2);font-weight:600;z-index:1}
+.dt td.num{text-align:right;font-variant-numeric:tabular-nums}
+.dt .hl{background:rgba(46,109,164,.12)}
+.dt td.key{font-weight:600}
+.tbl2{border-collapse:collapse;font-size:13px;width:100%;margin:6px 0}
+.tbl2 th,.tbl2 td{border:1px solid var(--line);padding:4px 8px;text-align:left}
+.tbl2 th{background:var(--panel2);font-weight:600}
+tr.hl-row td{background:rgba(46,109,164,.12)}
+tr.bad-row td{background:rgba(192,40,31,.10)}
+tr.new-row td{background:rgba(30,122,46,.12)}
+pre.code{font:12.5px/1.5 var(--font-mono);margin:6px 0;white-space:pre-wrap;word-break:break-word;background:var(--panel2);border-radius:6px;padding:8px 10px;overflow-x:auto}
+pre.code .hk{color:#7c3aa8}pre.code .hs{color:#1c6b40}pre.code .hc{color:#7a7a88;font-style:italic}pre.code .hn{color:#b05a00}pre.code .hf{color:#1f3fa0}
+textarea.sql{width:100%;font:13px/1.5 var(--font-mono);padding:8px 10px;border:1px solid var(--line);border-radius:8px;resize:vertical;background:#fff;color:var(--fg)}
+textarea.sql:focus{outline:2px solid var(--accent);outline-offset:0}
+.term{background:var(--term-bg);color:var(--term-fg);border-radius:8px;font:12.5px/1.5 var(--font-mono);padding:10px;white-space:pre-wrap;word-break:break-word;min-height:40px;margin:8px 0}
+.verdict{border-radius:8px;padding:9px 12px;margin-top:10px;font-size:14px}
+.verdict.yes{background:rgba(30,122,46,.15)}.verdict.no{background:rgba(192,40,31,.13)}
+.exo{border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0;background:var(--panel)}
+.exo.done{border-color:var(--ok)}
+.exo .enonce{font-size:14.5px;margin:4px 0 8px}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox footer{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;border-top:1px solid var(--line)}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}.dlgbox code{font-family:var(--font-mono);background:var(--panel2);padding:0 4px;border-radius:4px;font-size:12.5px}
+@media (max-width:820px){
+  .ctoc{display:none}.cwrap{padding-top:8px}.gloss{grid-template-columns:1fr}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28)}
+  .work{flex-direction:column;gap:8px}
+}
+</style></head><body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">Atelier SQL <small>CPGE · 2e année</small></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function h(tag,attrs,...kids){
+  const el=document.createElement(tag);
+  if(attrs)for(const[k,v]of Object.entries(attrs)){
+    if(v===false||v==null)continue;
+    if(k==='class')el.className=v;
+    else if(k==='html')el.innerHTML=v;
+    else if(k.startsWith('on'))el.addEventListener(k.slice(2),v);
+    else if(v===true)el.setAttribute(k,'');
+    else el.setAttribute(k,v);
+  }
+  for(const k of kids.flat())if(k!=null&&k!==false)el.append(k.nodeType?k:document.createTextNode(k));
+  return el;
+}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},3000);}
+const KEYS={act:'atelier-sql-cpge-v1'};
+const LSOK=(()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true;}catch(e){return false;}})();
+const MEM={};
+function lsGet(k,d){try{const v=LSOK?localStorage.getItem(k):MEM[k];return v?JSON.parse(v):d;}catch(e){return d;}}
+function lsSet(k,v){try{const s=JSON.stringify(v);if(LSOK)localStorage.setItem(k,s);else MEM[k]=s;}catch(e){MEM[k]=JSON.stringify(v);}}
+const cm=t=>'<code class="k">'+t+'</code>';
+const fmt=n=>(Math.round(n*100)/100).toString().replace('.',',');
+
+/* ===== base de données : scolarité (style concours) ===== */
+const DB={
+ etudiants:{cols:['ine','nom','ville'],pk:'ine',
+  rows:[[1,'Alice','Lyon'],[2,'Bruno','Paris'],[3,'Chloé','Lyon'],[4,'David','Marseille'],[5,'Emma','Paris'],[6,'Farid','Lyon'],[7,'Gaël','Nantes'],[8,'Hélène','Lyon']]},
+ modules:{cols:['code','intitule','credits'],pk:'code',
+  rows:[['AN201','Analyse',6],['ECO201','Économie',4],['IN301','Informatique',4],['MA101','Algèbre linéaire',6],['PH101','Physique',5]]},
+ notes:{cols:['etudiant','module','valeur'],pk:null,
+  rows:[[1,'MA101',14],[1,'AN201',11],[1,'IN301',16],[2,'MA101',9],[2,'AN201',12],[2,'ECO201',7],[3,'MA101',17],[3,'AN201',15],[3,'IN301',18],[3,'PH101',13],[4,'PH101',11],[5,'AN201',13],[5,'ECO201',15],[6,'MA101',12],[6,'IN301',10],[8,'MA101',15],[8,'PH101',16]]}
+};
+const SCHEMA_NOTE='notes(<i>etudiant</i>, <i>module</i>, valeur)  — clé primaire (etudiant, module)';
+
+/* ===== mini moteur SQL (testé) ===== */
+const sqlErr=m=>{throw new Error(m);};
+function lex(src){
+  const T=[];let i=0;
+  const isD=c=>c>='0'&&c<='9',isI=c=>/[A-Za-z_À-ÿ]/.test(c);
+  while(i<src.length){
+    const c=src[i];
+    if(/\s/.test(c)){i++;continue;}
+    if(c==='-'&&src[i+1]==='-'){while(i<src.length&&src[i]!=='\n')i++;continue;}
+    if(c==="'"){let j=i+1,v='';while(j<src.length){if(src[j]==="'"){if(src[j+1]==="'"){v+="'";j+=2;continue;}break;}v+=src[j++];}if(src[j]!=="'")sqlErr('Guillemet non fermé');j++;T.push({t:'str',v});i=j;continue;}
+    if(isD(c)||(c==='.'&&isD(src[i+1]))){let j=i;while(j<src.length&&(isD(src[j])||src[j]==='.'))j++;T.push({t:'num',v:parseFloat(src.slice(i,j))});i=j;continue;}
+    if(isI(c)){let j=i;while(j<src.length&&(isI(src[j])||isD(src[j])))j++;T.push({t:'id',v:src.slice(i,j)});i=j;continue;}
+    const two=src.slice(i,i+2);
+    if(two==='<='||two==='>='||two==='<>'||two==='!='){T.push({t:'op',v:two==='!='?'<>':two});i+=2;continue;}
+    if('=<>+-*/%(),.;'.includes(c)){T.push({t:'op',v:c});i++;continue;}
+    sqlErr('Caractère inattendu : « '+c+' »');
+  }
+  T.push({t:'end'});return T;
+}
+const RESERVED=new Set(['SELECT','FROM','WHERE','GROUP','BY','HAVING','ORDER','LIMIT','JOIN','INNER','LEFT','CROSS','ON','AS','AND','OR','NOT','DISTINCT','DESC','ASC','LIKE','IN','IS','NULL']);
+function parse(sql){
+  const T=lex(sql);let p=0;
+  const peek=()=>T[p],next=()=>T[p++];
+  const eat=v=>{if(T[p].t==='op'&&T[p].v===v){p++;return true;}return false;};
+  const expect=v=>{if(!eat(v))sqlErr('« '+v+' » attendu');};
+  const kw=()=>T[p].t==='id'?T[p].v.toUpperCase():null;
+  const eatKw=w=>{if(kw()===w){p++;return true;}return false;};
+  const expectKw=w=>{if(!eatKw(w))sqlErr('« '+w+' » attendu');};
+  function primary(){
+    const t=peek();
+    if(t.t==='num'||t.t==='str'){next();return {k:'lit',v:t.v};}
+    if(t.t==='op'&&t.v==='('){next();const e=orE();expect(')');return e;}
+    if(t.t==='op'&&t.v==='*'){next();return {k:'star'};}
+    if(t.t==='id'){
+      next();const name=t.v;
+      if(peek().t==='op'&&peek().v==='('){
+        next();const args=[];
+        if(peek().t==='op'&&peek().v==='*'){next();args.push({k:'star'});}
+        else if(!(peek().t==='op'&&peek().v===')')){args.push(orE());while(eat(','))args.push(orE());}
+        expect(')');
+        return {k:'fn',name:name.toUpperCase(),args};
+      }
+      if(peek().t==='op'&&peek().v==='.'){next();const c=next();if(c.t!=='id')sqlErr('Attribut attendu après « . »');return {k:'col',table:name,name:c.v};}
+      if(name.toUpperCase()==='NULL')return {k:'lit',v:null};
+      return {k:'col',name};
+    }
+    sqlErr('Expression attendue');
+  }
+  function unE(){if(peek().t==='op'&&peek().v==='-'){next();return {k:'neg',e:unE()};}if(peek().t==='id'&&peek().v.toUpperCase()==='NOT'){next();return {k:'not',e:unE()};}return primary();}
+  function mulE(){let l=unE();while(peek().t==='op'&&(peek().v==='*'||peek().v==='/'||peek().v==='%')){const op=next().v;l={k:'bin',op,l,r:unE()};}return l;}
+  function addE(){let l=mulE();while(peek().t==='op'&&(peek().v==='+'||peek().v==='-')){const op=next().v;l={k:'bin',op,l,r:mulE()};}return l;}
+  function inE(l,neg){expect('(');const list=[addE()];while(eat(','))list.push(addE());expect(')');return {k:'in',e:l,list,neg};}
+  function cmpE(){
+    let l=addE();const t=peek();
+    if(t.t==='op'&&['=','<>','<','>','<=','>='].includes(t.v)){const op=next().v;return {k:'cmp',op,l,r:addE()};}
+    if(t.t==='id'){
+      const w=t.v.toUpperCase();
+      if(w==='LIKE'){next();return {k:'like',l,pat:addE(),neg:false};}
+      if(w==='IS'){next();if(eatKw('NOT')){expectKw('NULL');return {k:'isnull',e:l,neg:true};}expectKw('NULL');return {k:'isnull',e:l,neg:false};}
+      if(w==='NOT'){next();const w2=kw();if(w2==='LIKE'){next();return {k:'like',l,pat:addE(),neg:true};}if(w2==='IN'){next();return inE(l,true);}sqlErr('LIKE ou IN attendu après NOT');}
+      if(w==='IN'){next();return inE(l,false);}
+    }
+    return l;
+  }
+  function andE(){let l=cmpE();while(peek().t==='id'&&peek().v.toUpperCase()==='AND'){next();l={k:'and',l,r:cmpE()};}return l;}
+  function orE(){let l=andE();while(peek().t==='id'&&peek().v.toUpperCase()==='OR'){next();l={k:'or',l,r:andE()};}return l;}
+  function alias(){if(eatKw('AS')){const a=next();if(a.t!=='id')sqlErr('Alias attendu');return a.v;}if(peek().t==='id'&&!RESERVED.has(peek().v.toUpperCase()))return next().v;return null;}
+  expectKw('SELECT');
+  const distinct=eatKw('DISTINCT');
+  const select=[];
+  do{const e=orE();select.push({e,alias:alias()});}while(eat(','));
+  expectKw('FROM');
+  const tables=[];
+  function tableRef(){const t=next();if(t.t!=='id')sqlErr('Nom de table attendu');const a=alias();tables.push({table:t.v,alias:a||t.v});}
+  tableRef();
+  const joins=[];
+  while(true){
+    let type=null;
+    if(eatKw('JOIN'))type='inner';
+    else if(eatKw('INNER')){expectKw('JOIN');type='inner';}
+    else if(eatKw('LEFT')){expectKw('JOIN');type='left';}
+    else if(eatKw('CROSS')){expectKw('JOIN');type='cross';}
+    else break;
+    tableRef();
+    let on=null;
+    if(type!=='cross'){expectKw('ON');on=orE();}
+    joins.push({table:tables[tables.length-1],type,on});
+  }
+  let where=null;if(eatKw('WHERE'))where=orE();
+  let groupBy=null;
+  if(eatKw('GROUP')){expectKw('BY');groupBy=[orE()];while(eat(','))groupBy.push(orE());}
+  let having=null;if(eatKw('HAVING'))having=orE();
+  let orderBy=null;
+  if(eatKw('ORDER')){expectKw('BY');orderBy=[];do{const e=orE();let dir=1;if(eatKw('DESC'))dir=-1;else eatKw('ASC');orderBy.push({e,dir});}while(eat(','));}
+  let limit=null;
+  if(eatKw('LIMIT')){const t=next();if(t.t!=='num')sqlErr('Nombre attendu après LIMIT');limit=t.v;}
+  eat(';');
+  if(peek().t!=='end')sqlErr('Fin de requête inattendue (près de « '+(peek().v??'fin')+' »)');
+  return {distinct,select,tables,joins,where,groupBy,having,orderBy,limit};
+}
+const AGGS=new Set(['COUNT','SUM','AVG','MIN','MAX']);
+function hasAgg(e){
+  if(!e||!e.k)return false;
+  if(e.k==='fn')return AGGS.has(e.name)||e.args.some(hasAgg);
+  if(['neg','not','isnull'].includes(e.k))return hasAgg(e.e);
+  if('l' in e)return hasAgg(e.l)||hasAgg(e.r);
+  if(e.k==='in')return hasAgg(e.e)||e.list.some(hasAgg);
+  return false;
+}
+function cmpVal(a,b){
+  if(typeof a==='number'&&typeof b==='number')return a<b?-1:a>b?1:0;
+  const x=String(a),y=String(b);return x<y?-1:x>y?1:0;
+}
+function likeMatch(v,pat){
+  const r=new RegExp('^'+String(pat).replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/%/g,'[\\s\\S]*').replace(/_/g,'[\\s\\S]')+'$','i');
+  return r.test(String(v));
+}
+function evalExpr(e,row,grp){
+  switch(e.k){
+    case 'lit':return e.v;
+    case 'star':sqlErr('* inattendu ici');
+    case 'col':{
+      let key=null;
+      if(e.table)key=e.table+'.'+e.name;
+      else key=Object.keys(row).find(k=>k===e.name)||Object.keys(row).find(k=>k.endsWith('.'+e.name))||null;
+      if(key===null)sqlErr('Colonne inconnue : « '+e.name+' »');
+      return row[key];
+    }
+    case 'neg':return -Number(evalExpr(e.e,row,grp));
+    case 'not':return evalExpr(e.e,row,grp)?0:1;
+    case 'and':return (evalExpr(e.l,row,grp)?evalExpr(e.r,row,grp):false)?1:0;
+    case 'or':return (evalExpr(e.l,row,grp)||evalExpr(e.r,row,grp))?1:0;
+    case 'bin':{const a=Number(evalExpr(e.l,row,grp)),b=Number(evalExpr(e.r,row,grp));return e.op==='+'?a+b:e.op==='-'?a-b:e.op==='*'?a*b:e.op==='/'?(b===0?null:a/b):a%b;}
+    case 'cmp':{const a=evalExpr(e.l,row,grp),b=evalExpr(e.r,row,grp);if(a===null||b===null)return 0;const c=cmpVal(a,b);if(e.op==='=')return c===0?1:0;if(e.op==='<>')return c!==0?1:0;if(e.op==='<')return c<0?1:0;if(e.op==='>')return c>0?1:0;if(e.op==='<=')return c<=0?1:0;return c>=0?1:0;}
+    case 'like':{const r=likeMatch(evalExpr(e.l,row,grp),evalExpr(e.pat,row,grp));return (e.neg?!r:r)?1:0;}
+    case 'isnull':{const a=evalExpr(e.e,row,grp);return (e.neg?a!==null:a===null)?1:0;}
+    case 'in':{const a=evalExpr(e.e,row,grp);const r=e.list.some(x=>cmpVal(a,evalExpr(x,row,grp))===0);return (e.neg?!r:r)?1:0;}
+    case 'fn':{
+      if(AGGS.has(e.name)){
+        if(!grp)sqlErr(e.name+'(...) doit être utilisé avec GROUP BY ou seul dans le SELECT');
+        let vals;
+        if(e.args[0].k==='star')vals=grp.map(()=>1);
+        else vals=grp.map(r=>evalExpr(e.args[0],r,null)).filter(v=>v!==null&&v!==undefined);
+        if(e.name==='COUNT')return vals.length;
+        if(!vals.length)return null;
+        if(e.name==='MIN')return vals.reduce((a,b)=>cmpVal(a,b)<=0?a:b);
+        if(e.name==='MAX')return vals.reduce((a,b)=>cmpVal(a,b)>=0?a:b);
+        const nums=vals.map(Number),s=nums.reduce((a,b)=>a+b,0);
+        return e.name==='SUM'?s:s/nums.length;
+      }
+      const a=evalExpr(e.args[0],row,grp);
+      if(e.name==='UPPER')return String(a).toUpperCase();
+      if(e.name==='LOWER')return String(a).toLowerCase();
+      if(e.name==='LENGTH')return String(a).length;
+      if(e.name==='ABS')return Math.abs(Number(a));
+      if(e.name==='ROUND'){const d=e.args[1]?Number(evalExpr(e.args[1],row,grp)):0;return Math.round(Number(a)*Math.pow(10,d))/Math.pow(10,d);}
+      sqlErr('Fonction inconnue : '+e.name);
+    }
+  }
+  sqlErr('Expression non gérée');
+}
+function exprText(e){
+  if(!e)return '';
+  switch(e.k){
+    case 'lit':return e.v===null?'NULL':typeof e.v==='number'?String(e.v):"'"+e.v+"'";
+    case 'star':return '*';
+    case 'col':return (e.table?e.table+'.':'')+e.name;
+    case 'fn':return e.name+'('+e.args.map(exprText).join(', ')+')';
+    case 'neg':return '-'+exprText(e.e);
+    case 'not':return 'NOT '+exprText(e.e);
+    case 'and':return exprText(e.l)+' AND '+exprText(e.r);
+    case 'or':return exprText(e.l)+' OR '+exprText(e.r);
+    case 'bin':return exprText(e.l)+' '+e.op+' '+exprText(e.r);
+    case 'cmp':return exprText(e.l)+' '+e.op+' '+exprText(e.r);
+    case 'like':return exprText(e.l)+(e.neg?' NOT':'')+' LIKE '+exprText(e.pat);
+    case 'isnull':return exprText(e.e)+' IS '+(e.neg?'NOT ':'')+'NULL';
+    case 'in':return exprText(e.e)+(e.neg?' NOT':'')+' IN ('+e.list.map(exprText).join(', ')+')';
+  }
+  return '?';
+}
+function runQuery(sql){
+  const Q=parse(sql);
+  if(Q.select.length===1&&Q.select[0].e.k==='star'){
+    const all=[],seen=new Set();
+    for(const t of Q.tables){if(!DB[t.table])sqlErr('Table inconnue : « '+t.table+' »');for(const c of DB[t.table].cols){const k=t.alias+'.'+c;if(!seen.has(k)){seen.add(k);all.push({e:{k:'col',table:t.alias,name:c},alias:c});}}}
+    Q.select=all;
+  }
+  const stats={};
+  const tableRows=ref=>{
+    const t=DB[ref.table];if(!t)sqlErr('Table inconnue : « '+t.table+' »');
+    return t.rows.map(r=>{const o={};t.cols.forEach((c,i)=>{o[ref.alias+'.'+c]=r[i];if(!(c in o))o[c]=r[i];});return o;});
+  };
+  let rows=tableRows(Q.tables[0]);
+  for(const j of Q.joins){
+    const rt=tableRows(j.table);const out=[];
+    if(j.type==='left'){
+      for(const a of rows){
+        let any=false;
+        for(const b of rt){const m={...a,...b};if(evalExpr(j.on,m,null)){out.push(m);any=true;}}
+        if(!any){const m={...a};for(const k in rt[0])if(!(k in m))m[k]=null;out.push(m);}
+      }
+    }else{
+      for(const a of rows)for(const b of rt){const m={...a,...b};if(j.type==='cross'||evalExpr(j.on,m,null))out.push(m);}
+    }
+    rows=out;
+  }
+  stats.from=rows.length;
+  if(Q.where)rows=rows.filter(r=>evalExpr(Q.where,r,null));
+  stats.where=rows.length;
+  const anyAgg=Q.select.some(s=>hasAgg(s.e))||hasAgg(Q.having)||(Q.orderBy||[]).some(o=>hasAgg(o.e));
+  let ctxs;
+  if(Q.groupBy){
+    const gm=new Map();
+    for(const r of rows){const key=JSON.stringify(Q.groupBy.map(g=>evalExpr(g,r,null)));if(!gm.has(key))gm.set(key,[]);gm.get(key).push(r);}
+    ctxs=[...gm.values()];
+  }else if(anyAgg)ctxs=[rows];
+  else ctxs=rows.map(r=>[r]);
+  stats.groups=ctxs.length;
+  if(Q.having)ctxs=ctxs.filter(g=>evalExpr(Q.having,g[0],g));
+  stats.having=ctxs.length;
+  const cols=Q.select.map(s=>s.alias||(s.e.k==='col'?s.e.name:exprText(s.e)));
+  let recs=ctxs.map(g=>({vals:Q.select.map(s=>evalExpr(s.e,g[0],g)),g}));
+  if(Q.distinct){const seen=new Set();recs=recs.filter(r=>{const k=JSON.stringify(r.vals);if(seen.has(k))return false;seen.add(k);return true;});}
+  if(Q.orderBy){
+    for(const o of Q.orderBy){
+      const j=o.e.k==='col'&&!o.e.table?cols.indexOf(o.e.name):-1;
+      const key=r=>j>=0?r.vals[j]:evalExpr(o.e,r.g[0],r.g);
+      recs.sort((A,B)=>{const a=key(A),b=key(B);if(a===null&&b===null)return 0;if(a===null)return 1;if(b===null)return -1;return (o.dir*cmpVal(a,b))||0;});
+    }
+  }
+  if(Q.limit!==null)recs=recs.slice(0,Q.limit);
+  stats.result=recs.length;
+  return {cols,rows:recs.map(r=>r.vals),stats,q:Q,groups:recs.map(r=>r.g)};
+}
+
+/* ===== coloration SQL ===== */
+const SQLKW=new Set(['SELECT','FROM','WHERE','GROUP','BY','HAVING','ORDER','LIMIT','JOIN','INNER','LEFT','CROSS','ON','AS','AND','OR','NOT','DISTINCT','DESC','ASC','LIKE','IN','IS','NULL','INSERT','INTO','VALUES','UPDATE','SET','DELETE','CREATE','TABLE','PRIMARY','KEY','FOREIGN','REFERENCES','COMMIT']);
+const SQLFN=new Set(['COUNT','SUM','AVG','MIN','MAX','UPPER','LOWER','LENGTH','ROUND','ABS']);
+function sqlhl(code){
+  return code.split('\n').map(line=>{
+    let out='',i=0;
+    while(i<line.length){
+      const ch=line[i];
+      if(ch==='-'&&line[i+1]==='-'){out+='<span class="hc">'+esc(line.slice(i))+'</span>';break;}
+      if(ch==="'"){let j=i+1;while(j<line.length&&line[j]!=="'")j++;out+='<span class="hs">'+esc(line.slice(i,j+1))+'</span>';i=j+1;continue;}
+      let j=i;while(j<line.length&&line[j]!=='-'&&line[j]!=="'")j++;
+      let segTxt=esc(line.slice(i,j));
+      segTxt=segTxt.replace(/[A-Za-z_À-ÿ]\w*|\d+(?:\.\d+)?/g,m=>/^\d/.test(m)?'<span class="hn">'+m+'</span>':SQLKW.has(m.toUpperCase())?'<span class="hk">'+m+'</span>':SQLFN.has(m.toUpperCase())?'<span class="hf">'+m+'</span>':m);
+      out+=segTxt;i=j;
+    }
+    return out||' ';
+  });
+}
+function codeBlock(code){
+  return '<pre class="code">'+sqlhl(code).map(l=>'<span>'+l+'</span>').join('\n')+'</pre>';
+}
+
+/* ===== rendu de tables ===== */
+function htmlVal(v){
+  if(v===null||v===undefined)return '<span style="color:var(--muted);font-style:italic">NULL</span>';
+  if(typeof v==='number')return String(v).replace('.',',');
+  return esc(v);
+}
+function tableHTML(cols,rows,opts){
+  opts=opts||{};
+  return '<div class="dwrap"><table class="dt"><thead><tr>'+cols.map(c=>'<th'+(opts.pk&&opts.pk.includes(c)?' class="hl"':'')+'>'+c+'</th>').join('')+'</tr></thead><tbody>'+
+    (rows.length?rows.map((r,ri)=>{
+      const cls=opts.rowClass?opts.rowClass(r,ri):'';
+      return '<tr'+(cls?' class="'+cls+'"':'')+'>'+r.map((v,ci)=>'<td'+((typeof v==='number')?' class="num"':'')+'>'+htmlVal(v)+'</td>').join('')+'</tr>';
+    }).join(''):'<tr><td colspan="'+cols.length+'" style="color:var(--muted)">0 ligne</td></tr>')+'</tbody></table></div>';
+}
+function dbTable(name,opts){
+  const t=DB[name];
+  return tableHTML(t.cols.map(esc),t.rows,Object.assign({pk:[t.pk].filter(Boolean)},opts||{}));
+}
+
+/* ===== ateliers ===== */
+const WORKSHOPS=[];
+function ws(o){WORKSHOPS.push(o);}
+
+/* ---------- Atelier 1 : schéma & algèbre relationnelle ---------- */
+ws({id:'rel',label:'Modèle & algèbre',hint:'Le modèle relationnel : tables, clés, et les opérations de l\'algèbre (π, σ, ⋈).',mount(root){
+  root.append(h('h2',null,'Modèle relationnel et algèbre'),
+    h('p',null,'Une base relationnelle est un ensemble de ',h('b',null,'tables'), ' (relations). Chaque table a un ',h('b',null,'schéma'), ' (ses attributs) et une ',h('b',null,'instance'), ' (ses lignes). Notre base d\'exemple : ',cm('etudiants'), ', ',cm('modules'), ', ',cm('notes'), '.'),
+    h('p',{class:'formula'},'etudiants(ine, nom, ville) · modules(code, intitule, credits) · notes(etudiant, module, valeur)'));
+  root.append(h('div',{class:'gstats'},
+    h('div',{class:'stat'},h('span',null,'etudiants'),h('b',null,'8 lignes · clé ine')),
+    h('div',{class:'stat'},h('span',null,'modules'),h('b',null,'5 lignes · clé code')),
+    h('div',{class:'stat'},h('span',null,'notes'),h('b',null,'17 lignes · clé (etudiant, module)'))));
+  root.append(h('h3',null,'Les trois tables'),
+    h('p',{class:'small'},'La colonne de clé primaire est surlignée ; en italique dans la notation, les clés étrangères.'));
+  root.append(h('div',{html:dbTable('etudiants')+dbTable('modules')+dbTable('notes')}));
+  root.append(h('h3',null,'Opérer sur les tables : l\'algèbre relationnelle'));
+  const OPS=[
+    {id:'proj',lab:'π Projection',f:'π<sub>nom, ville</sub>(etudiants)',sql:"SELECT nom, ville FROM etudiants;",d:'Garde certaines <b>colonnes</b>. Le résultat est une table ; les doublons de lignes disparaissent en algèbre (d\'où DISTINCT en SQL).'},
+    {id:'sel',lab:'σ Sélection',f:'σ<sub>ville = \'Lyon\'</sub>(etudiants)',sql:"SELECT * FROM etudiants WHERE ville = 'Lyon';",d:'Garde certaines <b>lignes</b> selon une condition.'},
+    {id:'join',lab:'⋈ Jointure',f:'notes ⋈ etudiants',sql:'SELECT * FROM notes JOIN etudiants ON notes.etudiant = etudiants.ine;',d:'Assemble deux tables ligne à ligne sur une condition d\'égalité entre clés.'},
+    {id:'ren',lab:'ρ Renommage',f:'ρ<sub>ine→num</sub>(etudiants)',sql:'SELECT ine AS num, nom, ville FROM etudiants;',d:'Change le nom d\'un attribut (ou d\'une table) ; purement cosmétique mais indispensable pour composer les opérations.'}
+  ];
+  let cur='proj';
+  const box=h('div');
+  function render(){
+    const o=OPS.find(x=>x.id===cur);
+    box.innerHTML='';
+    box.append(h('p',{class:'formula',html:o.f+'   <span style="color:var(--muted)">≡</span>   '+esc(o.sql)}));
+    box.append(h('div',{html:codeBlock(o.sql)}));
+    box.append(h('p',{html:o.d}));
+    let res;
+    try{res=runQuery(o.sql);}catch(e){box.append(h('p',{class:'verdict no'},'Erreur : '+e.message));return;}
+    box.append(h('p',{class:'small'},'Résultat : '+res.rows.length+' ligne(s).'));
+    box.append(h('div',{html:tableHTML(res.cols.map(esc),res.rows)}));
+  }
+  const segB=h('div',{class:'chips'});
+  OPS.forEach(o=>{const c=h('button',{type:'button',class:'chip'+(o.id===cur?' on':''),onclick:()=>{cur=o.id;$$('.chip',segB).forEach(b=>b.classList.remove('on'));c.classList.add('on');render();}},o.lab);segB.append(c);});
+  root.append(segB,box);
+  root.append(h('div',{class:'retain'},'À retenir : toute requête SQL, même compliquée, se décompose en π, σ, ⋈ et renommages composés. Le résultat de chaque opération est... une table.'));
+}});
+
+/* ---------- Atelier 2 : console SQL ---------- */
+const PRESETS=[
+ ['base','SELECT *','SELECT * FROM notes;'],
+ ['where','WHERE','SELECT nom, ville\nFROM etudiants\nWHERE ville = \'Lyon\'\nORDER BY nom;'],
+ ['like','LIKE / IN','SELECT nom\nFROM etudiants\nWHERE nom LIKE \'A%\' OR ville IN (\'Lyon\', \'Paris\');'],
+ ['distinct','DISTINCT','SELECT DISTINCT ville\nFROM etudiants\nORDER BY ville;'],
+ ['join2','Jointure','SELECT e.nom, m.intitule, n.valeur\nFROM notes n\nJOIN etudiants e ON n.etudiant = e.ine\nJOIN modules m ON n.module = m.code\nWHERE n.valeur >= 15\nORDER BY n.valeur DESC;'],
+ ['agg','Agrégat','SELECT COUNT(*) AS nb,\n       ROUND(AVG(valeur), 2) AS moyenne,\n       MIN(valeur) AS mini,\n       MAX(valeur) AS maxi\nFROM notes;'],
+ ['group','GROUP BY','SELECT m.intitule, ROUND(AVG(n.valeur),2) AS moyenne\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nORDER BY moyenne DESC;'],
+ ['having','HAVING','SELECT m.intitule, ROUND(AVG(n.valeur),2) AS moyenne, COUNT(*) AS nb\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nHAVING AVG(n.valeur) < 12\nORDER BY nb DESC;'],
+ ['left','LEFT JOIN','SELECT e.nom, n.valeur\nFROM etudiants e\nLEFT JOIN notes n ON e.ine = n.etudiant\nWHERE n.valeur IS NULL;']
+];
+ws({id:'sql',label:'Console SQL',hint:'Écris des requêtes SQL et exécute-les : le moteur les évalue et montre l\'ordre des étapes.',mount(root){
+  root.append(h('h2',null,'Console SQL'),
+    h('p',null,'Modifie la requête ou charge un exemple, puis exécute (bouton ou ',cm('Ctrl+Entrée'), '). Le moteur exécute réellement la requête et affiche l\'ordre d\'évaluation du SGBD : FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.'));
+  const chips=h('div',{class:'chips'});
+  const ta=h('textarea',{class:'sql',rows:5,spellcheck:'false','aria-label':'Requête SQL'});
+  const out=h('div'),msg=h('div');
+  let cur='base';
+  PRESETS.forEach(([k,l,s])=>{
+    const c=h('button',{type:'button',class:'chip'+(k===cur?' on':''),onclick:()=>{cur=k;ta.value=s;$$('.chip',chips).forEach(b=>b.classList.remove('on'));c.classList.add('on');run();}},l);
+    chips.append(c);
+  });
+  ta.value=PRESETS[0][2];
+  function steps(r){
+    const Q=r.q,st=r.stats,out=[];
+    out.push({t:'FROM',big:Q.tables.map(t=>t.table).join(' ⋈ ')+' ('+Q.joins.length+' jointure'+(Q.joins.length?'s':'')+')',d:st.from+' ligne(s)'});
+    if(Q.where)out.push({t:'WHERE',big:exprText(Q.where),d:st.where+' ligne(s) gardée(s)'});
+    if(Q.groupBy||st.groups===1&&r.rows.length<=st.where&&Q.select.some(s=>hasAgg(s.e)))out.push({t:'GROUP BY',big:Q.groupBy?Q.groupBy.map(exprText).join(', '):'(pas de colonne : un seul groupe)',d:st.groups+' groupe(s)'});
+    if(Q.having)out.push({t:'HAVING',big:exprText(Q.having),d:st.having+' groupe(s) gardé(s)'});
+    out.push({t:'SELECT',big:r.cols.join(', '),d:st.result+' ligne(s) en résultat'+(Q.distinct?' (DISTINCT appliqué)':'')});
+    if(Q.orderBy)out.push({t:'ORDER BY',big:Q.orderBy.map(o=>exprText(o.e)+(o.dir<0?' DESC':'')).join(', '),d:'tri'});
+    if(Q.limit!==null)out.push({t:'LIMIT',big:String(Q.limit),d:'au plus '+Q.limit+' ligne(s)'});
+    return '<div class="widget"><h3 style="margin:0 0 8px">Ordre d\'évaluation</h3>'+out.map((s,i)=>'<div style="display:grid;grid-template-columns:24px 90px 1fr;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--line)"><b style="color:var(--accent-ink)">'+(i+1)+'</b><b>'+s.t+'</b><div><code style="font-family:var(--font-mono);font-size:12.5px">'+esc(s.big)+'</code><div style="font-size:12.5px;color:var(--muted)">'+s.d+'</div></div></div>').join('')+'</div>';
+  }
+  function run(){
+    msg.innerHTML='';out.innerHTML='';
+    let r;
+    try{r=runQuery(ta.value);}
+    catch(e){
+      msg.append(h('div',{class:'verdict no'},h('b',null,'Erreur SQL : '),e.message));
+      return;
+    }
+    msg.append(h('div',{class:'verdict yes'},r.rows.length+' ligne(s) · '+r.cols.length+' colonne(s)'));
+    out.append(h('div',{html:tableHTML(r.cols.map(esc),r.rows)}));
+    out.append(h('div',{html:steps(r)}));
+  }
+  ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();run();}});
+  root.append(chips,h('p',{class:'small'},'Exemples :'),ta,h('div',{style:'margin:8px 0'},h('button',{class:'btn pri',type:'button',onclick:run},'Exécuter (Ctrl+Entrée)')),msg,out);
+}});
+
+/* ---------- Atelier 3 : jointures ---------- */
+ws({id:'join',label:'Jointures',hint:'Comprendre ce que fait vraiment une jointure : croisement de lignes puis filtre ON.',mount(root){
+  root.append(h('h2',null,'Jointures : que se passe-t-il vraiment ?'),
+    h('p',null,'Une jointure croise ',h('b',null,'chaque ligne de A avec chaque ligne de B'), ' (produit cartésien), puis garde les paires qui vérifient la condition ',cm('ON'), ' (l\'égalité clé étrangère = clé primaire).'));
+  const JT={
+    inner:{lab:'JOIN (interne)',sql:'SELECT e.nom, n.module, n.valeur\nFROM etudiants e JOIN notes n ON e.ine = n.etudiant;',why:'On ne garde que les paires vérifiant e.ine = n.etudiant. Gaël (aucune note) disparaît : le résultat ne parle que des étudiants notés.'},
+    left:{lab:'LEFT JOIN',sql:'SELECT e.nom, n.module, n.valeur\nFROM etudiants e LEFT JOIN notes n ON e.ine = n.etudiant;',why:'On garde toutes les lignes de gauche ; pour Gaël, les colonnes de notes sont complétées par NULL. Indispensable pour chercher « les étudiants sans note » (WHERE n.valeur IS NULL).'},
+    cross:{lab:'CROSS JOIN',sql:'SELECT e.nom, m.intitule\nFROM etudiants e CROSS JOIN modules m;',why:'Aucune condition : 8 × 5 = 40 lignes. C\'est la matière première de toute jointure, filtrée ensuite par ON.'}
+  };
+  let cur='inner';
+  const box=h('div'),msg=h('div');
+  function render(){
+    const o=JT[cur];
+    let r;try{r=runQuery(o.sql);}catch(e){box.innerHTML='';box.append(h('p',{class:'verdict no'},e.message));return;}
+    const noted=new Set(DB.notes.rows.map(x=>x[0]));
+    box.innerHTML='';
+    box.append(h('div',{html:codeBlock(o.sql)}));
+    box.append(h('p',{html:o.why}));
+    const showRows=cur==='cross'?r.rows.slice(0,6):r.rows;
+    box.append(h('div',{class:'gstats'},
+      h('div',{class:'stat'},h('span',null,'lignes produites'),h('b',null,String(r.stats.from))),
+      h('div',{class:'stat'},h('span',null,'lignes finales'),h('b',null,String(r.rows.length))),
+      h('div',{class:'stat'},h('span',null,'etudiants présents'),h('b',null,String(new Set(r.rows.map(x=>x[0])).size)+' / 8'))));
+    box.append(h('h3',null,'Table de départ surlignée'),h('div',{html:dbTable('etudiants',{rowClass:(r2,ri)=>noted.has(DB.etudiants.rows[ri][0])?'hl-row':(cur!=='inner'?'bad-row':'')})}));
+    box.append(h('h3',null,'Résultat'+(cur==='cross'?' (6 premières lignes sur '+r.rows.length+')':'')),h('div',{html:tableHTML(r.cols.map(esc),showRows)}));
+  }
+  const chips=h('div',{class:'chips'});
+  Object.keys(JT).forEach(k=>{
+    const c=h('button',{type:'button',class:'chip'+(k===cur?' on':''),onclick:()=>{cur=k;$$('.chip',chips).forEach(b=>b.classList.remove('on'));c.classList.add('on');render();}},JT[k].lab);
+    chips.append(c);
+  });
+  root.append(chips,box);
+  root.append(h('div',{class:'retain'},'Astuce : pour compter les lignes qu\'une jointure « perd », compare COUNT(*) avant jointure (17 notes) et après jointure avec une table : chaque note a exactement un étudiant, donc rien ne se perd ici ; en revanche les étudiants sans note n\'apparaissent qu\'avec LEFT JOIN.'));
+}});
+
+/* ---------- Atelier 4 : agrégation ---------- */
+ws({id:'agg',label:'Agrégats & HAVING',hint:'GROUP BY découpe les lignes en paquets ; chaque paquet devient une ligne de résultat.',mount(root){
+  root.append(h('h2',null,'Agrégation : GROUP BY et HAVING'),
+    h('p',null,'Une fonction d\'agrégation (',cm('COUNT'), ', ',cm('SUM'), ', ',cm('AVG'), ', ',cm('MIN'), ', ',cm('MAX'), ') résume un ',h('b',null,'ensemble de lignes'), ' en une valeur. ',cm('GROUP BY'), ' découpe la table en paquets selon un attribut : chaque paquet donne ',h('b',null,'une ligne'), ' de résultat. ',cm('HAVING'), ' filtre les paquets, comme WHERE filtre les lignes.'));
+  root.append(h('table',{class:'ctable',html:'<tr><th>WHERE</th><th>HAVING</th></tr><tr><td>filtre des <b>lignes</b> avant regroupement</td><td>filtre des <b>groupes</b> après agrégation</td></tr><tr><td>peut utiliser les colonnes, pas les agrégats</td><td>peut utiliser les agrégats (AVG, COUNT...)</td></tr></table>'}));
+  const opts={col:'module',having:false};
+  const box=h('div'),chips=h('div',{class:'chips'});
+  function query(){
+    let s='SELECT m.intitule AS module, COUNT(*) AS nb,\n       ROUND(AVG(n.valeur), 2) AS moyenne\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule';
+    if(opts.having)s+='\nHAVING AVG(n.valeur) < 12';
+    s+='\nORDER BY moyenne DESC;';
+    return s;
+  }
+  function render(){
+    const sql=query();
+    box.innerHTML='';
+    box.append(h('div',{html:codeBlock(sql)}));
+    let r;try{r=runQuery(sql);}catch(e){box.append(h('p',{class:'verdict no'},e.message));return;}
+    box.append(h('div',{html:tableHTML(r.cols.map(esc),r.rows)}));
+    const bars=h('div',{class:'bars'});
+    const maxv=Math.max(...r.rows.map(x=>x[1]));
+    r.rows.forEach(x=>{bars.append(h('div',null,h('span',{class:'bl'},esc(x[0])),h('span',{class:'bar',style:'width:'+Math.round(x[1]/maxv*180)+'px'}),h('span',{class:'bv'},x[1]+' notes · moy. '+fmt(x[2]))));});
+    box.append(h('div',{class:'widget'},h('h3',{style:'margin:0 0 4px'},'Un groupe = une ligne = une barre'),bars));
+    if(opts.having)box.append(h('p',{class:'small'},'HAVING AVG(valeur) < 12 ne garde que les modules dont la moyenne est en dessous de 12 : ici, Économie (moyenne 11).'));
+  }
+  const c1=h('button',{type:'button',class:'chip on',onclick:()=>{opts.col='module';render();}},'Grouper par module');
+  const c2=h('button',{type:'button',class:'chip',onclick:()=>{opts.having=!opts.having;c2.classList.toggle('on',opts.having);render();}},'HAVING AVG < 12');
+  chips.append(c1,c2);
+  root.append(chips,box);
+}});
+
+/* ---------- Atelier 5 : SQL en Python ---------- */
+ws({id:'py',label:'SQL en Python',hint:'Le module sqlite3 : connecter, exécuter, lire, valider, se protéger.',mount(root){
+  root.append(h('h2',null,'SQL en Python : le module sqlite3'),
+    h('p',null,'Les données vivent dans la base ; le programme Python les interroge et les met à jour. ',cm('sqlite3'), ' est dans la bibliothèque standard.'));
+  const SC={
+    lire:{lab:'Lire des données',
+      code:'import sqlite3\nconnexion = sqlite3.connect("scolarite.db")\ncurseur = connexion.cursor()\ncurseur.execute("SELECT nom, ville FROM etudiants")\nresultats = curseur.fetchall()\nprint(resultats[0])\ncurseur.close()\nconnexion.close()',
+      steps:[
+       {line:2,t:'<b>connect()</b> ouvre la base (fichier local) et renvoie une connexion.',con:[]},
+       {line:3,t:'<b>cursor()</b> crée le curseur qui envoie les requêtes et lit les réponses.',con:[]},
+       {line:4,t:'<b>execute()</b> envoie la requête SQL, une simple chaîne : c\'est le SGBD qui l\'analyse et l\'exécute.',con:[]},
+       {line:5,t:'<b>fetchall()</b> renvoie la liste des lignes : en Python, chaque ligne est un <b>tuple</b>.',con:[],out:'fetch'},
+       {line:6,t:'On affiche la première ligne : un tuple, pas une liste.',con:["('Alice', 'Lyon')"],out:'fetch'},
+       {line:7,t:'On referme curseur puis connexion.',con:["('Alice', 'Lyon')"],out:'fetch'}
+      ]},
+    inserer:{lab:'Insérer & commit',
+      code:'import sqlite3\nconnexion = sqlite3.connect("scolarite.db")\ncurseur = connexion.cursor()\ncurseur.execute("INSERT INTO notes VALUES (7, \'MA101\', 12.5)")\nconnexion.commit()\ncurseur.execute("SELECT * FROM notes WHERE etudiant = 7")\nprint(curseur.fetchall())\nconnexion.close()',
+      steps:[
+       {line:4,t:'<b>execute</b> envoie un INSERT : la ligne est ajoutée dans une <b>transaction</b> en cours, pas encore gravée.',db:'pending'},
+       {line:5,t:'<b>commit()</b> valide la transaction : sans cet appel, la modification est <b>perdue</b> à la fermeture !',db:'ok'},
+       {line:6,t:'On relit les notes de Gaël (etudiant 7) pour vérifier.',db:'ok'},
+       {line:7,t:'fetchall renvoie bien la nouvelle ligne : Gaël a enfin une note.',con:["[(7, 'MA101', 12.5)]"],db:'ok'}
+      ]},
+    proteger:{lab:'Injection & paramètres',
+      code:'nom = input("Nom ? ")   # l\'utilisateur tape : x\' OR \'1\'=\'1\nrequete = "SELECT * FROM etudiants WHERE nom = \'" + nom + "\'"\ncurseur.execute(requete)          # injection SQL !\nprint(curseur.fetchall())        # toute la table !\ncurseur.execute("SELECT * FROM etudiants WHERE nom = ?", (nom,))\nprint(curseur.fetchall())        # requête honnête',
+      steps:[
+       {line:1,t:'L\'utilisateur tape un nom librement : c\'est une <b>donnée</b>, pas du code.',con:["Nom ? x' OR '1'='1"]},
+       {line:2,t:'En concaténant, sa saisie devient <b>du code SQL</b> : la requête change de sens.',con:["Nom ? x' OR '1'='1"]},
+       {line:3,t:'La condition devient nom = \'x\' OR \'1\'=\'1\' : toujours vraie, donc <b>toute la table</b> est renvoyée (injection SQL).',con:["Nom ? x' OR '1'='1"],out:'full'},
+       {line:4,t:'8 lignes au lieu d\'aucune : fuite de données.',con:["Nom ? x' OR '1'='1","8 lignes renvoyées"],out:'full'},
+       {line:5,t:'La bonne méthode : un <b>paramètre ?</b> et un tuple. La saisie reste une valeur, jamais du SQL.',con:["Nom ? x' OR '1'='1"],out:'safe'},
+       {line:6,t:'Aucune ligne : aucun étudiant ne s\'appelle vraiment « x\' OR \'1\'=\'1 ».',con:["Nom ? x' OR '1'='1","[]"],out:'safe'}
+      ]}
+  };
+  let cur='lire',k=0;
+  const chips=h('div',{class:'chips'});
+  const codeBox=h('div'),txt=h('div'),view=h('div');
+  function render(){
+    const S=SC[cur],st=S.steps[k];
+    codeBox.innerHTML=codeBlock(S.code);
+    /* surligner la ligne courante */
+    const lines=codeBox.querySelectorAll('pre.code>span');
+    if(lines[st.line-1])lines[st.line-1].style.background='rgba(224,160,40,.25)';
+    txt.innerHTML='<b>Étape '+(k+1)+' / '+S.steps.length+'.</b> '+st.t;
+    const con=S.steps.slice(0,k+1).flatMap(s=>s.con);
+    view.innerHTML='';
+    view.append(h('div',{class:'term'},con.length?con.join('\n'):'(aucune sortie pour l\'instant)'));
+    const last=S.steps.slice(0,k+1).reverse().find(s=>s.out||s.db);
+    if(last){
+      if(last.out==='fetch')view.append(h('h3',null,'resultats : une liste de tuples'),h('div',{html:tableHTML(['nom','ville'],DB.etudiants.rows.map(r=>[r[1],r[2]]))}));
+      else if(last.db){
+        const pending=last.db==='pending';
+        const rows=DB.notes.rows.concat([[7,'MA101',12.5]]);
+        view.append(h('h3',null,'Table notes '+(pending?'(transaction en cours, non validée)':'(validée par commit())')),h('div',{html:tableHTML(DB.notes.cols.map(esc),rows,{rowClass:(r,ri)=>ri===rows.length-1&&r[0]===7?(pending?'bad-row':'new-row'):''})}));
+      }else if(last.out==='full')view.append(h('h3',null,'Résultat de la requête piratée : toute la table'),h('div',{html:tableHTML(DB.etudiants.cols.map(esc),DB.etudiants.rows,{rowClass:()=>'bad-row'})}));
+      else if(last.out==='safe')view.append(h('h3',null,'Résultat de la requête paramétrée'),h('div',{html:tableHTML(DB.etudiants.cols.map(esc),[],{})}));
+    }
+  }
+  Object.keys(SC).forEach(kk=>{
+    const c=h('button',{type:'button',class:'chip'+(kk===cur?' on':''),onclick:()=>{cur=kk;k=0;$$('.chip',chips).forEach(b=>b.classList.remove('on'));c.classList.add('on');render();}},SC[kk].lab);
+    chips.append(c);
+  });
+  const prev=h('button',{class:'btn',type:'button',onclick:()=>{if(k>0){k--;render();}}},'◀ Précédent');
+  const next=h('button',{class:'btn pri',type:'button',onclick:()=>{if(k<SC[cur].steps.length-1){k++;render();}}},'Suivant ▶');
+  const rst=h('button',{class:'btn',type:'button',onclick:()=>{k=0;render();}},'↺');
+  root.append(chips,codeBox,h('div',{style:'display:flex;gap:6px;margin:8px 0'},prev,next,rst),txt,view);
+  render();
+}});
+
+/* ---------- Atelier 6 : exercices ---------- */
+const EXOS=[
+ {id:'e1',t:'Noms des étudiants de Lyon, triés par ordre alphabétique.',sol:"SELECT nom FROM etudiants WHERE ville = 'Lyon' ORDER BY nom;"},
+ {id:'e2',t:'Liste des modules avec leurs crédits, triée par intitulé.',sol:'SELECT intitule, credits FROM modules ORDER BY intitule;'},
+ {id:'e3',t:'Nombre total de notes et moyenne générale (arrondie à 2 décimales).',sol:'SELECT COUNT(*) AS nb, ROUND(AVG(valeur), 2) AS moyenne FROM notes;'},
+ {id:'e4',t:'Pour chaque étudiant : son nom et sa moyenne (arrondie à 2 décimales), triée par moyenne décroissante. Colonnes attendues : nom, moyenne.',sol:'SELECT e.nom, ROUND(AVG(n.valeur), 2) AS moyenne\nFROM notes n JOIN etudiants e ON n.etudiant = e.ine\nGROUP BY e.nom\nORDER BY moyenne DESC;'},
+ {id:'e5',t:'Les modules dont la moyenne est strictement inférieure à 12 : intitulé et moyenne arrondie à 2 décimales (sans tri imposé).',sol:'SELECT m.intitule, ROUND(AVG(n.valeur), 2) AS moyenne\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nHAVING AVG(n.valeur) < 12;'},
+ {id:'e6',t:'Noms (sans doublon) des étudiants ayant une note supérieure ou égale à 15.',sol:'SELECT DISTINCT e.nom\nFROM etudiants e JOIN notes n ON e.ine = n.etudiant\nWHERE n.valeur >= 15;'},
+ {id:'e7',t:'Les étudiants qui n\'ont aucune note (LEFT JOIN et IS NULL).',sol:'SELECT e.nom\nFROM etudiants e LEFT JOIN notes n ON e.ine = n.etudiant\nWHERE n.valeur IS NULL;'},
+ {id:'e8',t:'Pour chaque module : intitulé et nombre d\'étudiants notés, trié par effectif décroissant.',sol:'SELECT m.intitule, COUNT(*) AS nb\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nORDER BY nb DESC;'},
+ {id:'e9',t:'Nom des étudiants de Lyon ou Paris (avec IN), par ordre alphabétique.',sol:"SELECT nom FROM etudiants WHERE ville IN ('Lyon', 'Paris') ORDER BY nom;"},
+ {id:'e10',t:'La meilleure note de chaque module (intitulé + maximum), triée par maximum décroissant.',sol:'SELECT m.intitule, MAX(n.valeur) AS maxi\nFROM notes n JOIN modules m ON n.module = m.code\nGROUP BY m.intitule\nORDER BY maxi DESC;'}
+];
+ws({id:'exo',label:'Exercices',hint:'Écris la requête demandée, le moteur la compare au résultat attendu.',mount(root){
+  const store=lsGet(KEYS.act+'/exo',{});
+  root.append(h('h2',null,'Exercices guidés'),
+    h('p',null,'Chaque exercice décrit le ',h('b',null,'résultat attendu'), '. Écris une requête qui produit ce résultat (l\'ordre des lignes doit correspondre si l\'énoncé demande un tri, sinon il est libre) et clique sur ',h('b',null,'Vérifier'), '.'));
+  const done=EXOS.filter(e=>store[e.id]).length;
+  const score=h('p',{class:'score'},done+' / '+EXOS.length+' exercices résolus');
+  root.append(score);
+  EXOS.forEach(e=>{
+    const ta=h('textarea',{class:'sql',rows:3,spellcheck:'false','aria-label':'Ta requête pour : '+e.t,placeholder:'SELECT ...'});
+    const fb=h('div'),box=h('div',{class:'exo'+(store[e.id]?' done':'')});
+    function check(){
+      fb.innerHTML='';
+      let r;
+      try{r=runQuery(ta.value);}catch(err){fb.append(h('div',{class:'verdict no'},h('b',null,'Erreur SQL : '),err.message));return;}
+      let exp;try{exp=runQuery(e.sol);}catch(_){return;}
+      const norm=a=>a.rows.map(x=>JSON.stringify(x)).sort().join('|');
+      const normOrdered=a=>a.rows.map(x=>JSON.stringify(x)).join('|');
+      const ordered=/tri/.test(e.t.toLowerCase());
+      const ok=ordered?normOrdered(r)===normOrdered(exp)||norm(r)===norm(exp):norm(r)===norm(exp);
+      if(ok){
+        if(!store[e.id]){store[e.id]=true;lsSet(KEYS.act+'/exo',store);box.classList.add('done');score.textContent=(EXOS.filter(x=>store[x.id]).length)+' / '+EXOS.length+' exercices résolus';toast('Bien joué !');}
+        fb.append(h('div',{class:'verdict yes'},'Correct : '+r.rows.length+' ligne(s), exactement le résultat attendu.'));
+      }else{
+        fb.append(h('div',{class:'verdict no'},'Pas encore : ta requête renvoie '+r.rows.length+' ligne(s), le résultat attendu en a '+exp.rows.length+' (et/ou les valeurs diffèrent).'));
+        fb.append(h('p',{class:'small'},'Ta requête :'),h('div',{html:tableHTML(r.cols.map(esc),r.rows.slice(0,5))}));
+        fb.append(h('p',{class:'small'},'Résultat attendu :'),h('div',{html:tableHTML(exp.cols.map(esc),exp.rows.slice(0,5))}));
+      }
+    }
+    box.append(h('p',{class:'enonce'},h('b',null,e.id.toUpperCase()+' · '),e.t),ta,
+      h('div',{style:'display:flex;gap:6px;margin:8px 0'},
+        h('button',{class:'btn pri',type:'button',onclick:check},'Vérifier'),
+        h('button',{class:'btn',type:'button',onclick:()=>{if(box.querySelector('details'))return;box.append(h('details',{class:'defi'},h('summary',null,'Voir une solution'),h('div',{html:codeBlock(e.sol)})));}},'Indice')));
+    box.append(fb);
+    root.append(box);
+  });
+}});
+
+/* ===== activation des ateliers ===== */
+function mountWorkshops(){
+  const seg=$('#wsSeg'),stage=$('#ws');
+  let cur=WORKSHOPS[0].id;
+  WORKSHOPS.forEach(w=>{
+    const b=h('button',{type:'button',id:'tab-'+w.id,'aria-pressed':String(w.id===cur)},w.label);
+    b.addEventListener('click',()=>{cur=w.id;$$('button',seg).forEach(x=>x.setAttribute('aria-pressed',String(x===b)));show(w);});
+    seg.append(b);
+  });
+  function show(w){
+    $('#hint').textContent=w.hint||'';
+    stage.innerHTML='';
+    w.mount(stage);
+    $('#scroller').scrollTop=0;
+  }
+  show(WORKSHOPS[0]);
+}
+
+/* ===== panneau Activité : quizz ===== */
+function mountAct(){
+  const act=$('#act');
+  const QCM=[
+    {id:'q1',q:'Dans notes, la paire (etudiant, module) est clé primaire. Pourquoi les lignes (3, \'MA101\', 15) et (3, \'MA101\', 12) sont-elles refusées ?',
+     opts:['Parce que la note doit être unique dans la table','Parce que deux lignes ne peuvent pas avoir la même valeur de clé primaire','Parce que la colonne etudiant est une clé étrangère'],
+     a:1,why:'La clé primaire identifie chaque ligne : une même valeur de clé (ici le couple 3, MA101) ne peut apparaître deux fois. C\'est la contrainte d\'unicité de l\'entité.'},
+    {id:'q2',q:'SELECT AVG(valeur) FROM notes; (sans GROUP BY) renvoie :',
+     opts:['La moyenne de chaque note, une ligne par note','Une seule ligne : la moyenne de toutes les lignes de la table','Une erreur : il faut un GROUP BY'],
+     a:1,why:'Sans GROUP BY, toute la table forme un seul groupe : l\'agrégat produit exactement une ligne.'},
+    {id:'q3',q:'On veut les modules dont la moyenne des notes est inférieure à 12. Le bon outil :',
+     opts:['WHERE AVG(valeur) < 12','HAVING AVG(valeur) < 12','WHERE valeur < 12 GROUP BY module'],
+     a:1,why:'On filtre des groupes (une valeur par module) : c\'est HAVING, évalué après GROUP BY. WHERE agit avant le regroupement, ligne par ligne.'},
+    {id:'q4',q:'Gaël n\'a aucune note. Dans SELECT e.nom FROM etudiants e JOIN notes n ON e.ine = n.etudiant;, Gaël apparaît :',
+     opts:['Pas du tout : le JOIN ne garde que les paires qui vérifient ON','Une fois, avec valeur = NULL','Deux fois'],
+     a:0,why:'La jointure interne garde les paires qui vérifient la condition : sans note, pas de paire pour Gaël. Pour le voir apparaître, il faut LEFT JOIN (avec NULL).'},
+    {id:'q5',q:'Pourquoi COUNT(valeur) peut renvoyer moins que COUNT(*) ?',
+     opts:['Les deux sont toujours égaux','COUNT(valeur) ne compte que les lignes où valeur n\'est pas NULL','COUNT(*) ne compte que les clés primaires'],
+     a:1,why:'COUNT(*) compte toutes les lignes ; COUNT(col) ignore les lignes où col vaut NULL. Précieux pour compter les valeurs manquantes.'},
+    {id:'q6',q:'Une requête SQL est un langage :',
+     opts:['impératif : on décrit comment parcourir les lignes','déclaratif : on décrit le résultat voulu, le SGBD choisit le plan d\'exécution','procédural : on écrit un programme exécuté ligne à ligne'],
+     a:1,why:'On décrit quoi (le résultat), pas comment : le SGBD choisit l\'ordre des opérations et les optimise (index, ordre de jointure...).'}
+  ];
+  const store=lsGet(KEYS.act+'/qcm',{});
+  let ok=0,done=0;
+  act.innerHTML='';
+  act.append(h('div',{class:'phead'},h('b',null,'Activité'),h('span',{class:'sub'},'Objectif · questions')));
+  const body=h('div',{class:'pbody'});
+  body.append(h('div',{class:'goal'},'Objectif : savoir écrire une requête SQL (projection, sélection, jointure, agrégats) sur un schéma relationnel, et l\'utiliser depuis Python.'));
+  body.append(h('ul',{class:'steps'},
+    h('li',null,'Parcours les ateliers : modèle, console, jointures, agrégats, Python.'),
+    h('li',null,'Termine les 10 exercices guidés dans l\'atelier « Exercices ».'),
+    h('li',null,'Réponds au QCM ci-dessous : tes réponses sont mémorisées.')));
+  const score=h('p',{class:'score'});
+  body.append(score);
+  function upd(){
+    ok=QCM.filter(q=>store[q.id]===q.a).length;
+    done=QCM.filter(q=>store[q.id]!=null).length;
+    score.textContent=done?('Score : '+ok+' / '+QCM.length+(done===QCM.length?' (terminé)':'')):'';
+  }
+  QCM.forEach(q=>{
+    const fs=h('fieldset',{class:'q'},h('legend',null,q.q));
+    q.opts.forEach((lab,j)=>{
+      const chosen=store[q.id];
+      const good=chosen!=null&&j===q.a,bad=chosen!=null&&j===chosen&&j!==q.a;
+      const labEl=h('label',{class:'opt'+(good?' good':bad?' bad':'')},
+        h('input',{type:'radio',name:'r-'+q.id,checked:chosen===j,disabled:chosen!=null,onclick:()=>{store[q.id]=j;lsSet(KEYS.act+'/qcm',store);mountAct();}}),
+        h('span',{style:chosen!=null&&j===q.a?'font-weight:600':'',html:esc(lab)+(chosen!=null&&j===q.a?' ✓':'')}));
+      fs.append(labEl);
+    });
+    if(store[q.id]!=null)fs.append(h('p',{class:'why'},q.why));
+    body.append(fs);
+  });
+  upd();
+  act.append(body);
+}
+
+/* ===== cours ===== */
+function mountCourse(){
+  const SEC=[
+   {id:'c1',t:'1. Le modèle relationnel',html:`
+    <p>Une <b>base de données relationnelle</b> range les données dans des <b>tables</b>. Une table a :</p>
+    <ul><li>un <b>schéma</b> : le nom des attributs et leurs domaines (INTEGER, TEXT, REAL...) ;</li>
+    <li>une <b>instance</b> : l'ensemble des lignes à un instant donné.</li></ul>
+    <p>Formellement, une relation est un sous-ensemble du produit cartésien des domaines : une même ligne ne peut pas y apparaître deux fois.</p>
+    <p class="formula">etudiants(ine, nom, ville)<br>modules(code, intitule, credits)<br>notes(etudiant, module, valeur)</p>
+    <div class="retain">Une table = un schéma (les colonnes) + une instance (les lignes). Le résultat d'une requête est toujours... une table.</div>`},
+   {id:'c2',t:'2. Clés et contraintes',html:`
+    <p>La <b>clé primaire</b> identifie chaque ligne : unique et jamais NULL (contrainte d'entité). Une <b>clé étrangère</b> référence la clé primaire d'une autre table ; toute valeur doit exister dans la table référencée (contrainte d'intégrité référentielle).</p>
+    <table class="ctable"><tr><th>Table</th><th>Clé primaire</th><th>Clés étrangères</th></tr>
+    <tr><td>etudiants</td><td>ine</td><td>—</td></tr>
+    <tr><td>modules</td><td>code</td><td>—</td></tr>
+    <tr><td>notes</td><td>(etudiant, module)</td><td>etudiant → etudiants.ine, module → modules.code</td></tr></table>
+    <p class="formula">CREATE TABLE notes (<br>&nbsp;&nbsp;etudiant INTEGER REFERENCES etudiants(ine),<br>&nbsp;&nbsp;module&nbsp; TEXT REFERENCES modules(code),<br>&nbsp;&nbsp;valeur&nbsp;&nbsp; REAL,<br>&nbsp;&nbsp;PRIMARY KEY (etudiant, module)<br>);</p>
+    <p>Un attribut peut valoir <b>NULL</b> (valeur absente) ; on le teste avec <code class="k">IS NULL</code> ou <code class="k">IS NOT NULL</code>, jamais avec = : <code class="k">valeur = NULL</code> est toujours faux.</p>
+    <div class="retain">Insérer une ligne dont la clé primaire existe déjà : refusé. Insérer une clé étrangère qui ne pointe nulle part : refusé. C'est le SGBD qui garantit ces contraintes, pas le programmeur.</div>`},
+   {id:'c3',t:'3. Algèbre relationnelle',html:`
+    <p>Les requêtes se pensent avec quatre opérations, composables, dont le résultat est toujours une relation :</p>
+    <table class="ctable"><tr><th>Opération</th><th>Notation</th><th>Effet</th><th>En SQL</th></tr>
+    <tr><td>Projection</td><td>π<sub>A,B</sub>(R)</td><td>garde les colonnes A, B (doublons éliminés)</td><td>SELECT DISTINCT A, B</td></tr>
+    <tr><td>Sélection</td><td>σ<sub>cond</sub>(R)</td><td>garde les lignes vérifiant cond</td><td>WHERE cond</td></tr>
+    <tr><td>Jointure</td><td>R ⋈ S</td><td>assemble les lignes de R et S qui coïncident</td><td>JOIN ... ON ...</td></tr>
+    <tr><td>Renommage</td><td>ρ<sub>a→b</sub>(R)</td><td>renomme un attribut</td><td>AS</td></tr></table>
+    <p class="formula">π<sub>nom</sub>(σ<sub>ville='Lyon'</sub>(etudiants))&nbsp;&nbsp;≡&nbsp;&nbsp;SELECT nom FROM etudiants WHERE ville = 'Lyon';</p>
+    <div class="retain">SQL est <b>déclaratif</b> : on décrit le résultat (avec π, σ, ⋈), le SGBD choisit comment le calculer. L'algèbre relationnel est le plan de travail du SGBD.</div>`},
+   {id:'c4',t:'4. SELECT : la requête complète',html:`
+    <p class="formula">SELECT [DISTINCT] exprs [AS alias]   -- projection<br>FROM table [alias]<br>[JOIN table2 ON cond]           -- jointures<br>[WHERE cond]                     -- sélection des lignes<br>[GROUP BY attributs]             -- regroupement<br>[HAVING cond]                    -- filtre des groupes<br>[ORDER BY attribut [DESC]]       -- tri<br>[LIMIT n]                        -- n lignes</p>
+    <p>L'ordre d'<b>écriture</b> n'est pas l'ordre d'<b>évaluation</b> :</p>
+    <p class="formula">FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT</p>
+    <p>C'est pour cela que le filtre sur les groupes doit être dans HAVING (évalué après GROUP BY), et que l'on ne peut pas utiliser un alias du SELECT dans WHERE.</p>
+    <ul>
+      <li><code class="k">WHERE ville = 'Lyon' AND valeur >= 12</code> — conditions booléennes (AND, OR, NOT) ;</li>
+      <li><code class="k">WHERE nom LIKE 'A%'</code> — motif (% : n'importe quoi, _ : un caractère) ;</li>
+      <li><code class="k">WHERE ville IN ('Lyon', 'Paris')</code> — appartenance ;</li>
+      <li><code class="k">SELECT DISTINCT ...</code> — élimine les doublons ;</li>
+      <li><code class="k">ORDER BY moyenne DESC, nom</code> — tri multi-critères.</li>
+    </ul>
+    <div class="retain">SQL ne renvoie pas un « fichier de résultats » : il renvoie une table. Doublons, ordre, colonnes : tout se décrit dans la requête.</div>`},
+   {id:'c5',t:'5. Jointures',html:`
+    <p>Une jointure assemble deux tables : on croise chaque ligne de A avec chaque ligne de B, puis on garde les paires qui vérifient la condition <code class="k">ON</code> (en général clé étrangère = clé primaire).</p>
+    <table class="ctable"><tr><th>Type</th><th>Lignes gardées</th><th>Usage type</th></tr>
+    <tr><td>JOIN (interne)</td><td>les paires qui vérifient ON</td><td>combiner les données liées</td></tr>
+    <tr><td>LEFT JOIN</td><td>toutes les lignes de gauche (NULL si pas de partenaire)</td><td>trouver les lignes « orphelines » (IS NULL)</td></tr>
+    <tr><td>CROSS JOIN</td><td>toutes les paires (produit cartésien)</td><td>comprendre ce que filtre ON</td></tr></table>
+    <p class="formula">SELECT e.nom, n.valeur<br>FROM etudiants e LEFT JOIN notes n ON e.ine = n.etudiant<br>WHERE n.valeur IS NULL;&nbsp;&nbsp;-- les étudiants sans note</p>
+    <div class="retain">Le nombre de lignes d'un CROSS JOIN est le produit des effectifs : 8 × 17 = 136 pour etudiants × notes. Une jointure filtre ce produit cartésien.</div>`},
+   {id:'c6',t:'6. Agrégats, GROUP BY, HAVING',html:`
+    <table class="ctable"><tr><th>Fonction</th><th>Résultat</th></tr>
+    <tr><td>COUNT(*) / COUNT(col)</td><td>nombre de lignes / nombre de valeurs non NULL</td></tr>
+    <tr><td>SUM(col), AVG(col)</td><td>somme, moyenne (valeurs NULL ignorées)</td></tr>
+    <tr><td>MIN(col), MAX(col)</td><td>extremums</td></tr></table>
+    <p><code class="k">GROUP BY a</code> découpe les lignes en paquets qui partagent la même valeur de a ; chaque paquet produit <b>une</b> ligne du résultat. Sans GROUP BY, un agrégat dans le SELECT traite la table entière et renvoie une seule ligne.</p>
+    <p><b>WHERE filtre des lignes, HAVING filtre des groupes :</b></p>
+    <p class="formula">SELECT m.intitule, ROUND(AVG(n.valeur),2) AS moyenne<br>FROM notes n JOIN modules m ON n.module = m.code<br>GROUP BY m.intitule<br>HAVING AVG(n.valeur) &lt; 12;<br>-- modules dont la moyenne est &lt; 12</p>
+    <div class="retain">Règle d'or : toute colonne du SELECT qui n'est pas dans un agrégat doit figurer dans le GROUP BY.</div>`},
+   {id:'c7',t:'7. SQL en Python (sqlite3)',html:`
+    <p class="formula">import sqlite3<br>connexion = sqlite3.connect("base.db")&nbsp;&nbsp;# 1. connexion<br>curseur = connexion.cursor()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 2. curseur<br>curseur.execute("SELECT ...")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 3. requête<br>lignes = curseur.fetchall()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 4. lecture (liste de tuples)<br>connexion.commit()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 5. validation des écritures<br>connexion.close()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 6. fermeture</p>
+    <ul>
+      <li>les écritures (INSERT, UPDATE, DELETE) sont d'abord dans une <b>transaction</b> : sans <code class="k">commit()</code>, elles sont perdues ;</li>
+      <li>on ne concatène <b>jamais</b> une saisie utilisateur dans la requête (injection SQL) : on passe par un <b>paramètre</b> :</li>
+    </ul>
+    <p class="formula">curseur.execute("SELECT * FROM etudiants WHERE nom = ?", (nom,))</p>
+    <div class="retain">La requête reste du SQL, les données restent des valeurs : le paramètre ? est la barrière entre les deux.</div>`},
+   {id:'c8',t:'8. Glossaire',html:`
+    <dl class="gloss">
+    <dt>Attribut</dt><dd>colonne d'une table, avec son domaine (type).</dd>
+    <dt>Clé primaire</dt><dd>attribut(s) identifiant chaque ligne, unique(s) et non NULL.</dd>
+    <dt>Clé étrangère</dt><dd>attribut référençant la clé primaire d'une autre table.</dd>
+    <dt>Schéma</dt><dd>description des tables et contraintes d'une base.</dd>
+    <dt>Instance</dt><dd>contenu (lignes) des tables à un instant donné.</dd>
+    <dt>Projection π</dt><dd>garder certaines colonnes (SELECT).</dd>
+    <dt>Sélection σ</dt><dd>garder certaines lignes (WHERE).</dd>
+    <dt>Jointure ⋈</dt><dd>assembler deux tables selon une condition.</dd>
+    <dt>Agrégat</dt><dd>fonction résumant un groupe de lignes (COUNT, AVG...).</dd>
+    <dt>Transaction</dt><dd>séquence d'opérations validée atomiquement par commit.</dd>
+    <dt>Injection SQL</dt><dd>attaque par saisie transformée en code SQL ; parade : paramètres.</dd>
+    <dt>SGBD</dt><dd>système de gestion de bases de données (ex. SQLite, PostgreSQL).</dd>
+    </dl>`}
+  ];
+  const course=$('#course');
+  course.innerHTML='';
+  course.append(h('div',{class:'inner ctop'},h('b',null,'Cours : SQL et bases de données relationnelles'),h('span',{class:'small'},'Niveau CPGE · 2e année')));
+  const toc=h('div',{class:'inner ctoc'}),body=h('div',{class:'cbody'});
+  let cur=SEC[0].id;
+  function show(s){
+    body.innerHTML='<h2>'+s.t+'</h2>'+s.html;
+    $$('button',toc).forEach(b=>b.classList.toggle('on',b.dataset.id===s.id));
+  }
+  SEC.forEach(s=>{toc.append(h('button',{type:'button','data-id':s.id,onclick:()=>show(s)},s.t));});
+  course.append(h('div',{class:'inner cwrap'},toc,body));
+  show(SEC[0]);
+}
+
+/* ===== aide ===== */
+function mountHelp(){
+  const dlg=$('#dlg');
+  dlg.innerHTML='';
+  dlg.append(h('div',{class:'dlgbox'},
+    h('header',null,h('b',null,'Aide'),h('button',{class:'btn',type:'button',onclick:()=>{dlg.hidden=true;}},'Fermer')),
+    h('div',{class:'dbody'},
+      h('h3',null,'Ateliers'),
+      h('p',null,'La barre d\'ateliers (en haut) propose 6 manipulations : modèle relationnel et algèbre, console SQL, jointures, agrégats, SQL en Python, exercices guidés.'),
+      h('h3',null,'Console et exercices'),
+      h('p',null,'Dans la console et les exercices, tes requêtes sont ',h('b',null,'réellement exécutées'), ' par un mini-moteur SQL embarqué dans la page : SELECT, FROM, JOIN (interne, LEFT, CROSS), WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, DISTINCT, LIKE, IN, IS NULL et les agrégats. Raccourci : ',h('code',null,'Ctrl+Entrée'), ' pour exécuter.'),
+      h('h3',null,'Activité'),
+      h('p',null,'Le bouton ',h('b',null,'Activité'), ' ouvre le panneau latéral : objectif, démarche et QCM. Tes réponses et les exercices résolus sont mémorisés dans le navigateur.'),
+      h('h3',null,'Cours'),
+      h('p',null,'Le bouton ',h('b',null,'Cours'), ' remplace l\'atelier par le cours complet avec sommaire : modèle, clés, algèbre, SELECT, jointures, agrégats, sqlite3, glossaire.')),
+    h('footer',null,h('button',{class:'btn pri',type:'button',onclick:()=>{dlg.hidden=true;}},'Compris'))));
+  dlg.hidden=false;
+}
+
+/* ===== lancement ===== */
+mountWorkshops();
+mountAct();
+mountCourse();
+$('#bAct').addEventListener('click',()=>{const a=$('#act');a.hidden=!a.hidden;$('#bAct').setAttribute('aria-pressed',String(!a.hidden));});
+$('#bCourse').addEventListener('click',()=>{
+  const c=$('#course'),w=$('#work');
+  const on=c.hidden;
+  c.hidden=!on;w.hidden=on;
+  $('#bCourse').setAttribute('aria-pressed',String(on));
+});
+$('#bHelp').addEventListener('click',mountHelp);
+</script>
+</body></html>
