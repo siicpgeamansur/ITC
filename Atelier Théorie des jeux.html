@@ -1,0 +1,980 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Théorie des jeux</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-fill:#dfe7f0;--node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px}
+.formula.pre{white-space:pre;overflow-x:auto;font-family:var(--font-mono);font-size:13px;line-height:1.7}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts select{width:auto}
+.opts input[type=range]{width:170px}
+.opts .fld input[type=text]{width:84px;text-align:center;font-family:var(--font-mono)}
+.opts .fld input.ok{border-color:var(--ok);background:rgba(30,122,46,.15)}
+.opts .fld input.ko{border-color:var(--bad);background:rgba(192,40,31,.13)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.widget{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0 14px;background:var(--panel)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:15px;font-family:var(--font-mono)}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}
+.sticks{display:flex;flex-wrap:wrap;gap:9px;padding:14px 4px 4px;min-height:74px}
+.stick{width:6px;height:44px;border-radius:3px;background:var(--node-stroke);position:relative;flex:none}
+.stick::before{content:"";position:absolute;top:-5px;left:-2px;width:10px;height:11px;border-radius:50%;background:var(--bad)}
+.nlog{list-style:none;margin:6px 0;padding:0;font:12.5px/1.6 var(--font-mono);color:var(--muted)}
+.nlog:empty{display:none}
+.gwrap{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:#fff}
+svg.g{display:block;width:100%;height:auto}
+.nn{cursor:pointer}
+.nn circle{fill:#fff;stroke:var(--node-stroke);stroke-width:1.6}
+.nn.g circle{fill:rgba(30,122,46,.2);stroke:var(--ok);stroke-width:2.4}
+.nn.p circle{fill:rgba(192,40,31,.16);stroke:var(--bad);stroke-width:2.4}
+.nn.err circle{stroke:var(--bad);stroke-width:4;stroke-dasharray:4 3}
+.nn.sel circle{stroke:var(--accent);stroke-width:3.4}
+.nn text{fill:var(--fg);font-family:var(--font-mono);font-size:13px;font-weight:600;text-anchor:middle}
+.nn .lab{font-size:12px;font-weight:700}
+.nn.g .lab{fill:var(--ok)}.nn.p .lab{fill:var(--bad)}
+.nn:focus-visible{outline:none}.nn:focus-visible circle{stroke:var(--accent);stroke-width:4}
+.ed{fill:none;stroke:#8a949f;stroke-width:1.3;opacity:.7}
+.ed.hl{stroke:var(--accent);stroke-width:2.2;opacity:1}
+.ah{fill:#8a949f}.ahl{fill:var(--accent)}
+.te{stroke:#8a949f;stroke-width:1.4}
+.te.pr{stroke-dasharray:3 4;opacity:.35}
+.tn .shape{fill:#fff;stroke:var(--node-stroke);stroke-width:1.6;stroke-linejoin:round}
+.tn.open .shape{fill:var(--accent-soft);stroke:var(--accent)}
+.tn.cur .shape{fill:var(--accent-soft);stroke:var(--accent);stroke-width:3}
+.tn.done .shape{fill:rgba(30,122,46,.15);stroke:var(--ok);stroke-width:2}
+.tn.pruned{opacity:.4}
+.tn.pruned .shape{stroke-dasharray:3 3}
+.tn.sel .shape{stroke:var(--bad);stroke-width:3}
+.tn.click{cursor:pointer}
+.tn.click:focus-visible{outline:none}.tn.click:focus-visible .shape{stroke:var(--accent);stroke-width:3.5}
+.tn .val{fill:var(--fg);font-family:var(--font-mono);font-weight:600;text-anchor:middle}
+.tn .nm{fill:var(--muted);font-family:var(--font-mono);font-weight:600;text-anchor:middle}
+.tn .abl{fill:var(--accent-ink);font-family:var(--font-mono);font-weight:600;text-anchor:middle}
+.cmp{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.cmpr{display:grid;grid-template-columns:130px 1fr 34px;gap:8px;align-items:center;font-size:13px}
+.cmpr i{display:block;height:12px;background:var(--accent);border-radius:3px}
+.cmpr.mm i{background:#8a949f}
+.cmpr em{font-style:normal;font-family:var(--font-mono);text-align:right}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  #act.sheet{z-index:35}
+  .work{flex-direction:column;gap:8px}
+  .cmpr{grid-template-columns:96px 1fr 30px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 5L6 14M13 5L20 14M6 14L3 21M6 14L9 21M20 14L17 21M20 14L23 21" stroke="var(--fg)" stroke-width="1.5" fill="none"/><circle cx="13" cy="5" r="3" fill="var(--accent)"/><circle cx="6" cy="14" r="3" fill="var(--ok)"/><circle cx="20" cy="14" r="3" fill="var(--warn)"/></svg><span>Atelier Théorie des jeux <small>ITC · PSI*</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+let toastT = null;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3000); }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-jeux-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const fmt = x => x === Infinity ? '+∞' : x === -Infinity ? '−∞' : String(x);
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function randTree(depth, b, lo, hi) {
+  if (depth === 0) return randInt(lo, hi);
+  const out = []; for (let i = 0; i < b; i++) out.push(randTree(depth - 1, b, lo, hi)); return out;
+}
+function minimax(t, isMax) {
+  if (typeof t === 'number') return t;
+  const vs = t.map(c => minimax(c, !isMax));
+  return isMax ? Math.max(...vs) : Math.min(...vs);
+}
+function orderTree(t, isMax, best) {
+  if (typeof t === 'number') return t;
+  const kids = t.map(c => orderTree(c, !isMax, best));
+  const desc = (isMax === best);
+  const keyed = kids.map(c => ({ c, v: minimax(c, !isMax) }));
+  keyed.sort((a, b) => desc ? b.v - a.v : a.v - b.v);
+  return keyed.map(o => o.c);
+}
+function layoutTree(tree, rootMax, xGap, yGap, padX, padTop) {
+  const nodes = []; let leafIdx = 0, maxDepth = 0;
+  function rec(t, path, depth, isMax) {
+    if (depth > maxDepth) maxDepth = depth;
+    let n;
+    if (typeof t === 'number') {
+      n = { path, depth, leaf: true, value: t, val: t, x: padX + leafIdx * xGap, y: 0 }; leafIdx++;
+    } else {
+      const kids = t.map((c, i) => rec(c, path + '.' + i, depth + 1, !isMax));
+      const vals = kids.map(k => k.val);
+      n = { path, depth, leaf: false, isMax, kids, x: (kids[0].x + kids[kids.length - 1].x) / 2, y: 0, val: isMax ? Math.max(...vals) : Math.min(...vals) };
+    }
+    nodes.push(n); return n;
+  }
+  const root = rec(tree, 'r', 0, rootMax);
+  nodes.forEach(n => { n.y = padTop + n.depth * yGap; });
+  return { nodes, root, maxDepth, width: padX * 2 + (leafIdx - 1) * xGap, height: padTop * 2 + maxDepth * yGap };
+}
+function runAB(tree) {
+  const ev = []; let leaves = 0;
+  function rec(t, path, isMax, alpha, beta) {
+    if (typeof t === 'number') { leaves++; ev.push({ k: 'leaf', path, v: t }); return t; }
+    ev.push({ k: 'enter', path, alpha, beta, isMax });
+    let v = isMax ? -Infinity : Infinity;
+    for (let i = 0; i < t.length; i++) {
+      const r = rec(t[i], path + '.' + i, !isMax, alpha, beta);
+      if (isMax) { v = Math.max(v, r); alpha = Math.max(alpha, v); } else { v = Math.min(v, r); beta = Math.min(beta, v); }
+      ev.push({ k: 'update', path, v, alpha, beta, isMax, last: i === t.length - 1 });
+      if (alpha >= beta) {
+        if (i < t.length - 1) ev.push({ k: 'cut', path, from: i + 1, n: t.length, alpha, beta, isMax });
+        break;
+      }
+    }
+    ev.push({ k: 'exit', path, v });
+    return v;
+  }
+  const val = rec(tree, 'r', true, -Infinity, Infinity);
+  return { ev, leaves, val };
+}
+function nimWin(moves, N) {
+  const W = []; for (let i = 0; i <= N; i++) W[i] = moves.some(m => m <= i && !W[i - m]); return W;
+}
+function nimRounds(moves, N) {
+  const known = []; for (let i = 0; i <= N; i++) known[i] = 0;
+  const rounds = []; let changed = true;
+  while (changed) {
+    changed = false; const batch = [];
+    for (let i = 0; i <= N; i++) {
+      if (known[i]) continue;
+      const succ = moves.filter(m => m <= i).map(m => i - m);
+      if (succ.some(s => known[s] === 2)) batch.push({ n: i, t: 1 });
+      else if (succ.every(s => known[s] === 1)) batch.push({ n: i, t: 2 });
+    }
+    if (batch.length) { batch.forEach(b => { known[b.n] = b.t; }); rounds.push(batch); changed = true; }
+  }
+  return rounds;
+}
+/*LOGIC-END*/
+
+/* ---------- dessin d'un arbre de jeu ---------- */
+function drawTree(svg, L, o) {
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
+  svg.style.minWidth = (o.minW || 0) + 'px';
+  svg.style.maxWidth = o.maxW ? o.maxW + 'px' : 'none';
+  const fs = o.fs || 12;
+  const gE = el('g', {}, svg);
+  L.nodes.forEach(n => {
+    if (n.leaf) return;
+    n.kids.forEach(k => { el('line', { x1: n.x, y1: n.y, x2: k.x, y2: k.y, 'class': 'te' + (o.pruned && o.pruned(k.path) ? ' pr' : '') }, gE); });
+  });
+  L.nodes.forEach(n => {
+    let cls = 'tn ' + (o.nodeCls ? o.nodeCls(n) : '');
+    if (n.leaf && o.onLeaf) cls += ' click';
+    const g = el('g', { 'class': cls }, svg);
+    const txt = o.nodeText(n);
+    if (n.leaf) {
+      el('rect', { 'class': 'shape', x: n.x - 14, y: n.y - 11, width: 28, height: 22, rx: 3 }, g);
+      const tl = el('text', { 'class': 'val', x: n.x, y: n.y + 4, 'font-size': fs }, g); tl.textContent = txt;
+      if (o.onLeaf) {
+        g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', 'Feuille de valeur ' + n.value);
+        g.addEventListener('click', () => o.onLeaf(n));
+        g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); o.onLeaf(n); } });
+      }
+    } else {
+      const pts = n.isMax ? [[n.x, n.y - 17], [n.x - 17, n.y + 12], [n.x + 17, n.y + 12]] : [[n.x, n.y + 17], [n.x - 17, n.y - 12], [n.x + 17, n.y - 12]];
+      el('polygon', { 'class': 'shape', points: pts.map(p => p.join(',')).join(' ') }, g);
+      const tv = el('text', { 'class': 'val', x: n.x, y: n.isMax ? n.y + 7 : n.y + 1, 'font-size': fs }, g); tv.textContent = txt;
+      const lab = o.label ? o.label(n) : '';
+      if (lab) { const tn = el('text', { 'class': 'nm', x: n.x + 26, y: n.y + 4, 'font-size': fs }, g); tn.textContent = lab; }
+      const ab = o.above ? o.above(n) : '';
+      if (ab) { const ta = el('text', { 'class': 'abl', x: n.x, y: n.y - 22, 'font-size': 10 }, g); ta.textContent = ab; }
+    }
+  });
+}
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; m.textContent = text; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+
+/* ================= Atelier 1 : Nim et attracteurs ================= */
+const MOVESETS = [[1, 2, 3], [1, 3, 4], [2, 3]];
+const G1 = { mi: 0, N: 12, level: 'random', first: 'you', inited: false };
+const nim = { moves: [1, 2, 3], N: 12, n: 12, turn: 'you', over: false, winner: null, W: [], log: [], timer: null };
+let marks = [], errSet = {}, selNode = null, rounds = [], stepIdx = 0;
+function nimCan(n) { return nim.moves.some(m => m <= n); }
+function nimSetup() {
+  G1.mi = $('#nim-moves').selectedIndex; G1.N = +$('#nim-n').value;
+  nim.moves = MOVESETS[G1.mi]; nim.N = G1.N;
+  $('#nim-n-out').textContent = nim.N;
+  nim.W = nimWin(nim.moves, nim.N);
+  rounds = nimRounds(nim.moves, nim.N);
+  nimClear(true);
+  $('#nim-conj-box').hidden = true;
+  nimNewGame();
+}
+function nimNewGame() {
+  clearTimeout(nim.timer);
+  nim.n = nim.N; nim.over = false; nim.winner = null; nim.log = [];
+  nim.turn = G1.first;
+  $('#nim-hint-out').textContent = '';
+  nimRenderGame();
+  if (nim.turn === 'pc') nim.timer = setTimeout(nimPc, 700);
+}
+function nimRenderGame() {
+  const st = $('#nim-sticks'); if (!st) return; st.innerHTML = '';
+  for (let i = 0; i < nim.n; i++) { const s = document.createElement('span'); s.className = 'stick'; st.appendChild(s); }
+  st.setAttribute('aria-label', nim.n + ' allumettes restantes');
+  const bt = $('#nim-buttons'); bt.innerHTML = '';
+  nim.moves.forEach(m => {
+    bt.append(h('button', { type: 'button', class: 'btn', disabled: nim.over || nim.turn !== 'you' || m > nim.n, onclick: () => nimMove('you', m) }, 'Retirer ' + m));
+  });
+  let status;
+  if (nim.over) {
+    status = (nim.winner === 'you' ? 'Victoire ! L’ordinateur ne peut plus jouer.' : 'Défaite : vous ne pouvez plus jouer.') +
+      ' La position de départ était ' + (nim.W[nim.N] ? 'gagnante' : 'perdante') + ' pour le premier joueur.';
+  } else status = nim.turn === 'you' ? 'À vous de jouer. Il reste ' + nim.n + ' allumettes.' : 'L’ordinateur réfléchit…';
+  $('#nim-status').textContent = status;
+  const lg = $('#nim-log'); lg.innerHTML = '';
+  nim.log.slice(-6).forEach(t => lg.append(h('li', null, t)));
+}
+function nimMove(who, m) {
+  if (nim.over || m > nim.n) return;
+  nim.n -= m;
+  nim.log.push((who === 'you' ? 'Vous retirez ' : 'Ordinateur retire ') + m + ' → reste ' + nim.n);
+  if (!nimCan(nim.n)) { nim.over = true; nim.winner = who; } else nim.turn = who === 'you' ? 'pc' : 'you';
+  nimRenderGame();
+  if (!nim.over && nim.turn === 'pc') nim.timer = setTimeout(nimPc, 700);
+}
+function nimPc() {
+  if (nim.over) return;
+  const opts = nim.moves.filter(m => m <= nim.n);
+  let pick = opts[randInt(0, opts.length - 1)];
+  if (G1.level === 'expert') { const win = opts.filter(m => !nim.W[nim.n - m]); if (win.length) pick = win[0]; }
+  nimMove('pc', pick);
+}
+function nimHint() {
+  const out = $('#nim-hint-out');
+  if (nim.over) { out.textContent = 'La partie est terminée.'; return; }
+  if (nim.W[nim.n]) {
+    const m = nim.moves.filter(x => x <= nim.n && !nim.W[nim.n - x])[0];
+    out.textContent = 'Position gagnante pour qui doit jouer : retirez ' + m + '.';
+  } else out.textContent = 'Position perdante pour qui doit jouer : un adversaire parfait gagne.';
+}
+function drawNim() {
+  const svg = $('#nim-svg'); if (!svg) return;
+  const N = nim.N, XG = 46, R = 16, X0 = 28, Y = 118, W = X0 * 2 + N * XG, H = 172;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.style.minWidth = W + 'px';
+  svg.innerHTML = '<defs><marker id="nim-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah"/></marker>' +
+    '<marker id="nim-arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" class="ahl"/></marker></defs>';
+  const gE = el('g', {}, svg);
+  for (let i = 0; i <= N; i++) {
+    nim.moves.forEach(m => {
+      if (m > i) return;
+      const j = i - m, x1 = X0 + i * XG, x2 = X0 + j * XG, mid = (x1 + x2) / 2, hh = 14 + m * 9, hl = selNode === i;
+      el('path', { d: 'M' + x1 + ' ' + (Y - R) + ' Q' + mid + ' ' + (Y - R - 2 * hh) + ' ' + x2 + ' ' + (Y - R - 3), 'class': 'ed' + (hl ? ' hl' : ''), 'marker-end': 'url(#' + (hl ? 'nim-arh' : 'nim-ar') + ')' }, gE);
+    });
+  }
+  for (let k = 0; k <= N; k++) {
+    const mk = marks[k], cls = 'nn' + (mk === 1 ? ' g' : mk === 2 ? ' p' : '') + (errSet[k] ? ' err' : '') + (selNode === k ? ' sel' : '');
+    const g = el('g', { 'class': cls, tabindex: 0, role: 'button', 'aria-label': 'Position ' + k + ', ' + (mk === 1 ? 'marquée gagnante' : mk === 2 ? 'marquée perdante' : 'non marquée') }, svg);
+    el('circle', { cx: X0 + k * XG, cy: Y, r: R }, g);
+    const t = el('text', { x: X0 + k * XG, y: Y + 5 }, g); t.textContent = k;
+    const l = el('text', { 'class': 'lab', x: X0 + k * XG, y: Y + R + 20 }, g); l.textContent = mk === 1 ? 'G' : mk === 2 ? 'P' : '';
+    const act = () => { selNode = k; marks[k] = (marks[k] + 1) % 3; errSet = {}; drawNim(); };
+    g.addEventListener('click', act);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+  }
+}
+function nimClear(silent) {
+  marks = []; for (let i = 0; i <= nim.N; i++) marks.push(0);
+  errSet = {}; selNode = null; stepIdx = 0;
+  drawNim();
+  setMsg('#nim-msg', 'Commencez par les positions où l’on ne peut plus jouer.');
+}
+function nimCheck() {
+  const truth = nim.W.map(w => w ? 1 : 2), wrong = []; let unk = 0; errSet = {};
+  marks.forEach((m, i) => { if (!m) unk++; else if (m !== truth[i]) { wrong.push(i); errSet[i] = true; } });
+  drawNim();
+  if (wrong.length) setMsg('#nim-msg', (wrong.length === 1 ? '1 erreur' : wrong.length + ' erreurs') + ' (position' + (wrong.length > 1 ? 's ' : ' ') + wrong.join(', ') + ', entourée' + (wrong.length > 1 ? 's' : '') + '). Rappel : P si tous les coups mènent à une position G, G si un coup mène à une position P.', 'no');
+  else if (unk) setMsg('#nim-msg', 'Aucune erreur pour l’instant. Il reste ' + unk + ' position' + (unk > 1 ? 's' : '') + ' à marquer.');
+  else setMsg('#nim-msg', 'Coloriage correct. Regardez maintenant où se trouvent les P.', 'yes');
+}
+function nimStep() {
+  if (stepIdx >= rounds.length) { setMsg('#nim-msg', 'L’attracteur est complet : toutes les positions sont classées.', 'yes'); return; }
+  const batch = rounds[stepIdx];
+  batch.forEach(b => { marks[b.n] = b.t; });
+  const P = batch.filter(b => b.t === 2).map(b => b.n), G = batch.filter(b => b.t === 1).map(b => b.n), parts = [];
+  if (P.length) parts.push('P : ' + P.join(', ') + (stepIdx === 0 ? ' (aucun coup possible)' : ' (tous les coups mènent à une position G)'));
+  if (G.length) parts.push('G : ' + G.join(', ') + ' (un coup mène à une position P)');
+  stepIdx++; errSet = {}; drawNim();
+  setMsg('#nim-msg', 'Tour ' + stepIdx + ' sur ' + rounds.length + ' : ' + parts.join(' ; ') + '.');
+}
+function nimConj() {
+  const P = []; nim.W.forEach((w, i) => { if (!w) P.push(i); });
+  const box = $('#nim-conj-box'); box.hidden = false;
+  const key = nim.moves.join();
+  box.textContent = 'Positions perdantes pour N = ' + nim.N + ' avec les prises {' + nim.moves.join(', ') + '} : ' + P.join(', ') + '. ' +
+    'Elles reviennent à intervalle régulier, de période ' + (key === '1,2,3' ? '4 (= 3 + 1)' : key === '1,3,4' ? '7' : '5') + '. ' +
+    'Depuis ' + nim.N + ' allumettes, le premier joueur ' + (nim.W[nim.N] ? 'gagne : il joue vers une position P.' : 'perd : le second joueur répond toujours en revenant sur une position P.');
+}
+function mountG1(root) {
+  root.innerHTML =
+    '<h2>Nim et attracteurs</h2>' +
+    '<p>Un tas de <b>N</b> allumettes. À tour de rôle, chaque joueur en retire un nombre autorisé. <b>Celui qui ne peut plus jouer a perdu.</b> Ce petit jeu suffit à voir toute la théorie : graphe de jeu, positions gagnantes, attracteur.</p>' +
+    '<div class="opts">' +
+    '<label class="fld"><span>Prises autorisées</span><select id="nim-moves"><option>1, 2 ou 3</option><option>1, 3 ou 4</option><option>2 ou 3</option></select></label>' +
+    '<label class="fld"><span>Allumettes N : <b id="nim-n-out">12</b></span><input type="range" id="nim-n" min="5" max="14" value="12" aria-label="Nombre d’allumettes"></label></div>' +
+    '<h3>1. Jouez contre l’ordinateur</h3>' +
+    '<div class="widget"><div class="opts">' +
+    '<label class="fld"><span>Adversaire</span><select id="nim-level"><option value="random">Débutant (au hasard)</option><option value="expert">Expert (stratégie gagnante)</option></select></label>' +
+    '<label class="fld"><span>Premier à jouer</span><select id="nim-first"><option value="you">Vous</option><option value="pc">Ordinateur</option></select></label>' +
+    '<button class="btn" id="nim-new" type="button">Nouvelle partie</button></div>' +
+    '<div class="sticks" id="nim-sticks" role="img" aria-label="Allumettes restantes"></div>' +
+    '<div class="files" id="nim-buttons"></div>' +
+    '<p class="score" id="nim-status" aria-live="polite"></p><ul class="nlog" id="nim-log"></ul>' +
+    '<div class="files"><button class="btn sm" id="nim-hint" type="button">Indice</button><span class="small" id="nim-hint-out" style="margin:0"></span></div></div>' +
+    '<h3>2. Colorez le graphe de jeu</h3>' +
+    '<p class="small">Chaque sommet est un nombre d’allumettes ; les flèches sont les coups possibles. Cliquez sur une position pour la marquer <b style="color:var(--ok)">G</b> (le joueur qui doit jouer gagne), puis <b style="color:var(--bad)">P</b> (il perd), puis pour l’effacer. Les coups de la dernière position cliquée sont en surbrillance.</p>' +
+    '<div class="gwrap"><svg class="g" id="nim-svg" role="group" aria-label="Graphe de jeu de Nim"></svg></div>' +
+    '<div class="files" style="margin:10px 0"><button class="btn pri" id="nim-check" type="button">Vérifier mon coloriage</button><button class="btn" id="nim-step" type="button">Attracteur : tour suivant</button><button class="btn" id="nim-clear" type="button">Effacer</button></div>' +
+    '<div class="verdict" id="nim-msg" aria-live="polite"></div>' +
+    '<h3>3. Conjecturez</h3>' +
+    '<p>Repérez les positions P. Quel est l’écart entre deux positions P consécutives ? Changez les prises autorisées : que devient cet écart ? Qui gagne depuis N ?</p>' +
+    '<p><button class="btn" id="nim-conj" type="button">Afficher la conclusion</button></p><div class="verdict" id="nim-conj-box" hidden></div>';
+  $('#nim-moves').selectedIndex = G1.mi; $('#nim-n').value = G1.N; $('#nim-level').value = G1.level; $('#nim-first').value = G1.first;
+  $('#nim-moves').addEventListener('change', nimSetup);
+  $('#nim-n').addEventListener('input', nimSetup);
+  $('#nim-level').addEventListener('change', e => { G1.level = e.target.value; });
+  $('#nim-first').addEventListener('change', e => { G1.first = e.target.value; });
+  $('#nim-new').addEventListener('click', nimNewGame);
+  $('#nim-hint').addEventListener('click', nimHint);
+  $('#nim-check').addEventListener('click', nimCheck);
+  $('#nim-step').addEventListener('click', nimStep);
+  $('#nim-clear').addEventListener('click', () => nimClear(false));
+  $('#nim-conj').addEventListener('click', nimConj);
+  if (!G1.inited) { G1.inited = true; nimSetup(); }
+  else {
+    $('#nim-n-out').textContent = nim.N; drawNim(); nimRenderGame();
+    if (!nim.over && nim.turn === 'pc') nim.timer = setTimeout(nimPc, 700);
+  }
+}
+WORKSHOPS.push({ id: 'g1', title: 'Nim et attracteurs', hint: 'Jouez au Nim, puis colorez le graphe de jeu pour trouver les positions gagnantes et perdantes.', mount: mountG1, leave: () => clearTimeout(nim.timer), reset: () => { clearTimeout(nim.timer); Object.assign(G1, { mi: 0, N: 12, level: 'random', first: 'you', inited: false }); } });
+
+/* ================= Atelier 2 : Minimax ================= */
+const G2 = { tree: null, rootMax: true, solved: {}, revealed: false, vals: {} };
+const MM_LABEL = { 'r': 'R', 'r.0': 'A', 'r.1': 'B', 'r.2': 'C' };
+let mmL = null;
+function mmRender() {
+  mmL = layoutTree(G2.tree, G2.rootMax, 46, 70, 30, 34);
+  drawTree($('#mm-svg'), mmL, {
+    fs: 13, maxW: Math.round(mmL.width * 1.4),
+    label: n => MM_LABEL[n.path] || '',
+    nodeText: n => n.leaf ? String(n.value) : ((G2.revealed || G2.solved[n.path]) ? String(n.val) : '?'),
+    nodeCls: n => (!n.leaf && (G2.revealed || G2.solved[n.path])) ? 'done' : ''
+  });
+}
+function mmBuildInputs() {
+  const box = $('#mm-inputs'); box.innerHTML = '';
+  const internals = mmL.nodes.filter(n => !n.leaf).sort((a, b) => b.depth - a.depth || (a.path < b.path ? -1 : 1));
+  internals.forEach(n => {
+    const lab = MM_LABEL[n.path];
+    const inp = h('input', { type: 'text', id: 'mm-in-' + lab, autocomplete: 'off', inputmode: 'numeric', 'aria-label': 'Valeur du nœud ' + lab, value: G2.vals[lab] || '' });
+    inp.addEventListener('input', () => { G2.vals[lab] = inp.value; });
+    box.append(h('label', { class: 'fld' }, h('span', null, lab + ' (' + (n.isMax ? 'Max' : 'Min') + ')'), inp));
+  });
+}
+function mmNew() {
+  G2.tree = randTree(2, 3, -9, 9); G2.solved = {}; G2.revealed = false; G2.vals = {};
+  mmRender(); mmBuildInputs();
+  setMsg('#mm-msg', 'Saisissez d’abord A, B et C (juste au-dessus des feuilles), puis R.');
+}
+function mmCheck() {
+  const wrong = []; let unans = 0;
+  mmL.nodes.forEach(n => {
+    if (n.leaf) return;
+    const lab = MM_LABEL[n.path], inp = $('#mm-in-' + lab), raw = inp.value.trim().replace('−', '-');
+    inp.classList.remove('ok', 'ko');
+    if (raw === '') { unans++; return; }
+    const ok = !isNaN(Number(raw)) && Number(raw) === n.val;
+    inp.classList.add(ok ? 'ok' : 'ko');
+    if (ok) G2.solved[n.path] = true; else { wrong.push(lab); delete G2.solved[n.path]; }
+  });
+  mmRender();
+  if (wrong.length) setMsg('#mm-msg', 'À revoir : ' + wrong.join(', ') + '. Un nœud Max prend la plus grande valeur de ses fils, un nœud Min la plus petite. Remontez depuis les feuilles.', 'no');
+  else if (unans) setMsg('#mm-msg', 'Pas d’erreur pour l’instant. ' + unans + ' nœud' + (unans > 1 ? 's' : '') + ' à renseigner.');
+  else {
+    const r = mmL.root, best = r.kids.filter(k => k.val === r.val)[0];
+    setMsg('#mm-msg', 'Tout est juste. La racine vaut ' + r.val + ' : ' + (G2.rootMax ? 'Max' : 'Min') + ' joue vers ' + MM_LABEL[best.path] + '.', 'yes');
+  }
+}
+function mmReveal() {
+  G2.revealed = true; mmRender();
+  mmL.nodes.forEach(n => { if (!n.leaf) { const i = $('#mm-in-' + MM_LABEL[n.path]); i.value = n.val; G2.vals[MM_LABEL[n.path]] = String(n.val); i.classList.remove('ko'); i.classList.add('ok'); } });
+  setMsg('#mm-msg', 'Correction affichée. Chaque valeur est celle d’un de ses fils : le plus grand pour Max, le plus petit pour Min.');
+}
+function mountG2(root) {
+  root.innerHTML =
+    '<h2>Minimax à la main</h2>' +
+    '<p>Pour évaluer une position, on explore l’arbre des coups. Les feuilles portent une valeur (l’heuristique) du point de vue de <b>Max</b> : plus elle est grande, mieux Max est placé. Max cherche à la maximiser, Min à la minimiser. △ désigne un nœud Max, ▽ un nœud Min.</p>' +
+    '<div class="opts"><label class="fld"><span>La racine est un nœud</span><select id="mm-root"><option value="max">Max (△)</option><option value="min">Min (▽)</option></select></label>' +
+    '<button class="btn" id="mm-new" type="button">Nouvel arbre</button></div>' +
+    '<div class="gwrap"><svg class="g" id="mm-svg" role="img" aria-label="Arbre de jeu de profondeur 2"></svg></div>' +
+    '<h3>Valeurs des nœuds internes</h3><div class="opts" id="mm-inputs"></div>' +
+    '<div class="files"><button class="btn pri" id="mm-check" type="button">Vérifier</button><button class="btn" id="mm-reveal" type="button">Voir la correction</button></div>' +
+    '<div class="verdict" id="mm-msg" aria-live="polite"></div>' +
+    '<p class="small">Remarque : la valeur d’un nœud est toujours celle d’un de ses fils. Le meilleur coup mène à ce fils.</p>';
+  $('#mm-root').value = G2.rootMax ? 'max' : 'min';
+  $('#mm-root').addEventListener('change', e => { G2.rootMax = e.target.value === 'max'; G2.tree = null; mmNew(); });
+  $('#mm-new').addEventListener('click', mmNew);
+  $('#mm-check').addEventListener('click', mmCheck);
+  $('#mm-reveal').addEventListener('click', mmReveal);
+  if (!G2.tree) mmNew();
+  else { mmRender(); mmBuildInputs(); setMsg('#mm-msg', 'Saisissez d’abord A, B et C (juste au-dessus des feuilles), puis R.'); }
+}
+WORKSHOPS.push({ id: 'g2', title: 'Minimax', hint: 'Remontez les valeurs des feuilles vers la racine : maximum aux nœuds Max, minimum aux nœuds Min.', mount: mountG2, reset: () => { Object.assign(G2, { tree: null, rootMax: true, solved: {}, revealed: false, vals: {} }); } });
+
+/* ================= Atelier 3 : Alpha-bêta ================= */
+const G3 = { tree: [[[8, 5, 12], [3, 14, 9], [11, 4, 6]], [[2, 17, 7], [13, 1, 10], [15, 16, 3]], [[9, 6, 18], [4, 20, 5], [12, 8, 2]]], run: null, k: 0, sel: null, timer: null };
+function nodeName(p) { return p === 'r' ? 'la racine' : 'le nœud ' + p.slice(2).split('.').map(x => +x + 1).join('.'); }
+function pathGet(t, path) { let c = t; path.split('.').slice(1).map(Number).forEach(i => { c = c[i]; }); return c; }
+function pathSet(t, path, v) { const idx = path.split('.').slice(1).map(Number); let c = t; for (let i = 0; i < idx.length - 1; i++) c = c[idx[i]]; c[idx[idx.length - 1]] = v; }
+function abStop() { clearInterval(G3.timer); G3.timer = null; const b = $('#ab-play'); if (b) b.textContent = 'Lecture'; }
+function abRecompute() { abStop(); G3.run = runAB(G3.tree); G3.k = 0; abRender(); }
+function abState(k) {
+  const info = {}, pruned = []; let cur = null;
+  for (let i = 0; i < k; i++) {
+    const e = G3.run.ev[i];
+    if (e.k === 'enter') { info[e.path] = { st: 'open', alpha: e.alpha, beta: e.beta, v: e.isMax ? -Infinity : Infinity }; cur = e.path; }
+    else if (e.k === 'leaf') { info[e.path] = { st: 'leaf', v: e.v }; cur = e.path; }
+    else if (e.k === 'update') { const o = info[e.path]; o.v = e.v; o.alpha = e.alpha; o.beta = e.beta; cur = e.path; }
+    else if (e.k === 'cut') { for (let j = e.from; j < e.n; j++) pruned.push(e.path + '.' + j); }
+    else if (e.k === 'exit') { info[e.path].st = 'done'; info[e.path].v = e.v; cur = e.path; }
+  }
+  return { info, cur, pruned };
+}
+const isPruned = (S, path) => S.pruned.some(p => path === p || path.indexOf(p + '.') === 0);
+function abMessage(k) {
+  if (k === 0) return 'Prêt. Appuyez sur « Suivant » : on part de la racine avec α = −∞ et β = +∞.';
+  const e = G3.run.ev[k - 1], who = nodeName(e.path);
+  if (e.k === 'enter') return 'Entrée dans ' + who + ' (' + (e.isMax ? 'Max' : 'Min') + ') avec α = ' + fmt(e.alpha) + ' et β = ' + fmt(e.beta) + '.';
+  if (e.k === 'leaf') return 'Feuille évaluée : ' + e.v + '.';
+  if (e.k === 'update') {
+    let s = 'Mise à jour de ' + who + ' : valeur ' + fmt(e.v) + ', ' + (e.isMax ? 'α' : 'β') + ' = ' + fmt(e.isMax ? e.alpha : e.beta) + '.';
+    if (e.alpha >= e.beta) s += ' Comme α ≥ β (' + fmt(e.alpha) + ' ≥ ' + fmt(e.beta) + '), ' + (e.last ? 'tous les fils ont déjà été vus.' : 'on coupe.');
+    return s;
+  }
+  if (e.k === 'cut') { const r = e.n - e.from; return 'Coupure ' + (e.isMax ? 'β' : 'α') + ' sur ' + who + ' : ' + r + ' fils restant' + (r > 1 ? 's' : '') + ' élagué' + (r > 1 ? 's' : '') + '. Ils ne peuvent plus changer le résultat.'; }
+  const w = who.charAt(0).toUpperCase() + who.slice(1);
+  return w + ' vaut ' + fmt(e.v) + '.';
+}
+const abCountAt = k => { let c = 0; for (let i = 0; i < k; i++) if (G3.run.ev[i].k === 'leaf') c++; return c; };
+function abRender() {
+  if (!$('#ab-svg')) return;
+  const S = abState(G3.k), L = layoutTree(G3.tree, true, 26, 58, 22, 28);
+  drawTree($('#ab-svg'), L, {
+    minW: Math.round(L.width), fs: 11,
+    pruned: p => isPruned(S, p),
+    nodeCls: n => {
+      if (isPruned(S, n.path)) return 'pruned' + (G3.sel === n.path ? ' sel' : '');
+      let c = ''; const i = S.info[n.path];
+      if (i) c = (i.st === 'done' || i.st === 'leaf') ? 'done' : 'open';
+      if (n.path === S.cur && i && i.st === 'open') c = 'cur';
+      if (G3.sel === n.path) c += ' sel';
+      return c;
+    },
+    nodeText: n => { if (n.leaf) return String(n.value); const i = S.info[n.path]; return (i && isFinite(i.v)) ? String(i.v) : '?'; },
+    above: n => { const i = S.info[n.path]; return (i && n.path === S.cur && i.st === 'open') ? 'α=' + fmt(i.alpha) + ' β=' + fmt(i.beta) : ''; },
+    onLeaf: n => { G3.sel = n.path; abRender(); }
+  });
+  $('#ab-msg').textContent = abMessage(G3.k);
+  $('#ab-count').textContent = abCountAt(G3.k) + ' / 27';
+  $('#ab-root').textContent = G3.k === G3.run.ev.length ? String(G3.run.val) : '?';
+  const ci = S.cur && S.info[S.cur];
+  $('#ab-ab').textContent = (ci && ci.alpha !== undefined) ? 'α=' + fmt(ci.alpha) + ' β=' + fmt(ci.beta) : '–';
+  $('#ab-prev').disabled = G3.k === 0;
+  $('#ab-next').disabled = G3.k === G3.run.ev.length;
+  const has = G3.sel !== null;
+  $('#ab-inc').disabled = !has; $('#ab-dec').disabled = !has;
+  $('#ab-selinfo').textContent = has ? 'Feuille sélectionnée : ' + nodeName(G3.sel).replace('le nœud ', '') + ' = ' + pathGet(G3.tree, G3.sel) : 'Touchez une feuille pour la sélectionner, puis changez sa valeur.';
+  abBars();
+}
+function abBars() {
+  const cur = G3.run.leaves, best = runAB(orderTree(G3.tree, true, true)).leaves, worst = runAB(orderTree(G3.tree, true, false)).leaves;
+  const rows = [['Minimax', 27, 'mm'], ['Ordre actuel', cur, ''], ['Meilleur ordre', best, ''], ['Pire ordre', worst, '']];
+  const box = $('#ab-bars'); box.innerHTML = '';
+  rows.forEach(r => {
+    const d = h('div', { class: 'cmpr ' + r[2] }, h('span', null, r[0]), h('div', null, h('i', { style: 'width:' + Math.round(r[1] / 27 * 100) + '%' })), h('em', null, String(r[1])));
+    box.append(d);
+  });
+  $('#ab-bars-note').textContent = 'La valeur de la racine (' + G3.run.val + ') est la même dans tous les cas : seul le nombre de feuilles évaluées change.';
+}
+function abNext() { if (G3.k < G3.run.ev.length) { G3.k++; abRender(); } }
+function abBump(d) {
+  if (G3.sel === null) return;
+  pathSet(G3.tree, G3.sel, Math.max(1, Math.min(20, pathGet(G3.tree, G3.sel) + d))); abRecompute();
+}
+function mountG3(root) {
+  root.innerHTML =
+    '<h2>Voir l’élagage à l’œuvre</h2>' +
+    '<p>Arbre de profondeur 3 avec 3 coups par position : 27 feuilles. Avancez pas à pas et regardez α et β évoluer. Les nœuds grisés sont élagués. Puis changez l’<b>ordre</b> des fils et comparez le nombre de feuilles évaluées.</p>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="ab-prev" type="button">◀ Précédent</button><button class="btn pri" id="ab-next" type="button">Suivant ▶</button><button class="btn" id="ab-play" type="button">Lecture</button><button class="btn" id="ab-all" type="button">Tout exécuter</button><button class="btn" id="ab-reset" type="button">Départ</button></div>' +
+    '<div class="gwrap"><svg class="g" id="ab-svg" role="img" aria-label="Arbre de jeu de profondeur 3 pour alpha-bêta"></svg></div>' +
+    '<div class="verdict" id="ab-msg" aria-live="polite"></div>' +
+    '<div class="gstats"><div class="stat"><span>Feuilles évaluées</span><b id="ab-count">0 / 27</b></div><div class="stat"><span>Valeur de la racine</span><b id="ab-root">?</b></div><div class="stat"><span>α, β du nœud courant</span><b id="ab-ab">–</b></div></div>' +
+    '<h3>Modifier l’arbre</h3>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="ab-rand" type="button">Nouvelles valeurs</button><button class="btn" id="ab-best" type="button">Meilleur ordre</button><button class="btn" id="ab-worst" type="button">Pire ordre</button></div>' +
+    '<div class="files" style="margin:8px 0"><span class="small" id="ab-selinfo" style="margin:0"></span><button class="btn sm" id="ab-dec" type="button" aria-label="Diminuer la valeur" disabled>−1</button><button class="btn sm" id="ab-inc" type="button" aria-label="Augmenter la valeur" disabled>+1</button></div>' +
+    '<h3>Feuilles évaluées selon l’ordre</h3><div class="cmp" id="ab-bars"></div><p class="small" id="ab-bars-note"></p>';
+  $('#ab-next').addEventListener('click', () => { abStop(); abNext(); });
+  $('#ab-prev').addEventListener('click', () => { abStop(); if (G3.k > 0) { G3.k--; abRender(); } });
+  $('#ab-all').addEventListener('click', () => { abStop(); G3.k = G3.run.ev.length; abRender(); });
+  $('#ab-reset').addEventListener('click', () => { abStop(); G3.k = 0; abRender(); });
+  $('#ab-play').addEventListener('click', () => {
+    if (G3.timer) { abStop(); return; }
+    if (G3.k === G3.run.ev.length) G3.k = 0;
+    $('#ab-play').textContent = 'Pause';
+    G3.timer = setInterval(() => { if (G3.k >= G3.run.ev.length) { abStop(); abRender(); return; } abNext(); }, 520);
+  });
+  $('#ab-rand').addEventListener('click', () => { G3.tree = randTree(3, 3, 1, 20); G3.sel = null; abRecompute(); });
+  $('#ab-best').addEventListener('click', () => { G3.tree = orderTree(G3.tree, true, true); G3.sel = null; abRecompute(); });
+  $('#ab-worst').addEventListener('click', () => { G3.tree = orderTree(G3.tree, true, false); G3.sel = null; abRecompute(); });
+  $('#ab-inc').addEventListener('click', () => abBump(1));
+  $('#ab-dec').addEventListener('click', () => abBump(-1));
+  if (!G3.run) G3.run = runAB(G3.tree);
+  abRender();
+}
+const G3_DEFAULT = () => [[[8, 5, 12], [3, 14, 9], [11, 4, 6]], [[2, 17, 7], [13, 1, 10], [15, 16, 3]], [[9, 6, 18], [4, 20, 5], [12, 8, 2]]];
+WORKSHOPS.push({ id: 'g3', title: 'Alpha-bêta', hint: 'Avancez pas à pas, observez α et β, puis comparez les ordres d’exploration.', mount: mountG3, leave: abStop, reset: () => { abStop(); Object.assign(G3, { tree: G3_DEFAULT(), run: null, k: 0, sel: null }); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  g1: {
+    title: 'Nim et attracteurs', level: 'Niveau 1 · Découvrir', time: '30 min', course: 'modeliser',
+    goal: 'Modéliser un jeu par un graphe, classer les positions en gagnantes ou perdantes avec un attracteur et repérer une stratégie gagnante.',
+    steps: [
+      'Dans « Jouez contre l’ordinateur », choisissez l’adversaire « Débutant » et jouez deux parties. Gagnez-vous à tous les coups ?',
+      'Choisissez l’adversaire « Expert » avec 12 allumettes et les prises 1, 2 ou 3. Gagnez-vous en commençant ? Et en laissant l’ordinateur commencer ?',
+      'Dans « Colorez le graphe », marquez P les positions où l’on ne peut plus jouer, puis avancez avec « Attracteur : tour suivant ». À chaque tour, relevez les positions ajoutées.',
+      'Relevez les positions P pour les prises {1, 2, 3}, puis {1, 3, 4} et {2, 3}. Quel est l’écart entre deux P consécutives ?',
+      'Pendant une partie, utilisez « Indice » : retrouvez ce coup gagnant avec votre coloriage.',
+      'Faites varier N de 5 à 14 avec les prises {1, 2, 3} : pour quelles valeurs de N le premier joueur gagne-t-il ?'
+    ],
+    defi: { q: 'Avec les prises {1, 2, 3} et N = 20, qui possède une stratégie gagnante, et laquelle ? Même question avec N = 22.',
+      a: '20 est un multiple de 4 : position <b>perdante</b> pour le premier joueur. Le second joue le complément à 4 (si l’adversaire retire k, il retire 4 − k). Pour N = 22, le premier joueur retire 2, laisse 20 et <b>gagne</b>.' },
+    qcm: [
+      { q: 'Dans un graphe de jeu à deux joueurs, comment les sommets sont-ils répartis ?', o: ['Chaque sommet appartient à exactement un joueur : celui qui doit jouer en cette position', 'Un sommet peut appartenir aux deux joueurs', 'Seuls les sommets terminaux sont attribués à un joueur', 'Ce sont les arcs qui appartiennent aux joueurs'], a: 0, w: 'Les sommets forment une partition S₁ ⊔ S₂ : une position indique sans ambiguïté qui joue.' },
+      { q: 'Nim avec prises de 1, 2 ou 3 : celui qui ne peut plus jouer perd. Il y a 20 allumettes. Le premier joueur a-t-il une stratégie gagnante ?', o: ['Oui, en retirant 1 allumette', 'Oui, en retirant 3 allumettes', 'Non : 20 est un multiple de 4, le second gagne en jouant le complément à 4', 'On ne peut pas le savoir sans simuler des parties'], a: 2, w: 'Les positions perdantes sont les multiples de 4. Depuis 20, tout coup mène à un non-multiple de 4 et le second revient sur un multiple de 4.' },
+      { q: 'Pour construire Attr(k+1) à partir de Attr(k), quand ajoute-t-on un sommet s appartenant à l’adversaire ?', o: ['Quand au moins un de ses successeurs est dans Attr(k)', 'Quand s a au moins un successeur et que tous ses successeurs sont dans Attr(k)', 'Quand s n’a aucun successeur', 'Quand son prédécesseur est dans Attr(k)'], a: 1, w: 'L’adversaire choisit son coup : il n’est piégé que si tous ses coups mènent dans l’attracteur. La condition « au moins un successeur » évite d’ajouter à tort les terminaux perdants pour le joueur.' },
+      { q: 'Le graphe est fini, acyclique, et chaque partie a un vainqueur. Que dire d’une position quelconque ?', o: ['Elle est gagnante pour exactement un des deux joueurs', 'Elle peut être gagnante pour les deux joueurs', 'Elle peut n’être gagnante pour personne', 'Cela dépend de la profondeur de l’arbre'], a: 0, w: 'Dans ce cadre, les deux attracteurs partitionnent l’ensemble des positions.' },
+      { q: 'Dans un graphe avec cycles, une position n’appartient à aucun des deux attracteurs. Que conclure ?', o: ['Le joueur qui doit jouer perd', 'Le joueur qui doit jouer gagne', 'Aucun joueur ne peut forcer la victoire : la partie est nulle (ou infinie) avec un jeu optimal', 'L’algorithme de l’attracteur s’est trompé'], a: 2, w: 'Chacun peut éviter de perdre : les cycles permettent de repousser indéfiniment la fin de la partie.' }
+    ]
+  },
+  g2: {
+    title: 'Minimax', level: 'Niveau 2 · Calculer', time: '25 min', course: 'minimax',
+    goal: 'Évaluer un arbre de jeu avec minimax : remonter les valeurs des feuilles en prenant le maximum aux nœuds Max et le minimum aux nœuds Min.',
+    steps: [
+      'Relevez les valeurs des feuilles. Calculez A, B et C (nœuds Min), puis R (nœud Max). Saisissez-les et cliquez sur « Vérifier ».',
+      'Cliquez sur « Nouvel arbre » et recommencez deux fois. Cherchez à aller plus vite.',
+      'Passez la racine en Min : A, B et C deviennent des nœuds Max. Recalculez R.',
+      'Quand R est juste, lisez le coup optimal indiqué : vers quel fils faut-il jouer ?',
+      'Utilisez « Voir la correction » et comparez avec votre démarche.'
+    ],
+    defi: { q: 'Un arbre a une profondeur 4 et 5 coups par position. Combien de feuilles minimax doit-il évaluer ? Et avec 10 coups par position et une profondeur 6 ?',
+      a: '5⁴ = <b>625</b> feuilles ; 10⁶ = <b>1 000 000</b> de feuilles. Le coût est en O(b<sup>p</sup>) : il explose quand la profondeur augmente.' },
+    qcm: [
+      { q: 'La racine est un nœud Max. Ses trois fils sont des nœuds Min dont les feuilles valent (3, 5), (2, 9) et (4, 4). Quelle est la valeur minimax de la racine ?', o: ['2', '3', '4', '9'], a: 2, w: 'Les nœuds Min valent 3, 2 et 4. La racine prend le maximum : 4.' },
+      { q: 'Avec b coups par position et une profondeur p, combien de nœuds minimax visite-t-il ?', o: ['O(b·p)', 'O(b^p)', 'O(p^b)', 'O(b + p)'], a: 1, w: 'Chaque niveau multiplie le nombre de nœuds par b : de l’ordre de b^p feuilles.' },
+      { q: 'Pourquoi limite-t-on la profondeur et utilise-t-on une heuristique h ?', o: ['Parce que l’arbre complet est trop grand : h estime la valeur des positions à la profondeur limite', 'Parce que minimax n’est pas correct sans heuristique', 'Pour éviter les cycles dans le graphe', 'Pour que le jeu devienne à somme nulle'], a: 0, w: 'Aux échecs l’arbre complet est hors de portée. On coupe à la profondeur p et on remplace le résultat exact par une estimation.' }
+    ]
+  },
+  g3: {
+    title: 'Alpha-bêta', level: 'Niveau 3 · Optimiser', time: '30 min', course: 'alphabeta',
+    goal: 'Comprendre comment α et β évitent d’évaluer des branches inutiles et mesurer l’effet de l’ordre des coups sur le nombre de feuilles évaluées.',
+    steps: [
+      'Avancez avec « Suivant » jusqu’à la première coupure. Notez le nœud concerné, α et β.',
+      'Cliquez sur « Tout exécuter » : combien de feuilles ont été évaluées sur 27 ? Quelle est la valeur de la racine ?',
+      'Cliquez sur « Meilleur ordre » puis « Tout exécuter » : que devient le nombre de feuilles ? Même question avec « Pire ordre ».',
+      'Sélectionnez une feuille et changez sa valeur. La valeur de la racine change-t-elle ? Et le nombre de feuilles évaluées ?',
+      'Dans le diagramme en barres, comparez avec minimax (27 feuilles). La valeur de la racine est-elle toujours la même ?'
+    ],
+    defi: { q: 'Au mieux, alpha-bêta évalue b<sup>⌈p/2⌉</sup> + b<sup>⌊p/2⌋</sup> − 1 feuilles. Calculez ce minimum pour b = 3, p = 3, puis pour b = 30, p = 6, et comparez avec minimax.',
+      a: 'Pour b = 3 et p = 3 : 3² + 3 − 1 = <b>11</b> feuilles contre 27 (c’est ce que donne « Meilleur ordre »). Pour b = 30 et p = 6 : 2 × 30³ − 1 = <b>53 999</b> feuilles contre 30⁶ = <b>729 000 000</b> pour minimax.' },
+    qcm: [
+      { q: 'Racine Max. Le 1er fils vaut 6. Dans le 2e fils (nœud Min), la première feuille évaluée vaut 4. Que fait alpha-bêta ?', o: ['Il évalue quand même toutes les autres feuilles de ce fils', 'Il coupe : les autres feuilles de ce fils sont ignorées', 'Il remplace la valeur de la racine par 4', 'Il recommence l’exploration depuis la racine'], a: 1, w: 'Ici α = 6 et la première feuille donne β ≤ 4. Comme α ≥ β, ce fils vaudra au plus 4 : Max ne le choisira jamais.' },
+      { q: 'Quelle affirmation sur alpha-bêta est vraie ?', o: ['Il peut renvoyer une valeur différente de minimax, mais plus vite', 'Il renvoie toujours la même valeur que minimax ; le nombre de nœuds visités dépend de l’ordre des fils', 'Sa complexité est toujours en O(b^(p/2))', 'Il n’est utilisable que pour les jeux à somme non nulle'], a: 1, w: 'L’élagage ne retire que des branches inutiles. Meilleur cas : O(b^(p/2)) ; pire cas : O(b^p).' },
+      { q: 'Dans un nœud Max, quand une coupure β se produit-elle ?', o: ['Quand la valeur courante v devient supérieure ou égale à β', 'Quand toutes les feuilles ont été évaluées', 'Quand α devient négatif', 'Quand v devient inférieur à α'], a: 0, w: 'Si v ≥ β, le nœud parent (Min) a déjà une meilleure option : il n’ira jamais dans cette branche.' },
+      { q: 'Pour que l’élagage soit le plus efficace, dans quel ordre faut-il examiner les fils d’un nœud Max ?', o: ['Du meilleur au moins bon', 'Du moins bon au meilleur', 'Dans un ordre aléatoire, c’est équivalent', 'Peu importe, α–β examine toujours tout'], a: 0, w: 'Un excellent premier fils relève α tout de suite, ce qui déclenche beaucoup de coupures. En pratique, on trie les coups avec une heuristique.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'modeliser', t: 'Modéliser un jeu', h: `
+<p>On étudie les jeux où deux joueurs jouent <b>à tour de rôle</b>, voient toute la position (<b>information parfaite</b>), sans hasard, et dont les parties se terminent : échecs, dames, Puissance 4, Nim.</p>
+<h3>Le graphe de jeu</h3>
+<p>Un graphe de jeu est un graphe orienté G = (S, A). Ses sommets (les <b>positions</b>) sont partitionnés en deux ensembles :</p>
+<div class="formula">S = S₁ ⊔ S₂ : S_i contient les positions où c’est au joueur i de jouer</div>
+<p>Un arc s → t est un <b>coup</b>. Les sommets sans successeur forment l’ensemble F des <b>positions terminales</b> : chacune désigne un vainqueur (ou un match nul). Une <b>partie</b> est un chemin du graphe qui part de la position initiale s₀.</p>
+<h3>Stratégie</h3>
+<p>Une <b>stratégie</b> du joueur i est une application σ qui associe à chaque position de S_i non terminale l’un de ses successeurs. Elle est <b>gagnante depuis s</b> si toute partie issue de s où i joue selon σ est gagnée par i, quoi que fasse l’adversaire.</p>
+<h3>Exemple : Nim</h3>
+<p>Les positions sont le nombre d’allumettes restantes et les arcs vont de n à n − m, avec m une prise autorisée. Comme les deux joueurs ont les mêmes coups, on se contente de noter chaque position <b>G</b> (celui qui doit jouer gagne) ou <b>P</b> (il perd).</p>
+<h3>Attention aux cycles</h3>
+<p>Dans un graphe avec cycles, une partie peut ne jamais finir. On la déclare alors nulle, et il faut en tenir compte dans la définition de « position gagnante ».</p>
+<div class="retain"><b>À retenir.</b> Un jeu à deux joueurs à information parfaite se représente par un graphe orienté dont les sommets sont partagés entre les deux joueurs. Une stratégie gagnante garantit la victoire contre toute défense.</div>` });
+
+COURSE.push({ id: 'attracteurs', t: 'Attracteurs et positions gagnantes', h: `
+<p>Pour savoir qui gagne depuis chaque position, on part des positions déjà gagnantes et on remonte les arcs. L’ensemble construit est l’<b>attracteur</b>.</p>
+<h3>Définition</h3>
+<p>Soit F_i l’ensemble des positions terminales gagnantes pour le joueur i.</p>
+<div class="formula pre">Attr₀ = F_i
+Attr_{k+1} = Attr_k
+   ∪ { s ∈ S_i      | ∃ t ∈ succ(s), t ∈ Attr_k }
+   ∪ { s ∈ S_{3-i}  | succ(s) ≠ ∅ et ∀ t ∈ succ(s), t ∈ Attr_k }
+Attr = ⋃ Attr_k</div>
+<p>Un sommet du joueur i entre dès qu’<b>un</b> de ses coups mène dans l’attracteur. Un sommet de l’adversaire n’entre que si <b>tous</b> ses coups y mènent.</p>
+<h3>Théorème</h3>
+<p>Depuis toute position de Attr(F_i), le joueur i possède une stratégie gagnante : il joue un coup qui mène à un rang strictement plus petit. Ce rang décroît à chaque coup, donc la partie se termine dans F_i.</p>
+<p><b>Corollaire.</b> Si le graphe est fini, acyclique et sans match nul, chaque position est gagnante pour exactement un des deux joueurs.</p>
+<h3>Programmer l’attracteur</h3>
+<pre class="code">def attracteur(succ, proprio, cible):
+    """succ : dict sommet -&gt; liste de successeurs
+       proprio : dict sommet -&gt; 0 ou 1 (joueur qui joue en ce sommet)
+       cible : terminaux gagnants pour le joueur 0"""
+    attr = set(cible)
+    change = True
+    while change:
+        change = False
+        for s in succ:
+            if s in attr:
+                continue
+            if proprio[s] == 0 and any(t in attr for t in succ[s]):
+                attr.add(s); change = True
+            elif proprio[s] == 1 and succ[s] and all(t in attr for t in succ[s]):
+                attr.add(s); change = True
+    return attr</pre>
+<p>Cette version balaie tous les sommets à chaque tour : coût en O(|S|·(|S|+|A|)). En tenant à jour un compteur de successeurs restants pour chaque sommet, on obtient O(|S|+|A|).</p>
+<div class="retain"><b>À retenir.</b> Position gagnante : j’ai un coup vers une position perdante pour l’autre. Position perdante : tous mes coups mènent à une position gagnante pour l’autre.</div>` });
+
+COURSE.push({ id: 'minimax', t: 'Évaluer une position : minimax', h: `
+<p>Dans la plupart des jeux, le graphe est trop grand pour calculer l’attracteur complet. On explore l’arbre des coups jusqu’à une <b>profondeur p</b> et on évalue les feuilles avec une <b>heuristique</b> h, valeur du point de vue de Max : grande si Max est bien placé.</p>
+<h3>Valeur minimax</h3>
+<div class="formula pre">v(s, p) = h(s)                              si p = 0 ou s terminal
+v(s, p) = max { v(t, p-1) | t ∈ succ(s) }   si c’est à Max de jouer
+v(s, p) = min { v(t, p-1) | t ∈ succ(s) }   si c’est à Min de jouer</div>
+<p>Max choisit le coup qui maximise la valeur, Min celui qui la minimise. On dessine un nœud Max par △ et un nœud Min par ▽.</p>
+<pre class="code">def minimax(s, p, est_max):
+    if p == 0 or terminal(s):
+        return h(s)
+    valeurs = [minimax(t, p - 1, not est_max) for t in successeurs(s)]
+    return max(valeurs) if est_max else min(valeurs)</pre>
+<h3>Coût</h3>
+<ul><li><b>Temps</b> : avec b coups par position, on visite O(b<sup>p</sup>) nœuds.</li><li><b>Espace</b> : O(p), puisque l’exploration est en profondeur.</li><li><b>Négamax</b> : si h est antisymétrique, v(s) = max<sub>t</sub> −v(t) ; un seul cas à écrire.</li></ul>
+<table class="ctable"><thead><tr><th>b</th><th>p</th><th>Feuilles b<sup>p</sup></th></tr></thead><tbody><tr><td>3</td><td>3</td><td>27</td></tr><tr><td>10</td><td>6</td><td>1 000 000</td></tr><tr><td>30</td><td>6</td><td>729 000 000</td></tr></tbody></table>
+<div class="retain"><b>À retenir.</b> La valeur d’un nœud est toujours la valeur d’un de ses fils. Le coup à jouer est celui qui mène à ce fils.</div>` });
+
+COURSE.push({ id: 'alphabeta', t: 'Élaguer : alpha-bêta', h: `
+<p>Minimax évalue des branches dont on peut prouver qu’elles ne changeront pas le résultat. L’élagage α–β les saute.</p>
+<h3>Les deux bornes</h3>
+<p>α est la meilleure valeur que Max est déjà sûr d’obtenir sur le chemin menant au nœud. β est la meilleure valeur (la plus basse) que Min est déjà sûr d’obtenir. On démarre avec α = −∞ et β = +∞.</p>
+<p><b>Coupure</b> dès que α ≥ β : l’adversaire ne laissera jamais la partie arriver ici, les fils restants sont ignorés. On parle de coupure β sur un nœud Max et de coupure α sur un nœud Min.</p>
+<pre class="code">def alphabeta(s, p, alpha, beta, est_max):
+    if p == 0 or terminal(s):
+        return h(s)
+    if est_max:
+        v = float('-inf')
+        for t in successeurs(s):
+            v = max(v, alphabeta(t, p - 1, alpha, beta, False))
+            alpha = max(alpha, v)
+            if alpha &gt;= beta:
+                break              # coupure beta
+        return v
+    v = float('inf')
+    for t in successeurs(s):
+        v = min(v, alphabeta(t, p - 1, alpha, beta, True))
+        beta = min(beta, v)
+        if alpha &gt;= beta:
+            break                  # coupure alpha
+    return v</pre>
+<h3>Efficacité</h3>
+<ul><li>Le résultat est <b>identique</b> à celui de minimax : seul le nombre de nœuds visités change.</li><li>Pire cas (mauvais ordre des fils) : O(b<sup>p</sup>).</li><li>Meilleur cas (meilleurs coups examinés en premier) : O(b<sup>p/2</sup>), ce qui permet de chercher environ deux fois plus profond à temps égal.</li><li>En pratique, on trie les coups avec une heuristique avant de les explorer.</li></ul>
+<div class="retain"><b>À retenir.</b> Alpha-bêta donne la même valeur que minimax en visitant moins de nœuds. Son efficacité dépend de l’ordre dans lequel on examine les fils.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Position</dt><dd>Sommet du graphe de jeu : état de la partie, avec le joueur dont c’est le tour.</dd>
+<dt>Coup</dt><dd>Arc du graphe, qui mène d’une position à une autre.</dd>
+<dt>Position terminale</dt><dd>Position sans coup possible : elle désigne le vainqueur ou un match nul.</dd>
+<dt>Stratégie</dt><dd>Règle qui indique le coup à jouer dans chaque position du joueur.</dd>
+<dt>Stratégie gagnante</dt><dd>Stratégie qui gagne contre toute défense de l’adversaire.</dd>
+<dt>Attracteur</dt><dd>Ensemble des positions depuis lesquelles un joueur peut forcer la victoire.</dd>
+<dt>Heuristique</dt><dd>Fonction qui estime la valeur d’une position non terminale.</dd>
+<dt>Minimax</dt><dd>Calcul de la valeur d’une position en alternant maximum (Max) et minimum (Min).</dd>
+<dt>Alpha-bêta</dt><dd>Version de minimax qui ignore les branches inutiles grâce aux bornes α et β.</dd>
+<dt>Coupure</dt><dd>Arrêt de l’exploration des fils d’un nœud lorsque α ≥ β.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'g1' };
+const AS = { key: 'g1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'modeliser' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open; box.classList.toggle('sheet', AS.open && isSmall());
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  AS.open = !AS.open; renderAct();
+}
+$('#bAct').addEventListener('click', actToggle);
+
+/* ---------- cours ---------- */
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : la théorie des jeux'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+/* ---------- aide ---------- */
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Trois ateliers sur la théorie des jeux à deux joueurs (ITC, CPGE PSI*) : jeu de Nim et attracteurs, minimax, élagage alpha-bêta. Les jeux sont volontairement simples pour voir les algorithmes à l’œuvre.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille toutes les notions.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+
+/* ---------- démarrage ---------- */
+(function init() {
+  AS.open = !isSmall();
+  renderSeg(); mountWs(); renderAct(); renderCourse();
+})();
+</script>
+
+</body></html>
