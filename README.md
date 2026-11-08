@@ -8,6 +8,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 ## Sommaire
 
+- [Architecture et Représentation](#architecture-et-représentation)
 - [Structures de données](#structures-de-données)
 - [Algorithmique](#algorithmique)
 - [Intelligence artificielle](#intelligence-artificielle)
@@ -16,6 +17,12 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 - [Contribuer](#contribuer)
 
 ---
+
+## Architecture et Représentation
+
+| Outil | Description |
+|---|---|
+| [Représentation des entiers et flottants](https://siicpgeamansur.github.io/ITC/representation_entiers_flottants.html) | Visualisation de la représentation binaire des entiers (signés/non signés, complément à deux) et des nombres à virgule flottante (norme IEEE 754). |
 
 ## Structures de données
 
@@ -30,19 +37,20 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | [Parcours de graphes](https://siicpgeamansur.github.io/ITC/Parcours_de_graphes_animation.html) | Animation des différents parcours de graphes au programme de CPGE en deuxième année. |
 | [Algorithmes de tri](https://siicpgeamansur.github.io/ITC/algorithmes_tri.html) | Page pour s'entraîner aux algorithmes de tri. |
 | [Programmation dynamique](https://siicpgeamansur.github.io/ITC/programmation_dynamique.html) | Illustration de la résolution de certains types de problèmes par programmation dynamique. |
+| [Récursivité](https://siicpgeamansur.github.io/ITC/recursivite.html) | Visualisation des appels récursifs et de l'empilement/dépilement des cadres d'exécution (pile d'appels). |
+| [Théorie des jeux](https://siicpgeamansur.github.io/ITC/theorie_des_jeux.html) | Exploration et analyse algorithmique des jeux à deux joueurs (arbres de jeu, algorithme Minimax, élagage Alpha-Bêta). |
 
 ## Intelligence artificielle
 
 | Outil | Description |
 |---|---|
-| [IA](https://siicpgeamansur.github.io/ITC/ia.html) | Atelier complet sur l'intelligence artificielle et l'apprentissage automatique : données, attributs et étiquettes, k plus proches voisins sur un jeu de données réglable (taille et équilibre), k-moyennes non supervisées, régression linéaire et descente de gradient avec courbe du coût et rôle du taux d'apprentissage α, arbres de décision et entropie, évaluation des modèles (matrice de confusion, précision, rappel, surapprentissage), perceptron et portes logiques (ET, OU, XOR), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
-
+| [IA](https://siicpgeamansur.github.io/ITC/ia.html) | Atelier complet sur l'intelligence artificielle et l'apprentissage automatique : données, attributs et étiquettes, k plus proches voisins sur un jeu de données réglable (taille et équilibre), k-moyennes non supervisées, régression linéaire et descente de gradient avec courbe du coût et rôle du taux d'apprentissage $\alpha$, arbres de décision et entropie, évaluation des modèles (matrice de confusion, précision, rappel, surapprentissage), perceptron et portes logiques (ET, OU, XOR), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
 
 ## Bases de données
 
 | Outil | Description |
 |---|---|
-| [SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Atelier complet sur SQL et les bases de données relationnelles : modèle relationnel et algèbre (π, σ, ⋈), console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
+| [SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Atelier complet sur SQL et les bases de données relationnelles : modèle relationnel et algèbre ($\pi$, $\sigma$, $\bowtie$), console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
 
 ---
 
