@@ -54,9 +54,20 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 ## A trier
 
+| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.html) | |
+
+| 1ère année | [Algorithmes gloutons](https://siicpgeamansur.github.io/ITC/algorithmes_gloutons.html) | |
+
 | 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
 
 | 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+
+| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+
+| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+
+| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+
 
 ---
 
