@@ -1,0 +1,1352 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier SQL</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* barres de tri */
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px;background:#fff;margin:8px 0}
+.rowname{font-size:12px;color:var(--muted);margin:4px 2px 0}
+.bars{display:flex;align-items:flex-end;gap:4px;height:176px;padding-top:4px}
+.bars.short{height:120px}
+.bcol{flex:1 1 0;max-width:54px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bcol .v{font:600 12px var(--font-mono);margin-bottom:2px}
+.bcol .b{width:100%;border-radius:5px 5px 0 0;background:#9fb4ca;border:1px solid #6f8aa6;min-height:3px}
+.bcol .i{font:11px var(--font-mono);color:var(--muted);margin-top:3px}
+.bcol.sorted .b{background:rgba(30,122,46,.75);border-color:var(--ok)}
+.bcol.scan .b{background:var(--accent);border-color:var(--accent-ink)}
+.bcol.key .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.swap .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.min .b{background:var(--violet);border-color:#52308f}
+.bcol.pivot .b{background:var(--bad);border-color:#8e1d15}
+.bcol.left .b{background:#b9d3ee;border-color:var(--accent)}
+.bcol.right .b{background:#f3d6a6;border-color:var(--warn)}
+.bcol.dim{opacity:.32}
+.bcol.empty .b{background:transparent;border:1px dashed var(--line)}
+.leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid #6f8aa6;background:#9fb4ca}
+.leg i.s{background:rgba(30,122,46,.75);border-color:var(--ok)}.leg i.c{background:var(--accent);border-color:var(--accent-ink)}.leg i.k{background:#e8a33a;border-color:var(--warn)}.leg i.m{background:var(--violet);border-color:#52308f}.leg i.p{background:var(--bad);border-color:#8e1d15}
+/* cellules (comptage) */
+.cells{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px}
+.cell{width:40px;text-align:center}
+.cell .v{border:1px solid var(--line);border-radius:6px;padding:6px 0;font:600 14px var(--font-mono);background:#fff;min-height:33px}
+.cell .i{font:11px var(--font-mono);color:var(--muted);margin-top:2px}
+.cell.scan .v{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cell.key .v{background:#e8a33a;border-color:var(--warn)}
+.cell.sorted .v{background:rgba(30,122,46,.2);border-color:var(--ok)}
+.cell.zero .v{color:#9aa3ad}
+/* comparaison */
+.cmpr{display:grid;grid-template-columns:120px 1fr 80px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.cmpr i{display:block;height:12px;background:var(--accent);border-radius:3px;min-width:2px}
+.cmpr em{font-style:normal;font-family:var(--font-mono);text-align:right}
+.seqr{display:flex;gap:4px;flex-wrap:wrap}
+.card{border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:600 12.5px var(--font-mono);background:#fff}
+.card.t1{border-color:#2e6da4;color:#1b4a76}.card.t2{border-color:#9a5b00;color:#7a4700}.card.t3{border-color:#7b4fc2;color:#52308f}.card.t4{border-color:#1e7a2e;color:#1e7a2e}.card.t5{border-color:#c0281f;color:#8e1d15}.card.t6{border-color:#33475b;color:#33475b}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:30px}.cell .v{font-size:12px}
+  .cmpr{grid-template-columns:90px 1fr 70px}
+  .bcol .v{font-size:11px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}.bcol .b{transition:height .15s}}
+.sqlbox{width:100%;min-height:118px;resize:vertical;font:13px/1.5 var(--font-mono);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;tab-size:2}
+.pipe{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin:4px 0 8px}
+.pstep{border:1px solid var(--line);border-radius:8px;padding:4px 10px;background:var(--panel);min-width:80px}
+.pstep b{display:block;font:600 12px var(--font-mono)}.pstep span{font-size:12px;color:var(--muted)}
+.parrow{align-self:center;color:var(--muted)}
+.gboxes{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+.gbox{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:3px 9px;font:12.5px var(--font-mono)}
+.gbox.out{opacity:.55;text-decoration:line-through;border-color:var(--line);background:var(--panel2);color:var(--muted)}
+.dt td.num{text-align:right}
+.dt tr.hl td{background:rgba(232,163,58,.32)}
+.kpk{text-decoration:underline;font-weight:600}.kfk{color:var(--violet);font-weight:500}
+.fkb{border:1px solid var(--violet);background:transparent;color:var(--violet);border-radius:6px;padding:0 8px;font:12.5px var(--font-mono);cursor:pointer}
+.fkb:hover{background:var(--violet);color:#fff}
+.tdet{margin:8px 0;border:1px solid var(--line);border-radius:8px;padding:6px 10px}.tdet summary{cursor:pointer;font-weight:500}
+.dgm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.dgm .ent{border:2px solid var(--accent);border-radius:8px;padding:5px 12px;font-weight:600;background:var(--accent-soft);color:var(--accent-ink)}
+.dgm .lnk{font:600 13px var(--font-mono);color:var(--muted)}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><ellipse cx="13" cy="6" rx="8" ry="3.2" fill="var(--accent)"/><path d="M5 6v6c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2V6" fill="none" stroke="var(--accent)" stroke-width="2"/><path d="M5 12v6c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2v-6" fill="none" stroke="var(--ok)" stroke-width="2"/></svg><span>Atelier SQL <small>ITC · CPGE 2<sup>e</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-sql-v1', ex: 'atelier-sql-ex-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+class SqlError extends Error {}
+/* ---- base de données : bibliothèque (pas de NULL, pas de dates : jour = entier) ---- */
+const DB = {
+  auteurs: { cols: ['id', 'nom', 'pays', 'naissance'], pk: ['id'], fk: {}, rows: [
+    [1, 'Hugo', 'France', 1802], [2, 'Zola', 'France', 1840], [3, 'Camus', 'France', 1913], [4, 'Orwell', 'Royaume-Uni', 1903],
+    [5, 'Asimov', 'États-Unis', 1920], [6, 'Tolstoï', 'Russie', 1828], [7, 'Calvino', 'Italie', 1923]] },
+  livres: { cols: ['id', 'titre', 'auteur_id', 'annee', 'genre', 'pages'], pk: ['id'], fk: { auteur_id: 'auteurs.id' }, rows: [
+    [1, 'Les Misérables', 1, 1862, 'roman', 1900], [2, 'Notre-Dame de Paris', 1, 1831, 'roman', 560], [3, 'Germinal', 2, 1885, 'roman', 590],
+    [4, 'L\'Assommoir', 2, 1877, 'roman', 480], [5, 'L\'Étranger', 3, 1942, 'roman', 190], [6, 'La Peste', 3, 1947, 'roman', 330],
+    [7, '1984', 4, 1949, 'science-fiction', 330], [8, 'La Ferme des animaux', 4, 1945, 'fable', 140], [9, 'Fondation', 5, 1951, 'science-fiction', 255],
+    [10, 'Les Robots', 5, 1950, 'science-fiction', 280], [11, 'Guerre et Paix', 6, 1869, 'roman', 1300], [12, 'Les Contemplations', 1, 1856, 'poésie', 400]] },
+  lecteurs: { cols: ['id', 'nom', 'ville'], pk: ['id'], fk: {}, rows: [
+    [1, 'Alice', 'Lyon'], [2, 'Bruno', 'Paris'], [3, 'Chloé', 'Lyon'], [4, 'David', 'Lille'], [5, 'Emma', 'Paris'], [6, 'Farid', 'Nantes']] },
+  emprunts: { cols: ['id', 'livre_id', 'lecteur_id', 'jour'], pk: ['id'], fk: { livre_id: 'livres.id', lecteur_id: 'lecteurs.id' }, rows: [
+    [1, 1, 1, 3], [2, 7, 1, 10], [3, 7, 2, 12], [4, 5, 2, 15], [5, 5, 3, 20], [6, 9, 3, 21], [7, 3, 4, 32], [8, 7, 4, 35],
+    [9, 10, 5, 36], [10, 9, 5, 38], [11, 2, 1, 39], [12, 6, 2, 42], [13, 7, 5, 44], [14, 11, 3, 45], [15, 8, 1, 50], [16, 5, 4, 51]] }
+};
+function checkInsert(db, vals) {
+  const errs = [];
+  if (vals.some(v => !Number.isInteger(v))) return { ok: false, errs: ['Les quatre champs doivent être des nombres entiers.'] };
+  if (db.emprunts.rows.some(r => r[0] === vals[0])) errs.push('Clé primaire : id = ' + vals[0] + ' existe déjà dans emprunts, deux lignes ne peuvent pas avoir la même clé primaire.');
+  if (!db.livres.rows.some(r => r[0] === vals[1])) errs.push('Clé étrangère : livre_id = ' + vals[1] + ' ne correspond à aucun livres.id.');
+  if (!db.lecteurs.rows.some(r => r[0] === vals[2])) errs.push('Clé étrangère : lecteur_id = ' + vals[2] + ' ne correspond à aucun lecteurs.id.');
+  return { ok: !errs.length, errs };
+}
+/* ---- analyse lexicale ---- */
+const KW = new Set(['SELECT', 'DISTINCT', 'FROM', 'WHERE', 'GROUP', 'BY', 'HAVING', 'ORDER', 'LIMIT', 'OFFSET', 'AS', 'AND', 'OR', 'NOT', 'IN', 'IS', 'NULL', 'LIKE', 'BETWEEN', 'JOIN', 'INNER', 'LEFT', 'OUTER', 'CROSS', 'ON', 'UNION', 'INTERSECT', 'EXCEPT', 'ALL', 'ASC', 'DESC', 'EXISTS']);
+function tokenize(src) {
+  const t = []; let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === '-' && src[i + 1] === '-') { while (i < src.length && src[i] !== '\n') i++; continue; }
+    if (/[0-9]/.test(c)) { let j = i; while (j < src.length && /[0-9.]/.test(src[j])) j++; t.push({ k: 'num', v: parseFloat(src.slice(i, j)), p: i, e: j }); i = j; continue; }
+    if (c === "'") {
+      let j = i + 1, s = '';
+      for (;;) {
+        if (j >= src.length) throw new SqlError('Chaîne non terminée : il manque une apostrophe fermante.');
+        if (src[j] === "'") { if (src[j + 1] === "'") { s += "'"; j += 2; continue; } break; }
+        s += src[j++];
+      }
+      t.push({ k: 'str', v: s, p: i, e: j + 1 }); i = j + 1; continue;
+    }
+    if (/[A-Za-z_\u00C0-\u00FF]/.test(c)) {
+      let j = i; while (j < src.length && /[A-Za-z0-9_\u00C0-\u00FF]/.test(src[j])) j++;
+      const w = src.slice(i, j), u = w.toUpperCase();
+      t.push(KW.has(u) ? { k: 'kw', v: u, p: i, e: j } : { k: 'id', v: w, p: i, e: j }); i = j; continue;
+    }
+    const two = src.slice(i, i + 2);
+    if (['<=', '>=', '<>', '!=', '||'].includes(two)) { t.push({ k: 'op', v: two, p: i, e: i + 2 }); i += 2; continue; }
+    if ('=<>+-*/%(),.;'.includes(c)) { t.push({ k: 'op', v: c, p: i, e: i + 1 }); i++; continue; }
+    if (c === '"') throw new SqlError('Les guillemets doubles ne sont pas utilisés ici : écrivez les chaînes entre apostrophes, par exemple \'roman\'.');
+    throw new SqlError('Caractère inattendu « ' + c + ' ».');
+  }
+  t.push({ k: 'eof', p: src.length, e: src.length });
+  return t;
+}
+/* ---- analyse syntaxique ---- */
+class Parser {
+  constructor(src) { this.src = src; this.toks = tokenize(src); this.i = 0; }
+  peek() { return this.toks[this.i]; }
+  next() { return this.toks[this.i++]; }
+  prevEnd() { return this.toks[this.i - 1].e; }
+  isKw(v) { const t = this.peek(); return t.k === 'kw' && t.v === v; }
+  eatKw(v) { if (this.isKw(v)) { this.i++; return true; } return false; }
+  isOp(v) { const t = this.peek(); return t.k === 'op' && t.v === v; }
+  eatOp(v) { if (this.isOp(v)) { this.i++; return true; } return false; }
+  fail(msg) {
+    const t = this.peek();
+    const near = t.k === 'eof' ? 'la fin de la requête' : '« ' + this.src.slice(t.p, Math.min(this.src.length, t.p + 14)).trim() + ' »';
+    throw new SqlError('Erreur de syntaxe : ' + msg + ' près de ' + near + '.');
+  }
+  expectKw(v) { if (!this.eatKw(v)) this.fail('« ' + v + ' » attendu'); }
+  expectOp(v) { if (!this.eatOp(v)) this.fail('« ' + v + ' » attendu'); }
+  ident() { const t = this.peek(); if (t.k === 'id') { this.i++; return t.v; } this.fail('un nom attendu'); }
+  parseQuery() {
+    let body = this.parseCore();
+    while (this.isKw('UNION') || this.isKw('INTERSECT') || this.isKw('EXCEPT')) {
+      const op = this.next().v; let all = false;
+      if (op === 'UNION' && this.eatKw('ALL')) all = true;
+      body = { type: 'set', op, all, l: body, r: this.parseCore() };
+    }
+    let order = null, limit = null, offset = null;
+    if (this.eatKw('ORDER')) {
+      this.expectKw('BY'); order = [];
+      do { const e = this.parseExpr(); let desc = false; if (this.eatKw('DESC')) desc = true; else this.eatKw('ASC'); order.push({ e, desc }); } while (this.eatOp(','));
+    }
+    if (this.eatKw('LIMIT')) { limit = this.parseExpr(); if (this.eatKw('OFFSET')) offset = this.parseExpr(); }
+    return { body, order, limit, offset };
+  }
+  parseCore() {
+    this.expectKw('SELECT');
+    const distinct = this.eatKw('DISTINCT'), items = [];
+    do {
+      if (this.isOp('*')) { this.next(); items.push({ star: true }); }
+      else if (this.peek().k === 'id' && this.toks[this.i + 1].k === 'op' && this.toks[this.i + 1].v === '.' && this.toks[this.i + 2].k === 'op' && this.toks[this.i + 2].v === '*') {
+        const tb = this.next().v; this.i += 2; items.push({ star: true, tb });
+      } else {
+        const s = this.peek().p, e = this.parseExpr(), end = this.prevEnd(); let alias = null;
+        if (this.eatKw('AS')) alias = this.ident(); else if (this.peek().k === 'id') alias = this.next().v;
+        items.push({ e, alias, text: this.src.slice(s, end).trim() });
+      }
+    } while (this.eatOp(','));
+    let from = null, where = null, group = null, having = null;
+    if (this.eatKw('FROM')) from = this.parseFrom();
+    if (this.eatKw('WHERE')) where = this.parseExpr();
+    if (this.eatKw('GROUP')) { this.expectKw('BY'); group = []; do group.push(this.parseExpr()); while (this.eatOp(',')); }
+    if (this.eatKw('HAVING')) having = this.parseExpr();
+    return { type: 'core', distinct, items, from, where, group, having };
+  }
+  parseTableRef() {
+    if (this.eatOp('(')) {
+      const q = this.parseQuery(); this.expectOp(')'); let alias = null;
+      if (this.eatKw('AS')) alias = this.ident(); else if (this.peek().k === 'id') alias = this.next().v;
+      return { type: 'sub', q, alias };
+    }
+    const name = this.ident(); let alias = null;
+    if (this.eatKw('AS')) alias = this.ident(); else if (this.peek().k === 'id') alias = this.next().v;
+    return { type: 'table', name, alias };
+  }
+  parseFrom() {
+    let node = this.parseTableRef();
+    for (;;) {
+      if (this.eatOp(',')) { node = { type: 'join', kind: 'cross', l: node, r: this.parseTableRef(), on: null }; continue; }
+      let kind = null;
+      if (this.isKw('JOIN')) { this.next(); kind = 'inner'; }
+      else if (this.isKw('INNER')) { this.next(); this.expectKw('JOIN'); kind = 'inner'; }
+      else if (this.isKw('LEFT')) { this.next(); this.eatKw('OUTER'); this.expectKw('JOIN'); kind = 'left'; }
+      else if (this.isKw('CROSS')) { this.next(); this.expectKw('JOIN'); kind = 'cross'; }
+      else break;
+      const r = this.parseTableRef(); let on = null;
+      if (kind !== 'cross') { this.expectKw('ON'); on = this.parseExpr(); }
+      node = { type: 'join', kind, l: node, r, on };
+    }
+    return node;
+  }
+  parseExpr() { return this.parseOr(); }
+  parseOr() { let l = this.parseAnd(); while (this.eatKw('OR')) l = { t: 'bin', op: 'OR', l, r: this.parseAnd() }; return l; }
+  parseAnd() { let l = this.parseNot(); while (this.eatKw('AND')) l = { t: 'bin', op: 'AND', l, r: this.parseNot() }; return l; }
+  parseNot() { if (this.eatKw('NOT')) return { t: 'not', e: this.parseNot() }; return this.parseCmp(); }
+  parseCmp() {
+    let l = this.parseAdd();
+    for (;;) {
+      const tk = this.peek();
+      if (tk.k === 'op' && ['=', '<', '>', '<=', '>=', '<>', '!='].includes(tk.v)) { this.next(); l = { t: 'cmp', op: tk.v === '!=' ? '<>' : tk.v, l, r: this.parseAdd() }; continue; }
+      if (this.isKw('IS')) { this.next(); const neg = this.eatKw('NOT'); this.expectKw('NULL'); l = { t: 'isnull', e: l, neg }; continue; }
+      let neg = false;
+      if (this.isKw('NOT')) { const nx = this.toks[this.i + 1]; if (nx.k === 'kw' && ['IN', 'BETWEEN', 'LIKE'].includes(nx.v)) { this.next(); neg = true; } else break; }
+      if (this.eatKw('IN')) {
+        this.expectOp('('); let node;
+        if (this.isKw('SELECT')) node = { t: 'in', e: l, sub: this.parseQuery(), neg };
+        else { const list = []; do list.push(this.parseExpr()); while (this.eatOp(',')); node = { t: 'in', e: l, list, neg }; }
+        this.expectOp(')'); l = node; continue;
+      }
+      if (this.eatKw('BETWEEN')) { const a = this.parseAdd(); this.expectKw('AND'); const b = this.parseAdd(); l = { t: 'between', e: l, a, b, neg }; continue; }
+      if (this.eatKw('LIKE')) { l = { t: 'like', e: l, p: this.parseAdd(), neg }; continue; }
+      break;
+    }
+    return l;
+  }
+  parseAdd() {
+    let l = this.parseMul();
+    for (;;) {
+      if (this.isOp('+') || this.isOp('-')) { const op = this.next().v; l = { t: 'arith', op, l, r: this.parseMul() }; }
+      else if (this.isOp('||')) { this.next(); l = { t: 'concat', l, r: this.parseMul() }; }
+      else return l;
+    }
+  }
+  parseMul() {
+    let l = this.parseUnary();
+    while (this.isOp('*') || this.isOp('/') || this.isOp('%')) { const op = this.next().v; l = { t: 'arith', op, l, r: this.parseUnary() }; }
+    return l;
+  }
+  parseUnary() { if (this.eatOp('-')) return { t: 'neg', e: this.parseUnary() }; return this.parsePrimary(); }
+  parsePrimary() {
+    const tk = this.peek();
+    if (tk.k === 'num') { this.next(); return { t: 'lit', v: tk.v }; }
+    if (tk.k === 'str') { this.next(); return { t: 'lit', v: tk.v }; }
+    if (tk.k === 'kw' && tk.v === 'NULL') { this.next(); return { t: 'lit', v: null }; }
+    if (tk.k === 'kw' && tk.v === 'EXISTS') { this.next(); this.expectOp('('); const sub = this.parseQuery(); this.expectOp(')'); return { t: 'exists', sub }; }
+    if (this.eatOp('(')) {
+      if (this.isKw('SELECT')) { const sub = this.parseQuery(); this.expectOp(')'); return { t: 'scalar', sub }; }
+      const e = this.parseExpr(); this.expectOp(')'); return e;
+    }
+    if (tk.k === 'id') {
+      this.next();
+      if (this.isOp('(')) {
+        this.next(); const name = tk.v.toUpperCase(); let distinct = false, args = [];
+        if (this.isOp('*')) { this.next(); args = [{ t: 'star' }]; }
+        else if (!this.isOp(')')) { distinct = this.eatKw('DISTINCT'); do args.push(this.parseExpr()); while (this.eatOp(',')); }
+        this.expectOp(')'); return { t: 'fn', name, args, distinct };
+      }
+      if (this.isOp('.')) { this.next(); return { t: 'col', tb: tk.v, c: this.ident() }; }
+      return { t: 'col', c: tk.v };
+    }
+    this.fail('une expression est attendue');
+  }
+}
+/* ---- évaluation ---- */
+const AGGS = new Set(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']);
+const tv = v => v == null ? null : typeof v === 'boolean' ? v : typeof v === 'number' ? v !== 0 : (parseFloat(v) || 0) !== 0;
+const truthy = v => tv(v) === true;
+const typeRank = v => v == null ? 0 : (typeof v === 'number' || typeof v === 'boolean') ? 1 : 2;
+function cmpVal(a, b) {
+  const ra = typeRank(a), rb = typeRank(b);
+  if (ra !== rb) return ra - rb;
+  if (ra === 0) return 0;
+  a = ra === 1 ? Number(a) : a; b = ra === 1 ? Number(b) : b;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+function containsAgg(e) {
+  if (Array.isArray(e)) return e.some(containsAgg);
+  if (!e || typeof e !== 'object') return false;
+  if (e.t === 'fn' && AGGS.has(e.name)) return true;
+  return Object.keys(e).some(k => k !== 'sub' && containsAgg(e[k]));
+}
+function resolveCol(e, ctx) {
+  for (let c = ctx; c; c = c.outer) {
+    let idx = -1, cnt = 0;
+    c.cols.forEach((k, i) => { if (k.c.toLowerCase() === e.c.toLowerCase() && (!e.tb || k.t.toLowerCase() === e.tb.toLowerCase())) { idx = i; cnt++; } });
+    if (cnt > 1) throw new SqlError('La colonne « ' + e.c + ' » est ambiguë : elle existe dans plusieurs tables. Précisez-la avec le nom ou l’alias de la table, par exemple table.' + e.c + '.');
+    if (cnt === 1) return c.row[idx];
+  }
+  throw new SqlError('Colonne « ' + (e.tb ? e.tb + '.' : '') + e.c + ' » inconnue.' + (e.tb ? '' : ' (Pour écrire une chaîne de caractères, utilisez des apostrophes : \'' + e.c + '\'.)'));
+}
+function evalExpr(db, e, ctx) {
+  switch (e.t) {
+    case 'lit': return e.v;
+    case 'col': return resolveCol(e, ctx);
+    case 'bin': {
+      const a = tv(evalExpr(db, e.l, ctx));
+      if (e.op === 'AND') { if (a === false) return false; const b = tv(evalExpr(db, e.r, ctx)); if (b === false) return false; return a === null || b === null ? null : true; }
+      if (a === true) return true; const b = tv(evalExpr(db, e.r, ctx)); if (b === true) return true; return a === null || b === null ? null : false;
+    }
+    case 'not': { const a = tv(evalExpr(db, e.e, ctx)); return a === null ? null : !a; }
+    case 'cmp': {
+      const a = evalExpr(db, e.l, ctx), b = evalExpr(db, e.r, ctx);
+      if (a == null || b == null) return null;
+      const c = cmpVal(a, b);
+      return e.op === '=' ? c === 0 : e.op === '<>' ? c !== 0 : e.op === '<' ? c < 0 : e.op === '<=' ? c <= 0 : e.op === '>' ? c > 0 : c >= 0;
+    }
+    case 'arith': {
+      const a = evalExpr(db, e.l, ctx), b = evalExpr(db, e.r, ctx);
+      if (a == null || b == null) return null;
+      const x = Number(a), y = Number(b);
+      if (e.op === '+') return x + y; if (e.op === '-') return x - y; if (e.op === '*') return x * y;
+      if (y === 0) return null;
+      if (e.op === '/') return Number.isInteger(x) && Number.isInteger(y) ? Math.trunc(x / y) : x / y;
+      return x % y;
+    }
+    case 'neg': { const a = evalExpr(db, e.e, ctx); return a == null ? null : -Number(a); }
+    case 'concat': { const a = evalExpr(db, e.l, ctx), b = evalExpr(db, e.r, ctx); return a == null || b == null ? null : String(a) + String(b); }
+    case 'isnull': { const a = evalExpr(db, e.e, ctx); return e.neg ? a != null : a == null; }
+    case 'between': {
+      const a = evalExpr(db, e.e, ctx), lo = evalExpr(db, e.a, ctx), hi = evalExpr(db, e.b, ctx);
+      if (a == null || lo == null || hi == null) return null;
+      const r = cmpVal(a, lo) >= 0 && cmpVal(a, hi) <= 0; return e.neg ? !r : r;
+    }
+    case 'like': {
+      const a = evalExpr(db, e.e, ctx), p = evalExpr(db, e.p, ctx);
+      if (a == null || p == null) return null;
+      const re = new RegExp('^' + String(p).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.') + '$', 'is');
+      const r = re.test(String(a)); return e.neg ? !r : r;
+    }
+    case 'in': {
+      const a = evalExpr(db, e.e, ctx); let vals;
+      if (e.sub) { const r = execQuery(db, e.sub, ctx); if (r.cols.length !== 1) throw new SqlError('Une sous-requête utilisée avec IN doit renvoyer une seule colonne.'); vals = r.rows.map(x => x[0]); }
+      else vals = e.list.map(x => evalExpr(db, x, ctx));
+      if (a == null) return null;
+      let res = false, sawNull = false;
+      for (const v of vals) { if (v == null) sawNull = true; else if (cmpVal(a, v) === 0) { res = true; break; } }
+      if (!res && sawNull) return null;
+      return e.neg ? !res : res;
+    }
+    case 'exists': return execQuery(db, e.sub, ctx).rows.length > 0;
+    case 'scalar': {
+      const r = execQuery(db, e.sub, ctx);
+      if (r.cols.length !== 1) throw new SqlError('Une sous-requête utilisée comme valeur doit renvoyer une seule colonne.');
+      return r.rows.length ? r.rows[0][0] : null;
+    }
+    case 'fn': return evalFn(db, e, ctx);
+    default: throw new SqlError('Expression non reconnue.');
+  }
+}
+function evalFn(db, e, ctx) {
+  if (AGGS.has(e.name)) {
+    if (!ctx.group) throw new SqlError('Une fonction d’agrégation (' + e.name + ') ne peut pas être utilisée dans WHERE : utilisez HAVING pour filtrer sur un agrégat.');
+    if (e.name === 'COUNT' && e.args[0] && e.args[0].t === 'star') return ctx.group.length;
+    if (e.args.length !== 1) throw new SqlError(e.name + ' attend un seul argument.');
+    let vals = ctx.group.map(r => evalExpr(db, e.args[0], { cols: ctx.cols, row: r, outer: ctx.outer })).filter(v => v != null);
+    if (e.distinct) { const s = new Set(); vals = vals.filter(v => { const k = JSON.stringify(v); if (s.has(k)) return false; s.add(k); return true; }); }
+    if (e.name === 'COUNT') return vals.length;
+    if (!vals.length) return null;
+    if (e.name === 'SUM') return vals.reduce((a, b) => a + Number(b), 0);
+    if (e.name === 'AVG') return vals.reduce((a, b) => a + Number(b), 0) / vals.length;
+    return vals.reduce((a, b) => (e.name === 'MIN' ? cmpVal(b, a) < 0 : cmpVal(b, a) > 0) ? b : a);
+  }
+  const a = e.args.map(x => evalExpr(db, x, ctx));
+  switch (e.name) {
+    case 'UPPER': return a[0] == null ? null : String(a[0]).toUpperCase();
+    case 'LOWER': return a[0] == null ? null : String(a[0]).toLowerCase();
+    case 'LENGTH': return a[0] == null ? null : String(a[0]).length;
+    case 'ABS': return a[0] == null ? null : Math.abs(a[0]);
+    case 'ROUND': { if (a[0] == null) return null; const d = a[1] || 0, f = Math.pow(10, d); return Math.sign(a[0]) * Math.round(Math.abs(a[0]) * f) / f; }
+    case 'COALESCE': return a.find(v => v != null) ?? null;
+    default: throw new SqlError('Fonction « ' + e.name + ' » inconnue ou hors programme.');
+  }
+}
+function tableLabel(n) { return n.type === 'table' ? (n.alias || n.name) : n.type === 'sub' ? (n.alias || 'sous-requête') : '(' + tableLabel(n.l) + ' ⋈ ' + tableLabel(n.r) + ')'; }
+function evalFrom(db, node, outer, tr) {
+  if (!node) return { cols: [], rows: [[]] };
+  if (node.type === 'table') {
+    const t = db[node.name.toLowerCase()];
+    if (!t) throw new SqlError('Table « ' + node.name + ' » inconnue. Tables disponibles : ' + Object.keys(db).join(', ') + '.');
+    const al = node.alias || node.name;
+    return { cols: t.cols.map(c => ({ t: al, c })), rows: t.rows.map(r => r.slice()) };
+  }
+  if (node.type === 'sub') { const r = execQuery(db, node.q, outer); const al = node.alias || 'sous_requete'; return { cols: r.cols.map(c => ({ t: al, c })), rows: r.rows }; }
+  const L = evalFrom(db, node.l, outer, tr), R = evalFrom(db, node.r, outer, tr);
+  if (L.rows.length * R.rows.length > 200000) throw new SqlError('Le produit cartésien est trop volumineux (' + L.rows.length * R.rows.length + ' lignes).');
+  const cols = L.cols.concat(R.cols), rows = [];
+  for (const a of L.rows) {
+    let matched = false;
+    for (const b of R.rows) {
+      const row = a.concat(b);
+      if (node.on && !truthy(evalExpr(db, node.on, { cols, row, outer }))) continue;
+      rows.push(row); matched = true;
+    }
+    if (!matched && node.kind === 'left') rows.push(a.concat(R.cols.map(() => null)));
+  }
+  if (tr) tr.joins.push({ kind: node.kind, l: tableLabel(node.l), r: tableLabel(node.r), ln: L.rows.length, rn: R.rows.length, out: rows.length, on: !!node.on });
+  return { cols, rows };
+}
+const outVal = v => v === true ? 1 : v === false ? 0 : v === undefined ? null : v;
+function execCore(db, core, outer, tr) {
+  const F = evalFrom(db, core.from, outer, tr);
+  if (tr) { tr.fromCols = F.cols; tr.from = F.rows.length; }
+  let rows = F.rows;
+  if (core.where) { rows = rows.filter(r => truthy(evalExpr(db, core.where, { cols: F.cols, row: r, outer }))); if (tr) tr.where = rows.length; }
+  const items = [];
+  for (const it of core.items) {
+    if (it.star) {
+      const cs = F.cols.filter(k => !it.tb || k.t.toLowerCase() === it.tb.toLowerCase());
+      if (!cs.length) throw new SqlError('Table « ' + it.tb + ' » inconnue dans FROM.');
+      cs.forEach(k => items.push({ e: { t: 'col', tb: k.t, c: k.c }, name: k.c }));
+    } else items.push({ e: it.e, name: it.alias || (it.e.t === 'col' ? it.e.c : it.text) });
+  }
+  const grouped = !!core.group || core.items.some(it => it.e && containsAgg(it.e)) || (core.having && containsAgg(core.having));
+  let out = [], ctxs = [];
+  if (grouped) {
+    let groups;
+    if (core.group) {
+      const m = new Map();
+      for (const r of rows) {
+        const vals = core.group.map(g => evalExpr(db, g, { cols: F.cols, row: r, outer }));
+        const key = JSON.stringify(vals);
+        if (!m.has(key)) m.set(key, { vals, rows: [] });
+        m.get(key).rows.push(r);
+      }
+      groups = [...m.values()];
+    } else groups = [{ vals: [], rows }];
+    if (tr) { tr.grouped = true; tr.groups = []; tr.having = !!core.having; }
+    for (const g of groups) {
+      const ctx = { cols: F.cols, row: g.rows[0] || F.cols.map(() => null), group: g.rows, outer };
+      const keep = core.having ? truthy(evalExpr(db, core.having, ctx)) : true;
+      if (tr) tr.groups.push({ vals: g.vals, n: g.rows.length, kept: keep });
+      if (!keep) continue;
+      out.push(items.map(it => outVal(evalExpr(db, it.e, ctx)))); ctxs.push(ctx);
+    }
+  } else {
+    for (const r of rows) { const ctx = { cols: F.cols, row: r, outer }; out.push(items.map(it => outVal(evalExpr(db, it.e, ctx)))); ctxs.push(ctx); }
+  }
+  if (tr) tr.select = out.length;
+  if (core.distinct) {
+    const seen = new Set(), o2 = [], c2 = [];
+    out.forEach((r, i) => { const k = JSON.stringify(r); if (!seen.has(k)) { seen.add(k); o2.push(r); c2.push(ctxs[i]); } });
+    out = o2; ctxs = c2; if (tr) { tr.distinct = true; tr.afterDistinct = out.length; }
+  }
+  return { cols: items.map(i => i.name), rows: out, ctxs };
+}
+function execSet(db, b, outer) {
+  const side = n => n.type === 'set' ? execSet(db, n, outer) : execCore(db, n, outer, null);
+  const L = side(b.l), R = side(b.r);
+  if (L.cols.length !== R.cols.length) throw new SqlError(b.op + ' : les deux SELECT doivent avoir le même nombre de colonnes (' + L.cols.length + ' et ' + R.cols.length + ').');
+  const key = r => JSON.stringify(r); const dedup = rows => { const s = new Set(); return rows.filter(r => { const k = key(r); if (s.has(k)) return false; s.add(k); return true; }); };
+  let rows;
+  if (b.op === 'UNION') rows = b.all ? L.rows.concat(R.rows) : dedup(L.rows.concat(R.rows));
+  else if (b.op === 'INTERSECT') { const rs = new Set(R.rows.map(key)); rows = dedup(L.rows.filter(r => rs.has(key(r)))); }
+  else { const rs = new Set(R.rows.map(key)); rows = dedup(L.rows.filter(r => !rs.has(key(r)))); }
+  return { cols: L.cols, rows, ctxs: null };
+}
+function execQuery(db, q, outer, tr) {
+  const res = q.body.type === 'set' ? execSet(db, q.body, outer) : execCore(db, q.body, outer, tr);
+  let rows = res.rows;
+  if (q.order) {
+    const keyFns = q.order.map(o => {
+      const e = o.e;
+      if (e.t === 'lit' && typeof e.v === 'number') { const ix = e.v - 1; if (ix < 0 || ix >= res.cols.length) throw new SqlError('ORDER BY ' + e.v + ' : numéro de colonne invalide.'); return (r) => r[ix]; }
+      if (e.t === 'col' && !e.tb) { const ix = res.cols.findIndex(c => c.toLowerCase() === e.c.toLowerCase()); if (ix >= 0) return (r) => r[ix]; }
+      if (!res.ctxs) throw new SqlError('Avec UNION, INTERSECT ou EXCEPT, ORDER BY doit désigner une colonne du résultat.');
+      return (r, i) => evalExpr(db, e, res.ctxs[i]);
+    });
+    const dec = rows.map((r, i) => ({ r, i, k: keyFns.map(f => f(r, i)) }));
+    dec.sort((a, b) => { for (let j = 0; j < q.order.length; j++) { const c = cmpVal(a.k[j], b.k[j]); if (c) return q.order[j].desc ? -c : c; } return a.i - b.i; });
+    rows = dec.map(d => d.r);
+    if (tr) tr.order = true;
+  }
+  if (q.limit) {
+    const lim = evalExpr(db, q.limit, { cols: [], row: [] }), off = q.offset ? evalExpr(db, q.offset, { cols: [], row: [] }) : 0;
+    rows = rows.slice(off, off + lim);
+    if (tr) { tr.limit = rows.length; tr.hasOffset = !!q.offset; }
+  }
+  return { cols: res.cols, rows };
+}
+function runSQL(db, sql, withTrace) {
+  const src = sql.replace(/;\s*$/, '').trim();
+  if (!src) throw new SqlError('La requête est vide.');
+  if (!/^select\b/i.test(src) && !/^\(/.test(src)) throw new SqlError('Seules les requêtes SELECT sont disponibles ici (la création, la modification et la suppression de tables sont hors programme).');
+  const p = new Parser(src), q = p.parseQuery();
+  if (p.peek().k !== 'eof') p.fail('fin de requête attendue (une virgule ou un mot-clé manque-t-il ?)');
+  const tr = withTrace ? { joins: [], groups: [] } : null;
+  const r = execQuery(db, q, null, q.body.type === 'set' ? null : tr);
+  if (tr) tr.final = r.rows.length;
+  return { cols: r.cols, rows: r.rows, trace: tr };
+}
+function sameResult(a, b, ordered) {
+  if (a.cols.length !== b.cols.length) return { ok: false, why: 'cols', got: a.cols.length, exp: b.cols.length };
+  const norm = r => JSON.stringify(r.map(v => typeof v === 'number' ? +v.toFixed(6) : v));
+  let A = a.rows.map(norm), B = b.rows.map(norm);
+  const As = A.slice().sort(), Bs = B.slice().sort();
+  if (A.length !== B.length) return { ok: false, why: 'rows', got: A.length, exp: B.length };
+  if (JSON.stringify(As) !== JSON.stringify(Bs)) return { ok: false, why: 'data' };
+  if (ordered && JSON.stringify(A) !== JSON.stringify(B)) return { ok: false, why: 'order' };
+  return { ok: true };
+}
+
+/*LOGIC-END*/
+
+/* ---------- aides d'interface ---------- */
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', null, k[0]), h('b', null, k[1])))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
+}
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; m.textContent = text; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+const fmtV = v => v == null ? 'NULL' : typeof v === 'number' ? (Number.isInteger(v) ? String(v) : String(+v.toFixed(4))) : String(v);
+function resultTable(cols, rows, max) {
+  const lim = max || 200, tb = h('tbody');
+  rows.slice(0, lim).forEach(r => tb.append(h('tr', null, r.map(v => h('td', { class: 'm' + (typeof v === 'number' ? ' num' : '') }, fmtV(v))))));
+  const w = h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, cols.map(c => h('th', null, c)))), tb));
+  if (rows.length > lim) w.append(h('p', { class: 'small', style: 'padding:4px 10px;margin:0' }, '… ' + (rows.length - lim) + ' lignes de plus non affichées.'));
+  return w;
+}
+function tableView(name, hl, onfk) {
+  const t = DB[name], tb = h('tbody');
+  t.rows.forEach(r => {
+    const tr = h('tr', { class: hl != null && r[0] === hl ? 'hl' : '' });
+    r.forEach((v, i) => {
+      const col = t.cols[i], fk = t.fk[col];
+      if (fk && onfk) tr.append(h('td', { class: 'm num' }, h('button', { type: 'button', class: 'fkb', title: 'Voir la ligne référencée dans ' + fk.split('.')[0], onclick: () => onfk(fk.split('.')[0], v) }, String(v))));
+      else tr.append(h('td', { class: 'm' + (typeof v === 'number' ? ' num' : '') }, fmtV(v)));
+    });
+    tb.append(tr);
+  });
+  const head = h('tr', null, t.cols.map(c => h('th', null, h('span', { class: t.pk.includes(c) ? 'kpk' : '' }, c), t.fk[c] ? h('small', { class: 'kfk' }, ' → ' + t.fk[c]) : null)));
+  return h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, head), tb));
+}
+const TABS = Object.keys(DB).map(n => [n, n]);
+
+/* ================= Atelier 1 : modèle relationnel ================= */
+const M1 = { tab: 'livres', hl: null, assoc: 'n1', f: ['17', '3', '6', '60'] };
+const ASSOC = {
+  n1: { name: '1 — *', sentence: 'Un auteur a écrit plusieurs livres ; un livre n’a qu’un seul auteur.', dgm: ['auteurs', '1', '*', 'livres'],
+    sql: 'livres(id, titre, auteur_id, annee, genre, pages)\n  clé primaire : id\n  clé étrangère : auteur_id → auteurs.id',
+    how: 'La clé étrangère se place dans la table du côté « * » (ici livres) : chaque livre contient l’identifiant de son unique auteur.' },
+  '11': { name: '1 — 1', sentence: 'Un lecteur possède une seule carte de bibliothèque ; une carte appartient à un seul lecteur (exemple hors base).', dgm: ['lecteurs', '1', '1', 'cartes'],
+    sql: 'cartes(num, lecteur_id)\n  clé primaire : num\n  clé étrangère : lecteur_id → lecteurs.id\n  (une même valeur de lecteur_id ne figure qu’une fois)',
+    how: 'On place une clé étrangère dans l’une des deux tables, en veillant à ce que chaque valeur n’y apparaisse qu’une fois (ou on fusionne les deux tables en une seule).' },
+  nn: { name: '* — *', sentence: 'Un lecteur emprunte plusieurs livres ; un livre est emprunté par plusieurs lecteurs.', dgm: ['lecteurs', '1', '*', 'emprunts', '*', '1', 'livres'],
+    sql: 'emprunts(id, livre_id, lecteur_id, jour)\n  clé primaire : id\n  clé étrangère : livre_id → livres.id\n  clé étrangère : lecteur_id → lecteurs.id',
+    how: 'Une association * — * ne se traduit pas directement : on la sépare en deux associations 1 — * grâce à une table intermédiaire (emprunts) qui porte deux clés étrangères.' }
+};
+function mountModel(root) {
+  root.innerHTML = '<h2>Tables, clés et associations</h2>' +
+    '<p>Une base de données relationnelle range ses données dans des <b>tables</b> (ou relations). Chaque <b>ligne</b> (ou enregistrement) décrit un objet ; chaque <b>colonne</b> (ou attribut) a un <b>domaine</b> : entier, flottant ou chaîne. Les tables sont reliées par des <b>clés</b>.</p>' +
+    '<h3>1. Explorer les tables</h3><p class="small">La clé primaire est soulignée. Une valeur de clé étrangère (en violet) est cliquable : elle désigne une ligne d’une autre table.</p>' +
+    '<div id="m1-tabs"></div><div id="m1-tbl"></div><div class="verdict" id="m1-fk"></div>' +
+    '<h3>2. Tester l’intégrité</h3><p>On essaie d’ajouter une ligne à la table <b>emprunts</b>. Une insertion est acceptée si la clé primaire est nouvelle et si chaque clé étrangère désigne une ligne existante.</p>' +
+    '<div id="m1-pre"></div><div class="opts" id="m1-form"></div><div id="m1-v"></div>' +
+    '<h3>3. Traduire une association</h3><div id="m1-as"></div><div id="m1-asv"></div>';
+  drawM1(); drawForm(); drawAssoc();
+}
+function drawM1() {
+  const tb = $('#m1-tabs'); tb.innerHTML = ''; tb.append(chipsRow(TABS, M1.tab, t => { M1.tab = t; M1.hl = null; drawM1(); }, 'Table'));
+  const box = $('#m1-tbl'); box.innerHTML = '';
+  const t = DB[M1.tab];
+  box.append(tableView(M1.tab, M1.hl, (tab, id) => { M1.tab = tab; M1.hl = id; drawM1(); }));
+  const fkl = Object.entries(t.fk).map(([c, r]) => c + ' → ' + r).join(', ');
+  setMsg('#m1-fk', 'Table ' + M1.tab + ' : ' + t.rows.length + ' lignes, ' + t.cols.length + ' attributs. Clé primaire : ' + t.pk.join(', ') + '.' + (fkl ? ' Clé(s) étrangère(s) : ' + fkl + '.' : ' Aucune clé étrangère.') + (M1.hl != null ? ' Ligne désignée : id = ' + M1.hl + '.' : ''));
+}
+function drawForm() {
+  const pre = $('#m1-pre'); pre.innerHTML = '';
+  pre.append(chipsRow([['a', 'Insertion valide'], ['b', 'Clé primaire déjà prise'], ['c', 'Livre inconnu'], ['d', 'Lecteur inconnu']], '', k => {
+    M1.f = { a: ['17', '3', '6', '60'], b: ['5', '3', '6', '60'], c: ['17', '42', '6', '60'], d: ['17', '3', '9', '60'] }[k]; drawForm();
+  }, 'Cas types'));
+  const fm = $('#m1-form'); fm.innerHTML = '';
+  ['id', 'livre_id', 'lecteur_id', 'jour'].forEach((n, i) => {
+    const inp = h('input', { type: 'text', inputmode: 'numeric', value: M1.f[i], 'aria-label': n, style: 'width:90px' });
+    inp.addEventListener('input', () => { M1.f[i] = inp.value; drawVerdict(); });
+    fm.append(h('label', { class: 'fld' }, h('span', null, n), inp));
+  });
+  drawVerdict();
+}
+function drawVerdict() {
+  const box = $('#m1-v'); box.innerHTML = '';
+  const vals = M1.f.map(s => /^\s*-?\d+\s*$/.test(s) ? parseInt(s, 10) : NaN);
+  const r = checkInsert(DB, vals);
+  box.append(h('div', { class: 'verdict ' + (r.ok ? 'yes' : 'no') }, r.ok ? 'Insertion acceptée : la ligne (' + vals.join(', ') + ') respecte la clé primaire et les clés étrangères.' : 'Insertion refusée.'));
+  if (!r.ok) box.append(h('ul', null, r.errs.map(e => h('li', null, e))));
+}
+function drawAssoc() {
+  const as = $('#m1-as'); as.innerHTML = '';
+  as.append(chipsRow(Object.entries(ASSOC).map(([k, v]) => [k, v.name]), M1.assoc, k => { M1.assoc = k; drawAssoc(); }, 'Type d’association'));
+  const a = ASSOC[M1.assoc], box = $('#m1-asv'); box.innerHTML = '';
+  box.append(h('p', null, a.sentence));
+  box.append(h('div', { class: 'dgm' }, a.dgm.map((x, i) => i % 3 === 0 ? h('span', { class: 'ent' }, x) : h('span', { class: 'lnk' }, x))));
+  box.append(h('pre', { class: 'code' }, a.sql), h('div', { class: 'verdict' }, a.how));
+}
+WORKSHOPS.push({ id: 's1', title: 'Tables et clés', hint: 'Explorez les tables, suivez les clés étrangères, testez des insertions et traduisez des associations.', mount: mountModel, reset: () => { Object.assign(M1, { tab: 'livres', hl: null, assoc: 'n1', f: ['17', '3', '6', '60'] }); } });
+
+/* ================= Ateliers 2 à 5 : console SQL ================= */
+const SQLLABS = [
+  { id: 's2', title: 'Interroger une table', hint: 'Écrivez ou modifiez une requête SELECT et observez comment les lignes sont filtrées, projetées, triées.',
+    intro: 'Une requête <b>SELECT</b> lit une table sans la modifier. <b>WHERE</b> sélectionne des lignes, la liste après SELECT choisit les colonnes (projection), <b>AS</b> les renomme, <b>DISTINCT</b> supprime les doublons, <b>ORDER BY</b> trie, <b>LIMIT</b> et <b>OFFSET</b> découpent le résultat.',
+    presets: [
+      ['Toutes les lignes', `SELECT * FROM livres`],
+      ['Projection', `SELECT titre, annee FROM livres`],
+      ['Sélection', `SELECT titre, pages FROM livres WHERE pages > 500`],
+      ['AND, OR, NOT', `SELECT titre, annee FROM livres WHERE genre = 'roman' AND annee > 1850 AND NOT (annee > 1900)`],
+      ['Calcul et AS', `SELECT titre, 2026 - annee AS anciennete FROM livres WHERE genre <> 'roman'`],
+      ['DISTINCT', `SELECT DISTINCT genre FROM livres`],
+      ['Tri', `SELECT titre, pages FROM livres ORDER BY pages DESC`],
+      ['LIMIT et OFFSET', `SELECT titre, pages FROM livres ORDER BY pages DESC LIMIT 3 OFFSET 1`],
+      ['Erreur : apostrophes', `SELECT titre FROM livres WHERE genre = roman`]
+    ] },
+  { id: 's3', title: 'Jointures', hint: 'Combinez plusieurs tables : le produit cartésien produit tous les couples, la jointure ne garde que ceux liés par la condition ON.',
+    intro: 'Les informations sont réparties sur plusieurs tables liées par des clés. Le <b>produit cartésien</b> associe chaque ligne de la première table à chaque ligne de la seconde. Une <b>jointure interne</b> <code>T1 JOIN T2 ON …</code> ne retient que les couples qui vérifient une égalité entre clé étrangère et clé primaire (équi-jointure).',
+    presets: [
+      ['Produit cartésien', `SELECT l.titre, a.nom FROM livres l, auteurs a`],
+      ['Produit + WHERE', `SELECT l.titre, a.nom FROM livres l, auteurs a WHERE l.auteur_id = a.id`],
+      ['JOIN … ON', `SELECT l.titre, a.nom FROM livres l JOIN auteurs a ON l.auteur_id = a.id`],
+      ['Jointure + filtre', `SELECT l.titre, a.nom FROM livres l JOIN auteurs a ON l.auteur_id = a.id WHERE a.pays = 'France' ORDER BY l.annee`],
+      ['Trois tables', `SELECT le.nom, l.titre, e.jour FROM emprunts e JOIN lecteurs le ON e.lecteur_id = le.id JOIN livres l ON e.livre_id = l.id ORDER BY e.jour`],
+      ['Quatre tables', `SELECT DISTINCT le.nom, a.nom AS auteur FROM emprunts e JOIN lecteurs le ON e.lecteur_id = le.id JOIN livres l ON e.livre_id = l.id JOIN auteurs a ON l.auteur_id = a.id WHERE le.ville = 'Lyon'`],
+      ['Autojointure', `SELECT a.nom AS lecteur1, b.nom AS lecteur2, a.ville FROM lecteurs a JOIN lecteurs b ON a.ville = b.ville AND a.id < b.id`],
+      ['Erreur : colonne ambiguë', `SELECT id, titre FROM livres JOIN auteurs ON livres.auteur_id = auteurs.id`]
+    ] },
+  { id: 's4', title: 'Agrégation', hint: 'Les fonctions d’agrégation résument des lignes ; GROUP BY forme des groupes et HAVING filtre ces groupes.',
+    intro: 'Les fonctions <b>COUNT, SUM, AVG, MIN, MAX</b> résument plusieurs lignes en une valeur. Avec <b>GROUP BY</b>, on forme un groupe par valeur de l’attribut et on calcule un agrégat par groupe. <b>WHERE</b> filtre les lignes avant le regroupement, <b>HAVING</b> filtre les groupes après.',
+    presets: [
+      ['Agrégats globaux', `SELECT COUNT(*) AS nb, MIN(annee) AS plus_ancien, MAX(pages) AS plus_long, AVG(pages) AS moyenne FROM livres`],
+      ['GROUP BY', `SELECT genre, COUNT(*) AS nb FROM livres GROUP BY genre`],
+      ['Agrégat par auteur', `SELECT a.nom, SUM(l.pages) AS total_pages FROM livres l JOIN auteurs a ON l.auteur_id = a.id GROUP BY a.nom`],
+      ['HAVING', `SELECT genre, COUNT(*) AS nb FROM livres GROUP BY genre HAVING COUNT(*) >= 2`],
+      ['WHERE puis HAVING', `SELECT a.nom, COUNT(*) AS nb FROM livres l JOIN auteurs a ON l.auteur_id = a.id WHERE l.annee > 1850 GROUP BY a.nom HAVING COUNT(*) > 1`],
+      ['Emprunts par lecteur', `SELECT le.nom, COUNT(*) AS nb FROM emprunts e JOIN lecteurs le ON e.lecteur_id = le.id GROUP BY le.nom ORDER BY nb DESC`],
+      ['Palmarès', `SELECT l.titre, COUNT(*) AS nb FROM emprunts e JOIN livres l ON e.livre_id = l.id GROUP BY l.titre ORDER BY nb DESC LIMIT 3`],
+      ['Erreur : WHERE et agrégat', `SELECT genre FROM livres WHERE COUNT(*) > 1 GROUP BY genre`]
+    ] },
+  { id: 's5', title: 'Ensembles et imbriquées', hint: 'Combinez des résultats avec UNION, INTERSECT, EXCEPT, ou utilisez le résultat d’une requête dans une autre.',
+    intro: '<b>UNION</b>, <b>INTERSECT</b> et <b>EXCEPT</b> combinent deux résultats de même forme (même nombre de colonnes) : réunion, intersection, différence. Une <b>requête imbriquée</b> place un SELECT entre parenthèses dans une autre requête, pour comparer à une valeur calculée ou à un ensemble de valeurs.',
+    presets: [
+      ['UNION', `SELECT pays FROM auteurs UNION SELECT ville FROM lecteurs`],
+      ['INTERSECT', `SELECT livre_id FROM emprunts WHERE lecteur_id = 1 INTERSECT SELECT livre_id FROM emprunts WHERE lecteur_id = 4`],
+      ['EXCEPT', `SELECT id FROM livres EXCEPT SELECT livre_id FROM emprunts`],
+      ['Valeur calculée', `SELECT titre, pages FROM livres WHERE pages > (SELECT AVG(pages) FROM livres)`],
+      ['Maximum', `SELECT titre FROM livres WHERE pages = (SELECT MAX(pages) FROM livres)`],
+      ['IN', `SELECT nom FROM auteurs WHERE id IN (SELECT auteur_id FROM livres WHERE genre = 'science-fiction')`],
+      ['NOT IN', `SELECT titre FROM livres WHERE id NOT IN (SELECT livre_id FROM emprunts)`],
+      ['Dans FROM', `SELECT genre, nb FROM (SELECT genre, COUNT(*) AS nb FROM livres GROUP BY genre) AS t WHERE nb > 2`],
+      ['Erreur : colonnes', `SELECT id, titre FROM livres UNION SELECT id FROM auteurs`]
+    ] }
+];
+const SQ = {};
+function sqState(lab) { return SQ[lab.id] || (SQ[lab.id] = { sql: lab.presets[0][1], tab: lab.id === 's5' ? 'livres' : 'livres', res: null }); }
+function mountSqlLab(root, lab) {
+  const S = sqState(lab), id = lab.id;
+  root.innerHTML = '<h2>' + lab.title + '</h2><p>' + lab.intro + '</p>' +
+    '<details class="tdet"><summary>Voir les tables</summary><div id="' + id + '-tabs"></div><div id="' + id + '-tbl"></div></details>' +
+    '<h3>Requête</h3><div id="' + id + '-pre"></div>' +
+    '<textarea class="sqlbox" id="' + id + '-q" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Requête SQL"></textarea>' +
+    '<div class="files" style="margin:8px 0"><button class="btn pri" id="' + id + '-run" type="button">Exécuter</button><button class="btn" id="' + id + '-clr" type="button">Effacer</button><span class="small" style="margin:0 0 0 6px">Ctrl + Entrée pour exécuter</span></div>' +
+    '<div class="verdict" id="' + id + '-msg" aria-live="polite"></div><div id="' + id + '-pipe"></div><div id="' + id + '-res"></div>';
+  const q = $('#' + id + '-q'); q.value = S.sql;
+  q.addEventListener('input', () => { S.sql = q.value; });
+  q.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runLab(lab); } });
+  $('#' + id + '-run').addEventListener('click', () => runLab(lab));
+  $('#' + id + '-clr').addEventListener('click', () => { S.sql = ''; q.value = ''; S.res = null; showRes(lab); q.focus(); });
+  const pre = $('#' + id + '-pre');
+  pre.append(chipsRow(lab.presets.map((p, i) => [i, p[0]]), -1, i => { S.sql = lab.presets[i][1]; q.value = S.sql; runLab(lab); }, 'Exemples'));
+  drawTabs(lab);
+  runLab(lab);
+}
+function drawTabs(lab) {
+  const S = sqState(lab), id = lab.id, tb = $('#' + id + '-tabs'); tb.innerHTML = '';
+  tb.append(chipsRow(TABS, S.tab, t => { S.tab = t; drawTabs(lab); }, 'Table'));
+  const box = $('#' + id + '-tbl'); box.innerHTML = ''; box.append(tableView(S.tab, null, null));
+}
+function runLab(lab) {
+  const S = sqState(lab);
+  try { S.res = { ok: true, r: runSQL(DB, S.sql, true) }; }
+  catch (e) { S.res = { ok: false, msg: e instanceof SqlError ? e.message : 'Erreur interne : ' + e.message }; }
+  showRes(lab);
+}
+function showRes(lab) {
+  const S = sqState(lab), id = lab.id; if (!$('#' + id + '-msg')) return;
+  const pipe = $('#' + id + '-pipe'), res = $('#' + id + '-res'); pipe.innerHTML = ''; res.innerHTML = '';
+  if (!S.res) { setMsg('#' + id + '-msg', 'Saisissez une requête puis exécutez-la.', ''); return; }
+  if (!S.res.ok) { setMsg('#' + id + '-msg', S.res.msg, 'no'); return; }
+  const r = S.res.r;
+  setMsg('#' + id + '-msg', r.rows.length + ' ligne' + (r.rows.length > 1 ? 's' : '') + ' × ' + r.cols.length + ' colonne' + (r.cols.length > 1 ? 's' : '') + '.' + (r.rows.length === 0 ? ' Aucune ligne ne vérifie la requête.' : ''), r.rows.length ? 'yes' : 'warn');
+  if (r.trace && r.trace.from != null) pipe.append(pipeView(r.trace));
+  res.append(resultTable(r.cols, r.rows));
+}
+function pipeView(t) {
+  const st = [];
+  st.push(['FROM', t.from + ' ligne' + (t.from > 1 ? 's' : '')]);
+  if (t.where != null) st.push(['WHERE', t.where + ' ligne' + (t.where > 1 ? 's' : '')]);
+  if (t.grouped) { st.push(['GROUP BY', t.groups.length + ' groupe' + (t.groups.length > 1 ? 's' : '')]); if (t.having) st.push(['HAVING', t.groups.filter(g => g.kept).length + ' groupe(s)']); }
+  st.push(['SELECT', t.select + ' ligne' + (t.select > 1 ? 's' : '')]);
+  if (t.distinct) st.push(['DISTINCT', t.afterDistinct + ' ligne' + (t.afterDistinct > 1 ? 's' : '')]);
+  if (t.order) st.push(['ORDER BY', 'tri']);
+  if (t.limit != null) st.push(['LIMIT', t.limit + ' ligne' + (t.limit > 1 ? 's' : '')]);
+  const box = h('div', null, h('p', { class: 'small', style: 'margin:8px 0 2px' }, 'Ordre d’exécution de la requête :'));
+  const pipe = h('div', { class: 'pipe' });
+  st.forEach((s, i) => { if (i) pipe.append(h('span', { class: 'parrow' }, '→')); pipe.append(h('div', { class: 'pstep' }, h('b', null, s[0]), h('span', null, s[1]))); });
+  box.append(pipe);
+  if (t.joins.length) box.append(h('ul', { class: 'small', style: 'margin:4px 0 8px' }, t.joins.map(j => h('li', null, j.l + ' × ' + j.r + ' : ' + j.ln + ' × ' + j.rn + ' = ' + (j.ln * j.rn) + ' couples' + (j.on ? ' → ' + j.out + ' retenus par la condition ON.' : ' (produit cartésien, aucune condition).')))));
+  if (t.grouped && t.groups.length) {
+    box.append(h('p', { class: 'small', style: 'margin:6px 0 2px' }, t.groups[0].vals.length ? 'Groupes formés (valeur du groupe : nombre de lignes)' + (t.having ? ' ; barrés : éliminés par HAVING :' : ' :') : 'Un seul groupe : toutes les lignes.'));
+    if (t.groups[0].vals.length) box.append(h('div', { class: 'gboxes' }, t.groups.map(g => h('span', { class: 'gbox' + (g.kept ? '' : ' out') }, g.vals.map(fmtV).join(' · ') + ' : ' + g.n))));
+  }
+  return box;
+}
+SQLLABS.forEach(lab => WORKSHOPS.push({ id: lab.id, title: lab.title, hint: lab.hint, mount: root => mountSqlLab(root, lab), reset: () => { delete SQ[lab.id]; } }));
+
+/* ================= Atelier 6 : défis ================= */
+const EXOS = [
+  { lv: 1, q: 'Afficher les titres des livres de science-fiction.', sol: `SELECT titre FROM livres WHERE genre = 'science-fiction'`, hint: 'Une seule table, un WHERE avec une chaîne entre apostrophes.' },
+  { lv: 1, q: 'Afficher le nom et l’année de naissance des auteurs français, du plus âgé au plus jeune.', sol: `SELECT nom, naissance FROM auteurs WHERE pays = 'France' ORDER BY naissance`, ordered: true, hint: 'ORDER BY naissance (ordre croissant par défaut).' },
+  { lv: 1, q: 'Compter les livres de plus de 500 pages.', sol: `SELECT COUNT(*) FROM livres WHERE pages > 500`, hint: 'COUNT(*) avec un WHERE.' },
+  { lv: 1, q: 'Afficher le titre du deuxième livre le plus long.', sol: `SELECT titre FROM livres ORDER BY pages DESC LIMIT 1 OFFSET 1`, hint: 'Trier par pages décroissantes, puis sauter une ligne et en garder une.' },
+  { lv: 2, q: 'Afficher, pour chaque livre publié après 1940, son titre et le nom de son auteur.', sol: `SELECT l.titre, a.nom FROM livres l JOIN auteurs a ON l.auteur_id = a.id WHERE l.annee > 1940`, hint: 'Jointure livres / auteurs avec l.auteur_id = a.id, puis WHERE.' },
+  { lv: 2, q: 'Afficher, pour chaque auteur ayant au moins un livre dans la base, son nom et son nombre de livres.', sol: `SELECT a.nom, COUNT(*) FROM auteurs a JOIN livres l ON l.auteur_id = a.id GROUP BY a.nom`, hint: 'Jointure puis GROUP BY sur le nom de l’auteur.' },
+  { lv: 2, q: 'Afficher les noms des lecteurs (sans doublon) ayant emprunté « 1984 ».', sol: `SELECT DISTINCT le.nom FROM emprunts e JOIN lecteurs le ON e.lecteur_id = le.id JOIN livres l ON e.livre_id = l.id WHERE l.titre = '1984'`, hint: 'Trois tables : emprunts fait le lien entre lecteurs et livres. Pensez à DISTINCT.' },
+  { lv: 2, q: 'Afficher les couples de lecteurs (nom1, nom2) habitant la même ville, chaque couple une seule fois.', sol: `SELECT a.nom, b.nom FROM lecteurs a JOIN lecteurs b ON a.ville = b.ville AND a.id < b.id`, hint: 'Autojointure : deux alias de lecteurs. La condition a.id < b.id évite les doublons et les couples (x, x).' },
+  { lv: 3, q: 'Afficher les villes dont les lecteurs ont fait au moins 4 emprunts au total, avec ce nombre, de la plus active à la moins active.', sol: `SELECT le.ville, COUNT(*) AS nb FROM emprunts e JOIN lecteurs le ON e.lecteur_id = le.id GROUP BY le.ville HAVING COUNT(*) >= 4 ORDER BY nb DESC`, ordered: true, hint: 'Jointure, GROUP BY ville, HAVING pour filtrer les groupes, ORDER BY.' },
+  { lv: 3, q: 'Afficher le titre des livres jamais empruntés.', sol: `SELECT titre FROM livres WHERE id NOT IN (SELECT livre_id FROM emprunts)`, hint: 'Requête imbriquée : id n’appartient pas à l’ensemble des livre_id de emprunts. Ou EXCEPT sur les identifiants.' },
+  { lv: 3, q: 'Afficher le titre du ou des livres les plus longs.', sol: `SELECT titre FROM livres WHERE pages = (SELECT MAX(pages) FROM livres)`, hint: 'Comparez pages à une valeur calculée par une sous-requête.' },
+  { lv: 3, q: 'Afficher les noms des auteurs (sans doublon) dont au moins un livre a été emprunté par un lecteur habitant Lyon.', sol: `SELECT DISTINCT a.nom FROM emprunts e JOIN lecteurs le ON e.lecteur_id = le.id JOIN livres l ON e.livre_id = l.id JOIN auteurs a ON l.auteur_id = a.id WHERE le.ville = 'Lyon'`, hint: 'Quatre tables à enchaîner : lecteurs, emprunts, livres, auteurs.' }
+];
+const EX = { cur: 0, sql: {}, res: {}, solved: lsGet(KEYS.ex, {}), shown: {} };
+function mountExos(root) {
+  root.innerHTML = '<h2>Défis SQL</h2><p>Douze énoncés de difficulté croissante sur la base de la bibliothèque. Écrivez votre requête, exécutez-la, puis cliquez sur <b>Vérifier</b> : votre résultat est comparé à celui de la requête attendue.</p>' +
+    '<div id="x-list"></div><div id="x-body"></div>';
+  drawExos();
+}
+function drawExos() {
+  const done = Object.keys(EX.solved).length;
+  const lst = $('#x-list'); lst.innerHTML = '';
+  lst.append(h('p', { class: 'small' }, done + ' défi' + (done > 1 ? 's' : '') + ' réussi' + (done > 1 ? 's' : '') + ' sur ' + EXOS.length + '.'));
+  lst.append(h('div', { class: 'chips' }, EXOS.map((x, i) => h('button', { type: 'button', class: 'chip' + (EX.cur === i ? ' on' : ''), 'aria-pressed': EX.cur === i ? 'true' : 'false', onclick: () => { EX.cur = i; drawExos(); } }, (i + 1) + (EX.solved[i] ? ' ✓' : '')))));
+  const x = EXOS[EX.cur], i = EX.cur, body = $('#x-body'); body.innerHTML = '';
+  body.append(h('p', { class: 'small', style: 'margin:6px 0 2px' }, 'Niveau ' + '★'.repeat(x.lv) + (x.ordered ? ' · l’ordre des lignes compte' : '')));
+  body.append(h('p', { style: 'font-weight:600;margin:2px 0 8px' }, (i + 1) + '. ' + x.q));
+  const ta = h('textarea', { class: 'sqlbox', spellcheck: 'false', autocapitalize: 'off', 'aria-label': 'Votre requête' }); ta.value = EX.sql[i] || '';
+  ta.addEventListener('input', () => { EX.sql[i] = ta.value; });
+  ta.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); exRun(false); } });
+  body.append(ta);
+  body.append(h('div', { class: 'files', style: 'margin:8px 0' },
+    h('button', { class: 'btn', type: 'button', onclick: () => exRun(false) }, 'Exécuter'),
+    h('button', { class: 'btn pri', type: 'button', onclick: () => exRun(true) }, 'Vérifier'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { EX.shown['h' + i] = !EX.shown['h' + i]; drawExos(); } }, 'Indice'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { EX.shown['s' + i] = !EX.shown['s' + i]; drawExos(); } }, 'Solution')));
+  if (EX.shown['h' + i]) body.append(h('div', { class: 'verdict' }, 'Indice : ' + x.hint));
+  if (EX.shown['s' + i]) body.append(h('pre', { class: 'code' }, x.sol));
+  body.append(h('div', { id: 'x-msg', class: 'verdict', 'aria-live': 'polite' }, 'Écrivez votre requête, puis exécutez-la.'), h('div', { id: 'x-res' }));
+  if (EX.res[i]) exShow(EX.res[i]);
+}
+function exRun(check) {
+  const i = EX.cur, x = EXOS[i], sql = EX.sql[i] || ''; let out;
+  try {
+    const r = runSQL(DB, sql, false); out = { ok: true, r };
+    if (check) {
+      const ref = runSQL(DB, x.sol, false), c = sameResult(r, ref, !!x.ordered);
+      out.check = c;
+      if (c.ok) { EX.solved[i] = true; lsSet(KEYS.ex, EX.solved); }
+    }
+  } catch (e) { out = { ok: false, msg: e instanceof SqlError ? e.message : 'Erreur interne : ' + e.message }; }
+  EX.res[i] = out;
+  const wasSolved = !!EX.solved[i];
+  if (check && out.check && out.check.ok) drawExos(); else exShow(out);
+  void wasSolved;
+}
+function exShow(out) {
+  if (!$('#x-msg')) return;
+  const res = $('#x-res'); res.innerHTML = '';
+  if (!out.ok) { setMsg('#x-msg', out.msg, 'no'); return; }
+  const r = out.r;
+  if (out.check) {
+    const c = out.check;
+    if (c.ok) setMsg('#x-msg', 'Bravo : résultat conforme (' + r.rows.length + ' ligne' + (r.rows.length > 1 ? 's' : '') + ').', 'yes');
+    else if (c.why === 'cols') setMsg('#x-msg', 'Pas encore : votre résultat a ' + c.got + ' colonne(s), il en faut ' + c.exp + '.', 'warn');
+    else if (c.why === 'rows') setMsg('#x-msg', 'Pas encore : votre résultat a ' + c.got + ' ligne(s), il en faut ' + c.exp + '.', 'warn');
+    else if (c.why === 'order') setMsg('#x-msg', 'Presque : les lignes sont les bonnes, mais dans un autre ordre.', 'warn');
+    else setMsg('#x-msg', 'Pas encore : le nombre de lignes est bon, mais leur contenu diffère de celui attendu.', 'warn');
+  } else setMsg('#x-msg', r.rows.length + ' ligne' + (r.rows.length > 1 ? 's' : '') + ' × ' + r.cols.length + ' colonne' + (r.cols.length > 1 ? 's' : '') + '. Cliquez sur Vérifier pour comparer à l’attendu.', r.rows.length ? '' : 'warn');
+  res.append(resultTable(r.cols, r.rows, 60));
+}
+WORKSHOPS.push({ id: 's6', title: 'Défis', hint: 'Écrivez la requête qui répond à l’énoncé ; la vérification compare son résultat à celui de la solution.', mount: mountExos, reset: () => { EX.cur = 0; EX.sql = {}; EX.res = {}; EX.shown = {}; EX.solved = {}; lsSet(KEYS.ex, {}); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  s1: {
+    title: 'Tables et clés', level: 'Niveau 1 · Découvrir', time: '25 min', course: 'cles',
+    goal: 'Maîtriser le vocabulaire des bases de données, repérer clés primaires et clés étrangères et savoir traduire une association entre entités.',
+    steps: [
+      'Dans l’onglet <b>livres</b>, repérez la clé primaire (soulignée) et la clé étrangère (en violet). Quel est le domaine de chaque attribut : entier, flottant ou chaîne ?',
+      'Cliquez sur une valeur de <b>auteur_id</b> : quelle ligne de quelle table est désignée ?',
+      'Ouvrez la table <b>emprunts</b> : combien de clés étrangères contient-elle ? Quelles tables relie-t-elle ?',
+      'Dans « Tester l’intégrité », essayez les quatre cas types. Pour chacun, expliquez pourquoi l’insertion est acceptée ou refusée.',
+      'Dans « Traduire une association », passez en revue les trois types. Pourquoi l’association * — * entre lecteurs et livres nécessite-t-elle la table emprunts ?'
+    ],
+    defi: { q: 'Peut-on insérer la ligne (13, \'Bel-Ami\', 8, 1885, \'roman\', 450) dans <b>livres</b> ? Et la ligne (17, 3, 6, 60) dans <b>emprunts</b> ?',
+      a: 'La première ligne est <b>refusée</b> : l’identifiant d’auteur 8 ne correspond à aucune ligne de <b>auteurs</b> (les identifiants vont de 1 à 7), ce qui viole la clé étrangère. La seconde est <b>acceptée</b> : l’id 17 est libre, le livre 3 (Germinal) et le lecteur 6 (Farid) existent.' },
+    qcm: [
+      { q: 'Dans une table, que désigne une ligne ?', o: ['Un attribut', 'Un enregistrement : un objet décrit par une valeur pour chaque attribut', 'Un domaine', 'Une clé étrangère'], a: 1, w: 'Une ligne (ou enregistrement) regroupe les valeurs des attributs pour un objet. Les colonnes sont les attributs.' },
+      { q: 'À quoi sert une clé primaire ?', o: ['À trier la table', 'À identifier de façon unique chaque ligne de la table', 'À référencer une autre table', 'À calculer des agrégats'], a: 1, w: 'Deux lignes d’une même table ne peuvent pas avoir la même valeur de clé primaire. Elle peut être formée de plusieurs attributs.' },
+      { q: 'Qu’est-ce qu’une clé étrangère ?', o: ['Un attribut dont les valeurs sont des clés primaires d’une autre table', 'Une clé primaire écrite en majuscules', 'Un attribut qui ne contient que des chaînes', 'Une table de sauvegarde'], a: 0, w: 'Ainsi livres.auteur_id contient des valeurs de auteurs.id : c’est ce qui relie les deux tables.' },
+      { q: 'Comment traduit-on en SQL une association * — * entre deux entités ?', o: ['Par une clé étrangère dans chacune des deux tables', 'Par une table supplémentaire portant deux clés étrangères (deux associations 1 — *)', 'On ne peut pas la traduire', 'Par une clé primaire commune'], a: 1, w: 'On sépare l’association * — * en deux associations 1 — * par une table intermédiaire, comme emprunts entre lecteurs et livres.' },
+      { q: 'On tente d’insérer dans emprunts une ligne avec livre_id = 42. Que se passe-t-il ?', o: ['L’insertion est acceptée', 'Elle viole l’intégrité : aucun livre n’a l’identifiant 42', 'La clé primaire est modifiée', 'La table livres reçoit une ligne automatiquement'], a: 1, w: 'Une clé étrangère doit toujours désigner une ligne existante de la table référencée.' }
+    ]
+  },
+  s2: {
+    title: 'Interroger une table', level: 'Niveau 1 · Découvrir', time: '30 min', course: 'select',
+    goal: 'Écrire des requêtes SELECT simples avec WHERE, AS, DISTINCT, ORDER BY, LIMIT et OFFSET, et comprendre l’ordre dans lequel elles s’exécutent.',
+    steps: [
+      'Exécutez « Toutes les lignes » puis « Projection » : comparez le nombre de lignes et de colonnes.',
+      'Exécutez « Sélection ». Lisez la chaîne d’exécution sous la requête : combien de lignes sortent de FROM ? de WHERE ?',
+      'Modifiez la condition pour obtenir les livres de plus de 300 pages et publiés avant 1900.',
+      'Exécutez « DISTINCT » puis supprimez le mot DISTINCT : que change-t-il ?',
+      'Avec « LIMIT et OFFSET », que se passe-t-il si vous changez OFFSET 1 en OFFSET 0 ? Provoquez ensuite l’erreur d’apostrophes et lisez le message.'
+    ],
+    defi: { q: 'Écrire la requête qui donne les titres des romans publiés après 1850 et de plus de 300 pages, du plus long au plus court, en ne gardant que les 3 premiers.',
+      a: '<code>SELECT titre FROM livres WHERE genre = \'roman\' AND annee &gt; 1850 AND pages &gt; 300 ORDER BY pages DESC LIMIT 3</code><br>Résultat : <b>Les Misérables</b> (1900 pages), <b>Guerre et Paix</b> (1300), <b>Germinal</b> (590).' },
+    qcm: [
+      { q: 'Quelle clause sélectionne les lignes ?', o: ['SELECT', 'FROM', 'WHERE', 'ORDER BY'], a: 2, w: 'WHERE sélectionne les lignes qui vérifient une condition ; la liste après SELECT choisit les colonnes (projection).' },
+      { q: 'Combien de lignes renvoie SELECT DISTINCT genre FROM livres ?', o: ['12', '4', '3', '1'], a: 1, w: 'Les 12 livres appartiennent à 4 genres : roman, science-fiction, fable et poésie. DISTINCT supprime les doublons.' },
+      { q: 'Que renvoie ORDER BY pages DESC LIMIT 1 OFFSET 1 ?', o: ['Le livre le plus long', 'Le deuxième livre le plus long', 'Le livre le plus court', 'Les deux premiers livres'], a: 1, w: 'On trie par pages décroissantes, on saute 1 ligne (OFFSET 1) puis on en garde 1 (LIMIT 1).' },
+      { q: 'Quelle écriture exprime « différent de » ?', o: ['!==', '<>', '=/=', 'NOT ='], a: 1, w: 'En SQL, « différent » s’écrit <>. Les autres comparateurs sont =, <, <=, >, >=.' },
+      { q: 'À quoi sert AS dans SELECT 2026 - annee AS anciennete ?', o: ['À calculer la différence', 'À renommer la colonne du résultat', 'À trier le résultat', 'À créer une nouvelle table'], a: 1, w: 'AS donne un nom à la colonne du résultat ; la table d’origine n’est pas modifiée.' }
+    ]
+  },
+  s3: {
+    title: 'Jointures', level: 'Niveau 2 · Comprendre', time: '40 min', course: 'jointures',
+    goal: 'Relier plusieurs tables par une équi-jointure, comprendre le lien avec le produit cartésien et utiliser une autojointure.',
+    steps: [
+      'Exécutez « Produit cartésien » : combien de lignes ? Retrouvez ce nombre à partir de la taille des deux tables.',
+      'Exécutez « Produit + WHERE » puis « JOIN … ON » : que remarquez-vous sur le résultat ?',
+      'Dans « Trois tables », identifiez les deux conditions ON. Quel rôle joue la table emprunts ?',
+      'Exécutez « Autojointure ». Pourquoi faut-il deux alias de la même table ? Que change la condition a.id < b.id ?',
+      'Provoquez l’erreur « colonne ambiguë » puis corrigez-la en préfixant les colonnes.'
+    ],
+    defi: { q: 'Donner les noms (sans doublon) des lecteurs qui ont emprunté au moins un livre d’un auteur français.',
+      a: '<code>SELECT DISTINCT le.nom FROM emprunts e JOIN lecteurs le ON e.lecteur_id = le.id JOIN livres l ON e.livre_id = l.id JOIN auteurs a ON l.auteur_id = a.id WHERE a.pays = \'France\'</code><br>Résultat : <b>Alice, Bruno, Chloé, David</b> (Emma et Farid n’ont emprunté aucun livre d’un auteur français).' },
+    qcm: [
+      { q: 'Combien de lignes produit SELECT * FROM livres, auteurs (12 livres, 7 auteurs) ?', o: ['12', '7', '19', '84'], a: 3, w: 'Le produit cartésien associe chaque ligne de livres à chaque ligne de auteurs : 12 × 7 = 84 lignes.' },
+      { q: 'Combien de lignes renvoie livres JOIN auteurs ON livres.auteur_id = auteurs.id ?', o: ['84', '12', '7', '19'], a: 1, w: 'Chaque livre a exactement un auteur : la jointure garde un couple par livre, soit 12 lignes.' },
+      { q: 'Pourquoi utilise-t-on des alias dans une autojointure ?', o: ['Pour accélérer la requête', 'Pour distinguer les deux exemplaires de la même table', 'Pour supprimer les doublons', 'Pour trier le résultat'], a: 1, w: 'Il faut deux noms différents (a et b) pour désigner les deux copies de la table et préciser les colonnes de chacune.' },
+      { q: 'On écrit FROM livres, auteurs sans condition de jointure. Que obtient-on ?', o: ['Une erreur', 'Le produit cartésien des deux tables', 'La jointure naturelle', 'Uniquement les livres sans auteur'], a: 1, w: 'Sans condition qui relie la clé étrangère à la clé primaire, tous les couples sont conservés.' },
+      { q: 'Dans SELECT id FROM livres JOIN auteurs ON …, que provoque id ?', o: ['Rien de particulier', 'Une ambiguïté : id existe dans les deux tables, il faut écrire livres.id ou auteurs.id', 'Un produit cartésien', 'Le tri du résultat'], a: 1, w: 'Quand un nom de colonne existe dans plusieurs tables de la requête, on le préfixe par le nom ou l’alias de la table.' }
+    ]
+  },
+  s4: {
+    title: 'Agrégation', level: 'Niveau 2 · Comprendre', time: '35 min', course: 'agreg',
+    goal: 'Calculer des agrégats avec COUNT, SUM, AVG, MIN, MAX, former des groupes avec GROUP BY et filtrer avec WHERE ou HAVING.',
+    steps: [
+      'Exécutez « Agrégats globaux » : combien de lignes renvoie la requête, malgré 12 livres dans la table ?',
+      'Exécutez « GROUP BY » : observez les groupes formés sous la requête et le nombre de lignes de chacun.',
+      'Exécutez « HAVING » : quels groupes sont barrés ? Pourquoi ?',
+      'Comparez « HAVING » et « WHERE puis HAVING » : à quel moment chaque filtre intervient-il dans l’ordre d’exécution ?',
+      'Provoquez l’erreur « WHERE et agrégat », puis réécrivez la requête avec HAVING.'
+    ],
+    defi: { q: 'Donner les genres pour lesquels il y a eu plus de 7 emprunts, avec ce nombre.',
+      a: '<code>SELECT l.genre, COUNT(*) AS nb FROM emprunts e JOIN livres l ON e.livre_id = l.id GROUP BY l.genre HAVING COUNT(*) &gt; 7</code><br>Résultat : <b>roman : 8</b> (science-fiction en compte 7, fable 1). Le filtre porte sur un agrégat : c’est HAVING, pas WHERE.' },
+    qcm: [
+      { q: 'Quelle est la différence entre WHERE et HAVING ?', o: ['Aucune', 'WHERE filtre les lignes avant le regroupement, HAVING filtre les groupes après', 'WHERE sert aux chaînes, HAVING aux nombres', 'HAVING s’utilise sans GROUP BY uniquement'], a: 1, w: 'WHERE agit sur les lignes de départ ; HAVING agit sur les groupes et peut donc utiliser des agrégats.' },
+      { q: 'Quel est l’ordre logique d’exécution d’une requête ?', o: ['SELECT, FROM, WHERE, GROUP BY', 'FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY, LIMIT', 'WHERE, FROM, SELECT, ORDER BY', 'GROUP BY, FROM, HAVING, WHERE'], a: 1, w: 'On construit d’abord les lignes (FROM), on les filtre (WHERE), on les regroupe (GROUP BY), on filtre les groupes (HAVING), puis on calcule le résultat (SELECT), on trie (ORDER BY) et on coupe (LIMIT).' },
+      { q: 'SELECT genre, COUNT(*) FROM livres GROUP BY genre renvoie…', o: ['Une seule ligne', 'Une ligne par genre', 'Une ligne par livre', 'Une erreur'], a: 1, w: 'GROUP BY forme un groupe par valeur de genre ; l’agrégat est calculé pour chaque groupe.' },
+      { q: 'Combien de lignes renvoie SELECT AVG(pages) FROM livres ?', o: ['12', '4', '1', '0'], a: 2, w: 'Sans GROUP BY, toutes les lignes forment un seul groupe : l’agrégat donne une seule ligne.' },
+      { q: 'Peut-on écrire WHERE COUNT(*) > 1 ?', o: ['Oui, c’est équivalent à HAVING', 'Non : un agrégat se filtre avec HAVING', 'Oui, mais seulement avec LIMIT', 'Non : COUNT n’existe pas en SQL'], a: 1, w: 'Au moment du WHERE, les groupes n’existent pas encore : un filtre sur un agrégat doit être placé dans HAVING.' }
+    ]
+  },
+  s5: {
+    title: 'Ensembles et imbriquées', level: 'Niveau 2 · Comprendre', time: '35 min', course: 'imbriquees',
+    goal: 'Combiner des résultats avec UNION, INTERSECT, EXCEPT et écrire quelques requêtes imbriquées simples.',
+    steps: [
+      'Exécutez « UNION » : combien de lignes, alors que auteurs et lecteurs en fournissent davantage ? Quel rôle joue l’élimination des doublons ?',
+      'Exécutez « INTERSECT » puis « EXCEPT » : décrivez chacun en une phrase.',
+      'Dans « Valeur calculée », exécutez séparément la sous-requête entre parenthèses : quelle valeur renvoie-t-elle ?',
+      'Exécutez « NOT IN » : à quel ensemble de valeurs compare-t-on id ?',
+      'Écrivez la même requête que « NOT IN » avec EXCEPT, puis provoquez l’erreur de colonnes.'
+    ],
+    defi: { q: 'Donner les titres des livres jamais empruntés, de deux façons : avec une requête imbriquée et avec EXCEPT.',
+      a: 'Imbriquée : <code>SELECT titre FROM livres WHERE id NOT IN (SELECT livre_id FROM emprunts)</code>.<br>Avec EXCEPT, on obtient les identifiants : <code>SELECT id FROM livres EXCEPT SELECT livre_id FROM emprunts</code> (4 et 12), qu’il faut ensuite traduire en titres.<br>Résultat : <b>L’Assommoir</b> et <b>Les Contemplations</b>.' },
+    qcm: [
+      { q: 'Combien de lignes renvoie SELECT genre FROM livres UNION SELECT genre FROM livres ?', o: ['24', '12', '4', '0'], a: 2, w: 'UNION élimine les doublons : il reste les 4 genres distincts.' },
+      { q: 'Que renvoie A INTERSECT B ?', o: ['Les lignes de A ou de B', 'Les lignes présentes à la fois dans A et dans B', 'Les lignes de A absentes de B', 'Le produit cartésien de A et B'], a: 1, w: 'INTERSECT est l’intersection ; UNION est la réunion et EXCEPT la différence.' },
+      { q: 'Que renvoie A EXCEPT B ?', o: ['Les lignes de A absentes de B', 'Les lignes de B absentes de A', 'Toutes les lignes de A et B', 'Les lignes communes'], a: 0, w: 'EXCEPT n’est pas symétrique : A EXCEPT B garde les lignes de A qui ne figurent pas dans B.' },
+      { q: 'Que représente (SELECT AVG(pages) FROM livres) dans WHERE pages > (…) ?', o: ['Une colonne', 'Une valeur unique calculée par la sous-requête', 'Une table', 'Une clé étrangère'], a: 1, w: 'La sous-requête renvoie une seule valeur, ici la moyenne des pages, comparée à chaque ligne.' },
+      { q: 'Quelles conditions doivent vérifier deux SELECT combinés par UNION ?', o: ['Même table', 'Même nombre de colonnes, de types compatibles', 'Même nombre de lignes', 'Aucune'], a: 1, w: 'Les deux résultats doivent avoir le même nombre de colonnes, de domaines compatibles.' }
+    ]
+  },
+  s6: {
+    title: 'Défis SQL', level: 'Niveau 3 · Maîtriser', time: '45 min', course: 'bilan',
+    goal: 'Choisir et enchaîner les clauses SQL pour répondre à une question sur une base de plusieurs tables.',
+    steps: [
+      'Commencez par les défis ★ (une seule table) puis passez aux ★★ (jointures).',
+      'Avant d’écrire, listez les tables dont vous avez besoin et la condition de jointure de chacune.',
+      'Utilisez « Exécuter » pour inspecter votre résultat, puis « Vérifier » pour le comparer à l’attendu.',
+      'Si le message dit que le nombre de lignes diffère, cherchez un doublon (DISTINCT ?) ou une condition manquante.',
+      'N’ouvrez l’indice qu’après plusieurs essais, et la solution en dernier.'
+    ],
+    defi: { q: 'Parmi les 12 défis, lesquels peuvent se résoudre de deux façons différentes ?',
+      a: 'Les « jamais empruntés » (NOT IN ou EXCEPT), « le plus long » (sous-requête ou ORDER BY … LIMIT 1, si l’on admet un seul résultat), et toute jointure qui peut s’écrire avec ON ou avec un produit cartésien filtré par WHERE.' },
+    qcm: [
+      { q: 'Pour compter les emprunts de chaque lecteur, que faut-il ?', o: ['ORDER BY lecteur_id', 'GROUP BY lecteur_id avec COUNT(*)', 'WHERE COUNT(*) > 0', 'DISTINCT lecteur_id'], a: 1, w: 'On forme un groupe par lecteur et on compte les lignes de chaque groupe.' },
+      { q: 'Quelle requête donne les 3 emprunts les plus récents ?', o: ['ORDER BY jour LIMIT 3', 'ORDER BY jour DESC LIMIT 3', 'WHERE jour = MAX(jour)', 'GROUP BY jour LIMIT 3'], a: 1, w: 'Le tri décroissant place les plus grands jours en premier ; LIMIT 3 garde les trois premières lignes.' },
+      { q: 'Une jointure renvoie beaucoup trop de lignes. Cause la plus probable ?', o: ['La clé primaire est trop longue', 'La condition de jointure ON manque ou est incomplète', 'Il manque un ORDER BY', 'La table est trop petite'], a: 1, w: 'Sans condition (ou avec une condition insuffisante), on retombe sur un produit cartésien partiel.' },
+      { q: 'Quelle est la forme générale d’une requête ?', o: ['FROM … SELECT … WHERE … ORDER BY', 'SELECT … FROM … WHERE … GROUP BY … HAVING … ORDER BY … LIMIT', 'SELECT … WHERE … FROM … HAVING', 'WHERE … SELECT … FROM'], a: 1, w: 'C’est l’ordre d’écriture des clauses, différent de leur ordre d’exécution (FROM d’abord).' },
+      { q: 'Dans une équi-jointure, la condition ON est…', o: ['Une inégalité entre deux colonnes', 'Une conjonction d’égalités entre colonnes', 'Un tri', 'Un agrégat'], a: 1, w: 'Au programme, les jointures sont des équi-jointures : ON combine des égalités par AND.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'cadre', t: 'Cadre du cours', h: `
+<p>Ce cours suit la partie « Bases de données » du programme d’ITC (troisième semestre). On se limite volontairement à une <b>description applicative</b> des bases de données en langage SQL : il s’agit d’<b>interroger</b> une base qui présente des données à travers plusieurs relations.</p>
+<h3>Au programme</h3>
+<ul><li>Vocabulaire : tables ou relations, attributs ou colonnes, domaine, schéma, enregistrements ou lignes.</li><li>Clé primaire, clé étrangère, entités et associations (1 — 1, 1 — *, * — *).</li><li>SELECT avec WHERE, projection, AS, DISTINCT, LIMIT, OFFSET, ORDER BY.</li><li>UNION, INTERSECT, EXCEPT, produit cartésien.</li><li>Jointures internes JOIN … ON, autojointure.</li><li>MIN, MAX, SUM, AVG, COUNT, GROUP BY, HAVING, quelques requêtes imbriquées.</li></ul>
+<h3>Hors programme</h3>
+<p>La création et la suppression de tables, l’algèbre et le calcul relationnels, la notion de NULL, la représentation des dates, les collations, les index, les transactions, l’optimisation de requêtes, les bases non relationnelles.</p>
+<p>Les exemples portent sur une petite base de bibliothèque : <b>auteurs</b>, <b>livres</b>, <b>lecteurs</b> et <b>emprunts</b>. Le temps est repéré par un numéro de jour (un entier), conformément au programme.</p>
+<div class="retain"><b>À retenir.</b> On apprend à <b>interroger</b> une base avec SELECT ; on ne la crée ni ne la modifie ici.</div>` });
+
+COURSE.push({ id: 'vocab', t: 'Tables, lignes, domaines', h: `
+<p>Une <b>base de données relationnelle</b> est un ensemble de <b>tables</b> (ou relations). Chaque table est un tableau :</p>
+<ul><li>les <b>colonnes</b> sont les <b>attributs</b> ; chacun a un <b>domaine</b> : entier, flottant ou chaîne de caractères ;</li><li>les <b>lignes</b> sont les <b>enregistrements</b> (ou n-uplets) ;</li><li>le <b>schéma</b> d’une table est la liste de ses attributs avec leur domaine.</li></ul>
+<table class="ctable"><thead><tr><th colspan="4">livres</th></tr><tr><th>id</th><th>titre</th><th>auteur_id</th><th>annee</th></tr></thead><tbody>
+<tr><td>7</td><td>1984</td><td>4</td><td>1949</td></tr><tr><td>8</td><td>La Ferme des animaux</td><td>4</td><td>1945</td></tr></tbody></table>
+<p>Schéma : <code>livres(id : entier, titre : chaîne, auteur_id : entier, annee : entier, genre : chaîne, pages : entier)</code>.</p>
+<p>Dans une requête, les chaînes s’écrivent entre apostrophes (<code>'roman'</code>), les nombres sans guillemets. Pour écrire une apostrophe dans une chaîne, on la double : <code>'L''Étranger'</code>.</p>
+<div class="retain"><b>À retenir.</b> Table = relation ; colonne = attribut ; ligne = enregistrement ; chaque attribut a un domaine.</div>` });
+
+COURSE.push({ id: 'cles', t: 'Clés et associations', h: `
+<h3>Clé primaire</h3>
+<p>Une <b>clé primaire</b> est un attribut, ou un ensemble d’attributs, dont la valeur identifie de façon unique chaque ligne de la table. Dans <code>livres</code>, c’est <code>id</code>. Elle n’est pas forcément formée d’un seul attribut, même si c’est le cas le plus fréquent.</p>
+<h3>Clé étrangère</h3>
+<p>Une <b>clé étrangère</b> est un attribut d’une table dont les valeurs sont des valeurs de la clé primaire d’une autre table. Ainsi <code>livres.auteur_id</code> référence <code>auteurs.id</code> : chaque livre désigne son auteur. Une clé étrangère doit toujours désigner une ligne qui existe.</p>
+<h3>Entités et associations</h3>
+<p>Le modèle <b>entité–association</b> décrit des entités (auteur, livre, lecteur) et les associations qui les lient :</p>
+<table class="ctable"><thead><tr><th>Association</th><th>Exemple</th><th>Traduction en tables</th></tr></thead><tbody>
+<tr><td>1 — 1</td><td>lecteur / carte de bibliothèque</td><td>une clé étrangère dans l’une des tables, dont les valeurs sont toutes distinctes</td></tr>
+<tr><td>1 — *</td><td>auteur / livres</td><td>clé étrangère dans la table du côté « * » (livres.auteur_id)</td></tr>
+<tr><td>* — *</td><td>lecteurs / livres</td><td>deux associations 1 — * grâce à une table intermédiaire (emprunts) portant deux clés étrangères</td></tr></tbody></table>
+<p>On peut dessiner ces schémas par de simples diagrammes à flèches : <code>auteurs ← livres</code>, <code>lecteurs ← emprunts → livres</code>.</p>
+<div class="retain"><b>À retenir.</b> Clé primaire : identifie une ligne. Clé étrangère : référence la clé primaire d’une autre table. Une association * — * se sépare en deux associations 1 — *.</div>` });
+
+COURSE.push({ id: 'select', t: 'SELECT, WHERE, projection', h: `
+<pre class="code">SELECT [DISTINCT] colonnes
+FROM table
+[WHERE condition]
+[ORDER BY colonne [DESC]]
+[LIMIT n [OFFSET k]]</pre>
+<ul>
+<li><b>Projection</b> : la liste après SELECT choisit les colonnes ; <code>*</code> désigne toutes les colonnes ; <code>expr AS nom</code> renomme une colonne du résultat.</li>
+<li><b>Sélection</b> : <code>WHERE</code> ne garde que les lignes qui vérifient la condition.</li>
+<li><b>Opérateurs</b> : <code>+ − * /</code> ; comparaisons <code>= &lt;&gt; &lt; &lt;= &gt; &gt;=</code> ; connecteurs <code>AND</code>, <code>OR</code>, <code>NOT</code>. NOT s’applique avant AND, AND avant OR : on utilise des parenthèses pour lever le doute.</li>
+<li><b>DISTINCT</b> supprime les doublons du résultat.</li>
+<li><b>ORDER BY</b> trie (croissant par défaut, <code>DESC</code> pour décroissant) ; on peut trier selon plusieurs colonnes.</li>
+<li><b>LIMIT n</b> garde les n premières lignes, <b>OFFSET k</b> saute d’abord k lignes.</li>
+</ul>
+<pre class="code">SELECT titre, 2026 - annee AS anciennete
+FROM livres
+WHERE genre = 'roman' AND annee &gt; 1850
+ORDER BY anciennete DESC
+LIMIT 3 OFFSET 1</pre>
+<p>Un SELECT ne modifie jamais la table : il construit un nouveau tableau, le résultat.</p>
+<div class="retain"><b>À retenir.</b> SELECT choisit les colonnes, WHERE les lignes, DISTINCT supprime les doublons, ORDER BY trie, LIMIT et OFFSET découpent.</div>` });
+
+COURSE.push({ id: 'ensembles', t: 'Produit cartésien et opérateurs ensemblistes', h: `
+<h3>Produit cartésien</h3>
+<p>Le <b>produit cartésien</b> de deux tables contient toutes les paires formées d’une ligne de la première et d’une ligne de la seconde. Si elles ont p et q lignes, il en a p × q.</p>
+<pre class="code">SELECT * FROM livres, auteurs        -- 12 x 7 = 84 lignes</pre>
+<p>Il est rarement utile seul : on le filtre par une condition qui relie les tables (voir jointures).</p>
+<h3>UNION, INTERSECT, EXCEPT</h3>
+<p>Ces opérateurs combinent deux résultats qui ont <b>le même nombre de colonnes</b>, de domaines compatibles. Le résultat est un ensemble : les doublons disparaissent.</p>
+<table class="ctable"><thead><tr><th>Opérateur</th><th>Résultat</th></tr></thead><tbody>
+<tr><td>A UNION B</td><td>lignes de A ou de B</td></tr><tr><td>A INTERSECT B</td><td>lignes de A et de B</td></tr><tr><td>A EXCEPT B</td><td>lignes de A qui ne sont pas dans B</td></tr></tbody></table>
+<pre class="code">SELECT id FROM livres
+EXCEPT
+SELECT livre_id FROM emprunts      -- livres jamais empruntés</pre>
+<div class="retain"><b>À retenir.</b> Produit cartésien : p × q lignes. UNION, INTERSECT, EXCEPT : réunion, intersection, différence de deux résultats de même forme.</div>` });
+
+COURSE.push({ id: 'jointures', t: 'Jointures', h: `
+<p>Une <b>jointure interne</b> relie des tables par leurs clés : elle garde, parmi le produit cartésien, les paires qui vérifient une condition.</p>
+<pre class="code">SELECT l.titre, a.nom
+FROM livres l
+JOIN auteurs a ON l.auteur_id = a.id</pre>
+<ul>
+<li><code>T1 JOIN T2 ON φ</code> équivaut à un produit cartésien filtré par φ. Au programme, φ est une <b>conjonction d’égalités</b> (équi-jointure).</li>
+<li>On peut enchaîner plusieurs jointures : <code>T1 JOIN T2 ON … JOIN T3 ON …</code>.</li>
+<li>Les <b>alias</b> (<code>livres l</code>) raccourcissent l’écriture et lèvent les ambiguïtés : si deux tables ont une colonne <code>id</code>, on écrit <code>l.id</code> ou <code>a.id</code>.</li>
+</ul>
+<pre class="code">-- trois tables : emprunts relie lecteurs et livres
+SELECT le.nom, l.titre
+FROM emprunts e
+JOIN lecteurs le ON e.lecteur_id = le.id
+JOIN livres l ON e.livre_id = l.id</pre>
+<h3>Autojointure</h3>
+<p>Une <b>autojointure</b> joint une table avec elle-même : on lui donne deux alias.</p>
+<pre class="code">SELECT a.nom, b.nom
+FROM lecteurs a JOIN lecteurs b
+  ON a.ville = b.ville AND a.id &lt; b.id    -- couples de lecteurs d'une même ville</pre>
+<p>La condition <code>a.id &lt; b.id</code> élimine les couples (x, x) et les doublons (x, y) / (y, x).</p>
+<div class="retain"><b>À retenir.</b> JOIN … ON relie une clé étrangère à une clé primaire ; sans condition on retrouve un produit cartésien. Les alias distinguent les tables, surtout dans une autojointure.</div>` });
+
+COURSE.push({ id: 'agreg', t: 'Agrégation, GROUP BY, HAVING', h: `
+<h3>Fonctions d’agrégation</h3>
+<p><code>COUNT</code>, <code>SUM</code>, <code>AVG</code>, <code>MIN</code>, <code>MAX</code> résument un ensemble de lignes en une valeur. <code>COUNT(*)</code> compte les lignes.</p>
+<pre class="code">SELECT COUNT(*), MIN(annee), MAX(pages), AVG(pages) FROM livres    -- une seule ligne</pre>
+<h3>GROUP BY</h3>
+<p><code>GROUP BY a</code> regroupe les lignes qui ont la même valeur de a, et chaque agrégat est calculé par groupe. Dans le SELECT, on ne met que les attributs de regroupement et des agrégats.</p>
+<pre class="code">SELECT genre, COUNT(*) AS nb
+FROM livres
+GROUP BY genre</pre>
+<h3>HAVING et WHERE</h3>
+<ul><li><b>WHERE</b> filtre les <b>lignes</b>, avant le regroupement ; il ne peut pas contenir d’agrégat.</li><li><b>HAVING</b> filtre les <b>groupes</b>, après le regroupement ; il porte en général sur un agrégat.</li></ul>
+<pre class="code">SELECT a.nom, COUNT(*) AS nb
+FROM livres l JOIN auteurs a ON l.auteur_id = a.id
+WHERE l.annee &gt; 1850          -- filtre les livres
+GROUP BY a.nom
+HAVING COUNT(*) &gt; 1           -- filtre les auteurs</pre>
+<h3>Ordre d’exécution</h3>
+<p>FROM → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT / OFFSET. C’est pourquoi un alias défini dans SELECT peut servir dans ORDER BY mais pas dans WHERE.</p>
+<div class="retain"><b>À retenir.</b> WHERE filtre les lignes avant GROUP BY, HAVING filtre les groupes après. Un agrégat ne s’écrit jamais dans WHERE.</div>` });
+
+COURSE.push({ id: 'imbriquees', t: 'Requêtes imbriquées', h: `
+<p>Une <b>requête imbriquée</b> (ou sous-requête) est un SELECT placé entre parenthèses dans une autre requête. On en présente quelques exemples.</p>
+<h3>Comparer à une valeur</h3>
+<pre class="code">SELECT titre FROM livres
+WHERE pages = (SELECT MAX(pages) FROM livres)</pre>
+<p>La sous-requête renvoie une valeur unique (le maximum), comparée à chaque ligne.</p>
+<h3>Comparer à un ensemble</h3>
+<pre class="code">SELECT titre FROM livres
+WHERE id NOT IN (SELECT livre_id FROM emprunts)   -- jamais empruntés</pre>
+<p><code>IN</code> teste l’appartenance à l’ensemble de valeurs produit par la sous-requête ; <code>NOT IN</code> teste la non-appartenance.</p>
+<h3>Sous-requête dans FROM</h3>
+<pre class="code">SELECT genre, nb
+FROM (SELECT genre, COUNT(*) AS nb FROM livres GROUP BY genre) AS t
+WHERE nb &gt; 2</pre>
+<p>Le résultat de la sous-requête sert de table, qu’on nomme par un alias.</p>
+<div class="retain"><b>À retenir.</b> Une sous-requête s’exécute d’abord et fournit une valeur ou un ensemble de valeurs à la requête principale.</div>` });
+
+COURSE.push({ id: 'bilan', t: 'Méthode et synthèse', h: `
+<h3>Démarche pour écrire une requête</h3>
+<ol><li>Quelles <b>tables</b> contiennent les informations demandées ? Les relier par des jointures (clé étrangère = clé primaire).</li><li>Quelles <b>lignes</b> garder ? Condition WHERE.</li><li>Faut-il <b>regrouper</b> ? GROUP BY, puis HAVING pour filtrer les groupes.</li><li>Quelles <b>colonnes</b> afficher ? SELECT, avec AS si besoin ; DISTINCT pour supprimer les doublons.</li><li>Dans quel <b>ordre</b> ? ORDER BY ; combien ? LIMIT, OFFSET.</li></ol>
+<h3>Erreurs fréquentes</h3>
+<table class="ctable"><thead><tr><th>Symptôme</th><th>Cause probable</th></tr></thead><tbody>
+<tr><td>Beaucoup trop de lignes</td><td>condition de jointure oubliée : produit cartésien</td></tr>
+<tr><td>Doublons dans le résultat</td><td>jointure qui multiplie les lignes : DISTINCT ou GROUP BY</td></tr>
+<tr><td>Colonne ambiguë</td><td>même nom dans deux tables : préfixer par l’alias</td></tr>
+<tr><td>Agrégat refusé dans WHERE</td><td>utiliser HAVING</td></tr>
+<tr><td>Colonne inconnue pour une chaîne</td><td>oubli des apostrophes</td></tr></tbody></table>
+<div class="retain"><b>À retenir.</b> Penser en étapes : tables et jointures, filtre, regroupement, affichage, tri.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Table, relation</dt><dd>Ensemble de lignes décrites par les mêmes attributs.</dd>
+<dt>Attribut, colonne</dt><dd>Caractéristique d’une table, de domaine donné.</dd>
+<dt>Domaine</dt><dd>Ensemble des valeurs possibles d’un attribut : entier, flottant, chaîne.</dd>
+<dt>Schéma</dt><dd>Description des attributs d’une table (ou des tables d’une base).</dd>
+<dt>Enregistrement, ligne</dt><dd>Ligne d’une table.</dd>
+<dt>Clé primaire</dt><dd>Attribut(s) identifiant de façon unique chaque ligne.</dd>
+<dt>Clé étrangère</dt><dd>Attribut(s) référençant la clé primaire d’une autre table.</dd>
+<dt>Association</dt><dd>Lien entre entités : 1 — 1, 1 — *, * — *.</dd>
+<dt>Projection</dt><dd>Choix des colonnes du résultat.</dd>
+<dt>Sélection</dt><dd>Choix des lignes par une condition WHERE.</dd>
+<dt>Produit cartésien</dt><dd>Toutes les paires de lignes de deux tables.</dd>
+<dt>Jointure</dt><dd>Produit cartésien filtré par une condition portant sur des clés.</dd>
+<dt>Autojointure</dt><dd>Jointure d’une table avec elle-même, à l’aide d’alias.</dd>
+<dt>Agrégat</dt><dd>Valeur calculée sur un ensemble de lignes : COUNT, SUM, AVG, MIN, MAX.</dd>
+<dt>Requête imbriquée</dt><dd>SELECT placé entre parenthèses dans une autre requête.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 's1' };
+const AS = { key: 's1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'notions' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : bases de données et SQL'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Six ateliers sur les bases de données et le langage SQL (ITC, CPGE 2e année) : tables et clés, requêtes SELECT, jointures, agrégation, ensembles et requêtes imbriquées, défis.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans les ateliers 2 à 5, cliquez sur un exemple ou écrivez votre requête, puis exécutez-la (Ctrl + Entrée).</li><li>Sous la requête, la chaîne d’exécution montre le nombre de lignes à chaque étape.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction ; <b>Cours</b> détaille le programme.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM et les défis réussis sont mémorisés dans ce navigateur uniquement. Aucune donnée n’est envoyée. Les requêtes sont exécutées par un petit interpréteur SQL intégré à la page, limité à SELECT.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
