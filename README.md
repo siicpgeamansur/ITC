@@ -58,7 +58,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | 1ère année | [Algorithmes gloutons](https://siicpgeamansur.github.io/ITC/algorithmes_gloutons.html) | |
 
-| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+| 1ère année | [Methodes et analyse algorithmique](https://siicpgeamansur.github.io/ITC/methodes_analyse_algorithmes.html) | |
 
 | 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
 
