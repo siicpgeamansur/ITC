@@ -128,9 +128,9 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .img-title{font-weight:600;font-size:13px;margin-bottom:6px;color:var(--fg)}
 .mat-table{border-collapse:collapse;font-family:var(--font-mono);font-size:11px;margin:0 auto;background:#fff}
 .mat-table td{width:22px;height:22px;text-align:center;padding:0;border:1px solid #eee}
-.mat-table td.active{outline:2px solid var(--warn);outline-offset:-2px;z-index:2;position:relative}
 .kernel-grid{display:inline-grid;grid-template-columns:repeat(3,1fr);gap:2px;margin:4px 0}
 .kernel-grid input{width:44px;height:36px;text-align:center;padding:0;font:12px var(--font-mono)}
+.kernel-display{font-family:var(--font-mono);font-size:12.5px;background:var(--panel2);padding:8px;border-radius:6px;margin-top:8px;display:inline-block;line-height:1.4;color:var(--fg);border:1px solid var(--line)}
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
 .zoom{display:flex;gap:4px;align-items:center;font-size:12.5px;color:var(--muted)}
 .code-tabs{display:flex;gap:0;margin-bottom:-1px;position:relative;z-index:1}
@@ -181,7 +181,7 @@ function h(tag, attrs, ...kids) {
   return el;
 }
 function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
-const KEYS = { act: 'atelier-images-v2' };
+const KEYS = { act: 'atelier-images-v3' };
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
 const WORKSHOPS = [];
@@ -212,76 +212,27 @@ function codeBlock(code, on) {
 /* ---------- Gestion des images ---------- */
 const IMG_SIZE = 16; // grille de 16x16 pixels
 
-/* Génère une image de base (La Joconde - pixel art simplifié) */
-function makeFrenchPainting() {
-  const img = [];
-  // Fond dégradé
-  for (let y = 0; y < IMG_SIZE; y++) {
-    const row = [];
-    for (let x = 0; x < IMG_SIZE; x++) {
-      let v = 120 + (x + y) * 4; // Fond marron/ocre
-      row.push(clamp(v, 0, 255));
-    }
-    img.push(row);
-  }
-  
-  // Silhouette / Visage
-  const face = [
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+/* Génère une image de base (Champignon Super Mario - Game Boy) */
+function makeGameboyMushroom() {
+  const m = [
+    [40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40],
+    [40, 40, 40, 40, 40, 80, 80, 80, 80, 80, 80, 40, 40, 40, 40, 40],
+    [40, 40, 40, 40, 80, 220, 220, 220, 220, 220, 220, 80, 40, 40, 40, 40],
+    [40, 40, 40, 80, 220, 220, 220, 80, 220, 220, 220, 220, 80, 40, 40, 40],
+    [40, 40, 80, 220, 220, 220, 80, 80, 220, 220, 80, 220, 220, 80, 40, 40],
+    [40, 80, 220, 220, 220, 80, 80, 220, 220, 80, 80, 220, 220, 220, 80, 40],
+    [40, 80, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 80, 40],
+    [40, 80, 220, 220, 80, 220, 220, 220, 220, 220, 220, 80, 220, 220, 80, 40],
+    [40, 80, 220, 220, 80, 220, 220, 220, 220, 220, 220, 80, 220, 220, 80, 40],
+    [40, 80, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 80, 40],
+    [40, 40, 80, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 80, 40, 40],
+    [40, 40, 40, 80, 160, 160, 160, 160, 160, 160, 160, 160, 80, 40, 40, 40],
+    [40, 40, 40, 40, 160, 160, 160, 160, 160, 160, 160, 160, 40, 40, 40, 40],
+    [40, 40, 40, 40, 160, 160, 40, 40, 160, 160, 160, 160, 40, 40, 40, 40],
+    [40, 40, 40, 40, 160, 160, 40, 40, 160, 160, 160, 160, 40, 40, 40, 40],
+    [40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40]
   ];
-  
-  const hair = [
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
-    [0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0],
-    [0,0,1,1,1,0,0,0,0,0,0,1,1,1,0,0],
-    [0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0],
-    [0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0],
-    [0,0,1,1,1,0,0,0,0,0,0,1,1,1,0,0],
-    [0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0],
-    [0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-  ];
-
-  for (let y = 0; y < IMG_SIZE; y++) {
-    for (let x = 0; x < IMG_SIZE; x++) {
-      if (hair[y][x]) img[y][x] = 40; // Cheveux noirs
-      if (face[y][x]) img[y][x] = 210; // Visage clair
-      // Yeux
-      if (y === 8 && (x === 5 || x === 10)) img[y][x] = 20;
-      // Bouche
-      if (y === 11 && (x === 7 || x === 8)) img[y][x] = 150;
-    }
-  }
-  
-  // Bordure style tableau
-  for (let i = 0; i < IMG_SIZE; i++) {
-    img[0][i] = 80; img[IMG_SIZE-1][i] = 80;
-    img[i][0] = 80; img[i][IMG_SIZE-1] = 80;
-  }
-
-  return img;
+  return m;
 }
 
 /* Convertit une matrice en canvas */
@@ -372,24 +323,16 @@ function convolve(mat, kernel) {
 }
 
 /* ================= Atelier 1 : Rotation ================= */
-const W1 = { origMat: makeFrenchPainting(), resMat: null, codeTab: 'list' };
+const W1 = { origMat: makeGameboyMushroom(), resMat: null, codeTab: 'list' };
 function mountW1(root) {
   root.innerHTML = '<h2>Rotation d\'une image</h2><p>Une image en niveaux de gris est un <b>tableau à deux dimensions</b> : <code>img[y][x]</code> donne l\'intensité (0 à 255) du pixel de coordonnées (x, y). Tourner une image revient à permuter ses lignes et ses colonnes.</p>' +
-    '<div class="controls"><button class="btn pri" id="w1-rot90" type="button">Tourner 90°</button><button class="btn" id="w1-rot180" type="button">Tourner 180°</button><button class="btn" id="w1-reset" type="button">Réinitialiser</button><div class="zoom"><span>Taille des pixels</span><input type="range" id="w1-scale" min="4" max="20" value="12" style="width:100px"></div></div>' +
-    '<div class="img-wrap"><div class="img-panel"><div class="img-title">Image d\'origine (La Joconde)</div><canvas id="w1-canvas-orig"></canvas></div><div class="img-panel"><div class="img-title">Image transformée</div><canvas id="w1-canvas-res"></canvas></div></div>' +
+    '<div class="controls"><button class="btn" id="w1-rot90" type="button">Tourner 90°</button><button class="btn" id="w1-rot180" type="button">Tourner 180°</button><button class="btn" id="w1-reset" type="button">Réinitialiser</button><div class="zoom"><span>Taille des pixels</span><input type="range" id="w1-scale" min="4" max="20" value="12" style="width:100px"></div></div>' +
+    '<div class="img-wrap"><div class="img-panel"><div class="img-title">Image d\'origine (Champignon Game Boy)</div><canvas id="w1-canvas-orig"></canvas></div><div class="img-panel"><div class="img-title">Image transformée</div><canvas id="w1-canvas-res"></canvas></div></div>' +
     '<div class="gstats" id="w1-stats"></div>' +
     '<h3>Principe mathématique</h3><p class="small">Pour une rotation de 90° dans le sens horaire, le pixel <code>(x, y)</code> se retrouve en <code>(H − 1 − y, x)</code> dans la nouvelle image, où <code>H</code> est la hauteur de l\'image d\'origine.</p>' +
     '<h3>Code Python</h3><div class="code-tabs" id="w1-tabs"><button type="button" class="on" data-tab="list">Version Listes</button><button type="button" data-tab="numpy">Version NumPy</button></div><div class="code-container" id="w1-code"></div>';
   const S = W1;
   if (!S.resMat) S.resMat = copyMat(S.origMat);
-
-  $('#w1-tabs').addEventListener('click', e => {
-    if (e.target.tagName === 'BUTTON') {
-      S.codeTab = e.target.dataset.tab;
-      $('#w1-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.codeTab));
-      renderCode();
-    }
-  });
 
   function renderCode() {
     if (S.codeTab === 'list') {
@@ -398,6 +341,14 @@ function mountW1(root) {
       $('#w1-code').innerHTML = codeBlock('import numpy as np\n\ndef rotation_horaire(img):\n    # np.rot90 tourne dans le sens anti-horaire, d\'où le -1\n    return np.rot90(img, k=-1)');
     }
   }
+
+  $('#w1-tabs').addEventListener('click', e => {
+    if (e.target.tagName === 'BUTTON') {
+      S.codeTab = e.target.dataset.tab;
+      $('#w1-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.codeTab));
+      renderCode();
+    }
+  });
 
   function render() {
     const scale = parseInt($('#w1-scale').value, 10);
@@ -415,10 +366,10 @@ function mountW1(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w1', title: 'Rotation', hint: 'Tourner une image revient à permuter les lignes et les colonnes du tableau 2D. Observez le pixel (0, 0) après rotation.',
-  mount: mountW1, reset: () => { W1.origMat = makeFrenchPainting(); W1.resMat = copyMat(W1.origMat); } });
+  mount: mountW1, reset: () => { W1.origMat = makeGameboyMushroom(); W1.resMat = copyMat(W1.origMat); } });
 
 /* ================= Atelier 2 : Réduction et agrandissement ================= */
-const W2 = { origMat: makeFrenchPainting(), resMat: null, codeTab: 'list' };
+const W2 = { origMat: makeGameboyMushroom(), resMat: null, codeTab: 'list' };
 function mountW2(root) {
   root.innerHTML = '<h2>Réduction et agrandissement</h2><p>Une image est une matrice de pixels. Pour la <b>réduire</b>, on fusionne des blocs de k × k pixels en moyennant leur intensité (filtrage). Pour l\'<b>agrandir</b>, on duplique chaque pixel (plus proche voisin) ou on interpole.</p>' +
     '<div class="controls"><div class="zoom"><span>Facteur k</span><input type="range" id="w2-k" min="2" max="4" value="2" style="width:100px"><b id="w2-kval" style="width:20px;display:inline-block;text-align:right">2</b></div><button class="btn" id="w2-down" type="button">Réduire</button><button class="btn" id="w2-up" type="button">Agrandir</button><button class="btn" id="w2-reset" type="button">Réinitialiser</button><div class="zoom"><span>Taille des pixels</span><input type="range" id="w2-scale" min="4" max="20" value="12" style="width:100px"></div></div>' +
@@ -429,14 +380,6 @@ function mountW2(root) {
   const S = W2;
   if (!S.resMat) S.resMat = copyMat(S.origMat);
 
-  $('#w2-tabs').addEventListener('click', e => {
-    if (e.target.tagName === 'BUTTON') {
-      S.codeTab = e.target.dataset.tab;
-      $('#w2-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.codeTab));
-      renderCode();
-    }
-  });
-
   function renderCode() {
     if (S.codeTab === 'list') {
       $('#w2-code').innerHTML = codeBlock('def reduire(img, k):\n    n, m = len(img), len(img[0])\n    res = [[0] * (m // k) for _ in range(n // k)]\n    for i in range(n // k):\n        for j in range(m // k):\n            total = 0\n            for di in range(k):\n                for dj in range(k):\n                    total += img[i * k + di][j * k + dj]\n            res[i][j] = total // (k * k)\n    return res\n\ndef agrandir(img, k):\n    n, m = len(img), len(img[0])\n    res = [[0] * (m * k) for _ in range(n * k)]\n    for i in range(n * k):\n        for j in range(m * k):\n            res[i][j] = img[i // k][j // k]\n    return res');
@@ -444,6 +387,14 @@ function mountW2(root) {
       $('#w2-code').innerHTML = codeBlock('import numpy as np\n\ndef reduire(img, k):\n    # Moyenne par blocs k x k\n    n, m = img.shape\n    return img.reshape(n//k, k, m//k, k).mean(axis=(1, 3)).astype(int)\n\ndef agrandir(img, k):\n    # Duplication de pixels\n    return np.repeat(np.repeat(img, k, axis=0), k, axis=1)');
     }
   }
+
+  $('#w2-tabs').addEventListener('click', e => {
+    if (e.target.tagName === 'BUTTON') {
+      S.codeTab = e.target.dataset.tab;
+      $('#w2-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.codeTab));
+      renderCode();
+    }
+  });
 
   function render() {
     const scale = parseInt($('#w2-scale').value, 10);
@@ -472,20 +423,28 @@ function mountW2(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w2', title: 'Réduction et agrandissement', hint: 'Réduire une image en moyennant des blocs k × k, l\'agrandir en dupliquant les pixels.',
-  mount: mountW2, reset: () => { W2.origMat = makeFrenchPainting(); W2.resMat = copyMat(W2.origMat); } });
+  mount: mountW2, reset: () => { W2.origMat = makeGameboyMushroom(); W2.resMat = copyMat(W2.origMat); } });
 
 /* ================= Atelier 3 : Convolution ================= */
-const W3 = { origMat: makeFrenchPainting(), resMat: null, codeTab: 'list', mode: 'flou' };
+const W3 = { origMat: makeGameboyMushroom(), resMat: null, codeTab: 'list', mode: 'flou', kernel: [[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]] };
 function mountW3(root) {
   root.innerHTML = '<h2>Convolution</h2><p>La <b>convolution</b> consiste à calculer, pour chaque pixel, une combinaison linéaire de ses voisins pondérés par un <b>noyau</b> (une petite matrice). C\'est la base du flou, du contour, du renforcement, etc.</p>' +
-    '<div class="controls"><div class="zoom"><span>Préréglage</span><div id="w3-preset" style="display:flex;gap:4px"></div></div><button class="btn pri" id="w3-apply" type="button">Appliquer</button><button class="btn" id="w3-reset" type="button">Réinitialiser l\'image</button></div>' +
+    '<div class="controls"><div class="zoom"><span>Préréglage</span><div id="w3-preset" style="display:flex;gap:4px"></div></div><button class="btn" id="w3-apply" type="button">Appliquer</button><button class="btn" id="w3-reset" type="button">Réinitialiser l\'image</button></div>' +
     '<div class="img-wrap"><div class="img-panel"><div class="img-title">Image d\'origine</div><canvas id="w3-canvas-orig"></canvas></div><div class="img-panel"><div class="img-title">Image convoluée</div><canvas id="w3-canvas-res"></canvas></div></div>' +
     '<h3>Noyau de convolution (3 × 3)</h3>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start"><div class="kernel-grid" id="w3-kernel"></div><p class="small" style="flex:1;min-width:180px">Un noyau est une petite matrice <code>K</code>. Pour chaque pixel, on calcule la somme <code>Σ K[i][j] · pixel(i, j)</code> sur le voisinage, puis on borne le résultat dans [0, 255]. La somme des coefficients d\'un noyau de flou vaut 1, celle d\'un noyau de contour vaut 0.</p></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start"><div><div class="kernel-grid" id="w3-kernel"></div><div class="kernel-display" id="w3-kernel-display"></div></div><p class="small" style="flex:1;min-width:180px">Un noyau est une petite matrice <code>K</code>. Pour chaque pixel, on calcule la somme <code>Σ K[i][j] · pixel(i, j)</code> sur le voisinage, puis on borne le résultat dans [0, 255]. La somme des coefficients d\'un noyau de flou vaut 1, celle d\'un noyau de contour vaut 0.</p></div>' +
     '<div class="gstats" id="w3-stats"></div>' +
     '<h3>Code Python</h3><div class="code-tabs" id="w3-tabs"><button type="button" class="on" data-tab="list">Version Listes</button><button type="button" data-tab="numpy">Version NumPy</button></div><div class="code-container" id="w3-code"></div>';
   const S = W3;
   if (!S.resMat) S.resMat = copyMat(S.origMat);
+
+  function renderCode() {
+    if (S.codeTab === 'list') {
+      $('#w3-code').innerHTML = codeBlock('def convoluer(img, noyau):\n    n, m = len(img), len(img[0])\n    kn, km = len(noyau), len(noyau[0])\n    kr, kc = kn // 2, km // 2\n    res = [[0] * m for _ in range(n)]\n    for i in range(n):\n        for j in range(m):\n            total = 0\n            for di in range(kn):\n                for dj in range(km):\n                    ni, nj = i + di - kr, j + dj - kc\n                    if 0 <= ni < n and 0 <= nj < m:\n                        total += img[ni][nj] * noyau[di][dj]\n            res[i][j] = max(0, min(255, int(total)))\n    return res');
+    } else {
+      $('#w3-code').innerHTML = codeBlock('import numpy as np\nfrom scipy.signal import convolve2d\n\ndef convoluer(img, noyau):\n    # mode="same" renvoie une image de même taille\n    res = convolve2d(img, noyau, mode="same", boundary="fill", fillvalue=0)\n    return np.clip(res, 0, 255).astype(int)');
+    }
+  }
 
   $('#w3-tabs').addEventListener('click', e => {
     if (e.target.tagName === 'BUTTON') {
@@ -523,14 +482,10 @@ function mountW3(root) {
       };
       kg.appendChild(inp);
     }));
-  }
-
-  function renderCode() {
-    if (S.codeTab === 'list') {
-      $('#w3-code').innerHTML = codeBlock('def convoluer(img, noyau):\n    n, m = len(img), len(img[0])\n    kn, km = len(noyau), len(noyau[0])\n    kr, kc = kn // 2, km // 2\n    res = [[0] * m for _ in range(n)]\n    for i in range(n):\n        for j in range(m):\n            total = 0\n            for di in range(kn):\n                for dj in range(km):\n                    ni, nj = i + di - kr, j + dj - kc\n                    if 0 <= ni < n and 0 <= nj < m:\n                        total += img[ni][nj] * noyau[di][dj]\n            res[i][j] = max(0, min(255, int(total)))\n    return res');
-    } else {
-      $('#w3-code').innerHTML = codeBlock('import numpy as np\nfrom scipy.signal import convolve2d\n\ndef convoluer(img, noyau):\n    # mode="same" renvoie une image de même taille\n    res = convolve2d(img, noyau, mode="same", boundary="fill", fillvalue=0)\n    return np.clip(res, 0, 255).astype(int)');
-    }
+    
+    // Affichage formaté de la matrice
+    const disp = S.kernel.map(row => '[' + row.map(v => String(v).padStart(5, ' ')).join(', ') + ']').join('\n');
+    $('#w3-kernel-display').innerText = disp;
   }
 
   function render() {
@@ -556,28 +511,35 @@ function mountW3(root) {
     render();
   };
   $('#w3-reset').onclick = () => { S.resMat = copyMat(S.origMat); render(); };
-  S.kernel = PRESETS[S.mode].k.map(r => r.slice());
   render();
 }
 WORKSHOPS.push({ id: 'w3', title: 'Convolution', hint: 'Appliquer un noyau de convolution (flou, contour, renforcement) à une image, comprendre l\'effet des coefficients.',
-  mount: mountW3, reset: () => { W3.origMat = makeFrenchPainting(); W3.resMat = copyMat(W3.origMat); W3.kernel = [[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]]; W3.mode = 'flou'; } });
+  mount: mountW3, reset: () => { W3.origMat = makeGameboyMushroom(); W3.resMat = copyMat(W3.origMat); W3.kernel = [[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]]; W3.mode = 'flou'; } });
 
 /* ================= Atelier 4 : Matrices comme tableaux 2D ================= */
 const W4 = { mat: [[1,2,3],[4,5,6],[7,8,9]], codeTab: 'list' };
 function mountW4(root) {
   root.innerHTML = '<h2>Manipulations de tableaux à deux dimensions</h2><p>Une image est un tableau 2D. On peut accéder à un pixel par <code>img[y][x]</code>, modifier sa valeur, parcourir les lignes et les colonnes. Voici quelques manipulations de base.</p>' +
     '<div class="opts"><label class="fld"><span>Matrice (nombres séparés par des espaces, une ligne par ligne)</span><textarea id="w4-mat" class="mono" rows="4" style="width:260px"></textarea></label></div>' +
-    '<div class="controls"><button class="btn pri" id="w4-apply" type="button">Appliquer</button><button class="btn" id="w4-identity" type="button">Matrice identité 5×5</button><button class="btn" id="w4-random" type="button">Aléatoire 5×5</button></div>' +
+    '<div class="controls"><button class="btn" id="w4-apply" type="button">Appliquer</button><button class="btn" id="w4-identity" type="button">Matrice identité 5×5</button><button class="btn" id="w4-random" type="button">Aléatoire 5×5</button></div>' +
     '<div id="w4-out"></div>' +
     '<h3>Code Python</h3><div class="code-tabs" id="w4-tabs"><button type="button" class="on" data-tab="list">Version Listes</button><button type="button" data-tab="numpy">Version NumPy</button></div><div class="code-container" id="w4-code"></div>';
   const S = W4;
   $('#w4-mat').value = S.mat.map(r => r.join(' ')).join('\n');
 
+  function renderCode() {
+    if (S.codeTab === 'list') {
+      $('#w4-code').innerHTML = codeBlock('img = [[1, 2, 3],\n       [4, 5, 6],\n       [7, 8, 9]]\n\nprint(img[1][2])   # 6\n\n# Transposée\nt = [[img[i][j] for i in range(len(img))]\n     for j in range(len(img[0]))]\n\n# Parcours de tous les pixels\nfor i in range(len(img)):\n    for j in range(len(img[i])):\n        img[i][j] = img[i][j] // 2');
+    } else {
+      $('#w4-code').innerHTML = codeBlock('import numpy as np\n\nimg = np.array([[1, 2, 3],\n                [4, 5, 6],\n                [7, 8, 9]])\n\nprint(img[1, 2])   # 6 (accès par tuple)\n\n# Transposée\nt = img.T\n\n# Parcours / opérations vectorisées (pas de boucles)\nimg = img // 2  # divise tous les éléments par 2');
+    }
+  }
+
   $('#w4-tabs').addEventListener('click', e => {
     if (e.target.tagName === 'BUTTON') {
       S.codeTab = e.target.dataset.tab;
       $('#w4-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.codeTab));
-      render();
+      renderCode();
     }
   });
 
@@ -629,12 +591,7 @@ function mountW4(root) {
     }
     html += '</table>';
     $('#w4-out').innerHTML = html;
-
-    if (S.codeTab === 'list') {
-      $('#w4-code').innerHTML = codeBlock('img = [[1, 2, 3],\n       [4, 5, 6],\n       [7, 8, 9]]\n\nprint(img[1][2])   # 6\n\n# Transposée\nt = [[img[i][j] for i in range(len(img))]\n     for j in range(len(img[0]))]\n\n# Parcours de tous les pixels\nfor i in range(len(img)):\n    for j in range(len(img[i])):\n        img[i][j] = img[i][j] // 2');
-    } else {
-      $('#w4-code').innerHTML = codeBlock('import numpy as np\n\nimg = np.array([[1, 2, 3],\n                [4, 5, 6],\n                [7, 8, 9]])\n\nprint(img[1, 2])   # 6 (accès par tuple)\n\n# Transposée\nt = img.T\n\n# Parcours / opérations vectorisées (pas de boucles)\nimg = img // 2  # divise tous les éléments par 2');
-    }
+    renderCode();
   }
   $('#w4-apply').onclick = () => {
     const mat = parseMat($('#w4-mat').value);
@@ -663,7 +620,7 @@ const ACT = {
     title: 'Rotation', level: 'Niveau 1 · Découvrir', time: '15 min', course: 'rotation',
     goal: 'Comprendre qu\'une image est un tableau 2D, et qu\'une rotation se traduit par une permutation des indices.',
     steps: [
-      'Observez La Joconde en pixel art. Repérez le pixel central.',
+      'Observez le champignon en pixel art. Repérez le pixel central.',
       'Cliquez sur « Tourner 90° » : où se retrouve le coin supérieur gauche ?',
       'Cliquez une deuxième fois sur « Tourner 90° » : que constatez-vous ?',
       'Cliquez quatre fois : l\'image revient-elle à son état initial ?',
@@ -703,7 +660,7 @@ const ACT = {
     title: 'Convolution', level: 'Niveau 3 · Approfondir', time: '25 min', course: 'convolution',
     goal: 'Comprendre l\'opération de convolution et les effets des noyaux (flou, contour, renforcement).',
     steps: [
-      'Appliquez le noyau de flou : que constatez-vous sur les bords du visage ?',
+      'Appliquez le noyau de flou : que constatez-vous sur les bords du champignon ?',
       'Appliquez le noyau de contour : les zones uniformes disparaissent, les bords ressortent.',
       'Modifiez le noyau à la main : que se passe-t-il si on met 1 au centre et 0 partout ailleurs ?',
       'Appliquez un noyau dont la somme vaut 2 : l\'image devient-elle plus claire ?',
