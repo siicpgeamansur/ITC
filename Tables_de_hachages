@@ -1,0 +1,1776 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Dictionnaires et hachage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* cellules de table de hachage */
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:8px 0}
+.bucket{border:1px solid var(--line);border-radius:8px;background:#fff;min-height:64px;padding:4px 6px}
+.bucket .bi{font:11px var(--font-mono);color:var(--muted);border-bottom:1px dashed var(--line);padding-bottom:2px;margin-bottom:4px}
+.bucket .pkt{display:block;font:12px var(--font-mono);padding:2px 4px;border-radius:4px;margin:2px 0;background:var(--accent-soft);color:var(--accent-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bucket .pkt.coll{background:rgba(192,40,31,.15);color:var(--bad)}
+.bucket .pkt.hit{background:rgba(30,122,46,.18);color:var(--ok)}
+.bucket.empty .bi{color:#9aa3ad}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0}
+.bar .lab{width:120px;color:var(--muted);font-size:12.5px}
+.bar .track{flex:1;background:var(--panel2);border-radius:4px;height:14px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent)}
+.bar .fill.ok{background:var(--ok)}.bar .fill.bad{background:var(--bad)}
+.bar .val{width:80px;text-align:right;font-family:var(--font-mono);font-size:12.5px}
+.hashout{font-family:var(--font-mono);font-size:12.5px;word-break:break-all;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:4px 0}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .grid2{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+  .bar .lab{width:86px}
+  .bar .val{width:64px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}.bucket{transition:background .15s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="6" width="20" height="5" rx="1" fill="var(--accent)"/><rect x="3" y="13" width="20" height="5" rx="1" fill="var(--ok)"/><rect x="3" y="20" width="20" height="3" rx="1" fill="var(--warn)"/><circle cx="7" cy="8.5" r="1.4" fill="#fff"/><circle cx="12" cy="15.5" r="1.4" fill="#fff"/></svg><span>Atelier Dictionnaires et hachage <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-hachage-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const fmt = (x, d = 2) => { const r = Math.round(x * 10 ** d) / 10 ** d; return String(Object.is(r, -0) ? 0 : r).replace('.', ','); };
+const ALGO_NAME = { mut: 'Mutabilité', dict: 'Dictionnaire', app: 'Applications', expl: 'Exploitation', table: 'Table de hachage', hash: 'Fonction hash', bonne: 'Bonne fonction' };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ---------- clés : int, float ou str, comme en Python ---------- */
+const FLOAT_RE = /^[+-]?(\d+\.\d*|\.\d+|\d+(?=[eE]))([eE][+-]?\d+)?$/;
+function parseKey(text) {
+  const t = String(text).trim().slice(0, 28);
+  if (!t) return null;
+  const qm = t.match(/^(["'])(.*)\1$/);
+  if (qm && qm[2].length) return { type: 'str', id: 's:' + qm[2], label: t, s: qm[2] };
+  if (/^[+-]?\d+$/.test(t)) { const b = BigInt(t.replace(/^\+/, '')); return { type: 'int', id: 'n:' + b, label: t, big: b }; }
+  let x = NaN;
+  if (/^[+-]?inf(inity)?$/i.test(t)) x = t[0] === '-' ? -Infinity : Infinity;
+  else if (FLOAT_RE.test(t)) x = parseFloat(t);
+  if (!Number.isNaN(x)) {
+    if (!Number.isFinite(x)) return { type: 'float', id: 'f:' + x, label: t, x };
+    if (Number.isInteger(x)) return { type: 'float', id: 'n:' + BigInt(x), label: t, x, big: BigInt(x) };
+    return { type: 'float', id: 'f:' + x, label: t, x };
+  }
+  return { type: 'str', id: 's:' + t, label: t, s: t };
+}
+const pyRepr = ki => ki.type === 'str' ? "'" + ki.s.replace(/'/g, "\\'") + "'" : ki.label;
+const unhashable = v => /^\s*[\[{]/.test(v) ? (/^\s*\[/.test(v) ? 'list' : /^\s*\{.*:/.test(v) ? 'dict' : 'set') : null;
+
+/* arithmétique 64 bits à la Python */
+const M64 = (1n << 64n) - 1n, P61 = (1n << 61n) - 1n;
+function pyInt(n) { const neg = n < 0n, a = neg ? -n : n; let h = a % P61; if (neg) h = -h; if (h === -1n) h = -2n; return h; }
+function splitmix(h) { h ^= h >> 30n; h = (h * 0xbf58476d1ce4e5b9n) & M64; h ^= h >> 27n; h = (h * 0x94d049bb133111ebn) & M64; h ^= h >> 31n; return h; }
+function strHash64(s, salt) { let h = 0xcbf29ce484222325n ^ (salt || 0n); for (const b of new TextEncoder().encode(s)) { h ^= BigInt(b); h = (h * 0x100000001b3n) & M64; } return BigInt.asIntN(64, splitmix(h)); }
+const bin64 = h => BigInt.asUintN(64, h).toString(2).padStart(64, '0');
+const hex64 = h => '0x' + BigInt.asUintN(64, h).toString(16).padStart(16, '0');
+function randSalt() { const a = new Uint32Array(2); (window.crypto && crypto.getRandomValues) ? crypto.getRandomValues(a) : (a[0] = Math.random() * 4294967296, a[1] = Math.random() * 4294967296); return (BigInt(a[0]) << 32n) | BigInt(a[1]); }
+function egcd(a, b) { let [r0, r1, s0, s1] = [a, b, 1n, 0n]; while (r1 !== 0n) { const qq = r0 / r1; [r0, r1] = [r1, r0 - qq * r1]; [s0, s1] = [s1, s0 - qq * s1]; } return [r0, s0]; }
+function modInv(a, m) { const [g, x] = egcd(((a % m) + m) % m, m); return g === 1n ? ((x % m) + m) % m : null; }
+function sci(x, d) { d = d === undefined ? 2 : d; if (!isFinite(x)) return '∞'; if (Math.abs(x) < 1e6) return fmtN(Math.round(x)); const e = Math.floor(Math.log10(x)), m = x / Math.pow(10, e); const sup = '⁰¹²³⁴⁵⁶⁷⁸⁹'; return fmt(m, d) + ' × 10' + String(e).split('').map(c => sup[+c]).join(''); }
+
+/* hash d'une clé (int, float, str), réduit modulo m */
+const hcache = new Map();
+function fracParts(x) {
+  const dv = new DataView(new ArrayBuffer(8)); dv.setFloat64(0, Math.abs(x));
+  const bits = dv.getBigUint64(0);
+  const e = Number((bits >> 52n) & 0x7ffn), f = bits & ((1n << 52n) - 1n);
+  let M, E;
+  if (e === 0) { M = f; E = -1074; } else { M = f | (1n << 52n); E = e - 1075; }
+  let k = -E;
+  while (M % 2n === 0n && k > 0) { M /= 2n; k--; }
+  return { M, k };
+}
+function hashOf(ki, salt) {
+  const sk = ki.id + '|' + (ki.type === 'str' ? String(salt || 0) : '');
+  let r = hcache.get(sk);
+  if (r !== undefined) return r;
+  if (ki.type === 'int' || ki.big !== undefined) r = pyInt(ki.big);
+  else if (ki.type === 'float') {
+    if (ki.x === Infinity) r = 314159n; else if (ki.x === -Infinity) r = -314159n;
+    else {
+      const { M, k } = fracParts(ki.x);
+      const inv = 2n ** BigInt((61 - (k % 61)) % 61);
+      r = (M * inv) % P61;
+      if (ki.x < 0) r = -r;
+      if (r === -1n) r = -2n;
+    }
+  } else r = strHash64(ki.s, salt);
+  if (hcache.size > 5000) hcache.clear();
+  hcache.set(sk, r);
+  return r;
+}
+const bmod = (h, m) => ((h % BigInt(m)) + BigInt(m)) % BigInt(m);
+const isPow2 = m => m > 0 && (m & (m - 1)) === 0;
+const isPrime = n => { if (n < 2) return false; for (let i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; };
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+
+/* table de hachage : construction */
+function buildTable(entries, m, red, method, salt) {
+  const chain = method === 'chain';
+  const T = chain ? Array.from({ length: m }, () => []) : new Array(m).fill(null);
+  const info = {}, failed = [];
+  let collisions = 0, totalProbes = 0, maxProbe = 0;
+  const home = new Array(m).fill(0);
+  const hv = ki => {
+    const hh = hashOf(ki, salt);
+    if (red === 'mod') return Number(bmod(hh, m));
+    if (red === 'mask') return Number(hh & BigInt(m - 1));
+    return Math.floor(m * ((Number(BigInt.asUintN(32, hh)) * ((Math.sqrt(5) - 1) / 2)) % 1));
+  };
+  const h2 = ki => 1 + Number(bmod(hashOf(ki, salt), m - 1));
+  for (const e of entries) {
+    const k = e.id, hh = hv(e.ki);
+    home[hh]++;
+    if (chain) {
+      const probes = T[hh].length + 1;
+      if (T[hh].length > 0) collisions++;
+      T[hh].push(k);
+      info[k] = { home: hh, slot: hh, pos: T[hh].length - 1, probes, placed: true };
+      totalProbes += probes; maxProbe = Math.max(maxProbe, T[hh].length);
+    } else {
+      let placed = false, probes = 0;
+      for (let i = 0; i < m; i++) {
+        const j = method === 'lin' ? (hh + i) % m : method === 'quad' ? (hh + i * i) % m : (hh + i * h2(e.ki)) % m;
+        probes++;
+        if (T[j] === null) { T[j] = k; info[k] = { home: hh, slot: j, probes, placed: true }; placed = true; break; }
+      }
+      if (T[hh] !== null && (!placed || info[k].slot !== hh)) collisions++;
+      if (!placed) { failed.push(e.label); info[k] = { home: hh, slot: -1, probes, placed: false }; }
+      totalProbes += probes; maxProbe = Math.max(maxProbe, probes);
+    }
+  }
+  const n = entries.length;
+  const empty = chain ? T.filter(b => b.length === 0).length : T.filter(x => x === null).length;
+  return { m, T, info, failed, collisions, avg: n ? totalProbes / n : 0, maxProbe, empty, home, chain, n };
+}
+/* liste des cases visitées pour une clé (pour le surlignage) */
+function pathFor(B, ki, red, method) {
+  const m = B.m, path = [], id = ki.id;
+  const hv = hh => {
+    if (red === 'mod') return Number(bmod(hh, m));
+    if (red === 'mask') return Number(hh & BigInt(m - 1));
+    return Math.floor(m * ((Number(BigInt.asUintN(32, hh)) * ((Math.sqrt(5) - 1) / 2)) % 1));
+  };
+  const h = hv(hashOf(ki, B.salt || 0n));
+  if (B.chain) {
+    const b = B.T[h];
+    path.push({ b: h, pos: -1 });
+    for (let i = 0; i < b.length; i++) { path.push({ b: h, pos: i }); if (b[i] === id) return { path, found: true, probes: i + 1 }; }
+    return { path, found: false, probes: b.length };
+  }
+  const h2 = 1 + Number(bmod(hashOf(ki, B.salt || 0n), m - 1));
+  for (let i = 0; i < m; i++) {
+    const j = method === 'lin' ? (h + i) % m : method === 'quad' ? (h + i * i) % m : (h + i * h2) % m;
+    path.push({ b: j, pos: 0 });
+    if (B.T[j] === id) return { path, found: true, probes: i + 1 };
+    if (B.T[j] === null) return { path, found: false, probes: i + 1 };
+  }
+  return { path, found: false, probes: m };
+}
+
+/* ---------- exemples de dictionnaires ---------- */
+const PRESETS = {
+  mdp: { name: 'mots_de_passe', text: '"M. Chomette" : "artif"\n"M. Catry" : "ETOPS"' },
+  couleurs: { name: 'couleurs', text: '"rouge" : (255, 0, 0)\n"jaune" : (255, 255, 0)\n"blanc" : (255, 255, 255)' },
+  notes: { name: 'notes', text: '"Alice" : 14\n"Bruno" : 9\n"Chloé" : 17\n"Alice2" : 14' },
+  animaux: { name: 'animaux', text: 'vache : 1000\ncochon : 6.5\npoule : None' },
+  graphe: { name: 'graphe', text: '0 : [1, 2]\n1 : [0, 2]\n2 : [0, 1]\n3 : [4]\n4 : [3]\n5 : []' },
+  graphe_pond: { name: 'graphe pondéré', text: '0 : {1: 2, 2: 3}\n1 : {0: 2, 2: 1}\n2 : {0: 3, 1: 1}\n3 : {4: 8}\n4 : {3: 8}\n5 : {}' }
+};
+/* entrées du cours pour la table de hachage */
+const ENTRIES_DEMO = [
+  ['pomme', '12'], ['42', '7'], ['0.375', '30'], ['1', '15'], ['"42"', '4'], ['-7', '22'], ['poire', '9'],
+  ['vache', '1000'], ['cochon', '6.5'], ['poule', 'None'], ['3', '"trois"'], ['4', '"quatre"'], ['5', '"cinq"'], ['13', '"treize"']
+];
+function mkEntry(label, v) { const ki = parseKey(label); return ki ? { ki, id: ki.id, label: ki.label, type: ki.type, v: String(v).trim().slice(0, 20) } : null; }
+function parseEntries(text) {
+  const out = [], seen = new Map(); let dup = '';
+  for (const line of text.split('\n')) {
+    const t = line.trim(); if (!t) continue;
+    let kt = t, v = '';
+    const mm = t.match(/^((?:"[^"]*"|'[^']*'|[^:=])+?)\s*[:=]\s*(.*)$/);
+    if (mm) { kt = mm[1]; v = mm[2]; }
+    const e = mkEntry(kt, v);
+    if (!e) continue;
+    if (seen.has(e.id)) { dup += (dup ? ' ; ' : '') + e.label + ' désigne la même clé que ' + seen.get(e.id) + ' (ignorée)'; continue; }
+    seen.set(e.id, e.label); out.push(e);
+    if (out.length >= 60) break;
+  }
+  return { out, dup };
+}
+const makeRecords = keys => keys.map((k, i) => ({ k, tag: String.fromCharCode(97 + i) }));
+function stableCheck(input, out) {
+  for (let i = 1; i < out.length; i++) if (out[i - 1].k === out[i].k && input.indexOf(out[i - 1]) > input.indexOf(out[i])) return { ok: false, a: out[i], b: out[i - 1] };
+  return { ok: true };
+}
+function sortRecords(algo, items) {
+  const a = items.slice(), n = a.length;
+  if (algo === 'selection') { for (let i = 0; i < n - 1; i++) { let m = i; for (let j = i + 1; j < n; j++) if (a[j].k < a[m].k) m = j; if (m !== i) [a[i], a[m]] = [a[m], a[i]]; } return a; }
+  if (algo === 'insertion') { for (let i = 1; i < n; i++) { const x = a[i]; let j = i; while (j > 0 && a[j - 1].k > x.k) { a[j] = a[j - 1]; j--; } a[j] = x; } return a; }
+  if (algo === 'fusion') {
+    const ms = x => { if (x.length <= 1) return x; const m = x.length >> 1, l = ms(x.slice(0, m)), r = ms(x.slice(m)), res = []; let i = 0, j = 0; while (i < l.length && j < r.length) { if (l[i].k <= r[j].k) res.push(l[i++]); else res.push(r[j++]); } return res.concat(l.slice(i), r.slice(j)); };
+    return ms(a);
+  }
+  if (algo === 'rapide') { const qs = (lo, hi) => { if (lo >= hi) return; const p = a[hi]; let i = lo; for (let j = lo; j < hi; j++) if (a[j].k < p.k) { [a[i], a[j]] = [a[j], a[i]]; i++; } [a[i], a[hi]] = [a[hi], a[i]]; qs(lo, i - 1); qs(i + 1, hi); }; qs(0, n - 1); return a; }
+  return a.slice().sort((p, q) => p.k - q.k);
+}
+/* fréquence : plus fréquent d'une liste, avec dictionnaire */
+function freqOf(L) { const o = new Map(); for (const x of L) o.set(x, (o.get(x) || 0) + 1); return o; }
+function frequent(L) { if (!L.length) return null; const oc = freqOf(L); let best = null, bm = 0; oc.forEach((c, k) => { if (c > bm) { bm = c; best = k; } }); return best; }
+/* arbre / graphe : parseur simple pour G = {sommet: [voisins] ou {voisin: poids}} */
+function parseGraph(text) {
+  const g = new Map(), errs = []; let weighted = false;
+  for (const line of text.split('\n')) {
+    const t = line.trim(); if (!t) continue;
+    const m = t.match(/^([^:]+?)\s*:\s*(.*)$/); if (!m) { errs.push('Ligne ignorée : ' + t); continue; }
+    const v = m[1].trim(), rest = m[2].trim();
+    if (rest.startsWith('[') && rest.endsWith(']')) {
+      const inner = rest.slice(1, -1).trim();
+      g.set(v, new Map((inner ? inner.split(/\s*,\s*/) : []).map(n => [n, null])));
+    } else if (rest.startsWith('{') && rest.endsWith('}')) {
+      const inner = rest.slice(1, -1).trim(); const mp = new Map();
+      if (inner) for (const pr of inner.split(/\s*,\s*/)) { const mm = pr.match(/^([^:]+?)\s*:\s*(-?[\d.]+)$/); if (!mm) { errs.push('Paire ignorée : ' + pr); continue; } mp.set(mm[1].trim(), parseFloat(mm[2])); weighted = true; }
+      g.set(v, mp);
+    } else errs.push('Ligne ignorée : ' + t);
+  }
+  return { g, errs, weighted };
+}
+
+/* densité et loi de Poisson */
+const POIS = (k, a) => { let l = -a + k * Math.log(a); for (let i = 2; i <= k; i++) l -= Math.log(i); return Math.exp(l); };
+function binomial(k, M, N) {
+  if (k > M) return 0;
+  let l = 0;
+  for (let i = 0; i < k; i++) l += Math.log((M - i) / (i + 1));
+  l += k * Math.log(1 / N) + (M - k) * Math.log1p(-1 / N);
+  return Math.exp(l);
+}
+
+/* échantillon de clés pour Poisson */
+function sampleCounts(N, M, src, salt) {
+  const mix32 = x => { x ^= x >>> 16; x = Math.imul(x, 0x7feb352d); x ^= x >>> 15; x = Math.imul(x, 0x846ca68b); x ^= x >>> 16; return x >>> 0; };
+  const c = new Uint32Array(N);
+  if (src === 'rand') { for (let i = 0; i < M; i++) c[(Math.random() * N) | 0]++; }
+  else if (src === 'hash') { for (let i = 0; i < M; i++) c[mix32((i + salt) >>> 0) % N]++; }
+  else { for (let i = 1; i <= M; i++) c[(4 * i) % N]++; }
+  let mx = 0; for (let i = 0; i < N; i++) if (c[i] > mx) mx = c[i];
+  const eff = new Array(mx + 1).fill(0); for (let i = 0; i < N; i++) eff[c[i]]++;
+  const mean = M / N; let s2 = 0;
+  for (let k = 0; k <= mx; k++) s2 += eff[k] * (k - mean) * (k - mean);
+  return { eff, mx, mean, vari: s2 / N, empty: eff[0] };
+}
+/* comptages du cours (N = 2^20, M = 424 579) */
+const COURS_POISSON = {
+  rand: [699149, 283705, 57195, 7698, 758, 68, 3],
+  hash: [699474, 283159, 57332, 7755, 793, 59, 4],
+  pois: [699439, 283210, 57337, 7739, 783, 63, 4]
+};
+/* mesure : multiples et modulo */
+function usedCases(s, K, N) { const cnt = new Array(N).fill(0); const lines = []; for (let i = 1; i <= K; i++) { const k = s * i, c = k % N; lines.push({ k, c, coll: cnt[c] > 0 }); cnt[c]++; } return { cnt, lines, used: cnt.filter(x => x > 0).length }; }
+/* recherche dichotomie sur un extrait */
+const MOTS = ['abattre', 'abeille', 'abricot', 'acheter', 'aimer', 'amour', 'arbre', 'avion', 'bateau', 'beurre', 'bonjour', 'cadeau', 'chaise', 'chapeau', 'cheval', 'ciel', 'citron', 'dormir', 'école', 'fenêtre', 'fleur', 'fromage', 'gare', 'hôpital', 'jardin', 'journal', 'lait', 'lune', 'maison', 'montagne', 'musique', 'nuage', 'obnubilé', 'océan', 'oiseau', 'orange', 'papier', 'plage', 'pomme', 'pont', 'quartier', 'rivière', 'soleil', 'table', 'train', 'vélo', 'voiture', 'zèbre'].sort();
+function planSearch(word) {
+  const steps = []; let lo = 0, hi = MOTS.length - 1;
+  steps.push({ lo, hi, mid: null, t: 'Zone de recherche : les 48 mots (indices 0 à 47).' });
+  let found = false;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1, c = MOTS[mid];
+    if (c === word) { steps.push({ lo, hi, mid, res: 'eq', t: 'liste[' + mid + '] = « ' + c + ' » : égal au mot cherché.' }); found = true; break; }
+    if (c < word) { steps.push({ lo, hi, mid, res: 'lt', t: 'liste[' + mid + '] = « ' + c + ' » < « ' + esc(word) + ' » : on élimine la moitié basse.' }); lo = mid + 1; }
+    else { steps.push({ lo, hi, mid, res: 'gt', t: 'liste[' + mid + '] = « ' + c + ' » > « ' + esc(word) + ' » : on élimine la moitié haute.' }); hi = mid - 1; }
+  }
+  steps.push({ lo, hi, mid: null, done: true, found, t: found ? '<b>Trouvé</b> après ' + (steps.length - 1) + ' comparaison' + (steps.length > 2 ? 's' : '') + '.' : '<b>Absent</b> : la zone est vide après ' + (steps.length - 1) + ' comparaisons.' });
+  return { steps, found };
+}
+
+/* ---------- scénarios de mutabilité ---------- */
+const SCENARIOS = {
+  liste: {
+    label: 'append sur une liste', code: `def ajoute(l):
+    l.append(4)
+L = [1, 2, 3]
+ajoute(L)
+print(L)   # [1, 2, 3, 4]`,
+    steps: [
+      { line: 3, g: { L: 'o1' }, f: null, o: { o1: ['list', '[1, 2, 3]'] }, t: 'On crée une liste : c\'est l\'objet <b>o1</b>. Le nom <code>L</code> est une étiquette qui y pointe.' },
+      { line: 4, g: { L: 'o1' }, f: { l: 'o1' }, o: { o1: ['list', '[1, 2, 3]'] }, t: 'Appel <code>ajoute(L)</code> : le paramètre <code>l</code> reçoit une <b>nouvelle référence vers le même objet</b>. <code>L</code> et <code>l</code> désignent o1.' },
+      { line: 2, g: { L: 'o1' }, f: { l: 'o1' }, o: { o1: ['list', '[1, 2, 3, 4]'] }, t: '<code>l.append(4)</code> modifie l\'objet <b>sur place</b>, car une liste est mutable. Son id n\'a pas changé.' },
+      { line: 5, g: { L: 'o1' }, f: null, o: { o1: ['list', '[1, 2, 3, 4]'] }, t: 'La fonction se termine, le nom <code>l</code> disparaît. <code>L</code> désigne toujours o1, qui contient maintenant 4 : l\'effet de bord est visible.' }]
+  },
+  entier: {
+    label: 'x = x + 1', code: `def ajoute(x):
+    x = x + 1
+a = 5
+ajoute(a)
+print(a)   # 5`,
+    steps: [
+      { line: 3, g: { a: 'o1' }, f: null, o: { o1: ['int', '5'] }, t: 'Le nom <code>a</code> pointe vers l\'entier 5 (objet o1).' },
+      { line: 4, g: { a: 'o1' }, f: { x: 'o1' }, o: { o1: ['int', '5'] }, t: 'Appel <code>ajoute(a)</code> : <code>x</code> reçoit une référence vers le même objet.' },
+      { line: 2, g: { a: 'o1' }, f: { x: 'o2' }, o: { o1: ['int', '5'], o2: ['int', '6'] }, t: '<code>x = x + 1</code> ne modifie pas l\'entier 5 (immuable) : elle <b>crée un nouvel entier 6</b> (o2) et fait pointer <code>x</code> dessus.' },
+      { line: 5, g: { a: 'o1' }, f: null, o: { o1: ['int', '5'] }, t: 'Retour : <code>x</code> disparaît, o2 n\'est plus référencé. Le nom <code>a</code> désigne toujours l\'ancien objet : <code>print(a)</code> affiche 5.' }]
+  },
+  chaine: {
+    label: 'upper()', code: `def maj(s):
+    s = s.upper()
+texte = "bonjour"
+maj(texte)
+print(texte)   # bonjour`,
+    steps: [
+      { line: 3, g: { texte: 'o1' }, f: null, o: { o1: ['str', '"bonjour"'] }, t: '<code>texte</code> pointe vers la chaîne "bonjour" (objet o1).' },
+      { line: 4, g: { texte: 'o1' }, f: { s: 'o1' }, o: { o1: ['str', '"bonjour"'] }, t: 'Appel <code>maj(texte)</code> : <code>s</code> désigne le même objet que <code>texte</code>.' },
+      { line: 2, g: { texte: 'o1' }, f: { s: 'o2' }, o: { o1: ['str', '"bonjour"'], o2: ['str', '"BONJOUR"'] }, t: '<code>upper()</code> <b>crée une nouvelle chaîne</b> (o2), elle ne modifie pas l\'ancienne. <code>s</code> pointe vers o2.' },
+      { line: 5, g: { texte: 'o1' }, f: null, o: { o1: ['str', '"bonjour"'] }, t: 'Retour : <code>texte</code> désigne toujours "bonjour".' }]
+  },
+  reaffecte: {
+    label: 'L = [10, 20]', code: `def f(L):
+    L = [10, 20]
+A = [1, 2]
+f(A)
+print(A)   # [1, 2]`,
+    steps: [
+      { line: 3, g: { A: 'o1' }, f: null, o: { o1: ['list', '[1, 2]'] }, t: '<code>A</code> pointe vers la liste [1, 2] (objet o1).' },
+      { line: 4, g: { A: 'o1' }, f: { L: 'o1' }, o: { o1: ['list', '[1, 2]'] }, t: 'Appel <code>f(A)</code> : le paramètre <code>L</code> désigne o1.' },
+      { line: 2, g: { A: 'o1' }, f: { L: 'o2' }, o: { o1: ['list', '[1, 2]'], o2: ['list', '[10, 20]'] }, t: '<b>Réaffecter n\'est pas modifier.</b> <code>L = [10, 20]</code> crée une nouvelle liste (o2) et déplace l\'étiquette <code>L</code>. L\'objet o1 n\'a jamais été modifié.' },
+      { line: 5, g: { A: 'o1' }, f: null, o: { o1: ['list', '[1, 2]'] }, t: 'Retour : <code>A</code> désigne toujours [1, 2].' }]
+  }
+};
+const TYPES_MUT = {
+  list: { m: true, t: 'list', ex: 'a = [1, 2]\na.append(3)', r: 'L\'objet est modifié sur place : <code>id(a)</code> ne change pas.' },
+  dict: { m: true, t: 'dict', ex: 'd = {"a": 1}\nd["b"] = 2', r: 'L\'objet est modifié sur place : <code>id(d)</code> ne change pas.' },
+  set: { m: true, t: 'set', ex: 's = {1, 2}\ns.add(3)', r: 'L\'objet est modifié sur place : <code>id(s)</code> ne change pas.' },
+  int: { m: false, t: 'int', ex: 'a = 5\na = a + 1', r: 'Un nouvel entier est créé : <code>id(a)</code> change.' },
+  float: { m: false, t: 'float', ex: 'x = 1.5\nx = x * 2', r: 'Un nouveau flottant est créé : <code>id(x)</code> change.' },
+  bool: { m: false, t: 'bool', ex: 'b = True\nb = not b', r: 'True et False sont deux objets uniques et immuables.' },
+  str: { m: false, t: 'str', ex: 's = "abc"\ns = s.upper()', r: 'Une nouvelle chaîne est créée : <code>id(s)</code> change.' },
+  tuple: { m: false, t: 'tuple', ex: 't = (1, 2)\nt[0] = 9   # TypeError', r: 'Impossible de modifier un tuple : l\'affectation d\'élément est refusée.' }
+};
+
+/* ---------- aide Python colorée (légère) ---------- */
+function pyhl(code) {
+  const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|None|True|False|get|items|keys|values)$/;
+  return code.split('\n').map(line => {
+    let out = '', i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '#') { out += '<span style="color:#7a7a88;font-style:italic">' + esc(line.slice(i)) + '</span>'; break; }
+      if (ch === '"' || ch === "'") { let j = i + 1; while (j < line.length && line[j] !== ch) j++; out += '<span style="color:#1c6b40">' + esc(line.slice(i, j + 1)) + '</span>'; i = j + 1; continue; }
+      let j = i; while (j < line.length && line[j] !== '#' && line[j] !== '"' && line[j] !== "'") j++;
+      let seg = esc(line.slice(i, j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g, m => /^\d/.test(m) ? '<span style="color:#b05a00">' + m + '</span>' : KW.test(m) ? '<span style="color:#7c3aa8">' + m + '</span>' : BI.test(m) ? '<span style="color:#1f3fa0">' + m + '</span>' : m);
+      out += seg; i = j;
+    }
+    return out;
+  });
+}
+function codeBlock(code, on) {
+  const lines = pyhl(code);
+  return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/*LOGIC-END*/
+
+/* ---------- aides d'interface ---------- */
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', null, k[0]), h('b', null, k[1])))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
+}
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; m.textContent = text; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+
+/* ================= Atelier 1 : Mutabilité ================= */
+const W1 = { scen: 'liste', step: 0, type: 'list' };
+const LAB1 = { id: 'w1', title: 'Mutabilité', hint: 'Suivez pas à pas ce que deviennent les objets et les noms quand une fonction reçoit une liste, un entier ou une chaîne.',
+  intro: 'En Python, un nom est une <b>étiquette</b> collée sur un objet. Appeler une fonction crée de nouvelles étiquettes sur les mêmes objets. Modifier un objet <b>mutable</b> (liste) se voit à l\'extérieur, mais réaffecter une variable ne modifie jamais l\'objet d\'origine.' };
+function mountW1(root) {
+  root.innerHTML = '<h2>' + LAB1.title + '</h2><p>' + LAB1.intro + '</p>' +
+    '<div class="opts"><div class="fld"><span>Scénario</span><div id="w1-scen"></div></div></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w1-prev" type="button">◀ Précédent</button><button class="btn pri" id="w1-next" type="button">Suivant ▶</button><button class="btn" id="w1-reset" type="button">Départ</button></div>' +
+    '<pre class="code" id="w1-code"></pre>' +
+    '<div class="stagebox" id="w1-stage" style="border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff"></div>' +
+    '<div class="verdict" id="w1-msg" aria-live="polite"></div>' +
+    '<h3>Mutable ou immuable ?</h3><p>Un objet est <b>mutable</b> si on peut changer sa valeur après sa création, sans nouvelle affectation.</p><div id="w1-types"></div><div id="w1-type-out"></div>';
+  const S = W1;
+  const draw = () => {
+    const sc = SCENARIOS[S.scen], st = sc.steps[S.step], prev = S.step > 0 ? sc.steps[S.step - 1] : null;
+    const sg = $('#w1-scen'); sg.innerHTML = ''; sg.append(chipsRow(Object.keys(SCENARIOS).map(k => [k, SCENARIOS[k].label]), S.scen, k => { S.scen = k; S.step = 0; draw(); }, 'Scénario'));
+    $('#w1-code').innerHTML = codeBlock(sc.code, st.line);
+    $('#w1-msg').innerHTML = '<b>Étape ' + (S.step + 1) + ' / ' + sc.steps.length + '.</b> ' + st.t;
+    $('#w1-msg').className = 'verdict' + (S.step === sc.steps.length - 1 ? ' yes' : '');
+    // dessin noms/objets
+    const names = [];
+    Object.entries(st.g).forEach(([n, o]) => names.push({ n, o, fr: 'global' }));
+    if (st.f) Object.entries(st.f).forEach(([n, o]) => names.push({ n, o, fr: 'f' }));
+    const ids = Object.keys(st.o);
+    const addr = id => 17559536 + 32 * (parseInt(id.slice(1), 10) - 1);
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start"><div><b class="small">NOMS (étiquettes)</b>';
+    names.forEach(nm => {
+      const f = nm.fr === 'f';
+      html += '<div style="margin:6px 0;padding:6px 8px;border:1px solid ' + (f ? '#e08a00' : 'var(--line)') + ';background:' + (f ? '#fff3dc' : '#fff') + ';border-radius:6px;font-family:var(--font-mono);font-size:13px">' + esc(nm.n) + (f ? ' <span class="small">(local)</span>' : '') + '</div>';
+    });
+    html += '</div><div><b class="small">OBJETS (mémoire)</b>';
+    ids.forEach(id => {
+      const [t, v] = st.o[id], isNew = prev && !prev.o[id], mut = prev && prev.o[id] && prev.o[id][1] !== v;
+      const refs = names.filter(n => n.o === id).length;
+      html += '<div style="margin:6px 0;padding:6px 8px;border:1px solid ' + (isNew ? 'var(--ok)' : mut ? 'var(--warn)' : 'var(--line)') + ';background:' + (isNew ? 'rgba(30,122,46,.12)' : mut ? 'rgba(154,91,0,.12)' : '#fff') + ';border-radius:6px;font-family:var(--font-mono);font-size:13px">' + esc(v) + ' <span class="small">' + t + ' · id ' + addr(id) + ' · ' + refs + ' nom' + (refs > 1 ? 's' : '') + '</span></div>';
+    });
+    html += '</div></div>';
+    $('#w1-stage').innerHTML = html;
+    // tableau mutable/immuable
+    const tw = $('#w1-types'); tw.innerHTML = '';
+    tw.append(chipsRow(Object.keys(TYPES_MUT).map(t => [t, t]), S.type, t => { S.type = t; draw(); }, 'Type'));
+    const T = TYPES_MUT[S.type];
+    $('#w1-type-out').innerHTML = '<p>' + (T.m ? '<span class="verdict yes" style="display:inline-block;padding:2px 8px">mutable</span>' : '<span class="verdict no" style="display:inline-block;padding:2px 8px">immuable</span>') + '</p>' + codeBlock(T.ex) + '<p class="small">' + T.r + '</p>';
+    $('#w1-prev').disabled = S.step === 0; $('#w1-next').disabled = S.step === sc.steps.length - 1;
+  };
+  $('#w1-prev').addEventListener('click', () => { if (S.step > 0) { S.step--; draw(); } });
+  $('#w1-next').addEventListener('click', () => { if (S.step < SCENARIOS[S.scen].steps.length - 1) { S.step++; draw(); } });
+  $('#w1-reset').addEventListener('click', () => { S.step = 0; draw(); });
+  draw();
+}
+WORKSHOPS.push({ id: 'w1', title: LAB1.title, hint: LAB1.hint, mount: mountW1, leave: () => {}, reset: () => { Object.assign(W1, { scen: 'liste', step: 0, type: 'list' }); } });
+
+/* ================= Atelier 2 : Dictionnaire ================= */
+const W2 = { preset: 'mdp', map: new Map(), pre: 'mdp', last: null, con: [], key: '"M. Catry"', val: '"j\'adore les maths"' };
+function mountW2(root) {
+  root.innerHTML = '<h2>Le dictionnaire</h2><p>Un dictionnaire associe à chaque <b>clé</b> une <b>valeur</b>. Opérations : ajouter, supprimer une association, obtenir la valeur d\'une clé.</p>' +
+    '<div class="opts"><div class="fld"><span>Exemple</span><div id="w2-pre"></div></div></div>' +
+    '<div class="fld"><span>Contenu (une association par ligne : clé : valeur)</span><textarea id="w2-text" rows="5" class="mono" spellcheck="false"></textarea></div>' +
+    '<div class="opts"><label class="fld"><span>Clé k</span><input type="text" id="w2-k" class="mono" autocomplete="off"></label><label class="fld"><span>Valeur v</span><input type="text" id="w2-v" class="mono" autocomplete="off"></label></div>' +
+    '<div class="files" id="w2-ops" style="margin:6px 0"></div>' +
+    '<div class="stagebox" id="w2-vis" style="border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff"></div>' +
+    '<h3>Console</h3><pre class="code" id="w2-con" style="min-height:90px"></pre><div class="files"><button class="btn sm" id="w2-clear" type="button">Effacer</button></div>' +
+    '<h3>Complexité des opérations</h3><div class="dwrap"><table class="dt"><thead><tr><th>Python</th><th>Description</th><th>Complexité</th></tr></thead><tbody>' +
+    '<tr><td><code>d[k] = v</code></td><td>Ajout (ou modification) d\'une association de k à v</td><td>O(1) en moyenne</td></tr>' +
+    '<tr><td><code>d[k]</code></td><td>Accès à la valeur de clé k</td><td>O(1) en moyenne</td></tr>' +
+    '<tr><td><code>len(d)</code></td><td>Nombre de clés de d</td><td>O(1) en moyenne</td></tr>' +
+    '<tr><td><code>for k in d:</code></td><td>Parcourir les clés k de d</td><td>O(n), n = nombre de clés</td></tr></tbody></table></div>' +
+    '<h3>Parcours et exercices</h3><div id="w2-extra"></div>';
+  const S = W2;
+  const parseDict = text => {
+    const m = new Map(); let notes = [];
+    for (const line of text.split('\n')) {
+      const t = line.trim(); if (!t) continue;
+      const mm = t.match(/^((?:"[^"]*"|'[^']*'|[^:])+?)\s*:\s*(.*)$/);
+      if (!mm) continue;
+      const ki = parseKey(mm[1]); if (!ki) continue;
+      const u = unhashable(mm[1]);
+      if (u) { notes.push('TypeError : unhashable type : \'' + u + '\' (clé ' + mm[1] + ')'); continue; }
+      if (m.has(ki.id)) notes.push(ki.label + ' remplace une clé égale déjà présente');
+      m.set(ki.id, { ki, v: mm[2].trim() });
+    }
+    return { m, notes };
+  };
+  const items = () => Array.from(S.map.values());
+  const reprDict = () => '{' + items().map(e => pyRepr(e.ki) + ': ' + e.v).join(', ') + '}';
+  const renderCon = () => {
+    $('#w2-con').innerHTML = S.con.length ? S.con.map(c => '<span style="display:block;padding:0 8px;color:var(--muted)">&gt;&gt;&gt; ' + esc(c.cmd) + '</span><span style="display:block;padding:0 8px;color:' + (c.err ? 'var(--bad)' : 'var(--fg)') + '">' + esc(c.out) + '</span>').join('') : '<span style="padding:0 8px;color:var(--muted)">Choisis une opération.</span>';
+  };
+  const log = (cmd, out, err) => { S.con.push({ cmd, out, err }); if (S.con.length > 14) S.con.shift(); renderCon(); };
+  const getK = () => parseKey($('#w2-k').value), getV = () => $('#w2-v').value.trim();
+  const OPS = [['get', 'd[k]'], ['set', 'd[k] = v'], ['in', 'k in d'], ['notin', 'k not in d'], ['getd', 'd.get(k, 0)'], ['del', 'del d[k]'], ['len', 'len(d)'], ['keys', 'd.keys()'], ['values', 'd.values()'], ['items', 'd.items()']];
+  $('#w2-ops').innerHTML = OPS.map(([id, l]) => '<button class="btn' + (id === 'set' ? ' pri' : '') + ' sm" type="button" data-op="' + id + '">' + esc(l) + '</button>').join('');
+  function doOp(op) {
+    const ki = getK(), need = !['len', 'keys', 'values', 'items'].includes(op);
+    if (need && !ki) { log('…', 'Saisis une clé k.', true); return; }
+    const key = ki ? (ki.type === 'str' ? '"' + ki.s + '"' : ki.label) : '';
+    const e = ki ? S.map.get(ki.id) : null;
+    S.last = ki && need ? ki.id : null;
+    if (op === 'get') { e ? log('d[' + key + ']', e.v) : log('d[' + key + ']', 'KeyError: ' + pyRepr(ki), true); }
+    else if (op === 'set') {
+      const v = getV() || 'None';
+      const u = unhashable(ki.label); if (u) log('d[' + key + '] = ' + v, 'TypeError: unhashable type: \'' + u + '\'', true);
+      else { S.map.set(ki.id, { ki: e ? e.ki : ki, v }); log('d[' + key + '] = ' + v, e ? '(valeur modifiée)' : '(clé ajoutée)'); syncText(); }
+    }
+    else if (op === 'in') log(key + ' in d', e ? 'True' : 'False');
+    else if (op === 'notin') log(key + ' not in d', e ? 'False' : 'True');
+    else if (op === 'getd') log('d.get(' + key + ', 0)', e ? e.v : '0');
+    else if (op === 'del') { if (e) { S.map.delete(ki.id); log('del d[' + key + ']', '(association supprimée)'); syncText(); } else log('del d[' + key + ']', 'KeyError: ' + pyRepr(ki), true); }
+    else if (op === 'len') log('len(d)', String(S.map.size));
+    else if (op === 'keys') log('list(d.keys())', '[' + items().map(e => pyRepr(e.ki)).join(', ') + ']');
+    else if (op === 'values') log('list(d.values())', '[' + items().map(e => e.v).join(', ') + ']');
+    else if (op === 'items') log('list(d.items())', '[' + items().map(e => '(' + pyRepr(e.ki) + ', ' + e.v + ')').join(', ') + ']');
+    renderAll();
+  }
+  root.querySelectorAll('[data-op]').forEach(b => b.addEventListener('click', () => doOp(b.dataset.op)));
+  $('#w2-clear').addEventListener('click', () => { S.con = []; renderCon(); });
+  const syncText = () => { $('#w2-text').value = items().map(e => (e.ki.type === 'str' ? '"' + e.ki.s + '"' : e.ki.label) + ' : ' + e.v).join('\n'); };
+  const sg = $('#w2-pre');
+  sg.append(chipsRow(Object.keys(PRESETS).map(k => [k, PRESETS[k].name]), S.pre, k => { S.pre = k; $('#w2-text').value = PRESETS[k].text; fromText(); }, 'Exemple'));
+  function fromText() { const r = parseDict($('#w2-text').value); S.map = r.m; S.last = null; renderAll(); }
+  $('#w2-text').addEventListener('input', fromText);
+  function renderAll() {
+    const it = items();
+    let html = '<div class="files" style="justify-content:space-between"><b class="small">len(d) = ' + it.length + '</b><span class="small">type(d) = dict</span></div>';
+    html += it.length ? '<div class="grid2">' + it.map(e => '<div class="bucket' + (S.last === e.ki.id ? '' : ' empty') + '" style="background:' + (S.last === e.ki.id ? 'rgba(30,122,46,.1)' : '#fff') + '"><div class="bi"><span class="tag" style="font-size:10px;padding:0 4px;border-radius:3px;background:#e6effc;color:#1f3fa0">' + e.ki.type + '</span> ' + esc(pyRepr(e.ki)) + '</div><span class="pkt' + (S.last === e.ki.id ? ' hit' : '') + '">' + esc(e.v || 'None') + '</span></div>').join('') + '</div>' : '<p class="small">Dictionnaire vide : <code>{}</code></p>';
+    html += '<p class="mono small">d = ' + esc(reprDict()) + '</p>';
+    // exercices
+    let ex = '';
+    // inverse
+    const inv = new Map(), dups = [], bad = [];
+    it.forEach(e => { const u = unhashable(e.v); if (u) { bad.push(e.v + ' (type ' + u + ')'); return; } const ki = parseKey(e.v); if (!ki) return; if (inv.has(ki.id)) dups.push(e.v); inv.set(ki.id, { ki, v: pyRepr(e.ki) }); });
+    ex += '<h4>Exercice : inverse(d)</h4><p class="small">On veut <code>d[k] == v ⇔ d2[v] == k</code>, en supposant que d ne contient pas deux fois la même valeur.</p>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="opts"><div>' + codeBlock('def inverse(d):\n    d2 = {}                 # nouveau dictionnaire\n    for k in d:             # O(n)\n        v = d[k]            # O(1)\n        d2[v] = k           # O(1)\n    return d2') + '<p class="small">Version élégante :</p>' + codeBlock('def inverse(d):\n    return {v: k for k, v in d.items()}') + '</div><div><b class="small">d2 = inverse(d)</b>' +
+      (inv.size ? '<div class="dwrap"><table class="dt"><thead><tr><th>clé de d2 (= v)</th><th>valeur (= k)</th></tr></thead><tbody>' + Array.from(inv.values()).map(e => '<tr><td><code>' + esc(e.ki.label) + '</code></td><td><code>' + esc(e.v) + '</code></td></tr>').join('') + '</tbody></table></div>' : '<p class="small">Rien à afficher.</p>') +
+      (dups.length ? '<p class="verdict warn"><b>Valeur en double :</b> ' + dups.map(esc).join(', ') + '. Une seule association est conservée, la dernière.</p>' : '') +
+      (bad.length ? '<p class="verdict no"><b>TypeError : unhashable.</b> ' + bad.map(esc).join(', ') + ' ne peut pas servir de clé.</p>' : '') + '</div></div>';
+    // frequent
+    const L = S.L === undefined ? '3 1 3 2 1 3 4 1 3' : S.L;
+    ex += '<h4>Exercice : frequent(L) en O(n)</h4><div class="fld"><span>L =</span><input type="text" id="w2-L" class="mono" value="' + esc(L) + '" autocomplete="off"></div><div id="w2-freq"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="opts"><div>' + codeBlock('def frequent(L):\n    if not L:\n        return None\n    occurrences = {}\n    for element in L:\n        occurrences[element] = occurrences.get(element, 0) + 1\n    return max(occurrences, key=occurrences.get)') + '</div><div>' + codeBlock('def frequent(L):\n    if not L:\n        return None\n    occurrences = {}\n    for element in L:\n        if element in occurrences:\n            occurrences[element] += 1\n        else:\n            occurrences[element] = 1\n    plus_frequent = L[0]\n    max_occ = 0\n    for element, compte in occurrences.items():\n        if compte > max_occ:\n            max_occ = compte\n            plus_frequent = element\n    return plus_frequent') + '</div></div>';
+    $('#w2-vis').innerHTML = html;
+    $('#w2-extra').innerHTML = ex;
+    const inp = $('#w2-L');
+    if (inp) {
+      const upd = () => {
+        S.L = inp.value;
+        const L2 = inp.value.split(/[\s,;]+/).filter(Boolean).slice(0, 200);
+        const oc = freqOf(L2), arr = Array.from(oc.entries());
+        let best = null, bm = 0; arr.forEach(([k, c]) => { if (c > bm) { bm = c; best = k; } });
+        $('#w2-freq').innerHTML = L2.length ? '<div class="dwrap"><table class="dt" style="margin-top:6px"><thead><tr><th>élément</th>' + arr.map(a => '<th><code>' + esc(a[0]) + '</code></th>').join('') + '</tr><tr><th>occurrences</th>' + arr.map(a => '<td class="m" style="' + (a[0] === best ? 'background:rgba(30,122,46,.12);font-weight:600' : '') + '">' + a[1] + '</td>').join('') + '</tr></thead></table></div><p class="verdict yes">frequent(L) = <b>' + esc(best) + '</b> (' + bm + ' fois). Un parcours de L : n = ' + L2.length + ' mises à jour du dictionnaire, chacune en O(1).</p>' : '<p class="verdict warn">frequent([]) renvoie None.</p>';
+      };
+      inp.addEventListener('input', upd); upd();
+    }
+  }
+  $('#w2-text').value = PRESETS[S.pre].text; fromText(); renderCon();
+  log('d["M. Chomette"]', "'artif'");
+}
+WORKSHOPS.push({ id: 'w2', title: 'Dictionnaire', hint: 'Créez un dictionnaire, testez les opérations d[k], d[k] = v, k in d, del d[k], et exercez-vous sur inverse(d) et frequent(L).',
+  mount: mountW2, reset: () => { W2.preset = 'mdp'; W2.map = new Map(); W2.con = []; W2.last = null; W2.L = undefined; } });
+
+/* ================= Atelier 3 : Applications ================= */
+const W3 = { mode: 'pond', text: PRESETS.graphe_pond.text, u: '0', w: '2', x: '1' };
+function mountW3(root) {
+  root.innerHTML = '<h2>Applications du dictionnaire</h2><p>Un dictionnaire peut représenter un <b>espace de noms</b> (globals, locals) ou un <b>graphe</b> : <code>G[v]</code> donne les voisins du sommet v.</p>' +
+    '<h3>globals et locals</h3><p>Python conserve en mémoire deux dictionnaires de variables : <code>globals()</code> et <code>locals()</code>.</p>' +
+    codeBlock('a = 10\ndef f(x):\n    y = 2\n    print(locals())\nf(1)   # affiche {\'x\': 1, \'y\': 2}') +
+    '<div class="opts"><label class="fld"><span>Argument de f</span><input type="text" id="w3-x" class="mono" style="width:80px"></label></div><p class="verdict" id="w3-loc"></p>' +
+    '<h3>Représenter un graphe</h3><div class="opts"><div class="fld"><span>Graphe</span><div id="w3-pre"></div></div></div>' +
+    '<div class="fld"><span>G = {sommet: [voisins] ou {voisin: poids}}</span><textarea id="w3-text" rows="7" class="mono" spellcheck="false"></textarea></div>' +
+    '<div class="opts"><label class="fld"><span>u</span><input type="text" id="w3-u" class="mono" style="width:70px"></label><label class="fld"><span>v</span><input type="text" id="w3-w" class="mono" style="width:70px"></label></div>' +
+    '<p class="verdict" id="w3-q"></p>' +
+    '<div class="stagebox" id="w3-graph" style="border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff"></div><p class="mono small" id="w3-repr"></p>';
+  const S = W3;
+  $('#w3-x').value = S.x;
+  const updLoc = () => { const xv = $('#w3-x').value.trim() || 'None'; $('#w3-loc').innerHTML = '<b>locals()</b> dans f : <code>{\'x\': ' + esc(xv) + ', \'y\': 2}</code><br><b>globals()</b> : <code>{\'a\': 10, \'f\': &lt;function f&gt;, …}</code><br>Une variable locale n\'existe que dans le bloc de la fonction.'; };
+  $('#w3-x').addEventListener('input', updLoc); updLoc();
+  const sg = $('#w3-pre');
+  sg.append(chipsRow([['simple', 'Graphe du cours'], ['pond', 'Graphe pondéré']], S.mode, k => { S.mode = k; $('#w3-text').value = PRESETS[k === 'pond' ? 'graphe_pond' : 'graphe'].text; render(); }, 'Graphe'));
+  function render() {
+    const r = parseGraph($('#w3-text').value);
+    const nodes = Array.from(r.g.keys());
+    for (const nb of r.g.values()) for (const k of nb.keys()) if (!r.g.has(k) && !nodes.includes(k)) nodes.push(k);
+    // positions : cercle
+    const pos = {};
+    nodes.forEach((n, i) => { const ang = -Math.PI / 2 + i * 2 * Math.PI / Math.max(nodes.length, 1); pos[n] = [300 + 190 * Math.cos(ang), 215 + 150 * Math.sin(ang)]; });
+    let s = '<svg viewBox="0 0 600 430" style="width:100%;max-width:640px;height:auto">';
+    s += '<defs><marker id="w3ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#55555f"/></marker></defs>';
+    const edges = [];
+    for (const [a, nb] of r.g) for (const [b, wt] of nb) edges.push([a, b, wt]);
+    const has = (a, b) => r.g.has(a) && r.g.get(a).has(b);
+    const drawn = new Set();
+    edges.forEach(([a, b, wt]) => {
+      if (!pos[a] || !pos[b]) return;
+      const sym = has(b, a), key = sym ? [a, b].sort().join('|') : a + '>' + b;
+      if (drawn.has(key)) return; drawn.add(key);
+      const [x1, y1] = pos[a], [x2, y2] = pos[b];
+      if (a === b) { s += '<path d="M' + x1 + ',' + (y1 - 18) + ' c-30,-50 30,-50 0,0" fill="none" stroke="#55555f" stroke-width="1.6" marker-end="url(#w3ar)"/>'; return; }
+      const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      const hl = a === S.u || (sym && b === S.u);
+      const col = hl ? '#e08a00' : '#55555f';
+      s += '<line x1="' + (x1 + ux * 20) + '" y1="' + (y1 + uy * 20) + '" x2="' + (x2 - ux * (sym ? 20 : 23)) + '" y2="' + (y2 - uy * (sym ? 20 : 23)) + '" stroke="' + col + '" stroke-width="' + (hl ? 3 : 1.8) + '"' + (sym ? '' : ' marker-end="url(#w3ar)"') + '/>';
+      if (wt !== null) s += '<text x="' + ((x1 + x2) / 2 - uy * 12) + '" y="' + ((y1 + y2) / 2 + ux * 12 + 4) + '" text-anchor="middle" font-size="14" font-weight="600" fill="#1565c0" paint-order="stroke" stroke="#fff" stroke-width="4">' + fmt(wt, 2) + '</text>';
+    });
+    nodes.forEach(n => {
+      const [x, y] = pos[n], on = n === S.u, nb = r.g.get(S.u) && r.g.get(S.u).has(n);
+      s += '<g data-n="' + esc(n) + '" style="cursor:pointer"><circle cx="' + x + '" cy="' + y + '" r="20" fill="' + (on ? '#fff3dc' : nb ? '#e3f4ea' : '#e6effc') + '" stroke="' + (on ? '#e08a00' : nb ? '#2e8b57' : '#8fa8d8') + '" stroke-width="2"/><text x="' + x + '" y="' + (y + 5) + '" text-anchor="middle" font-size="15" font-weight="600" fill="#1f1f28">' + esc(n) + '</text></g>';
+    });
+    s += '</svg>';
+    $('#w3-graph').innerHTML = s;
+    root.querySelectorAll('#w3-graph [data-n]').forEach(g => g.addEventListener('click', () => { S.u = g.dataset.n; $('#w3-u').value = S.u; render(); }));
+    const und = edges.every(([a, b]) => has(b, a));
+    $('#w3-repr').textContent = 'G = {' + Array.from(r.g).map(([v, nb]) => v + ': ' + (nb.size && Array.from(nb.values())[0] !== null ? '{' + Array.from(nb).map(([k, wt]) => k + ': ' + wt).join(', ') + '}' : '[' + Array.from(nb.keys()).join(', ') + ']')).join(', ') + '}';
+    query(r);
+  }
+  function query(r) {
+    const nb = r.g.get(S.u), el = $('#w3-q');
+    if (!nb) { el.className = 'verdict warn'; el.innerHTML = 'Le sommet <code>' + esc(S.u) + '</code> n\'est pas une clé de G.'; return; }
+    const wts = Array.from(nb.values())[0] !== undefined && Array.from(nb.values())[0] !== null;
+    let html = '<code>G[' + esc(S.u) + ']</code> = <b>' + esc(wts ? '{' + Array.from(nb).map(([k, x]) => k + ': ' + x).join(', ') + '}' : '[' + Array.from(nb.keys()).join(', ') + ']') + '</b> (degré ' + nb.size + '), accès en O(1).';
+    if (nb.has(S.w)) html += '<br><code>' + esc(S.w) + ' in G[' + esc(S.u) + ']</code> → True' + (wts ? ', poids <code>G[' + esc(S.u) + '][' + esc(S.w) + ']</code> = <b>' + nb.get(S.w) + '</b>' : '') + '.';
+    else html += '<br><code>' + esc(S.w) + ' in G[' + esc(S.u) + ']</code> → False : pas d\'arête de ' + esc(S.u) + ' vers ' + esc(S.w) + '.';
+    el.className = 'verdict'; el.innerHTML = html;
+  }
+  $('#w3-text').value = S.text;
+  $('#w3-text').addEventListener('input', render);
+  $('#w3-u').addEventListener('input', () => { S.u = $('#w3-u').value.trim(); render(); });
+  $('#w3-w').addEventListener('input', () => { S.w = $('#w3-w').value.trim(); render(); });
+  $('#w3-u').value = S.u; $('#w3-w').value = S.w;
+  render();
+}
+WORKSHOPS.push({ id: 'w3', title: 'Applications', hint: 'globals() et locals() sont des dictionnaires. Un graphe se représente par un dictionnaire de voisins, avec accès G[v] en O(1).',
+  mount: mountW3, reset: () => { W3.mode = 'pond'; W3.text = PRESETS.graphe_pond.text; W3.u = '0'; W3.w = '2'; W3.x = '1'; } });
+
+/* ================= Atelier 4 : Exploitation ================= */
+const W4 = { N: 424579, word: 'obnubilé', steps: [], k: 0 };
+function mountW4(root) {
+  root.innerHTML = '<h2>Exploitation : chercher dans un dictionnaire</h2><p>Pour savoir si un mot est bien orthographié, on cherche s\'il appartient à la liste des mots. La liste du cours (Hunspell français) contient <b>424 579 mots</b> : « obnubilé » y est, « omnubilé » non.</p>' +
+    '<div class="opts"><label class="fld"><span>N (nombre de mots)</span><input type="text" id="w4-N" class="mono" style="width:120px" autocomplete="off"></label><button class="btn" id="w4-424" type="button">424 579</button><button class="btn" id="w4-160" type="button">160 000 (Swann)</button></div>' +
+    '<div class="fld"><span>Mot recherché</span><input type="text" id="w4-word" class="mono" style="max-width:260px" value="obnubilé" autocomplete="off" spellcheck="false"></div>' +
+    '<div class="files" style="margin:6px 0"><button class="btn pri" id="w4-go" type="button">Chercher</button><button class="btn" id="w4-step" type="button">Pas suivant ▶</button><button class="btn" id="w4-all" type="button">Tout exécuter</button></div>' +
+    '<div id="w4-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:6px;margin:8px 0"></div>' +
+    '<pre class="code" id="w4-code"></pre><div class="verdict" id="w4-msg" aria-live="polite"></div>' +
+    '<h3>Comparaison des coûts</h3>' + stats([['N', ''], ['⌈log₂ N⌉', ''], ['Séquentielle', 'N comparaisons'], ['Dichotomie', '⌈log₂ N⌉'], ['Hachage', '≈ 1']]) +
+    '<div id="w4-chart-wrap"><h3>Comparaisons en fonction de N (échelle log-log)</h3><svg id="w4-chart" viewBox="0 0 600 260" style="width:100%;max-width:640px;height:auto"></svg></div>' +
+    '<h3>Temps mesurés dans le cours (échelle logarithmique)</h3><div id="w4-times"></div><p class="small">Analyser « Du côté de chez Swann » (160 000 mots) : <b>15 ms</b> avec un dict, <b>8 min</b> avec la recherche linéaire.</p>';
+  const S = W4;
+  const renderN = () => {
+    $('#w4-N').value = fmtN(S.N);
+    const k = Math.ceil(Math.log2(S.N));
+    const g = $('#w4-chart-wrap .gstats');
+    if (g) { const bs = g.querySelectorAll('.stat b'); if (bs.length >= 2) { bs[0].textContent = fmtN(S.N); bs[1].textContent = String(k); } }
+    const lin = [], dic = [], hs = [];
+    for (let e = 1; e <= 7; e += 0.1) { const n = Math.pow(10, e); lin.push([n, n]); dic.push([n, Math.ceil(Math.log2(n))]); hs.push([n, 1]); }
+    drawLogChart($('#w4-chart'), { series: [{ name: 'séquentielle O(N)', color: '#d93a2b', pts: lin }, { name: 'dichotomie O(log N)', color: '#e08a00', pts: dic }, { name: 'hachage O(1)', color: '#2e8b57', pts: hs }], marks: [{ x: S.N, y: S.N, color: '#d93a2b' }, { x: S.N, y: k, color: '#e08a00' }, { x: S.N, y: 1, color: '#2e8b57', label: 'N = ' + fmtN(S.N) }] });
+  };
+  // dessin log-log simple
+  function drawLogChart(svg, o) {
+    const W = 600, H = 260, L = 52, R = 12, T = 16, B = 36;
+    const xmin = 10, xmax = 1e7, ymin = 1, ymax = 1e7;
+    const X = x => L + (Math.log10(x) - Math.log10(xmin)) / (Math.log10(xmax) - Math.log10(xmin)) * (W - L - R);
+    const Y = y => H - B - (Math.log10(y) - Math.log10(ymin)) / (Math.log10(ymax) - Math.log10(ymin)) * (H - B - T);
+    let s = '';
+    for (let e = 1; e <= 7; e++) {
+      const x = X(Math.pow(10, e)), y = Y(Math.pow(10, e));
+      s += '<line x1="' + x + '" y1="' + T + '" x2="' + x + '" y2="' + (H - B) + '" stroke="#f0f0f4"/><text x="' + x + '" y="' + (H - B + 14) + '" text-anchor="middle" font-size="10.5" fill="#6a6a78">10' + e + '</text>';
+      s += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#e8e8ee"/><text x="' + (L - 5) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10.5" fill="#6a6a78">10' + e + '</text>';
+    }
+    s += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="#55555f"/><line x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '" stroke="#55555f"/>';
+    o.series.forEach(se => {
+      const pts = se.pts.filter(p => p[1] >= ymin && p[1] <= ymax);
+      if (!pts.length) return;
+      s += '<polyline fill="none" stroke="' + se.color + '" stroke-width="2" points="' + pts.map(p => X(clamp(p[0], xmin, xmax)).toFixed(1) + ',' + Y(clamp(p[1], ymin, ymax)).toFixed(1)).join(' ') + '"/>';
+    });
+    o.marks.forEach(m => { s += '<circle cx="' + X(m.x) + '" cy="' + Y(m.y) + '" r="4.5" fill="' + m.color + '" stroke="#fff" stroke-width="1.5"/>' + (m.label ? '<text x="' + X(m.x) + '" y="' + (Y(m.y) - 9) + '" text-anchor="end" font-size="11" fill="#1f1f28">' + m.label + '</text>' : ''); });
+    o.series.forEach((se, i) => { const x = L + 10, y = T + 10 + i * 15; s += '<line x1="' + x + '" y1="' + y + '" x2="' + (x + 16) + '" y2="' + y + '" stroke="' + se.color + '" stroke-width="2"/><text x="' + (x + 22) + '" y="' + (y + 3.5) + '" font-size="11" fill="#1f1f28">' + se.name + '</text>'; });
+    svg.innerHTML = s;
+  }
+  // plan
+  function plan() {
+    S.word = $('#w4-word').value.trim();
+    const r = planSearch(S.word);
+    S.steps = r.steps; S.k = 0; renderSearch();
+  }
+  function renderSearch() {
+    const st = S.steps[S.k] || S.steps[0];
+    $('#w4-list').innerHTML = MOTS.map((m, i) => {
+      const inz = i >= st.lo && i <= st.hi && !st.done;
+      const isMid = st.mid === i, isF = st.done && st.found && MOTS[i] === S.word;
+      const bg = isF ? 'rgba(30,122,46,.18)' : isMid ? 'rgba(154,91,0,.15)' : inz || (!st.done && S.k === 0) ? 'var(--accent-soft)' : '#ececf1';
+      const bd = isF ? 'var(--ok)' : isMid ? 'var(--warn)' : inz || (!st.done && S.k === 0) ? 'var(--accent)' : '#d4d4dc';
+      return '<div style="border:1.5px solid ' + bd + ';background:' + bg + ';border-radius:3px;padding:3px 6px;font-size:13px;' + (inz || isMid || isF || (!st.done && S.k === 0) ? '' : 'color:#9a9aa8;') + '"><span style="font-size:10px;color:var(--muted)">' + i + '</span> ' + esc(m) + '</div>';
+    }).join('');
+    $('#w4-msg').className = 'verdict ' + (st.done ? (st.found ? 'yes' : 'warn') : '');
+    $('#w4-msg').innerHTML = '<b>Étape ' + S.k + ' / ' + (S.steps.length - 1) + '.</b> ' + st.t + '<br><span class="small">Séquentielle : ' + (MOTS.includes(S.word) ? (MOTS.indexOf(S.word) + 1) : MOTS.length) + ' comparaisons sur cet extrait.</span>';
+    $('#w4-step').disabled = S.k >= S.steps.length - 1;
+    $('#w4-code').innerHTML = codeBlock('def recherche_dicho(mot, liste):\n    debut = 0\n    fin = len(liste) - 1\n    while debut <= fin:\n        milieu = (debut + fin) // 2\n        if liste[milieu] == mot:\n            return True\n        elif liste[milieu] < mot:\n            debut = milieu + 1\n        else:\n            fin = milieu - 1\n    return False', st.mid === null ? (st.done ? (st.found ? 7 : 12) : 3) : st.res === 'eq' ? 6 : st.res === 'lt' ? 8 : 10);
+  }
+  $('#w4-go').addEventListener('click', plan);
+  $('#w4-word').addEventListener('keydown', e => { if (e.key === 'Enter') plan(); });
+  $('#w4-step').addEventListener('click', () => { if (S.k < S.steps.length - 1) { S.k++; renderSearch(); } });
+  $('#w4-all').addEventListener('click', () => { S.k = S.steps.length - 1; renderSearch(); });
+  $('#w4-424').addEventListener('click', () => { S.N = 424579; renderN(); });
+  $('#w4-160').addEventListener('click', () => { S.N = 160000; renderN(); });
+  $('#w4-N').addEventListener('input', () => { const v = parseInt($('#w4-N').value.replace(/\s| /g, ''), 10); if (isFinite(v) && v >= 2) { S.N = v; renderN(); } });
+  $('#w4-times').innerHTML = '<div class="dwrap"><table class="dt">' + [['Liste, force brute', '3 ms'], ['Dichotomie écrite à la main', '3 µs'], ['bisect_left (bibliothèque)', '0,5 µs'], ['dict de Python', '27 à 34 ns']].map(m => '<tr><td style="width:50%">' + m[0] + '</td><td class="m">' + m[1] + '</td><td><div style="height:14px;border-radius:2px;background:var(--accent);width:' + Math.max(4, Math.round(Math.log10(3e-3 / 1e-9) / 7 * 100)) + '%"></div></td></tr>').join('') + '</table></div>';
+  renderN(); plan();
+}
+WORKSHOPS.push({ id: 'w4', title: 'Exploitation', hint: 'Sur une liste de 424 579 mots, la recherche linéaire coûte N comparaisons, la dichotomie ⌈log₂ N⌉, le dictionnaire ≈ 1.',
+  mount: mountW4, reset: () => { Object.assign(W4, { N: 424579, word: 'obnubilé', steps: [], k: 0 }); } });
+
+/* ================= Atelier 5 : Table de hachage ================= */
+const W5 = {
+  red: 'mod', method: 'chain', m: 8, entries: ENTRIES_DEMO.map(a => mkEntry(a[0], a[1])),
+  salt: 0n, salted: true, course: false, pyrule: false, auto: false, thr: 0.75,
+  sel: null, msg: null, dup: ''
+};
+function mountW5(root) {
+  W5.salt = randSalt();
+  root.innerHTML = '<h2>Table de hachage</h2>' +
+    '<div class="verdict goal">Deux façons de créer un dictionnaire : une <b>table de hachage</b> (Python), accès en O(1) et mémoire O(n + N) où N est la taille de la table, ou un arbre binaire de recherche.</div>' +
+    '<h3>1. Le hash donne un grand entier</h3><p>hash() renvoie toujours un entier de 64 bits, mais chaque type de clé occupe cette plage à sa façon :</p>' +
+    '<ul style="padding-left:22px;line-height:1.7"><li><b>int</b> : le hash est l\'entier lui-même, tant qu\'il est dans ]−(2⁶¹ − 1), 2⁶¹ − 1[. Sinon, modulo 2⁶¹ − 1.</li><li><b>float</b> : deux nombres égaux ont le même hash (1 et 1.0). Sinon, p/q donne p × q⁻¹ modulo 2⁶¹ − 1.</li><li><b>str</b> : salage aléatoire, puis un entier réparti sur les 64 bits.</li></ul>' +
+    '<div class="opts"><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="w5-course"> Valeurs de hash du cours (vache, cochon, poule, veau)</label><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="w5-salt" checked> Salage aléatoire des chaînes</label><button class="btn" id="w5-newrun" type="button">Nouvelle exécution</button></div>' +
+    '<p class="mono small" id="w5-saltv"></p>' +
+    '<h3>2. La réduction trouve la case</h3><div id="w5-red"></div><p class="small" id="w5-reddesc"></p><div id="w5-msl"></div>' +
+    '<h3>3. Le tableau stocke le paquet</h3><p>Chaque case contient le hash, la clé et la valeur. Si deux clés visent la même case, on gère la collision :</p><div id="w5-method"></div><p class="small" id="w5-methoddesc"></p>' +
+    '<div class="opts"><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="w5-py"> Règle de Python : agrandir à 2/3, ×4 (×2 au-delà de 50 000 clés)</label><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="w5-auto"> Agrandir si α dépasse le seuil</label></div><div id="w5-thr"></div>' +
+    '<div class="fld"><span>Entrées du dictionnaire (une par ligne, clé : valeur)</span><textarea id="w5-keys" rows="7" class="mono" spellcheck="false"></textarea></div><p class="small">La clé est un entier (42), un flottant (0.375) ou une chaîne (pomme, ou "42" entre guillemets).</p><p class="verdict warn" id="w5-dup" hidden></p>' +
+    '<div class="files" style="margin:6px 0"><button class="btn pri" id="w5-animaux" type="button">Exemple du cours : animaux</button><button class="btn" id="w5-regen" type="button">Tirer d\'autres entrées</button></div>' +
+    '<h3>Opération sur une clé</h3><div class="opts"><label class="fld"><span>Clé k</span><input type="text" id="w5-opk" class="mono" style="width:140px" value="0.375" autocomplete="off"></label><label class="fld"><span>Valeur v</span><input type="text" id="w5-opv" class="mono" style="width:140px" value="30" autocomplete="off"></label></div>' +
+    '<div class="files"><button class="btn pri" id="w5-ins" type="button">d[k] = v</button><button class="btn" id="w5-find" type="button">d[k]</button><button class="btn" id="w5-del" type="button">del d[k]</button></div><p class="verdict" id="w5-msg"></p><div id="w5-steps"></div>' +
+    '<h3>Résultats</h3>' + stats([['Taille effective m', ''], ['Facteur de charge α = n / m', ''], ['Collisions', ''], ['Sondages par insertion (moy.)', ''], ['Plus longue chaîne / sondage', ''], ['Cases vides', '']]) +
+    '<p class="verdict warn" id="w5-warn" hidden></p>' +
+    '<h3>Clés par case de départ</h3><svg id="w5-hist" viewBox="0 0 320 96" style="width:100%;max-width:400px;height:auto"></svg>' +
+    '<h3>Tableau</h3><div class="stagebox" id="w5-vis" style="border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff"></div>';
+  const S = W5;
+  // sliders
+  const makeSlider = (hostId, o) => {
+    const host = $(hostId); const wrap = document.createElement('div'); wrap.className = 'bar';
+    wrap.innerHTML = '<span class="lab">' + o.name + ' = <b>' + o.get() + '</b></span><input type="range" min="' + o.min + '" max="' + o.max + '" step="' + o.step + '" value="' + o.get() + '" aria-label="' + o.name + '" style="flex:1;width:auto">';
+    host.appendChild(wrap);
+    const rng = wrap.querySelector('input');
+    rng.addEventListener('input', () => { o.set(parseFloat(rng.value)); wrap.querySelector('b').textContent = o.get(); render(null); });
+    return { sync: () => { rng.value = o.get(); wrap.querySelector('b').textContent = o.get(); } };
+  };
+  const msl = makeSlider('#w5-msl', { name: 'm', min: 2, max: 32, step: 1, get: () => S.m, set: v => { S.m = Math.round(v); } });
+  const thr = makeSlider('#w5-thr', { name: 'seuil', min: 0.3, max: 1, step: 0.05, get: () => S.thr, set: v => { S.thr = v; } });
+  // segmented
+  const rd = $('#w5-red');
+  rd.append(chipsRow([['mod', 'Modulo'], ['mask', 'Masque'], ['mult', 'Multiplic.']], S.red, v => { S.red = v; render(null); }, 'Réduction'));
+  const md = $('#w5-method');
+  md.append(chipsRow([['chain', 'Chaînage'], ['lin', 'Linéaire'], ['quad', 'Quadr.'], ['dbl', 'Double']], S.method, v => { S.method = v; render(null); }, 'Collisions'));
+  // cases
+  $('#w5-py').addEventListener('change', e => { S.pyrule = e.target.checked; render(null); });
+  $('#w5-auto').addEventListener('change', e => { S.auto = e.target.checked; render(null); });
+  $('#w5-course').addEventListener('change', e => { S.course = e.target.checked; render(null); });
+  $('#w5-salt').addEventListener('change', e => { S.salted = e.target.checked; render(null); });
+  $('#w5-newrun').addEventListener('click', () => { S.salt = randSalt(); render(null); });
+  // entrées
+  const keysEl = $('#w5-keys');
+  const entriesText = () => S.entries.map(e => e.label + ' : ' + e.v).join('\n');
+  keysEl.value = entriesText();
+  keysEl.addEventListener('input', () => { const r = parseEntries(keysEl.value); S.entries = r.out; S.dup = r.dup; render(null); });
+  keysEl.addEventListener('blur', () => { keysEl.value = entriesText(); });
+  $('#w5-animaux').addEventListener('click', () => {
+    S.entries = [mkEntry('vache', '1000'), mkEntry('cochon', '6.5'), mkEntry('poule', 'None')];
+    S.course = true; S.salted = false; S.red = 'mod'; S.method = 'lin'; S.m = 8; S.auto = false; S.pyrule = false;
+    $('#w5-opk').value = 'veau'; $('#w5-opv').value = 'None'; S.sel = null; S.msg = null; S.dup = ''; render(null);
+  });
+  $('#w5-regen').addEventListener('click', () => {
+    const n = S.entries.length; S.entries = [];
+    const WORDS = ['pomme', 'poire', 'cerise', 'banane', 'kiwi', 'fraise', 'citron', 'mangue', 'orange', 'prune', 'figue', 'melon', 'raisin', 'abricot', 'ananas', 'pêche', 'datte', 'noix', 'lime', 'coing'];
+    let guard = 0;
+    while (S.entries.length < n && guard++ < 200) {
+      const r = Math.random(); let lab;
+      if (r < 0.4) lab = WORDS[Math.floor(Math.random() * WORDS.length)];
+      else if (r < 0.7) lab = String(Math.floor(Math.random() * 200) - 50);
+      else lab = String(Math.floor(Math.random() * 80) / 8 + (Math.random() < 0.5 ? 0.5 : 0.125)).slice(0, 8);
+      const e = mkEntry(lab, String(1 + Math.floor(Math.random() * 99)));
+      if (!e || S.entries.some(x => x.id === e.id)) continue;
+      S.entries.push(e);
+    }
+    S.sel = null; S.msg = null; S.dup = ''; render(null);
+  });
+  // opérations
+  const opKi = () => parseKey($('#w5-opk').value);
+  const opVal = () => $('#w5-opv').value.trim().slice(0, 20);
+  const entryOf = id => S.entries.find(x => x.id === id) || null;
+  function doInsert() {
+    const ki = opKi(); if (!ki) return;
+    const e = entryOf(ki.id);
+    if (e) { e.v = opVal(); S.sel = ki.id; S.msg = { mode: 'upd', ki }; }
+    else if (S.entries.length >= 60) { S.msg = { t: 'no', h: 'Limite de 60 entrées atteinte.' }; }
+    else { S.entries.push(mkEntry(ki.label, opVal())); S.sel = ki.id; S.msg = { mode: 'ins', ki }; }
+    render(null);
+  }
+  $('#w5-ins').addEventListener('click', doInsert);
+  $('#w5-find').addEventListener('click', () => { const ki = opKi(); if (!ki) return; S.sel = ki.id; S.msg = { mode: 'find', ki }; render(null); });
+  $('#w5-del').addEventListener('click', () => {
+    const ki = opKi(); if (!ki) return;
+    const i = S.entries.findIndex(x => x.id === ki.id);
+    if (i < 0) { S.sel = ki.id; S.msg = { mode: 'delmiss', ki }; }
+    else { S.entries.splice(i, 1); S.sel = null; S.msg = { t: 'yes', h: 'Entrée <b>' + esc(ki.label) + '</b> supprimée. Le tableau est reconstruit avec les entrées restantes.' }; }
+    render(null);
+  });
+  $('#w5-opk').addEventListener('input', () => renderSteps());
+  $('#w5-opk').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doInsert(); } });
+  $('#w5-opv').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doInsert(); } });
+  // rendu
+  function renderVis(B, pathInfo) {
+    const pm = new Map();
+    if (pathInfo) pathInfo.path.forEach((p, i) => pm.set(p.b + ':' + p.pos, i));
+    const last = pathInfo && pathInfo.found ? pathInfo.path[pathInfo.path.length - 1] : null;
+    const isFound = (b, pos) => last && last.b === b && last.pos === pos;
+    let html = '<div class="small" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px"><span><i style="display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--accent);background:var(--accent-soft);vertical-align:-2px"></i> à sa case</span><span><i style="display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--bad);background:rgba(192,40,31,.15);vertical-align:-2px"></i> collision</span><span><i style="display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--ok);background:rgba(30,122,46,.15);vertical-align:-2px"></i> trouvée</span></div>';
+    html += '<div class="grid2">';
+    for (let i = 0; i < B.m; i++) {
+      const b = B.chain ? B.T[i] : null;
+      const one = B.chain ? null : B.T[i];
+      html += '<div class="bucket' + ((B.chain ? !b.length : one === null) ? ' empty' : '') + '"><div class="bi">case ' + i + (isPow2(B.m) && B.m > 1 ? ' · ' + i.toString(2).padStart(Math.log2(B.m), '0') : '') + '</div>';
+      if (B.chain) {
+        if (!b.length) html += '<span class="small">∅</span>';
+        else b.forEach((k, pos) => { const e = entryOf(k); const key = i + ':' + pos; const onp = pm.has(key); const f = isFound(i, pos); const coll = pos > 0; html += '<span class="pkt' + (f ? ' hit' : coll ? ' coll' : '') + '" title="' + esc(e.label) + ' → ' + esc(e.v) + '">' + (onp ? '[' + pm.get(key) + '] ' : '') + esc(e.label) + ' → ' + esc(e.v) + '</span>'; });
+      } else if (one === null) html += '<span class="small">∅</span>';
+      else { const e = entryOf(one), key = i + ':0', onp = pm.has(key), f = isFound(i, 0), coll = B.info[one].home !== i; html += '<span class="pkt' + (f ? ' hit' : coll ? ' coll' : '') + '" title="' + esc(e.label) + ' → ' + esc(e.v) + '">' + (onp ? '[' + pm.get(key) + '] ' : '') + esc(e.label) + ' → ' + esc(e.v) + '</span>'; }
+      html += '</div>';
+    }
+    html += '</div>';
+    $('#w5-vis').innerHTML = html;
+  }
+  function renderHist(B) {
+    const W = 320, H = 96, top = 14, base = H - 16, left = 22, right = 6;
+    const mx = Math.max(3, ...B.home);
+    const bw = (W - left - right) / B.m;
+    let s = '<line x1="' + left + '" y1="' + base + '" x2="' + (W - right) + '" y2="' + base + '" stroke="#55555f" stroke-width="1"/>';
+    for (let v = 0; v <= mx; v += (mx > 6 ? Math.ceil(mx / 3) : 1)) {
+      const y = base - (base - top) * v / mx;
+      s += '<line x1="' + left + '" y1="' + y + '" x2="' + (W - right) + '" y2="' + y + '" stroke="#e8e8ee" stroke-width="1"/><text x="' + (left - 5) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10" fill="#6a6a78">' + v + '</text>';
+    }
+    B.home.forEach((c, i) => {
+      const x = left + i * bw + bw * 0.15, w = bw * 0.7, hh = (base - top) * c / mx;
+      if (c > 0) s += '<rect x="' + x.toFixed(2) + '" y="' + (base - hh).toFixed(2) + '" width="' + w.toFixed(2) + '" height="' + hh.toFixed(2) + '" fill="' + (c > 1 ? '#d93a2b' : '#8fa8d8') + '"/>';
+    });
+    const step = B.m > 20 ? 5 : B.m > 10 ? 2 : 1;
+    for (let i = 0; i < B.m; i += step) s += '<text x="' + (left + i * bw + bw / 2).toFixed(2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#6a6a78">' + i + '</text>';
+    $('#w5-hist').innerHTML = s;
+  }
+  function renderMsg(B) {
+    const el = $('#w5-msg'), m = S.msg;
+    el.className = 'verdict';
+    if (!m) { el.innerHTML = 'Saisis une clé et une valeur, puis choisis une opération.'; return; }
+    if (m.t) { el.className = 'verdict ' + m.t; el.innerHTML = m.h; return; }
+    const ki = m.ki, pi = pathFor(B, ki, S.red, S.method), inf = B.info[ki.id], unit = B.chain ? 'comparaison' : 'sondage';
+    const pl = n => n + ' ' + unit + (n > 1 ? 's' : '');
+    const en = entryOf(ki.id);
+    let t = '';
+    if (m.mode === 'ins' || m.mode === 'upd') {
+      if (inf && inf.placed) {
+        const where = B.chain ? 'case <b>' + inf.home + '</b>, position ' + (inf.pos + 1) + ' de la liste' : 'case <b>' + inf.slot + '</b>';
+        t = (m.mode === 'upd' ? 'Clé déjà présente' + (en && en.label !== ki.label ? ' (<b>' + esc(en.label) + '</b> est égale à <b>' + esc(ki.label) + '</b>)' : '') + ' : valeur mise à jour dans la ' : 'Paquet rangé dans la ') + where + ' (' + pl(inf.probes) + ').';
+        el.className = 'verdict ' + (inf.probes > 1 && m.mode === 'ins' ? 'warn' : 'yes');
+      } else { t = '<b>Échec</b> : aucune case libre trouvée après ' + B.m + ' sondages.'; el.className = 'verdict no'; }
+    } else if (m.mode === 'find') {
+      if (pi.found) { t = 'd[' + esc(ki.label) + '] renvoie <b>' + esc(en && en.v !== '' ? en.v : '—') + '</b> (' + pl(pi.probes) + ').'; el.className = 'verdict yes'; }
+      else { t = '<b>KeyError</b> : ' + esc(ki.label) + ' est absente (' + pl(pi.probes) + ').'; el.className = 'verdict no'; }
+    } else if (m.mode === 'delmiss') { t = '<b>KeyError</b> : ' + esc(ki.label) + ' est absente, rien à supprimer.'; el.className = 'verdict no'; }
+    el.innerHTML = t;
+  }
+  function renderSteps() {
+    const ki = opKi(); if (!ki) { $('#w5-steps').innerHTML = ''; return; }
+    const B = buildTable(S.entries, effM(), S.red, S.method, S.salt), h = hashOf(ki, S.salt), i = (S.red === 'mod' ? Number(bmod(h, B.m)) : S.red === 'mask' ? Number(h & BigInt(B.m - 1)) : Math.floor(B.m * ((Number(BigInt.asUintN(32, h)) * ((Math.sqrt(5) - 1) / 2)) % 1)));
+    const en = entryOf(ki.id);
+    let s3;
+    if (en) { const inf = B.info[ki.id]; s3 = inf.placed ? (B.chain ? 'Case <b>' + inf.home + '</b>, position ' + (inf.pos + 1) + ' : le paquet (hash, clé, valeur) y est rangé.' : 'Case <b>' + inf.slot + '</b> : le paquet y est rangé' + (inf.slot !== i ? ' après collision (case de départ ' + i + ').' : '.')) : 'Aucune case libre : la clé n\'a pas pu être rangée.'; }
+    else s3 = 'La clé n\'est pas dans le tableau. Elle serait rangée à partir de la case <b>' + i + '</b>.';
+    $('#w5-steps').innerHTML = '<div class="steps"><div class="st"><span class="n" style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px">1</span><div><b>hash(' + esc(ki.label) + ')</b><span class="big mono">' + h + '</span><span class="small">' + (ki.type === 'str' ? 'Chaîne : salage aléatoire' + (S.salted ? ' (sel ' + S.salt.toString(16).slice(0, 8) + '…)' : ' désactivé') + ', puis un entier réparti sur les 64 bits.' : 'Entier ou flottant : voir les parties précédentes.') + '</span></div></div>' +
+      '<div class="st"><span class="n" style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px">2</span><div><b>Réduction en indice</b><span class="big mono">' + (S.red === 'mod' ? h + ' mod ' + B.m + ' = <b>' + i + '</b>' : S.red === 'mask' ? h + ' ET ' + (B.m - 1) + ' = <b>' + i + '</b>' : '⌊' + B.m + ' · frac(' + BigInt.asUintN(32, h) + ' · φ)⌋ = <b>' + i + '</b>') + '</span></div></div>' +
+      '<div class="st"><span class="n" style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px">3</span><div><b>Stockage</b><span class="small">' + s3 + '</span></div></div></div>';
+  }
+  function effM() {
+    let m = S.m;
+    if (S.pyrule) { const n = S.entries.length; while (n / m > 2 / 3 && m < 4096) m *= (n < 50000 ? 4 : 2); }
+    else if (S.auto) { while (S.entries.length / m > S.thr && m < 64) m = Math.min(64, 2 * m); }
+    return m;
+  }
+  function render(skip) {
+    const B = buildTable(S.entries, effM(), S.red, S.method, S.salt);
+    B.salt = S.salt;
+    $('#w5-reddesc').textContent = { mod: 'indice = hash mod m : le reste de la division euclidienne, entre 0 et m−1.', mask: 'indice = hash ET (m−1) : on garde les bits de poids faible. Valable avec m = 2, 4, 8, 16… (méthode de Python).', mult: 'indice = ⌊m · frac(x · φ)⌋ où x est formé des 32 bits de poids faible du hash et φ = 0,618…' }[S.red];
+    $('#w5-methoddesc').textContent = { chain: 'Chaînage séparé : chaque case contient une liste de paquets.', lin: 'Sondage linéaire : essai des cases i, i+1, i+2…', quad: 'Sondage quadratique : essai des cases i, i+1², i+2²… Peut échouer si α dépasse 0,5.', dbl: 'Double hachage : le pas 1 + hash mod (m−1) change d\'une clé à l\'autre.' }[S.method];
+    $('#w5-saltv').textContent = S.salted ? 'sel = ' + hex64(S.salt) : 'sans sel : le hash est déterministe';
+    $('#w5-dup').hidden = !S.dup; $('#w5-dup').textContent = S.dup;
+    const st = $('#w5-vis').previousElementSibling; // pas utilisé
+    const bStats = $('#w5-vis').parentElement.querySelectorAll('.gstats');
+    // stats
+    const statsEl = $('#w5-vis').parentElement.querySelector('.gstats');
+    if (statsEl) {
+      const bs = statsEl.querySelectorAll('.stat b');
+      if (bs.length >= 6) {
+        bs[0].textContent = B.m + (B.m !== S.m ? ' (agrandi)' : '');
+        bs[1].textContent = fmt(B.n / B.m, 2);
+        bs[2].textContent = String(B.collisions);
+        bs[3].textContent = fmt(B.avg, 2);
+        bs[4].textContent = B.maxProbe;
+        bs[5].textContent = B.empty + ' / ' + B.m;
+      }
+    }
+    const notes = [];
+    if (B.failed.length) notes.push('<b>' + B.failed.length + ' entrée' + (B.failed.length > 1 ? 's' : '') + ' non rangée' + (B.failed.length > 1 ? 's' : '') + '</b> : ' + B.failed.map(esc).join(', ') + '. ' + (B.n > B.m ? 'Il y a plus d\'entrées que de cases.' : 'Les sondages ne visitent pas toutes les cases.'));
+    if (S.red === 'mask' && !isPow2(B.m)) notes.push('Masque : m = ' + B.m + ' n\'est pas une puissance de 2, certaines cases ne sont jamais visées.');
+    if (S.method === 'dbl' && !isPrime(B.m)) notes.push('m = ' + B.m + ' n\'est pas premier : le double hachage peut ne visiter qu\'une partie des cases.');
+    if (S.method === 'quad' && B.n / B.m > 0.5 && !B.failed.length) notes.push('α > 0,5 : le sondage quadratique n\'a plus de garantie de trouver une case libre.');
+    $('#w5-warn').hidden = !notes.length; $('#w5-warn').innerHTML = notes.join('<br>');
+    renderHist(B);
+    renderMsg(B);
+    renderSteps();
+    renderVis(B, S.sel ? pathFor(B, (S.msg && S.msg.ki && S.msg.ki.id === S.sel) ? S.msg.ki : entryOf(S.sel).ki, S.red, S.method) : null);
+    msl.sync(); thr.sync();
+    $('#w5-py').checked = S.pyrule; $('#w5-auto').checked = S.auto; $('#w5-course').checked = S.course; $('#w5-salt').checked = S.salted;
+    if (document.activeElement !== keysEl) keysEl.value = entriesText();
+  }
+  render(null);
+}
+WORKSHOPS.push({ id: 'w5', title: 'Table de hachage', hint: 'Choisissez une réduction (modulo, masque, multiplication) et un traitement des collisions, puis insérez des clés et observez le facteur de charge et les collisions.',
+  mount: mountW5, reset: () => { Object.assign(W5, { red: 'mod', method: 'chain', m: 8, entries: ENTRIES_DEMO.map(a => mkEntry(a[0], a[1])), salted: true, course: false, pyrule: false, auto: false, thr: 0.75, sel: null, msg: null, dup: '' }); } });
+
+/* ================= Atelier 6 : Fonction hash ================= */
+const W6 = { sv: 'anniv', N: 365, n: 23, pexp: 4, x: '0.375', q: '8', m: '11', p: '3', s1: 'bonjour', s2: 'bonjouR', salted: true, salt: 0n, dsN: 2000, dsSalt: false, simMsg: '' };
+function mountW6(root) {
+  W6.salt = randSalt();
+  root.innerHTML = '<h2>La fonction hash</h2><p>Sur un ordinateur 64 bits, <code>hash()</code> renvoie un entier de [−2⁶³ , 2⁶³ − 1], soit 2⁶⁴ ≈ 1,8 × 10¹⁹ valeurs : environ 18 milliards de milliards. Pourquoi si grand ? Pour éviter le <b>paradoxe des anniversaires</b>.</p>' +
+    '<div id="w6-seg"></div><div id="w6-body"></div>';
+  const S = W6;
+  $('#w6-seg').append(chipsRow([['anniv', 'Anniversaires'], ['mers', 'Mersenne'], ['inv', 'Float'], ['str', 'Chaînes']], S.sv, v => { S.sv = v; render(); }, 'Thème'));
+  function render() {
+    const B = $('#w6-body');
+    if (S.sv === 'anniv') {
+      B.innerHTML = '<h3>Paradoxe des anniversaires</h3><p>Avec n personnes (les clés) et N jours (les cases), la probabilité d\'avoir au moins deux anniversaires identiques est :</p><div class="formula">P = 1 − (N/N) × ((N−1)/N) × … × ((N−n+1)/N)</div>' +
+        '<div class="opts"><label class="fld"><span>N (cases)</span><input type="text" id="w6-N" class="mono" style="width:140px"></label><label class="fld"><span>n (clés)</span><input type="text" id="w6-n" class="mono" style="width:140px"></label></div><div class="files"><button class="btn" id="w6-365" type="button">365 jours</button><button class="btn" id="w6-2p20" type="button">2²⁰ cases</button><button class="btn" id="w6-2p64" type="button">2⁶⁴ valeurs</button><button class="btn pri" id="w6-sim" type="button">Simuler 2 000 tirages</button></div>' +
+        '<p class="verdict" id="w6-simmsg"></p><div id="w6-chart-wrap"><svg id="w6-chart" viewBox="0 0 600 260" style="width:100%;max-width:640px;height:auto"></svg></div>' +
+        '<div class="dwrap"><table class="dt"><thead><tr><th>Élèves</th><th>23</th><th>24</th><th>36</th><th>48</th></tr></thead><tbody><tr><td>P(au moins deux dates égales)</td>' + [23, 24, 36, 48].map(k => '<td class="m">' + fmt(100 * pColl(k, 365), 1) + ' %</td>').join('') + '</tr></tbody></table></div>' +
+        '<p class="verdict warn"><b>En informatique :</b> même avec un grand tableau, les collisions sont inévitables et arrivent très tôt. Avec 2⁶⁴ valeurs possibles, il faut de l\'ordre de 5 milliards de clés pour atteindre 50 %.</p>';
+      const NI = $('#w6-N'), nI = $('#w6-n');
+      NI.value = S.N < 1e9 ? fmtN(S.N) : sci(S.N); nI.value = S.n < 1e9 ? fmtN(S.n) : sci(S.n);
+      const upd = (keep) => {
+        if (!keep) { NI.value = S.N < 1e9 ? fmtN(S.N) : sci(S.N); nI.value = S.n < 1e9 ? fmtN(S.n) : sci(S.n); }
+        const xmax = Math.max(10, Math.ceil(3 * Math.sqrt(S.N))), pts = [];
+        for (let i = 0; i <= 80; i++) { const x = Math.max(1, Math.round(xmax * i / 80)); pts.push([x, 100 * pColl(x, S.N)]); }
+        const p = pColl(S.n, S.N), n5 = n50(S.N);
+        drawAnnivChart($('#w6-chart'), pts, S.n, p, n5, xmax);
+        const sim = $('#w6-simmsg');
+        sim.className = 'verdict'; sim.innerHTML = 'Pour n = ' + (S.n < 1e9 ? fmtN(S.n) : sci(S.n)) + ' et N = ' + (S.N < 1e9 ? fmtN(S.N) : sci(S.N)) + ' : <b>' + fmt(100 * p, p < 0.001 ? 6 : 1) + ' %</b> de chances d\'avoir un doublon. 50 % atteints dès n ≈ ' + sci(n5) + ' (≈ 1,18 × √N).';
+      };
+      NI.addEventListener('input', () => { const v = Number(NI.value.replace(/\s| /g, '').replace(',', '.')); if (isFinite(v) && v >= 2) { S.N = v; upd(true); } });
+      nI.addEventListener('input', () => { const v = Number(nI.value.replace(/\s| /g, '').replace(',', '.')); if (isFinite(v) && v >= 1) { S.n = Math.round(v); upd(true); } });
+      $('#w6-365').addEventListener('click', () => { S.N = 365; S.n = 23; upd(); });
+      $('#w6-2p20').addEventListener('click', () => { S.N = 1048576; S.n = 1206; upd(); });
+      $('#w6-2p64').addEventListener('click', () => { S.N = Math.pow(2, 64); S.n = 5.1e9; upd(); });
+      $('#w6-sim').addEventListener('click', () => {
+        const m = $('#w6-simmsg');
+        if (S.N > 5e7 || S.n > 5000) { m.className = 'verdict warn'; m.textContent = 'Simulation limitée à N ≤ 5×10⁷ et n ≤ 5 000.'; return; }
+        let hit = 0; const T = 2000;
+        for (let t = 0; t < T; t++) { const set = new Set(); let c = false; for (let i = 0; i < S.n; i++) { const v = Math.floor(Math.random() * S.N); if (set.has(v)) { c = true; break; } set.add(v); } if (c) hit++; }
+        m.className = 'verdict yes'; m.innerHTML = 'Sur ' + T + ' tirages de ' + fmtN(S.n) + ' clés dans ' + sci(S.N) + ' cases : au moins une collision dans <b>' + fmt(100 * hit / T, 1) + ' %</b> des cas (calcul : ' + fmt(100 * pColl(S.n, S.N), 1) + ' %).';
+      });
+      upd();
+    } else if (S.sv === 'mers') {
+      B.innerHTML = '<h3>Hash d\'un entier</h3><p>Le hash d\'un entier est lui-même tant qu\'il est dans ]−(2⁶¹ − 1), 2⁶¹ − 1[. Sinon, Python applique le modulo <b>M₆₁ = 2⁶¹ − 1</b>, le 9ᵉ nombre premier de Mersenne.</p>' +
+        '<div class="opts"><label class="fld"><span>hash(</span><input type="text" id="w6-int" class="mono" style="width:240px" value="2305843009213693952"></label></div><div class="files"><button class="btn" data-int="2305843009213693951" type="button">2⁶¹−1</button><button class="btn" data-int="2305843009213693952" type="button">2⁶¹</button><button class="btn" data-int="-1" type="button">−1</button><button class="btn" data-int="100000000000000000000" type="button">10²⁰</button></div><p class="verdict" id="w6-intmsg"></p>' +
+        '<h3>Le modulo sans division</h3><p>Une division entière coûte 30 à 80 cycles d\'horloge. Avec 2<sup>p</sup> − 1 on remplace la division par un décalage de bits et un ET logique : <code>X mod (2^p − 1) ≡ (X ≫ p) + (X &amp; (2^p − 1))</code>.</p>' +
+        '<div class="opts"><label class="fld"><span>X</span><input type="text" id="w6-big" class="mono" style="width:180px" value="53"></label><label class="fld"><span>p</span><input type="text" id="w6-p" class="mono" style="width:70px" value="4"></label></div><div id="w6-mers"></div>';
+      const parseBig = s => { const t = String(s).trim().replace(/[\s ]/g, ''); return /^[+-]?\d{1,60}$/.test(t) ? BigInt(t) : null; };
+      const intUpd = () => {
+        const nI = parseBig($('#w6-int').value), m = $('#w6-intmsg');
+        if (nI === null) { m.className = 'verdict no'; m.textContent = 'Saisis un entier.'; return; }
+        const a = nI < 0n ? -nI : nI, hh = pyInt(nI);
+        m.className = 'verdict'; m.innerHTML = '<code>hash(' + esc(nI) + ')</code> = <b>' + hh + '</b><br>' + (a < P61 ? (nI === -1n ? 'Cas particulier : hash(−1) = −2.' : 'Dans l\'intervalle : le hash est l\'entier lui-même.') : '|n| ≥ 2⁶¹ − 1 : on applique le modulo 2⁶¹ − 1 = ' + P61 + '.');
+      };
+      $('#w6-int').addEventListener('input', intUpd);
+      root.querySelectorAll('[data-int]').forEach(b => b.addEventListener('click', () => { $('#w6-int').value = b.dataset.int; intUpd(); }));
+      const mersUpd = () => {
+        const X = parseBig($('#w6-big').value), pv = parseInt($('#w6-p').value, 10);
+        const V = $('#w6-mers');
+        if (X === null || X < 0n || !(pv >= 2 && pv <= 61)) { V.innerHTML = '<p class="verdict no">Saisis X ≥ 0 et 2 ≤ p ≤ 61.</p>'; return; }
+        const P = BigInt(pv), M = (1n << P) - 1n;
+        const q = X >> P, r = X & M;
+        const bs = v => v.toString(2);
+        let h = '<div class="dwrap"><table class="dt"><thead><tr><th>X</th><th>quotient X ≫ p</th><th>reste X & (2^p − 1)</th></tr></thead><tbody><tr><td class="m">' + X + ' = (' + bs(X) + ')₂</td><td class="m">(' + bs(q) + ')₂ = ' + q + '</td><td class="m">(' + bs(r).padStart(pv, '0') + ')₂ = ' + r + '</td></tr></tbody></table></div>';
+        h += '<h4>Cas particulier : modulo 2^p − 1 = ' + M + (isPrime(pv) ? ' <span class="chip on" style="font-size:11px">premier de Mersenne</span>' : '') + '</h4><p class="small">Comme 2^p ≡ 1 (mod 2^p − 1), on écrit X = H·2^p + L avec H = X ≫ p et L = X & (2^p − 1). Donc X ≡ H + L (mod 2^p − 1).</p>';
+        let cur = X, rows = '', it = 0;
+        while (cur >= M && it < 80) { const H = cur >> P, L = cur & M, s = H + L; rows += '<tr><td class="m">' + bs(cur) + '</td><td class="m">H = ' + bs(H) + ' (' + H + ')</td><td class="m">L = ' + bs(L).padStart(pv, '0') + ' (' + L + ')</td><td class="m"><b>' + s + '</b></td></tr>'; cur = s; it++; }
+        let res = cur === M ? 0n : cur;
+        h += '<div class="dwrap"><table class="dt"><thead><tr><th>X (binaire)</th><th>H = X ≫ p</th><th>L = X & M</th><th>H + L</th></tr></thead><tbody>' + (rows || '<tr><td colspan="4">X < 2^p − 1 : déjà réduit.</td></tr>') + '</tbody></table></div>';
+        h += '<p class="verdict ' + (res === X % M ? 'yes' : 'no') + '">Résultat : X mod (2^' + pv + ' − 1) = <b>' + res + '</b>' + (cur === M ? ' (H + L = 2^p − 1 vaut 0 modulo M)' : '') + '. Division classique : ' + (X % M) + '. ' + (it ? it + ' addition' + (it > 1 ? 's' : '') + ' à la place d\'une division.' : '') + '</p>';
+        V.innerHTML = h;
+      };
+      $('#w6-big').addEventListener('input', mersUpd); $('#w6-p').addEventListener('input', mersUpd);
+      intUpd(); mersUpd();
+    } else if (S.sv === 'inv') {
+      B.innerHTML = '<h3>hash d\'un flottant</h3><p>Deux nombres égaux ont le même hash (1 et 1.0). Un flottant non entier p/q est haché par <code>p × q⁻¹ (mod 2⁶¹ − 1)</code>, où q⁻¹ est l\'inverse modulaire de q.</p>' +
+        '<div class="opts"><label class="fld"><span>x =</span><input type="text" id="w6-x" class="mono" style="width:140px" value="0.375"></label></div><p class="verdict" id="w6-xmsg"></p>' +
+        '<h3>Inverse modulaire en petit</h3><p>L\'inverse de q modulo m est l\'unique entier q⁻¹ tel que q × q⁻¹ ≡ 1 (mod m). On cherche à la main pour un petit modulo.</p>' +
+        '<div class="opts"><label class="fld"><span>q</span><input type="text" id="w6-q" class="mono" style="width:80px" value="8"></label><label class="fld"><span>m</span><input type="text" id="w6-m" class="mono" style="width:80px" value="11"></label><label class="fld"><span>p</span><input type="text" id="w6-p2" class="mono" style="width:80px" value="3"></label></div><div id="w6-inv"></div>';
+      const upd = () => {
+        const x = parseFloat($('#w6-x').value.replace(',', '.')), xm = $('#w6-xmsg');
+        if (!isFinite(x)) { xm.className = 'verdict no'; xm.textContent = 'Saisis un nombre décimal fini.'; return; }
+        if (Number.isInteger(x)) { const hh = pyInt(BigInt(x)); xm.className = 'verdict yes'; xm.innerHTML = '<b>' + x + '</b> est égal à l\'entier ' + x + ' : <code>hash(' + x + ') = hash(' + x + '.0) = ' + hh + '</code>.'; }
+        else {
+          const dv = new DataView(new ArrayBuffer(8)); dv.setFloat64(0, Math.abs(x)); const bits = dv.getBigUint64(0);
+          const e = Number((bits >> 52n) & 0x7ffn), f = bits & ((1n << 52n) - 1n); let Mn = e === 0 ? f : f | (1n << 52n), k = (e === 0 ? 1074 : 1075 - e);
+          while (Mn % 2n === 0n && k > 0) { Mn /= 2n; k--; }
+          const Q = 1n << BigInt(k), inv = modInv(Q, P61), neg = x < 0;
+          let hh = (Mn * inv) % P61; if (neg) hh = -hh; if (hh === -1n) hh = -2n;
+          xm.className = 'verdict'; xm.innerHTML = x + ' = ' + (neg ? '−' : '') + Mn + ' / ' + Q + '<br>q⁻¹ = ' + Q + '⁻¹ = <b>' + inv + '</b> (mod 2⁶¹ − 1)<br><code>hash(' + x + ') = ' + (neg ? '−(' : '') + Mn + ' × q⁻¹ mod M₆₁' + (neg ? ')' : '') + ' = <b>' + hh + '</b></code>';
+        }
+        const Q = BigInt(Math.round(parseFloat($('#w6-q').value) || 0)), Mm = BigInt(Math.round(parseFloat($('#w6-m').value) || 0)), Pp = BigInt(Math.round(parseFloat($('#w6-p2').value) || 0));
+        const V = $('#w6-inv');
+        if (Mm < 2n || Mm > 200n || Q < 1n) { V.innerHTML = '<p class="verdict no">Choisis 2 ≤ m ≤ 200 et q ≥ 1.</p>'; return; }
+        let h = '<h4>Exemple p/q dans le monde modulo m</h4><p class="small">Tous les nombres sont des restes de division par m (de 0 à m − 1). On cherche q⁻¹ tel que q × q⁻¹ ≡ 1 (mod m) en essayant les multiples de q.</p>';
+        const rows = []; let found = null; const qm = Q % Mm;
+        for (let t = 1n; t < Mm; t++) { const pr = qm * t, rr = pr % Mm; rows.push([t, pr, rr]); if (rr === 1n) { found = t; break; } }
+        h += '<div class="dwrap"><table class="dt"><thead><tr><th>t</th><th>q × t</th><th>(q × t) mod m</th></tr></thead><tbody>' + rows.map(([t, pr, rr]) => '<tr style="' + (rr === 1n ? 'background:rgba(30,122,46,.12);font-weight:600' : '') + '"><td>' + t + '</td><td>' + Q + ' × ' + t + ' = ' + (Q * t) + '</td><td>' + rr + '</td></tr>').join('') + '</tbody></table></div>';
+        if (found !== null) { const r2 = (Pp * found) % Mm; h += '<p class="verdict yes">L\'inverse modulaire de ' + Q + ' pour (mod ' + Mm + ') est <b>' + found + '</b>, car ' + Q + ' × ' + found + ' ≡ 1. Ici p/q = ' + Pp + '/' + Q + ' devient ' + Pp + ' × ' + found + ' = ' + (Pp * found) + ' ≡ <b>' + r2 + '</b> (mod ' + Mm + ').</p>'; }
+        else h += '<p class="verdict no">' + Q + ' n\'a pas d\'inverse modulo ' + Mm + ' : q et m ont un diviseur commun. Avec M₆₁ premier, tout dénominateur est inversible.</p>';
+        V.innerHTML = h;
+      };
+      ['#w6-x', '#w6-q', '#w6-m', '#w6-p2'].forEach(s => $(s).addEventListener('input', upd)); upd();
+    } else {
+      B.innerHTML = '<h3>Salage aléatoire</h3><p><code>hash("bonjour") = f("bonjour", salt)</code>. Avant le calcul, Python ajoute une graine secrète tirée au démarrage : deux exécutions donnent deux hashs différents pour une même chaîne.</p>' +
+        '<div class="opts"><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="w6-salted" checked> Salage actif</label><button class="btn" id="w6-newrun" type="button">Nouvelle exécution de Python</button></div><p class="mono small" id="w6-saltv"></p>' +
+        '<h3>Effet avalanche</h3><p>Une très petite modification de la clé doit donner un hash complètement différent.</p>' +
+        '<div class="opts"><label class="fld"><span>s₁</span><input type="text" id="w6-s1" class="mono" value="bonjour" autocomplete="off" spellcheck="false"></label><label class="fld"><span>s₂</span><input type="text" id="w6-s2" class="mono" value="bonjouR" autocomplete="off" spellcheck="false"></label></div><div id="w6-str"></div>' +
+        '<h3>Attaque Hash DoS</h3><p>Un attaquant envoie des milliers de clés conçues pour entrer en collision : l\'accès passe de O(1) à O(N), et l\'insertion de N clés à O(N²).</p>' +
+        '<div class="opts"><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="w6-dsalt"> Le serveur utilise un salage aléatoire</label></div><div id="w6-dsl"></div><div id="w6-dos"></div>';
+      let salt = randSalt();
+      const drawBits = (hh, ref) => '<div style="display:grid;grid-template-columns:repeat(32,1fr);gap:2px;max-width:460px">' + bin64(hh).split('').map((b, i) => { const diff = ref && bin64(ref)[i] !== b; return '<span title="bit ' + (63 - i) + '" style="aspect-ratio:1;display:grid;place-items:center;font:10px var(--font-mono);border-radius:2px;border:1px solid ' + (diff ? 'var(--bad)' : 'var(--line)') + ';background:' + (diff ? 'rgba(192,40,31,.15)' : b === '1' ? 'var(--accent-soft)' : '#fff') + '">' + b + '</span>'; }).join('') + '</div>';
+      const updStr = () => {
+        const salted = $('#w6-salted').checked;
+        const s1 = $('#w6-s1').value, s2 = $('#w6-s2').value;
+        const saltUse = salted ? salt : 0n;
+        $('#w6-saltv').textContent = salted ? 'sel = ' + hex64(salt) : 'sans sel : le hash est déterministe';
+        const h1 = strHash64(s1, saltUse), h2 = strHash64(s2, saltUse);
+        let diff = 0; const b1 = bin64(h1), b2 = bin64(h2); for (let i = 0; i < 64; i++) if (b1[i] !== b2[i]) diff++;
+        $('#w6-str').innerHTML = '<h4>Salage : le même mot, trois exécutions de Python</h4><div class="dwrap"><table class="dt"><thead><tr><th>Exécution</th><th>sel</th><th>hash("' + esc(s1) + '")</th></tr></thead><tbody>' + [0, 1, 2].map(i => { const sl = i === 0 ? saltUse : (salted ? randSaltStable(i) : 0n); return '<tr><td>' + (i === 0 ? 'courante' : 'autre #' + i) + '</td><td class="m">' + (salted ? hex64(sl) : '—') + '</td><td class="m">' + strHash64(s1, sl) + '</td></tr>'; }).join('') + '</tbody></table></div><p class="small">À l\'intérieur d\'une même exécution, le hash d\'une chaîne reste identique.</p>' +
+          '<h4 style="margin-top:16px">Effet avalanche : « ' + esc(s1) + ' » et « ' + esc(s2) + ' »</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" class="opts"><div><p class="small" style="margin:0 0 4px">s₁ : <span class="mono">' + hex64(h1) + '</span></p>' + drawBits(h1) + '</div><div><p class="small" style="margin:0 0 4px">s₂ : <span class="mono">' + hex64(h2) + '</span></p>' + drawBits(h2, h1) + '</div></div><p class="verdict ' + (s1 === s2 ? 'warn' : 'yes') + '"><b>' + diff + ' bits sur 64</b> diffèrent' + (s1 === s2 ? ' (chaînes identiques)' : ' : une modification minime change environ la moitié des bits') + '. Les bits en rouge sont ceux qui diffèrent de s₁.</p>';
+        // Hash DoS
+        const dsSalt = $('#w6-dsalt').checked, dsN = 2000, m = 1024;
+        const xs = [], ys = [], zs = [], ws = [];
+        const cnt = new Array(m).fill(0), cntS = new Array(m).fill(0);
+        let c1 = 0, c2 = 0, c3 = 0;
+        for (let i = 1; i <= dsN; i++) {
+          const b = Math.floor(Math.random() * m); c1 += cnt[b] + 1; cnt[b]++;
+          c2 += i;
+          const b2 = dsSalt ? Math.floor(Math.random() * m) : 0; c3 += cntS[b2] + 1; cntS[b2]++;
+          if (i % 30 === 0 || i === dsN) { xs.push(i); ys.push([i, c1]); zs.push([i, c2]); ws.push([i, c3]); }
+        }
+        $('#w6-dos').innerHTML = '<svg id="w6-dos-ch" viewBox="0 0 600 250" style="width:100%;max-width:640px;height:auto"></svg><p class="verdict ' + (dsSalt ? 'yes' : 'no') + '">Clés ordinaires : <b>' + sci(c1) + '</b> comparaisons. Clés conçues ' + (dsSalt ? 'contre une fonction salée : <b>' + sci(c3) + '</b> (le salage les disperse).' : 'sans salage : <b>' + sci(c2) + '</b>, soit ' + fmt(c2 / c1, 0) + ' fois plus (0 + 1 + … + N = O(N²)).') + '</p><p class="small">Le 28 décembre 2011, au congrès 28C3, A. Klink et J. Wälde dévoilent cette vulnérabilité touchant Python, PHP, Java, Ruby. Riposte de Python (3.3+) : un <b>salage aléatoire</b> au démarrage et, depuis 3.4, <b>SipHash</b>, un hachage rapide et résistant aux collisions forcées.</p>';
+        drawDosChart($('#w6-dos-ch'), xs, ys, zs, ws);
+      };
+      const _rs = {}; const randSaltStable = i => _rs[i] || (_rs[i] = randSalt());
+      $('#w6-salted').addEventListener('change', updStr);
+      $('#w6-newrun').addEventListener('click', () => { salt = randSalt(); updStr(); });
+      $('#w6-s1').addEventListener('input', updStr); $('#w6-s2').addEventListener('input', updStr);
+      $('#w6-dsalt').addEventListener('change', updStr);
+      updStr();
+    }
+  }
+  // graphiques
+  function drawAnnivChart(svg, pts, n, p, n5, xmax) {
+    const W = 600, H = 260, L = 46, R = 12, T = 16, B = 36;
+    const X = x => L + x / xmax * (W - L - R), Y = y => H - B - y / 100 * (H - B - T);
+    let s = '';
+    for (let v = 0; v <= 100; v += 20) { const y = Y(v); s += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#e8e8ee"/><text x="' + (L - 6) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10.5" fill="#6a6a78">' + v + '</text>'; }
+    for (let i = 0; i <= 6; i++) { const x = X(xmax * i / 6); s += '<line x1="' + x + '" y1="' + T + '" x2="' + x + '" y2="' + (H - B) + '" stroke="#f0f0f4"/><text x="' + x + '" y="' + (H - B + 14) + '" text-anchor="middle" font-size="10.5" fill="#6a6a78">' + fmtN(Math.round(xmax * i / 6)) + '</text>'; }
+    s += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="#55555f"/><line x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '" stroke="#55555f"/>';
+    s += '<polyline fill="none" stroke="#6557d2" stroke-width="2" points="' + pts.map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ') + '"/>';
+    s += '<circle cx="' + X(clamp(n, 0, xmax)) + '" cy="' + Y(100 * p) + '" r="4.5" fill="#d93a2b" stroke="#fff" stroke-width="1.5"/>';
+    s += '<text x="' + X(clamp(n, 0, xmax)) + '" y="' + (Y(100 * p) - 9) + '" text-anchor="end" font-size="11" fill="#1f1f28">n = ' + fmtN(n) + '</text>';
+    s += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11.5" fill="#1f1f28">n (nombre de clés)</text>';
+    s += '<text transform="translate(12 ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle" font-size="11.5" fill="#1f1f28">probabilité (%)</text>';
+    svg.innerHTML = s;
+  }
+  function drawDosChart(svg, xs, ys, zs, ws) {
+    const W = 600, H = 250, L = 54, R = 12, T = 16, B = 36;
+    const ymax = Math.max(...ys.map(p => p[1]), ...zs.map(p => p[1]), ...ws.map(p => p[1])) * 1.05;
+    const X = x => L + x / xs[xs.length - 1] * (W - L - R), Y = y => H - B - y / ymax * (H - B - T);
+    let s = '';
+    for (let i = 0; i <= 4; i++) { const y = Y(ymax * i / 4); s += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#e8e8ee"/><text x="' + (L - 5) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10.5" fill="#6a6a78">' + sci(ymax * i / 4, 1) + '</text>'; }
+    s += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="#55555f"/>';
+    [ys, zs, ws].forEach((arr, i) => { const col = ['#2e8b57', '#d93a2b', '#6557d2'][i]; s += '<polyline fill="none" stroke="' + col + '" stroke-width="2"' + (i === 2 ? ' stroke-dasharray="6 4"' : '') + ' points="' + arr.map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ') + '"/>'; });
+    ['clés ordinaires', 'clés conçues, sans salage', 'clés conçues, avec salage'].forEach((name, i) => { const y = T + 10 + i * 15; s += '<line x1="' + (L + 10) + '" y1="' + y + '" x2="' + (L + 26) + '" y2="' + y + '" stroke="' + ['#2e8b57', '#d93a2b', '#6557d2'][i] + '" stroke-width="2"/><text x="' + (L + 32) + '" y="' + (y + 3.5) + '" font-size="11" fill="#1f1f28">' + name + '</text>'; });
+    svg.innerHTML = s;
+  }
+  render();
+}
+WORKSHOPS.push({ id: 'w6', title: 'Fonction hash', hint: 'Explorez le paradoxe des anniversaires, le hash des entiers (Mersenne), des flottants (inverse modulaire) et des chaînes (salage, avalanche, Hash DoS).',
+  mount: mountW6, reset: () => { Object.assign(W6, { sv: 'anniv', N: 365, n: 23, pexp: 4, x: '0.375', q: '8', m: '11', p: '3', s1: 'bonjour', s2: 'bonjouR', salted: true, dsN: 2000, dsSalt: false }); } });
+
+/* ================= Atelier 7 : Bonne fonction ================= */
+const W7 = { sv: 'pois', N: 1000, M: 1000, src: 'rand', salt: 0 };
+function mountW7(root) {
+  W7.salt = (Math.random() * 4294967296) >>> 0;
+  root.innerHTML = '<h2>Bonne fonction de hachage</h2><p>Les collisions sont inévitables. L\'objectif est de <b>mélanger pour espacer</b> : chaque case a la même probabilité d\'être choisie, et une infime variation de la clé envoie le hash à l\'autre bout du tableau.</p>' +
+    '<div id="w7-seg"></div><div id="w7-body"></div>';
+  const S = W7;
+  $('#w7-seg').append(chipsRow([['pois', 'Remplissage'], ['prime', 'N premier']], S.sv, v => { S.sv = v; render(); }, 'Thème'));
+  function render() {
+    const B = $('#w7-body');
+    if (S.sv === 'pois') {
+      B.innerHTML = '<h3>Le problème du remplissage</h3><p>N tiroirs, M fiches. Soit X<sub>i</sub> le nombre de fiches du tiroir i. Comme ΣX<sub>i</sub> = M, la linéarité de l\'espérance donne <code>E[X<sub>i</sub>] = M / N = α</code>.</p>' +
+        '<div class="opts"><label class="fld"><span>N (tiroirs)</span><input type="text" id="w7-N" class="mono" style="width:120px"></label><label class="fld"><span>M (fiches)</span><input type="text" id="w7-M" class="mono" style="width:120px"></label></div>' +
+        '<div class="opts"><div class="fld"><span>Source</span><div id="w7-src"></div></div><button class="btn pri" id="w7-redo" type="button">Relancer le tirage</button><button class="btn" id="w7-course" type="button">Données du cours</button></div>' +
+        '<p class="small" id="w7-srcd"></p><div class="verdict goal" id="w7-alpha"></div>' +
+        '<div id="w7-stats"></div><div id="w7-chart-wrap"><svg id="w7-chart" viewBox="0 0 680 260" style="width:100%;max-width:680px;height:auto"></svg></div><div id="w7-tbl"></div>' +
+        '<p class="verdict warn" id="w7-msg"></p>';
+      const NI = $('#w7-N'), MI = $('#w7-M');
+      const upd = () => {
+        NI.value = fmtN(S.N); MI.value = fmtN(S.M);
+        const r = sampleCounts(S.N, S.M, S.src, S.salt);
+        const a = S.M / S.N;
+        $('#w7-alpha').innerHTML = 'α = M / N = <b>' + fmt(a, 3) + '</b>';
+        const kmax = Math.min(14, Math.max(5, r.mx, Math.ceil(a + 4 * Math.sqrt(a) + 2)));
+        const labels = [], mes = [], po = [];
+        for (let k = 0; k <= kmax; k++) { labels.push(String(k)); mes.push(r.eff[k] || 0); po.push(POIS(k, a) * S.N); }
+        $('#w7-stats').innerHTML = stats([['Moyenne mesurée', fmt(r.mean, 4)], ['Variance mesurée', fmt(r.vari, 4) + (S.src === 'bad' ? '' : ' (Poisson : ' + fmt(a, 3) + ')')], ['Tiroirs vides (mesuré)', fmt(100 * r.empty / S.N, 2) + ' %'], ['Tiroirs vides (e⁻ᵅ)', fmt(100 * Math.exp(-a), 2) + ' %'], ['Plus gros tiroir', r.mx + ' fiches']]);
+        $('#w7-tbl').innerHTML = '<h3>Nombre de tiroirs contenant exactement k fiches</h3><div class="dwrap"><table class="dt"><thead><tr><th>k</th><th>Effectif mesuré</th><th>Loi de Poisson</th><th>Binomiale (M, 1/N)</th></tr></thead><tbody>' + labels.map((l, k) => '<tr><td>' + k + '</td><td class="m">' + fmtN(mes[k]) + '</td><td class="m">' + fmtN(Math.round(po[k])) + '</td><td class="m">' + fmtN(Math.round(binomial(k, S.M, S.N) * S.N)) + '</td></tr>').join('') + '</tbody></table></div>' +
+          '<h3 style="margin-top:16px">Mesures du cours : N = 2²⁰ tiroirs, M = 424 579 mots</h3><div class="dwrap"><table class="dt"><thead><tr><th>k</th><th>randrange</th><th>hash de Python</th><th>Poisson</th></tr></thead><tbody>' + [0, 1, 2, 3, 4, 5, 6].map(k => '<tr><td>' + k + '</td><td class="m">' + fmtN(COURS_POISSON.rand[k]) + '</td><td class="m">' + fmtN(COURS_POISSON.hash[k]) + '</td><td class="m">' + fmtN(COURS_POISSON.pois[k]) + '</td></tr>').join('') + '</tbody></table></div>';
+        $('#w7-msg').className = 'verdict ' + (S.src === 'bad' ? 'no' : 'yes');
+        $('#w7-msg').innerHTML = S.src === 'bad'
+          ? 'Avec ces clés, la variance mesurée (' + fmt(r.vari, 2) + ') est très loin de α (' + fmt(a, 3) + ') : des tiroirs sont surchargés pendant que ' + fmt(100 * r.empty / S.N, 1) + ' % restent vides, contre ' + fmt(100 * Math.exp(-a), 1) + ' % attendus pour une répartition uniforme.'
+          : 'Pour k petit et M, N grands, le nombre de fiches d\'un tiroir suit la loi binomiale de paramètres M et 1/N, que la <b>loi de Poisson</b> approche : Pr[X = k] = αᵏ e⁻ᵅ / k!. Ici Pr[X = 0] = e⁻' + fmt(a, 3) + ' = ' + fmt(100 * Math.exp(-a), 1) + ' %.';
+        // graphique
+        drawHistChart($('#w7-chart'), labels, mes, po);
+      };
+      NI.addEventListener('input', () => { const v = parseInt(NI.value.replace(/\s| /g, ''), 10); if (isFinite(v) && v >= 2 && v <= 4e6) { S.N = v; upd(); } });
+      MI.addEventListener('input', () => { const v = parseInt(MI.value.replace(/\s| /g, ''), 10); if (isFinite(v) && v >= 1 && v <= 4e6) { S.M = v; upd(); } });
+      $('#w7-src').append(chipsRow([['rand', 'randrange'], ['hash', 'hash (simulé)'], ['bad', 'multiples de 4']], S.src, v => { S.src = v; $('#w7-srcd').innerHTML = { rand: '<code>random.randrange(0, N)</code> : un tirage uniforme, la référence théorique.', hash: 'Hash de Python simulé : un mélange de bits (effet avalanche) suivi d\'un modulo N.', bad: 'Mauvaise fonction : les clés sont les multiples de 4 et la case est <code>clé mod N</code>.' }[v]; upd(); }, 'Source'));
+      $('#w7-srcd').innerHTML = { rand: '<code>random.randrange(0, N)</code> : un tirage uniforme, la référence théorique.', hash: 'Hash de Python simulé : un mélange de bits (effet avalanche) suivi d\'un modulo N.', bad: 'Mauvaise fonction : les clés sont les multiples de 4 et la case est <code>clé mod N</code>.' }[S.src];
+      $('#w7-redo').addEventListener('click', () => { S.salt = (Math.random() * 4294967296) >>> 0; upd(); });
+      $('#w7-course').addEventListener('click', () => { S.N = 1048576; S.M = 424579; upd(); });
+      upd();
+    } else {
+      B.innerHTML = '<h3>Modulo un nombre premier</h3><p>Les clés sont les multiples du pas : s, 2s, 3s… et la case est <code>clé mod N</code>. Si N et s ont un diviseur commun, seules N / pgcd(s, N) cases sont atteignables.</p>' +
+        '<div class="opts"><label class="fld"><span>pas s</span><input type="text" id="w7-s" class="mono" style="width:80px" value="4"></label><label class="fld"><span>K (clés)</span><input type="text" id="w7-K" class="mono" style="width:80px" value="6"></label><label class="fld"><span>N₁</span><input type="text" id="w7-N1" class="mono" style="width:80px" value="12"></label><label class="fld"><span>N₂</span><input type="text" id="w7-N2" class="mono" style="width:80px" value="11"></label></div>' +
+        '<div class="files"><button class="btn" id="w7-ex" type="button">Exemple du cours (4, 8, 12… avec 12 et 11)</button></div><div id="w7-prime"></div>';
+      const upd = () => {
+        const s = clamp(parseInt($('#w7-s').value, 10) || 4, 1, 24), K = clamp(parseInt($('#w7-K').value, 10) || 6, 2, 40);
+        const N1 = clamp(parseInt($('#w7-N1').value, 10) || 12, 2, 40), N2 = clamp(parseInt($('#w7-N2').value, 10) || 11, 2, 40);
+        const block = (Nx, col) => {
+          const r = usedCases(s, K, Nx), g = gcd(s, Nx);
+          let html = '<div class="card" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"><div class="h3" style="color:' + col + '">N = ' + Nx + (isPrime(Nx) ? ' <span class="chip on" style="font-size:11px;padding:1px 6px">premier</span>' : ' <span class="chip" style="font-size:11px;padding:1px 6px">pgcd(s, N) = ' + g + '</span>') + '</div>';
+          html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:3px;margin:6px 0 8px">' + r.cnt.map((c, i) => '<div style="aspect-ratio:1.2;border:1px solid ' + (c > 1 ? 'var(--bad)' : c === 1 ? 'var(--accent)' : 'var(--line)') + ';border-radius:2px;display:grid;place-items:center;font-size:11px;background:' + (c > 1 ? 'rgba(192,40,31,.15)' : c === 1 ? 'var(--accent-soft)' : '#fff') + '" title="case ' + i + '">' + (c || i) + '</div>').join('') + '</div>';
+          html += '<div style="font-size:13px;line-height:1.7">' + r.lines.slice(0, 24).map(l => '<span style="display:inline-block;margin-right:10px;white-space:nowrap;font-family:var(--font-mono);font-size:12px;' + (l.coll ? 'color:var(--bad)' : '') + '">' + l.k + ' mod ' + Nx + ' = ' + l.c + (l.coll ? ' ✗' : '') + '</span>').join('') + '</div>';
+          html += '<div class="small">Cases utilisées : ' + r.used + ' / ' + Nx + ' (' + fmt(100 * r.used / Nx, 0) + ' %) · Collisions : ' + (K - r.used) + '</div></div>';
+          return html;
+        };
+        $('#w7-prime').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="opts">' + block(N1, 'var(--accent)') + block(N2, 'var(--ok)') + '</div>' +
+          '<p class="verdict ' + (gcd(s, N2) === 1 && gcd(s, N1) > 1 ? 'yes' : '') + '">Avec N = ' + N1 + ', pgcd(' + s + ', ' + N1 + ') = ' + gcd(s, N1) + ' : seules ' + (N1 / gcd(s, N1)) + ' cases sur ' + N1 + ' sont atteignables (' + fmt(100 / gcd(s, N1), 0) + ' %). Avec N = ' + N2 + ', pgcd(' + s + ', ' + N2 + ') = ' + gcd(s, N2) + ' : ' + (gcd(s, N2) === 1 ? 'toutes les cases sont atteignables, car ' + (isPrime(N2) ? N2 + ' est premier et ne partage aucun diviseur commun avec s.' : 'les cases sont toutes atteignables.') : 'seules ' + (N2 / gcd(s, N2)) + ' cases sont atteignables.') + '</p>';
+      };
+      $('#w7-s').addEventListener('input', upd); $('#w7-K').addEventListener('input', upd);
+      $('#w7-N1').addEventListener('input', upd); $('#w7-N2').addEventListener('input', upd);
+      $('#w7-ex').addEventListener('click', () => { $('#w7-s').value = 4; $('#w7-K').value = 6; $('#w7-N1').value = 12; $('#w7-N2').value = 11; upd(); });
+      upd();
+    }
+  }
+  function drawHistChart(svg, labels, mes, po) {
+    const W = 680, H = 260, L = 54, R = 10, T = 16, B = 42;
+    const mx = Math.max(1, ...mes, ...po);
+    const n = labels.length, S = 2, gw = (W - L - R) / n, bw = gw * 0.8 / S;
+    const Y = v => H - B - v / mx * (H - B - T);
+    let s = '';
+    for (let i = 0; i <= 4; i++) { const v = mx * i / 4; const y = Y(v); s += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#e8e8ee"/><text x="' + (L - 5) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10.5" fill="#6a6a78">' + fmtN(Math.round(v)) + '</text>'; }
+    s += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="#55555f"/>';
+    [mes, po].forEach((vals, j) => vals.forEach((v, i) => { const x = L + i * gw + gw * 0.1 + j * bw, hh = (H - B - T) * v / mx; if (v > 0) s += '<rect x="' + x.toFixed(1) + '" y="' + (H - B - hh).toFixed(1) + '" width="' + Math.max(1, bw - 1).toFixed(1) + '" height="' + hh.toFixed(1) + '" fill="' + (j === 0 ? '#6557d2' : '#e08a00') + '"/>'; }));
+    labels.forEach((l, i) => { if (i % 1 === 0) s += '<text x="' + (L + i * gw + gw / 2).toFixed(1) + '" y="' + (H - B + 13) + '" text-anchor="middle" font-size="10.5" fill="#6a6a78">' + l + '</text>'; });
+    s += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11.5" fill="#1f1f28">k fiches dans un tiroir</text>';
+    ['mesuré', 'Poisson'].forEach((name, j) => { const x = W - R - 150, y = T + 8 + j * 15; s += '<rect x="' + x + '" y="' + (y - 7) + '" width="12" height="10" fill="' + (j === 0 ? '#6557d2' : '#e08a00') + '"/><text x="' + (x + 18) + '" y="' + (y + 2) + '" font-size="11" fill="#1f1f28">' + name + '</text>'; });
+    svg.innerHTML = s;
+  }
+  render();
+}
+WORKSHOPS.push({ id: 'w7', title: 'Bonne fonction', hint: 'Observez la répartition des clés dans les cases (loi de Poisson) et l\'influence d\'une taille de table première sur les collisions.',
+  mount: mountW7, reset: () => { Object.assign(W7, { sv: 'pois', N: 1000, M: 1000, src: 'rand' }); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  w1: {
+    title: 'Mutabilité', level: 'Niveau 1 · Découvrir', time: '20 min', course: 'mutabilite',
+    goal: 'Distinguer les objets mutables (liste) des objets immuables (int, str) et comprendre l\'effet de bord d\'une fonction.',
+    steps: [
+      'Lancez le scénario « append sur une liste » et avancez pas à pas. Pourquoi <code>print(L)</code> affiche-t-il [1, 2, 3, 4] après l\'appel ?',
+      'Passez au scénario « x = x + 1 ». Qu\'est-ce qui change entre les étapes 2 et 3 ? Pourquoi le résultat final est-il 5 ?',
+      'Passez au scénario « upper() ». La méthode <code>upper()</code> modifie-t-elle la chaîne ?',
+      'Passez au scénario « L = [10, 20] ». Pourquoi <code>print(A)</code> affiche-t-il [1, 2] ?',
+      'Consultez le tableau « mutable ou immuable ? » et notez les types mutables et les types immuables.'
+    ],
+    defi: { q: 'Écrire une fonction <code>vide(L)</code> qui vide la liste reçue en argument, et une fonction qui la remplace par une nouvelle liste vide. Que voit l\'appelant dans chaque cas ?',
+      a: '<code>L.clear()</code> ou <code>del L[:]</code> modifie l\'objet (mutable) : l\'appelant voit la liste vidée. <code>L = []</code> réaffecte le nom local : l\'appelant garde sa liste intacte.' },
+    qcm: [
+      { q: 'Un objet est dit mutable si :', o: ['on peut le modifier après sa création', 'il a un identifiant', 'il est de type str', 'sa valeur ne change jamais'], a: 0, w: 'Une liste, un dictionnaire ou un ensemble sont mutables ; un entier ou une chaîne ne le sont pas.' },
+      { q: 'Quand on passe une liste à une fonction et qu\'on appelle <code>l.append(4)</code>, que voit l\'appelant ?', o: ['Rien, la liste est copiée', 'La liste modifiée (effet de bord)', 'Une erreur', 'La liste est remplacée par 4'], a: 1, w: 'Le paramètre reçoit une référence vers le même objet : la modification se voit à l\'extérieur.' },
+      { q: 'Si on réaffecte <code>x = x + 1</code> dans une fonction, que devient la variable de l\'appelant ?', o: ['Elle est incrémentée', 'Elle est remplacée', 'Elle ne change pas', 'Elle est supprimée'], a: 2, w: 'Les entiers sont immuables : <code>x + 1</code> crée un nouvel objet, et l\'ancien reste référencé par l\'appelant.' },
+      { q: 'Que renvoie <code>id(a)</code> ?', o: ['La valeur de a', 'L\'adresse de l\'objet référencé par a', 'Le type de a', 'Le nombre de références vers a'], a: 1, w: 'L\'identifiant d\'un objet est son adresse en mémoire. Il ne change pas quand un objet mutable est modifié sur place.' },
+      { q: 'Lequel de ces types est immuable ?', o: ['list', 'dict', 'set', 'tuple'], a: 3, w: 'Un tuple ne peut pas être modifié après sa création.' }
+    ]
+  },
+  w2: {
+    title: 'Dictionnaire', level: 'Niveau 1 · Découvrir', time: '30 min', course: 'dictionnaire',
+    goal: 'Maîtriser les opérations d\'un dictionnaire (d[k], d[k] = v, k in d, del d[k]) et écrire les algorithmes inverse et frequent.',
+    steps: [
+      'Créez le dictionnaire de mots de passe du cours. Affichez <code>d["M. Chomette"]</code> puis <code>d["M. Catry"]</code>.',
+      'Ajoutez une association avec <code>d[k] = v</code>, modifiez une valeur existante. Que se passe-t-il si on ajoute deux fois la même clé ?',
+      'Testez <code>k in d</code>, <code>d.get(k, 0)</code>, <code>del d[k]</code>. Que renvoie <code>d[k]</code> si la clé est absente ?',
+      'Écrivez <code>inverse(d)</code> et vérifiez sur plusieurs dictionnaires. Que se passe-t-il si deux clés ont la même valeur ?',
+      'Écrivez <code>frequent(L)</code> en un seul parcours, puis vérifiez sur plusieurs listes.'
+    ],
+    defi: { q: 'Le dictionnaire <code>d = {"a": 1, "b": 2, "c": 1}</code> a une valeur en double. Que vaut <code>inverse(d)</code> ? Pourquoi est-ce un problème ?',
+      a: '<code>inverse(d)</code> vaut <code>{1: "c", 2: "b"}</code> : l\'association 1 → "a" a été écrasée par 1 → "c". L\'hypothèse « pas deux fois la même valeur » est indispensable pour que l\'inverse soit défini sans perte.' },
+    qcm: [
+      { q: 'Que vaut <code>d["clé"]</code> si la clé est absente ?', o: ['None', '0', 'KeyError', 'False'], a: 2, w: 'Le dictionnaire lève une KeyError ; on peut utiliser <code>d.get(k, défaut)</code> pour éviter l\'exception.' },
+      { q: 'Que fait <code>d[k] = v</code> si la clé k existe déjà ?', o: ['Il ajoute une deuxième association', 'Il remplace la valeur', 'Il lève une erreur', 'Il ne fait rien'], a: 1, w: 'Un dictionnaire associe une clé à une seule valeur : l\'ancienne valeur est remplacée.' },
+      { q: 'Quelle est la complexité moyenne de l\'accès <code>d[k]</code> ?', o: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], a: 0, w: 'Grâce à la table de hachage, l\'accès à une valeur par sa clé est en O(1) en moyenne.' },
+      { q: 'Quel type ne peut pas servir de clé de dictionnaire ?', o: ['int', 'str', 'tuple', 'list'], a: 3, w: 'Une liste est mutable : elle ne peut pas être hachée (unhashable).' },
+      { q: 'Que renvoie <code>{v: k for k, v in d.items()}</code> ?', o: ['Une copie de d', 'Le dictionnaire inverse', 'Une liste de couples', 'Une erreur'], a: 1, w: 'On échange clés et valeurs ; si les valeurs ne sont pas distinctes, une association peut être écrasée.' }
+    ]
+  },
+  w3: {
+    title: 'Applications', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'applications',
+    goal: 'Comprendre que globals() et locals() sont des dictionnaires, et qu\'un graphe se représente par un dictionnaire d\'adjacence.',
+    steps: [
+      'Lisez le code de <code>f(x)</code> et vérifiez ce qu\'affiche <code>locals()</code> pour différentes valeurs de x.',
+      'Chargez le graphe du cours et le graphe pondéré. Combien de sommets, combien d\'arêtes ?',
+      'Cliquez sur différents sommets. Que renvoie <code>G[u]</code> ?',
+      'Testez <code>v in G[u]</code> et le poids <code>G[u][v]</code>. Que renvoie l\'accès si v n\'est pas voisin de u ?',
+      'Modifiez le graphe dans la zone de texte pour ajouter un sommet et des arêtes.'
+    ],
+    defi: { q: 'Comment représenter un graphe pondéré de 1000 sommets et 10 000 arêtes de façon compacte avec un dictionnaire ? Est-ce plus efficace qu\'une matrice d\'adjacence ?',
+      a: '<code>G = {sommet: {voisin: poids}}</code>. La mémoire est O(n + m) au lieu de O(n²) pour une matrice, et parcourir les voisins d\'un sommet coûte O(degré) au lieu de O(n). L\'accès à une arête reste O(1).' },
+    qcm: [
+      { q: 'Un graphe peut être représenté par un dictionnaire où :', o: ['chaque clé est un sommet et chaque valeur la liste de ses voisins', 'chaque clé est une arête', 'chaque valeur est un sommet', 'les clés sont les poids'], a: 0, w: 'C\'est la représentation par listes ou dictionnaires d\'adjacence.' },
+      { q: 'Que contient <code>locals()</code> dans une fonction ?', o: ['Toutes les variables globales', 'Les variables locales de la fonction', 'Les arguments seulement', 'Les fonctions du module'], a: 1, w: 'locals() contient le dictionnaire des variables locales, c\'est-à-dire des noms définis dans le bloc courant.' },
+      { q: 'Quelle est la complexité de l\'accès <code>G[u]</code> ?', o: ['O(1) en moyenne', 'O(degré de u)', 'O(n)', 'O(n²)'], a: 0, w: 'C\'est un accès à une valeur de dictionnaire par sa clé.' },
+      { q: 'Comment tester si l\'arête u → v existe ?', o: ['<code>v in G[u]</code>', '<code>G[v] in u</code>', '<code>G[u] == v</code>', '<code>u in G[v]</code>'], a: 0, w: 'On vérifie si v est une clé du dictionnaire des voisins de u.' }
+    ]
+  },
+  w4: {
+    title: 'Exploitation', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'exploitation',
+    goal: 'Comparer les coûts de la recherche linéaire, de la dichotomie et du dictionnaire, et comprendre l\'intérêt du hachage.',
+    steps: [
+      'Cherchez « obnubilé » avec la dichotomie. Combien de comparaisons sur l\'extrait de 48 mots ?',
+      'Cherchez « omnubilé ». Que se passe-t-il à la fin ?',
+      'Faites varier N avec les boutons. Comparez N, ⌈log₂ N⌉ et le coût d\'un dictionnaire.',
+      'Regardez le graphique log-log : pourquoi les droites du hachage et de la dichotomie sont-elles si basses ?',
+      'Lisez les temps mesurés dans le cours. Pourquoi le dictionnaire est-il si rapide ?'
+    ],
+    defi: { q: 'Analyser « Du côté de chez Swann » (160 000 mots) prend 8 min avec la recherche linéaire et 15 ms avec un dictionnaire. Quel rapport cela représente-t-il ? Pourquoi un tel écart ?',
+      a: '8 min = 480 000 ms ; 480 000 / 15 = 32 000. La recherche linéaire examine en moyenne N/2 = 80 000 mots par vérification, alors que le dictionnaire calcule un hash et accède directement à la case, en temps quasi constant.' },
+    qcm: [
+      { q: 'Combien de comparaisons fait la dichotomie sur une liste de N éléments ?', o: ['N', 'N/2', '≈ log₂ N', 'N²'], a: 2, w: 'À chaque étape, on divise la zone de recherche par 2 : il faut environ log₂ N étapes.' },
+      { q: 'La recherche dans un dictionnaire est en :', o: ['O(1) en moyenne', 'O(log n)', 'O(n)', 'O(n log n)'], a: 0, w: 'Le hachage permet d\'accéder directement à la case, sans parcours.' },
+      { q: 'La dichotomie nécessite que la liste soit :', o: ['triée', 'de taille paire', 'sans doublons', 'de type str'], a: 0, w: 'On ne peut éliminer une moitié que si les éléments sont ordonnés.' },
+      { q: 'Pourquoi la recherche linéaire est-elle si lente sur 424 579 mots ?', o: ['Parce que Python est lent', 'Parce qu\'elle examine les mots un par un', 'Parce que les mots sont longs', 'Parce qu\'il n\'y a pas de dictionnaire'], a: 1, w: 'Dans le pire cas, elle compare le mot cherché à chacun des N mots de la liste.' }
+    ]
+  },
+  w5: {
+    title: 'Table de hachage', level: 'Niveau 3 · Construire', time: '35 min', course: 'table',
+    goal: 'Comprendre les trois étapes d\'une table de hachage (hash, réduction, stockage), le rôle du facteur de charge et les stratégies de résolution des collisions.',
+    steps: [
+      'Chargez l\'exemple du cours « animaux » : vache, cochon, poule, puis insérez veau. Pourquoi veau entre-t-il en collision ?',
+      'Essayez les réductions Modulo, Masque et Multiplication. Pour le masque, que se passe-t-il si m n\'est pas une puissance de 2 ?',
+      'Passez du chaînage au sondage linéaire, puis quadratique et double hachage. Que devient la plus longue chaîne / le plus long sondage ?',
+      'Augmentez n et observez α. Activez l\'agrandissement automatique et la règle de Python. Que devient la taille effective m ?',
+      'Cherchez une clé absente, puis supprimez-la. Que renvoie d[k] ? Que fait del d[k] ?'
+    ],
+    defi: { q: 'Avec m = 8 et la réduction modulo, les clés 0.375, 1 et 13 visent-elles la même case ? Et avec le masque ?',
+      a: 'Modulo : 0.375 → 6, 1 → 1, 13 → 5 : pas de collision. Masque (m = 8) : on garde les 3 bits de poids faible : 0.375 → 6, 1 → 1, 13 → 5. Les collisions dépendent des valeurs de hash et de la réduction.' },
+    qcm: [
+      { q: 'Quelles sont les trois étapes d\'une table de hachage ?', o: ['Hash, réduction, stockage', 'Tri, recherche, insertion', 'Lecture, écriture, suppression', 'Division, multiplication, addition'], a: 0, w: 'hash() donne un grand entier, la réduction le ramène dans [0, m−1], le tableau stocke le paquet (hash, clé, valeur).' },
+      { q: 'Le facteur de charge α vaut :', o: ['n / m', 'm / n', 'n × m', 'n − m'], a: 0, w: 'α = nombre d\'entrées / taille de la table. Il doit rester petit pour limiter les collisions.' },
+      { q: 'Le chaînage séparé consiste à :', o: ['mettre plusieurs paquets dans une même case sous forme de liste', 'décaler les clés vers la case suivante', 'doubler la taille de la table', 'utiliser plusieurs fonctions de hachage'], a: 0, w: 'Chaque case contient une liste d\'associations qui partagent le même indice de départ.' },
+      { q: 'Avec le sondage linéaire, si la case h(k) est occupée, on essaie :', o: ['h(k) + 1, h(k) + 2, …', 'h(k) + 1², h(k) + 2², …', 'une autre fonction de hachage', 'on agrandit la table'], a: 0, w: 'On avance case par case jusqu\'à trouver une case libre.' },
+      { q: 'Avec m = 2^p et la réduction par masque, l\'indice vaut :', o: ['hash mod m', 'hash & (m − 1)', 'hash × m', 'hash / m'], a: 1, w: 'Prendre le reste modulo 2^p revient à garder les p bits de poids faible.' }
+    ]
+  },
+  w6: {
+    title: 'Fonction hash', level: 'Niveau 3 · Approfondir', time: '30 min', course: 'hash',
+    goal: 'Comprendre pourquoi hash() renvoie un entier de 64 bits, le lien avec les anniversaires, le hash des entiers (Mersenne), des flottants (inverse modulaire) et des chaînes (salage, avalanche, Hash DoS).',
+    steps: [
+      'Dans le thème Anniversaires, partez de N = 365, n = 23. Quelle est la probabilité de collision ? Essayez n = 48.',
+      'Passez à N = 2⁶⁴. Combien de clés faut-il pour atteindre 50 % ? Que retient-on pour une table de hachage ?',
+      'Dans le thème Mersenne, entrez 2⁶¹ puis 10²⁰. Pourquoi le hash n\'est-il plus l\'entier lui-même ?',
+      'Entrez X = 53, p = 4 : vérifiez que 53 = 16 × 3 + 5 et retrouvez le quotient et le reste par décalage et ET logique.',
+      'Dans le thème Float, entrez 0.375. Retrouvez l\'inverse de 8 modulo 11, puis l\'inverse de q modulo 2⁶¹ − 1.',
+      'Dans le thème Chaînes, comparez « bonjour » et « bonjouR » : combien de bits diffèrent ? Puis observez le Hash DoS.'
+    ],
+    defi: { q: 'Pourquoi Python utilise-t-il un salage aléatoire pour les chaînes, et pas pour les entiers ?',
+      a: 'Pour les chaînes, un attaquant peut choisir des clés qui produisent des collisions si la fonction de hachage est déterministe. Le salage rend la fonction secrète à chaque exécution, donc impossible à attaquer hors ligne. Pour les entiers, la fonction de hash est l\'identité (ou un modulo premier) et ne peut pas être salée sans casser la cohérence.' },
+    qcm: [
+      { q: 'Pourquoi hash() renvoie-t-il un entier de 64 bits ?', o: ['Pour occuper la mémoire', 'Pour rendre les collisions très improbables', 'Pour accélérer la division', 'Parce que Python est écrit en C'], a: 1, w: 'Avec 2⁶⁴ valeurs, le paradoxe des anniversaires montre qu\'il faut des milliards de clés pour atteindre 50 % de collisions.' },
+      { q: 'Que vaut hash(-1) en Python ?', o: ['−1', '0', '−2', '1'], a: 2, w: '−1 est réservé comme code d\'erreur dans l\'interpréteur, donc le hash de −1 est −2.' },
+      { q: 'Avec M = 2⁶¹ − 1, comment calcule-t-on X mod M sans division ?', o: ['On décale et on fait un ET logique', 'On multiplie par M', 'On utilise une boucle', 'On utilise la racine carrée'], a: 0, w: '<code>X mod (2^p − 1) ≡ (X ≫ p) + (X & (2^p − 1))</code> : quotient et reste par décalage et ET.' },
+      { q: 'Le hash d\'un flottant p/q utilise :', o: ['l\'inverse modulaire de q', 'la racine carrée de q', 'le logarithme de p', 'une division classique'], a: 0, w: 'On calcule p × q⁻¹ modulo 2⁶¹ − 1, où q⁻¹ est l\'inverse modulaire de q.' },
+      { q: 'Une attaque Hash DoS exploite :', o: ['des collisions forcées', 'un mot de passe faible', 'une erreur de syntaxe', 'un débordement de pile'], a: 0, w: 'Un attaquant envoie des clés qui entrent toutes en collision : le coût d\'insertion passe de O(N) à O(N²).' }
+    ]
+  },
+  w7: {
+    title: 'Bonne fonction', level: 'Niveau 3 · Approfondir', time: '30 min', course: 'bonne',
+    goal: 'Relier la répartition des clés à la loi de Poisson et comprendre l\'importance du choix de la taille de la table (premier ou puissance de 2).',
+    steps: [
+      'Avec N = M = 1000, observez la répartition. α vaut 1 : combien de tiroirs vides attend-on ? Et de tiroirs à 2 fiches ?',
+      'Faites varier M et N. Que devient la distribution ? Vérifiez avec la table binomiale.',
+      'Chargez les données du cours (N = 2²⁰, M = 424 579). Que constatez-vous sur le hash de Python ?',
+      'Passez à la source « multiples de 4 ». Pourquoi la répartition est-elle mauvaise ?',
+      'Dans le thème N premier, testez s = 4, N₁ = 12 et N₂ = 11. Combien de cases sont atteignables ?',
+      'Regardez le graphique du pourcentage de cases distinctes selon N. Pourquoi une taille première est-elle préférable ?'
+    ],
+    defi: { q: 'Pour N = 10 et s = 4, combien de cases sont atteignables par les clés 4, 8, 12, … ? Même question avec N = 11.',
+      a: 'Avec N = 10, pgcd(4, 10) = 2 : seules 5 cases sur 10 sont atteignables. Avec N = 11 premier, pgcd(4, 11) = 1 : toutes les cases sont atteignables (le cycle modulo 11 est complet).' },
+    qcm: [
+      { q: 'Que vaut E[X_i], le nombre moyen de fiches par tiroir ?', o: ['M / N', 'N / M', 'M × N', '√M'], a: 0, w: 'Par linéarité de l\'espérance, la somme des moyennes vaut M, donc chaque tiroir reçoit en moyenne M/N = α fiches.' },
+      { q: 'Quelle loi approxime le nombre de fiches d\'un tiroir pour M et N grands ?', o: ['La loi uniforme', 'La loi de Poisson', 'La loi normale seulement', 'La loi exponentielle'], a: 1, w: 'Pr[X = k] ≈ αᵏ e⁻ᵅ / k!, où α = M/N.' },
+      { q: 'Avec α = 1, quelle proportion de tiroirs vides attend-on (e⁻¹) ?', o: ['≈ 37 %', '≈ 50 %', '≈ 10 %', '≈ 100 %'], a: 0, w: 'e⁻¹ ≈ 0,368 : environ 37 % des tiroirs restent vides, même si M = N.' },
+      { q: 'Pourquoi choisir une taille de table première ?', o: ['Pour que toutes les cases soient atteignables si le pas s\'est premier', 'Pour accélérer les calculs', 'Pour éviter les collisions', 'Pour que la table tienne en mémoire'], a: 0, w: 'Si N est premier et que s n\'est pas multiple de N, le cycle engendré par les clés s, 2s, … parcourt toutes les cases.' },
+      { q: 'Une réduction par masque sur m = 2^p correspond à :', o: ['hash mod (2^p − 1)', 'hash & (m − 1)', 'hash / m', 'hash × 2'], a: 1, w: 'Le reste modulo 2^p s\'obtient en gardant les p bits de poids faible.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'mutabilite', t: 'Objets et mutabilité', h: `
+<p>En Python, <b>tout est objet</b>. Un nom est une étiquette attachée à un objet ; plusieurs noms peuvent désigner le même objet. Un objet peut être <b>mutable</b> (modifiable après création) ou <b>immuable</b>.</p>
+<h3>Noms et références</h3>
+<ul>
+<li><code>id(a)</code> donne l'identifiant (l'adresse) de l'objet référencé par <code>a</code>.</li>
+<li>L'affectation <code>a = b</code> ne copie pas l'objet : elle fait pointer <code>a</code> vers le même objet que <code>b</code>.</li>
+<li>Passer un argument à une fonction crée une nouvelle étiquette vers le même objet : c'est le <b>passage par partage d'objet</b>.</li>
+</ul>
+<h3>Mutable ou immuable ?</h3>
+<table class="ctable"><thead><tr><th>Type</th><th>Mutable</th><th>Exemple</th></tr></thead><tbody>
+<tr><td><code>list</code></td><td>oui</td><td><code>a = [1, 2]; a.append(3)</code></td></tr>
+<tr><td><code>dict</code></td><td>oui</td><td><code>d = {"a": 1}; d["b"] = 2</code></td></tr>
+<tr><td><code>set</code></td><td>oui</td><td><code>s = {1, 2}; s.add(3)</code></td></tr>
+<tr><td><code>int</code></td><td>non</td><td><code>a = 5; a = a + 1</code></td></tr>
+<tr><td><code>float</code></td><td>non</td><td><code>x = 1.5; x = x * 2</code></td></tr>
+<tr><td><code>str</code></td><td>non</td><td><code>s = "abc"; s = s.upper()</code></td></tr>
+<tr><td><code>tuple</code></td><td>non</td><td><code>t = (1, 2); t[0] = 9</code> → TypeError</td></tr>
+</tbody></table>
+<h3>Effets de bord</h3>
+<p>Modifier un objet mutable dans une fonction se voit à l'extérieur : <code>l.append(4)</code> modifie la liste. Au contraire, réaffecter un nom (<code>x = x + 1</code> ou <code>L = [10, 20]</code>) ne touche jamais l'objet référencé par l'appelant.</p>
+<div class="retain"><b>À retenir.</b> Une fonction qui modifie un objet mutable produit un effet de bord. Réaffecter n'est pas modifier.</div>` });
+
+COURSE.push({ id: 'dictionnaire', t: 'Le dictionnaire', h: `
+<p>Un <b>dictionnaire</b> associe à chaque <b>clé</b> une <b>valeur</b>. C'est une table d'association : on parle aussi de table de hachage.</p>
+<h3>Création et accès</h3>
+<pre class="code">d = {}                       # dictionnaire vide
+d = dict()                   # autre façon
+d = {"Alice": 14, "Bruno": 9}
+d["Chloé"] = 17              # ajout
+d["Alice"] = 15              # modification
+v = d["Bruno"]               # accès (KeyError si absente)
+v = d.get("Inès", 0)         # avec valeur par défaut
+"Alice" in d                 # True
+del d["Bruno"]               # suppression
+len(d)                       # nombre de clés</pre>
+<h3>Parcours</h3>
+<pre class="code">for k in d:                  # clés
+    print(k, "->", d[k])
+for k, v in d.items():
+    print(k, v)</pre>
+<h3>Complexité</h3>
+<table class="ctable"><thead><tr><th>Opération</th><th>Complexité moyenne</th></tr></thead><tbody>
+<tr><td><code>d[k] = v</code></td><td>O(1)</td></tr>
+<tr><td><code>d[k]</code></td><td>O(1)</td></tr>
+<tr><td><code>k in d</code></td><td>O(1)</td></tr>
+<tr><td><code>len(d)</code></td><td>O(1)</td></tr>
+<tr><td>parcours complet</td><td>O(n)</td></tr>
+</tbody></table>
+<h3>Exercices</h3>
+<p><b>inverse(d)</b> : construire <code>d2</code> telle que <code>d2[v] = k</code> quand <code>d[k] = v</code> (si les valeurs sont distinctes).</p>
+<pre class="code">def inverse(d):
+    d2 = {}
+    for k in d:
+        d2[d[k]] = k
+    return d2
+
+def inverse(d):
+    return {v: k for k, v in d.items()}</pre>
+<p><b>frequent(L)</b> : élément le plus fréquent d'une liste, en un seul parcours.</p>
+<pre class="code">def frequent(L):
+    if not L:
+        return None
+    occurrences = {}
+    for element in L:
+        occurrences[element] = occurrences.get(element, 0) + 1
+    return max(occurrences, key=occurrences.get)</pre>
+<div class="retain"><b>À retenir.</b> Le dictionnaire est la structure d'association de Python : accès en O(1) moyen, parcours en O(n).</div>` });
+
+COURSE.push({ id: 'applications', t: 'Applications du dictionnaire', h: `
+<h3>Espaces de noms</h3>
+<p>Python conserve les variables dans des dictionnaires : <code>globals()</code> pour le module et <code>locals()</code> pour le bloc courant. Une variable locale n'existe que dans le bloc de la fonction.</p>
+<pre class="code">a = 10
+def f(x):
+    y = 2
+    print(locals())   # {'x': 1, 'y': 2}
+f(1)</pre>
+<h3>Représentation d'un graphe</h3>
+<p>Un graphe peut être représenté par un dictionnaire d'<b>adjacence</b> : <code>G[v]</code> contient les voisins de v (liste ou ensemble), ou un dictionnaire <code>{voisin: poids}</code> pour un graphe pondéré.</p>
+<pre class="code">G = {0: [1, 2], 1: [0, 2], 2: [0, 1], 3: [4], 4: [3], 5: []}
+G[0]            # [1, 2]
+2 in G[0]       # True
+3 in G[0]       # False
+
+G_pondere = {0: {1: 2, 2: 3}, 1: {0: 2, 2: 1}, 2: {0: 3, 1: 1}}
+G_pondere[0][2] # 3</pre>
+<p>La mémoire utilisée est O(n + m) pour n sommets et m arêtes, contre O(n²) pour une matrice d'adjacence. L'accès à <code>G[u]</code> est en O(1), le parcours des voisins en O(degré de u).</p>
+<div class="retain"><b>À retenir.</b> globals() et locals() sont des dictionnaires. Un graphe se représente compactement par un dictionnaire d'adjacence.</div>` });
+
+COURSE.push({ id: 'exploitation', t: 'Exploitation : chercher vite', h: `
+<p>Un dictionnaire est une table de hachage : il permet de retrouver une valeur à partir de sa clé sans parcourir la structure.</p>
+<h3>Recherche dans une liste</h3>
+<ul>
+<li><b>Recherche linéaire</b> : parcourir les éléments un par un jusqu'à trouver. Coût : N comparaisons dans le pire cas.</li>
+<li><b>Recherche dichotomique</b> : si la liste est triée, on divise la zone de recherche par deux à chaque étape. Coût : ⌈log₂ N⌉ comparaisons. Sur 424 579 mots, environ 19 comparaisons.</li>
+</ul>
+<h3>Complexités</h3>
+<table class="ctable"><thead><tr><th>Méthode</th><th>Comparaisons</th></tr></thead><tbody>
+<tr><td>Liste, force brute</td><td>N</td></tr>
+<tr><td>Dichotomie</td><td>⌈log₂ N⌉</td></tr>
+<tr><td>Dictionnaire (hachage)</td><td>≈ 1</td></tr>
+</tbody></table>
+<h3>Temps mesurés dans le cours</h3>
+<table class="ctable"><thead><tr><th>Méthode</th><th>Temps</th></tr></thead><tbody>
+<tr><td>Liste, force brute</td><td>3 ms</td></tr>
+<tr><td>Dichotomie écrite à la main</td><td>3 µs</td></tr>
+<tr><td>bisect_left (bibliothèque)</td><td>0,5 µs</td></tr>
+<tr><td>dict de Python</td><td>27 à 34 ns</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> Le hachage permet un accès en temps quasi constant, sans comparaison entre les clés.</div>` });
+
+COURSE.push({ id: 'table', t: 'Table de hachage', h: `
+<p>Une <b>table de hachage</b> est un tableau T de taille m (le nombre de cases). Chaque clé k est transformée en un entier <b>hash(k)</b> (sur 64 bits), puis <b>réduit</b> en un indice <code>i</code> dans [0, m−1].</p>
+<h3>1. Le hash donne un grand entier</h3>
+<ul>
+<li><b>int</b> : le hash est l'entier lui-même tant qu'il est dans ]−(2⁶¹ − 1), 2⁶¹ − 1[ ; sinon, modulo 2⁶¹ − 1.</li>
+<li><b>float</b> : deux nombres égaux ont le même hash (1 et 1.0). Sinon, p/q donne p × q⁻¹ modulo 2⁶¹ − 1, où q⁻¹ est l'inverse modulaire de q.</li>
+<li><b>str</b> : salage aléatoire, puis un entier réparti sur les 64 bits.</li>
+</ul>
+<h3>2. La réduction trouve la case</h3>
+<ul>
+<li><b>Modulo</b> : <code>i = hash mod m</code>.</li>
+<li><b>Masque</b> : <code>i = hash ET (m−1)</code> avec m = 2, 4, 8, 16… (méthode de Python).</li>
+<li><b>Multiplication</b> : <code>i = ⌊m · frac(x · φ)⌋</code> où φ = 0,618…</li>
+</ul>
+<h3>3. Le tableau stocke le paquet</h3>
+<p>Chaque case contient le hash, la clé et la valeur. Si deux clés visent la même case, on gère la <b>collision</b> :</p>
+<ul>
+<li><b>Chaînage séparé</b> : chaque case contient une liste de paquets.</li>
+<li><b>Sondage linéaire</b> : essai des cases i, i+1, i+2…</li>
+<li><b>Sondage quadratique</b> : essai des cases i, i+1², i+2²…</li>
+<li><b>Double hachage</b> : le pas 1 + hash mod (m−1) change d'une clé à l'autre.</li>
+</ul>
+<h3>Facteur de charge et agrandissement</h3>
+<p>Le <b>facteur de charge</b> vaut α = n / m (nombre d'entrées / taille du tableau). Quand α augmente, les collisions deviennent fréquentes. Python agrandit le tableau quand α dépasse 2/3, en le multipliant par 4 (par 2 au-delà de 50 000 clés).</p>
+<h3>Exemple du cours : les animaux</h3>
+<pre class="code">vache : 1000
+cochon : 6.5
+poule : None</pre>
+<p>Avec m = 8 et la réduction modulo, les trois clés occupent des cases distinctes. On insère veau : il entre en collision. Le sondage linéaire place veau dans la case suivante.</p>
+<div class="retain"><b>À retenir.</b> Table de hachage : hash, réduction, stockage. α doit rester petit. Le choix de la taille m et de la fonction de réduction conditionne les collisions.</div>` });
+
+COURSE.push({ id: 'hash', t: 'La fonction hash', h: `
+<h3>Pourquoi un entier si grand ?</h3>
+<p>Sur 64 bits, hash() renvoie un entier dans [−2⁶³ , 2⁶³ − 1], soit 2⁶⁴ ≈ 1,8 × 10¹⁹ valeurs. Cela rend les collisions très improbables : c'est le paradoxe des anniversaires.</p>
+<h3>Paradoxe des anniversaires</h3>
+<p>Avec n clés et N cases, la probabilité d'avoir au moins deux clés dans la même case est :</p>
+<div class="formula">P = 1 − (N/N) × ((N−1)/N) × … × ((N−n+1)/N)</div>
+<p>Pour N = 365, P vaut 50 % dès n = 23. Pour N = 2⁶⁴, il faut de l'ordre de 5 milliards de clés.</p>
+<h3>Hash d'un entier : Mersenne</h3>
+<p>Le hash d'un entier est l'entier lui-même s'il est dans ]−(2⁶¹ − 1), 2⁶¹ − 1[. Sinon, on applique le modulo <b>M₆₁ = 2⁶¹ − 1</b>. Comme 2⁶¹ − 1 est premier, tout dénominateur y est inversible.</p>
+<p>Le modulo par 2^p − 1 se calcule sans division : <code>X mod (2^p − 1) ≡ (X ≫ p) + (X &amp; (2^p − 1))</code>.</p>
+<h3>Hash d'un flottant</h3>
+<p>Un flottant non entier p/q est haché par <code>p × q⁻¹ mod (2⁶¹ − 1)</code>. L'inverse modulaire q⁻¹ vérifie q × q⁻¹ ≡ 1 (mod M₆₁).</p>
+<h3>Hash d'une chaîne</h3>
+<p>Python ajoute une graine secrète (salt) tirée au démarrage : <code>hash("bonjour") = f("bonjour", salt)</code>. Une petite modification de la chaîne doit changer environ la moitié des bits (effet avalanche).</p>
+<h3>Attaque Hash DoS</h3>
+<p>Si la fonction de hachage est déterministe, un attaquant peut fabriquer des clés qui entrent toutes en collision : le coût d'insertion passe de O(N) à O(N²). Le salage aléatoire et SipHash (depuis Python 3.4) protègent contre cette attaque.</p>
+<div class="retain"><b>À retenir.</b> hash() renvoie un entier de 64 bits. Pour les entiers, modulo 2⁶¹ − 1 ; pour les flottants, inverse modulaire ; pour les chaînes, salage aléatoire.</div>` });
+
+COURSE.push({ id: 'bonne', t: 'Bonne fonction de hachage', h: `
+<h3>Répartition uniforme</h3>
+<p>Une bonne fonction de hachage mélange les clés de façon à ce que chaque case ait la même probabilité d'être choisie. On mesure la qualité par la répartition des clés dans les cases.</p>
+<h3>Loi de Poisson</h3>
+<p>Soit N tiroirs et M fiches, α = M/N. Le nombre de fiches d'un tiroir suit approximativement une loi de Poisson de paramètre α :</p>
+<div class="formula">Pr[X = k] ≈ αᵏ e⁻ᵅ / k!</div>
+<p>Pour α = 1, environ 37 % des tiroirs sont vides (e⁻¹), 37 % ont une fiche, 18 % en ont deux, etc. C'est ce qu'on observe avec le hash de Python sur 424 579 mots dans 2²⁰ cases.</p>
+<h3>Choix de la taille de la table</h3>
+<ul>
+<li>Si N est premier et que le pas s n'est pas multiple de N, les clés s, 2s, 3s… parcourent toutes les cases.</li>
+<li>Si N et s ont un diviseur commun, seules N / pgcd(s, N) cases sont atteignables.</li>
+<li>Une réduction par masque sur m = 2^p correspond à garder les p bits de poids faible : <code>hash &amp; (m−1)</code>.</li>
+</ul>
+<h3>Rapidité du modulo</h3>
+<p>Pour accélérer le calcul, on choisit une taille de la forme 2^p − 1 (nombre de Mersenne) : <code>X mod (2^p − 1) ≡ (X ≫ p) + (X &amp; (2^p − 1))</code>. On évite ainsi une division coûteuse.</p>
+<div class="retain"><b>À retenir.</b> Une bonne fonction de hachage donne une répartition conforme à la loi de Poisson. La taille de la table doit être choisie pour éviter les cycles courts (premier, ou puissance de 2 avec masque).</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Objet mutable</dt><dd>Objet dont la valeur peut être modifiée après sa création (list, dict, set).</dd>
+<dt>Objet immuable</dt><dd>Objet dont la valeur ne peut pas être modifiée (int, float, str, tuple).</dd>
+<dt>Hash</dt><dd>Entier de 64 bits calculé à partir d'une clé, qui représente la clé dans la table.</dd>
+<dt>Réduction</dt><dd>Transformation du hash en un indice de case (modulo, masque, multiplication).</dd>
+<dt>Collision</dt><dd>Deux clés qui visent la même case de la table.</dd>
+<dt>Facteur de charge α</dt><dd>Nombre d'entrées divisé par la taille de la table : α = n / m.</dd>
+<dt>Chaînage</dt><dd>Stratégie de collision où chaque case contient une liste de paquets.</dd>
+<dt>Adressage ouvert</dt><dd>Stratégie de collision où l'on cherche une autre case libre (sondage linéaire, quadratique, double hachage).</dd>
+<dt>Paradoxe des anniversaires</dt><dd>Probabilité élevée d'avoir deux clés identiques dans un espace pourtant grand.</dd>
+<dt>Salage</dt><dd>Ajout d'une graine aléatoire au calcul du hash d'une chaîne, pour empêcher les attaques.</dd>
+<dt>Hash DoS</dt><dd>Attaque par collisions forcées qui fait passer l'insertion en O(N²).</dd>
+<dt>Loi de Poisson</dt><dd>Loi approximant la répartition des clés dans les cases d'une bonne table de hachage.</dd>
+<dt>Inverse modulaire</dt><dd>Entier q⁻¹ tel que q × q⁻¹ ≡ 1 (mod m).</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'w1' };
+const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'mutabilite' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : dictionnaires et hachage'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Sept ateliers sur les dictionnaires et le hachage (ITC, CPGE 1re année) : mutabilité, dictionnaire, applications, exploitation, table de hachage, fonction hash et bonne fonction.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut, puis manipulez les curseurs, les textes et les boutons.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
