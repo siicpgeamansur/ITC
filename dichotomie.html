@@ -1,0 +1,758 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Algorithmes dichotomiques</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* spécifique dichotomie */
+.array-viz{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0}
+.cell{width:40px;height:40px;border:1px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:14px;background:#fff;transition:all .15s;position:relative}
+.cell .idx{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);font-family:var(--font-mono)}
+.cell.eliminated{background:#ececf1;color:#aaa;border-color:#d4d4dc}
+.cell.active{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.cell.mid{background:#fff3dc;border-color:var(--warn);font-weight:600}
+.cell.found{background:rgba(30,122,46,.2);border-color:var(--ok);font-weight:600}
+.cell.found::after{content:'✓';position:absolute;top:-6px;right:-2px;font-size:12px;color:var(--ok);background:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:30px;height:30px;font-size:12px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><line x1="3" y1="13" x2="23" y2="13" stroke="#ccc" stroke-width="2"/><circle cx="13" cy="13" r="4" fill="var(--accent)"/><circle cx="6" cy="13" r="2" fill="var(--warn)"/><circle cx="20" cy="13" r="2" fill="var(--ok)"/><path d="M10,6 L10,10 M16,16 L16,20" stroke="#55555f" stroke-width="1.5"/></svg><span>Atelier Algorithmes dichotomiques <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-dichotomie-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* Code Python coloré (léger) */
+function codeBlock(code, on) {
+  const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield|None)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|True|False|isinstance|TypeError|ValueError|Exception|AssertionError|abs|round|min|max)$/;
+  const lines = code.split('\n').map(line => {
+    let out = '', i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '#') { out += '<span style="color:#7a7a88;font-style:italic">' + esc(line.slice(i)) + '</span>'; break; }
+      if (ch === '"' || ch === "'") { let j = i + 1; while (j < line.length && line[j] !== ch) j++; out += '<span style="color:#1c6b40">' + esc(line.slice(i, j + 1)) + '</span>'; i = j + 1; continue; }
+      let j = i; while (j < line.length && line[j] !== '#' && line[j] !== '"' && line[j] !== "'") j++;
+      let seg = esc(line.slice(i, j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g, m => /^\d/.test(m) ? '<span style="color:#b05a00">' + m + '</span>' : KW.test(m) ? '<span style="color:#7c3aa8">' + m + '</span>' : BI.test(m) ? '<span style="color:#1f3fa0">' + m + '</span>' : m);
+      out += seg; i = j;
+    }
+    return out;
+  });
+  return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/* ================= Atelier 1 : Recherche dichotomique ================= */
+const W1 = { arr: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91], target: 23, step: 0, frames: null, timer: null, mode: 'dicho' };
+function mountW1(root) {
+  root.innerHTML = '<h2>Recherche dichotomique</h2><p>Dans un tableau <b>trié</b>, on peut chercher un élément en divisant la zone de recherche par deux à chaque étape. C\'est la recherche <b>dichotomique</b>, de complexité O(log n), bien plus rapide que la recherche linéaire O(n).</p>' +
+    '<div class="opts"><label class="fld"><span>Élément recherché</span><input type="number" id="w1-target" value="23" style="width:80px"></label><div class="fld"><span>Méthode</span><div id="w1-mode"></div></div><div class="fld"><span>Tableau</span><div id="w1-size"></div></div></div>' +
+    '<div class="array-viz" id="w1-array"></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w1-prev" type="button">◀ Précédent</button><button class="btn pri" id="w1-next" type="button">Suivant ▶</button><button class="btn" id="w1-play" type="button">Lecture</button><button class="btn" id="w1-reset" type="button">Départ</button></div>' +
+    '<div class="gstats" id="w1-stats"></div>' +
+    '<div class="verdict" id="w1-msg" aria-live="polite"></div>' +
+    '<h3>Code Python</h3><div id="w1-code"></div>';
+  const S = W1;
+  $('#w1-mode').append(chipsRow([['dicho', 'Dichotomique O(log n)'], ['lin', 'Linéaire O(n)']], S.mode, v => { S.mode = v; S.frames = null; S.step = 0; stop(); render(); }, 'Méthode'));
+  $('#w1-size').append(chipsRow([['10', '10 élts'], ['20', '20 élts'], ['50', '50 élts']], '10', v => {
+    const n = parseInt(v, 10);
+    S.arr = Array.from({ length: n }, (_, i) => Math.floor(i * 10 + Math.random() * 5 + 1)).sort((a, b) => a - b);
+    S.arr = Array.from(new Set(S.arr));
+    S.target = S.arr[Math.floor(Math.random() * S.arr.length)];
+    $('#w1-target').value = S.target;
+    S.frames = null; S.step = 0; stop(); render();
+  }, 'Taille'));
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w1-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const arr = S.arr, target = S.target, frames = [];
+    if (S.mode === 'dicho') {
+      let lo = 0, hi = arr.length - 1, step = 0;
+      frames.push({ lo, hi, mid: null, step, found: false, msg: 'Recherche de ' + target + ' dans un tableau de ' + arr.length + ' éléments triés. On compare à l\'élément du milieu.' });
+      while (lo <= hi) {
+        const mid = Math.floor((lo + hi) / 2);
+        step++;
+        if (arr[mid] === target) { frames.push({ lo, hi, mid, step, found: true, msg: 'arr[' + mid + '] = ' + arr[mid] + ' : trouvé !' }); break; }
+        else if (arr[mid] < target) { frames.push({ lo, hi, mid, step, found: false, msg: 'arr[' + mid + '] = ' + arr[mid] + ' < ' + target + ' : on cherche à droite.' }); lo = mid + 1; }
+        else { frames.push({ lo, hi, mid, step, found: false, msg: 'arr[' + mid + '] = ' + arr[mid] + ' > ' + target + ' : on cherche à gauche.' }); hi = mid - 1; }
+      }
+      if (!frames[frames.length - 1].found) frames.push({ lo, hi, mid: null, step, found: false, msg: 'Zone de recherche vide : ' + target + ' est absent.' });
+    } else {
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] === target) { frames.push({ i, step: i + 1, found: true, msg: 'arr[' + i + '] = ' + arr[i] + ' : trouvé !' }); break; }
+        frames.push({ i, step: i + 1, found: false, msg: 'arr[' + i + '] = ' + arr[i] + ' ≠ ' + target + ' : on avance.' });
+      }
+      if (!frames[frames.length - 1].found) frames.push({ i: null, step: arr.length, found: false, msg: target + ' absent (parcours complet).' });
+    }
+    return frames;
+  }
+  function render() {
+    if (!S.frames) S.frames = buildFrames();
+    if (S.step >= S.frames.length) S.step = S.frames.length - 1;
+    const f = S.frames[S.step];
+    const arr = S.arr;
+    let html = '';
+    arr.forEach((v, i) => {
+      let cls = 'cell';
+      if (S.mode === 'dicho') {
+        if (f.found && f.mid === i) cls += ' found';
+        else if (f.mid === i) cls += ' mid';
+        else if (i < f.lo || i > f.hi) cls += ' eliminated';
+        else cls += ' active';
+      } else {
+        if (f.i === i && f.found) cls += ' found';
+        else if (f.i === i) cls += ' mid';
+        else if (f.i !== null && i < f.i) cls += ' eliminated';
+        else if (f.i === null) cls += ' eliminated';
+        else cls += ' active';
+      }
+      html += '<div class="' + cls + '"><span class="idx">' + i + '</span>' + v + '</div>';
+    });
+    $('#w1-array').innerHTML = html;
+    $('#w1-msg').className = 'verdict ' + (f.found ? 'yes' : f.step === S.frames.length - 1 ? 'no' : '');
+    $('#w1-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
+    const n = arr.length;
+    $('#w1-stats').innerHTML = '';
+    $('#w1-stats').append(stats([
+      ['Étape', String(S.step + 1)],
+      ['n', String(n)],
+      ['Comparaisons (max)', S.mode === 'dicho' ? String(Math.ceil(Math.log2(n + 1))) : String(n)],
+      ['Complexité', S.mode === 'dicho' ? 'O(log n)' : 'O(n)']
+    ]));
+    $('#w1-code').innerHTML = codeBlock(S.mode === 'dicho'
+      ? 'def dichotomie(arr, x):\n    lo, hi = 0, len(arr) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if arr[mid] == x:\n            return mid\n        elif arr[mid] < x:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1'
+      : 'def recherche_lineaire(arr, x):\n    for i in range(len(arr)):\n        if arr[i] == x:\n            return i\n    return -1');
+    $('#w1-prev').disabled = S.step === 0;
+    $('#w1-next').disabled = S.step >= S.frames.length - 1;
+  }
+  $('#w1-target').oninput = () => { const v = parseInt($('#w1-target').value, 10); if (isFinite(v)) { S.target = v; S.frames = null; S.step = 0; stop(); render(); } };
+  $('#w1-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w1-next').onclick = () => { stop(); if (S.step < S.frames.length - 1) { S.step++; render(); } };
+  $('#w1-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w1-play').onclick = () => {
+    if (S.timer) { stop(); render(); return; }
+    if (S.step >= S.frames.length - 1) S.step = 0;
+    S.timer = setInterval(() => { if (S.step >= S.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 800);
+    render();
+  };
+  render();
+}
+WORKSHOPS.push({ id: 'w1', title: 'Recherche dichotomique', hint: 'Comparer la recherche dichotomique O(log n) et la recherche linéaire O(n) sur un tableau trié.',
+  mount: mountW1, reset: () => { Object.assign(W1, { arr: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91], target: 23, step: 0, frames: null }); if (W1.timer) { clearInterval(W1.timer); W1.timer = null; } } });
+
+/* ================= Atelier 2 : Exponentiation rapide ================= */
+const W2 = { base: 3, exp: 13, step: 0, frames: null, timer: null };
+function mountW2(root) {
+  root.innerHTML = '<h2>Exponentiation rapide</h2><p>Pour calculer <code>a<sup>n</sup></code>, on peut multiplier a n fois (O(n)), ou utiliser la <b>dichotomie</b> : <code>a<sup>n</sup> = (a<sup>n/2</sup>)<sup>2</sup></code> si n est pair, <code>a · a<sup>n−1</sup></code> si n est impair. C\'est l\'exponentiation rapide, de complexité O(log n).</p>' +
+    '<div class="opts"><label class="fld"><span>Base a</span><input type="number" id="w2-base" value="3" style="width:80px"></label><label class="fld"><span>Exposant n</span><input type="number" id="w2-exp" value="13" style="width:80px"></label></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w2-prev" type="button">◀ Précédent</button><button class="btn pri" id="w2-next" type="button">Suivant ▶</button><button class="btn" id="w2-play" type="button">Lecture</button><button class="btn" id="w2-reset" type="button">Départ</button></div>' +
+    '<div class="dwrap" id="w2-table"></div>' +
+    '<div class="verdict" id="w2-msg" aria-live="polite"></div>' +
+    '<h3>Comparaison des coûts</h3><div id="w2-comp"></div>' +
+    '<h3>Code Python</h3><div id="w2-code"></div>';
+  const S = W2;
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w2-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const a = S.base, n = S.exp;
+    const frames = [];
+    let b = a, e = n, res = 1, i = 0;
+    frames.push({ b, e, res, i, expr: 'a^' + n, msg: 'On décompose l\'exposant en binaire : ' + n.toString(2) + '.' });
+    while (e > 0) {
+      if (e % 2 === 1) { res *= b; frames.push({ b, e, res, i, expr: 'res ×= ' + b + ' (bit 1)', msg: 'L\'exposant est impair : on multiplie le résultat par ' + b + '.' }); }
+      e = Math.floor(e / 2);
+      if (e > 0) { b = b * b; frames.push({ b, e, res, i, expr: 'b = b²', msg: 'On élève la base au carré et on divise l\'exposant par 2.' }); }
+      i++;
+    }
+    frames.push({ b, e, res, i, expr: 'résultat', msg: 'Terminé : ' + a + '^' + n + ' = ' + res + '.' });
+    return frames;
+  }
+  function render() {
+    if (!S.frames) S.frames = buildFrames();
+    if (S.step >= S.frames.length) S.step = S.frames.length - 1;
+    const f = S.frames[S.step];
+    let html = '<table class="dt"><thead><tr><th>Étape</th><th>Base b</th><th>Exposant e</th><th>Résultat res</th><th>Opération</th></tr></thead><tbody>';
+    S.frames.slice(0, S.step + 1).forEach((fr, i) => {
+      html += '<tr' + (i === S.step ? ' style="background:var(--accent-soft)"' : '') + '><td>' + i + '</td><td class="m">' + fr.b + '</td><td class="m">' + fr.e + '</td><td class="m">' + fr.res + '</td><td>' + esc(fr.expr) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    $('#w2-table').innerHTML = html;
+    $('#w2-msg').className = 'verdict ' + (S.step === S.frames.length - 1 ? 'yes' : '');
+    $('#w2-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
+    const n = S.exp;
+    const logn = Math.ceil(Math.log2(n + 1)) * 2; // environ 2 multiplications par bit
+    $('#w2-comp').innerHTML = '<div class="dwrap"><table class="dt"><thead><tr><th>Méthode</th><th>Multiplications</th><th>Complexité</th></tr></thead><tbody>' +
+      '<tr><td>Naïve (a × a × … × a)</td><td class="m">' + (n - 1) + '</td><td>O(n)</td></tr>' +
+      '<tr><td>Exponentiation rapide</td><td class="m">≤ ' + logn + '</td><td>O(log n)</td></tr>' +
+      '</tbody></table></div>' +
+      '<p class="small">Pour n = ' + n + ', la version naïve fait ' + (n - 1) + ' multiplications, la version rapide en fait au plus ' + logn + '.</p>';
+    $('#w2-code').innerHTML = codeBlock('def puissance(a: int, n: int) -> int:\n    res = 1\n    b = a\n    e = n\n    while e > 0:\n        if e % 2 == 1:\n            res = res * b\n        b = b * b\n        e = e // 2\n    return res');
+    $('#w2-prev').disabled = S.step === 0;
+    $('#w2-next').disabled = S.step >= S.frames.length - 1;
+  }
+  $('#w2-base').oninput = () => { S.base = parseInt($('#w2-base').value, 10) || 2; S.frames = null; S.step = 0; stop(); render(); };
+  $('#w2-exp').oninput = () => { S.exp = clamp(parseInt($('#w2-exp').value, 10) || 1, 1, 30); S.frames = null; S.step = 0; stop(); render(); };
+  $('#w2-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w2-next').onclick = () => { stop(); if (S.step < S.frames.length - 1) { S.step++; render(); } };
+  $('#w2-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w2-play').onclick = () => {
+    if (S.timer) { stop(); render(); return; }
+    if (S.step >= S.frames.length - 1) S.step = 0;
+    S.timer = setInterval(() => { if (S.step >= S.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 700);
+    render();
+  };
+  render();
+}
+WORKSHOPS.push({ id: 'w2', title: 'Exponentiation rapide', hint: 'Calculer a^n en O(log n) multiplications au lieu de O(n), en utilisant la décomposition binaire de n.',
+  mount: mountW2, reset: () => { Object.assign(W2, { base: 3, exp: 13, step: 0, frames: null }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
+
+/* ================= Atelier 3 : Jeux de tests ================= */
+const W3 = { arr: [1, 3, 5, 7, 9, 11], tests: [] };
+function mountW3(root) {
+  root.innerHTML = '<h2>Jeux de tests pour la dichotomie</h2><p>Pour valider un algorithme, il faut un <b>jeu de tests</b> qui couvre les cas normaux, les cas limites et les cas d\'erreur. Voici quelques tests pour la recherche dichotomique.</p>' +
+    '<div class="opts"><label class="fld"><span>Tableau trié</span><input type="text" id="w3-arr" class="mono" value="1, 3, 5, 7, 9, 11"></label></div>' +
+    '<div id="w3-out"></div>' +
+    '<h3>Code Python</h3><pre class="code">def dichotomie(arr, x):\n    lo, hi = 0, len(arr) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if arr[mid] == x:\n            return mid\n        elif arr[mid] < x:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1</pre>';
+  function render() {
+    const arr = $('#w3-arr').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x));
+    const sorted = arr.every((v, i) => i === 0 || arr[i - 1] <= v);
+    if (!sorted) { $('#w3-out').innerHTML = '<p class="verdict no">Le tableau doit être trié par ordre croissant.</p>'; return; }
+    const tests = [
+      { x: arr[0], name: 'Premier élément', desc: 'Cas limite : l\'élément au début du tableau.' },
+      { x: arr[Math.floor(arr.length / 2)], name: 'Élément du milieu', desc: 'Trouvé dès la première comparaison.' },
+      { x: arr[arr.length - 1], name: 'Dernier élément', desc: 'Cas limite : l\'élément à la fin.' },
+      { x: arr[0] - 1, name: 'Absent (plus petit)', desc: 'Erreur : élément plus petit que tous.' },
+      { x: arr[arr.length - 1] + 1, name: 'Absent (plus grand)', desc: 'Erreur : élément plus grand que tous.' },
+      { x: 0, name: 'Absent (milieu)', desc: 'Erreur : élément absent entre deux valeurs.' }
+    ];
+    let html = '<h3>Jeu de tests</h3><div class="dwrap"><table class="dt"><thead><tr><th>Test</th><th>Entrée x</th><th>Résultat attendu</th><th>Description</th></tr></thead><tbody>';
+    tests.forEach(t => {
+      const idx = arr.indexOf(t.x);
+      const expected = idx >= 0 ? 'index ' + idx : 'absent (-1)';
+      const desc = idx >= 0 ? t.desc : t.desc;
+      html += '<tr><td>' + t.name + '</td><td class="m">' + t.x + '</td><td class="m">' + expected + '</td><td>' + desc + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<p class="small">Un bon jeu de tests doit couvrir : le cas normal (élément trouvé), les limites (début et fin), les erreurs (élément absent plus petit / plus grand / au milieu). On peut aussi tester un tableau vide ou à un élément.</p>';
+    html += '<h3>Tests sur d\'autres cas</h3><div class="dwrap"><table class="dt"><thead><tr><th>Tableau</th><th>x</th><th>Attendu</th></tr></thead><tbody>';
+    [['[]', '5', '-1'], ['[7]', '7', '0'], ['[7]', '3', '-1'], ['[1, 2]', '1', '0'], ['[1, 2]', '2', '1']].forEach(t => {
+      html += '<tr><td class="m">' + esc(t[0]) + '</td><td class="m">' + t[1] + '</td><td class="m">' + t[2] + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    $('#w3-out').innerHTML = html;
+  }
+  $('#w3-arr').oninput = render;
+  render();
+}
+WORKSHOPS.push({ id: 'w3', title: 'Jeux de tests', hint: 'Construire un jeu de tests pour la dichotomie : cas normal, limites, erreurs.',
+  mount: mountW3, reset: () => { W3.arr = [1, 3, 5, 7, 9, 11]; } });
+
+/* ================= Atelier 4 : Complexité comparative ================= */
+const W4 = { n: 1000, runs: {} };
+function mountW4(root) {
+  root.innerHTML = '<h2>Accélération : linéaire vs logarithmique</h2><p>La dichotomie divise par 2 la taille de la recherche à chaque étape. La recherche linéaire, elle, examine chaque élément un par un. Sur n = 1 000 000 d\'éléments, la différence est spectaculaire.</p>' +
+    '<div class="opts"><label class="fld"><span>Taille n = <b id="w4-nval"></b></span><input type="range" id="w4-n" min="10" max="1000000" value="1000" style="width:240px"></label></div>' +
+    '<div class="gstats" id="w4-stats"></div>' +
+    '<div class="dwrap" id="w4-table"></div>' +
+    '<h3>Graphique comparatif</h3><svg id="w4-chart" viewBox="0 0 600 260" style="width:100%;max-width:640px;height:auto"></svg>' +
+    '<h3>Code Python</h3><pre class="code"># Recherche linéaire : O(n)\ndef lineaire(arr, x):\n    for i in range(len(arr)):\n        if arr[i] == x:\n            return i\n    return -1\n\n# Recherche dichotomique : O(log n)\ndef dichotomie(arr, x):\n    lo, hi = 0, len(arr) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if arr[mid] == x:\n            return mid\n        elif arr[mid] < x:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1</pre>';
+  const nEl = $('#w4-n'), nVal = $('#w4-nval');
+  function fmt(n) { if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'; if (n >= 1e3) return (n / 1e3).toFixed(1).replace('.', ',') + ' k'; return String(n); }
+  function render() {
+    const n = W4.n;
+    nVal.textContent = fmt(n);
+    const lin = n, dicho = Math.ceil(Math.log2(n + 1));
+    const ratio = lin / Math.max(dicho, 1);
+    $('#w4-stats').innerHTML = '';
+    $('#w4-stats').append(stats([
+      ['n', fmtN(n)],
+      ['Recherche linéaire (pire cas)', fmtN(lin) + ' comparaisons'],
+      ['Recherche dichotomique', dicho + ' comparaisons'],
+      ['Facteur d\'accélération', '×' + fmt(ratio)]
+    ]));
+    $('#w4-table').innerHTML = '<table class="dt"><thead><tr><th>Méthode</th><th>Comparaisons</th><th>Complexité</th><th>Sur 1 000 000 d\'éléments</th></tr></thead><tbody>' +
+      '<tr><td>Recherche linéaire</td><td class="m">' + fmtN(lin) + '</td><td>O(n)</td><td class="m">1 000 000</td></tr>' +
+      '<tr><td>Recherche dichotomique</td><td class="m">' + dicho + '</td><td>O(log n)</td><td class="m">20</td></tr>' +
+      '</tbody></table>';
+    // graphique
+    const W = 600, H = 260, L = 60, R = 20, T = 20, B = 40;
+    const pts = [];
+    for (let e = 1; e <= 6; e += 0.1) { const x = Math.pow(10, e); pts.push({ x, lin: x, log: Math.ceil(Math.log2(x)) }); }
+    const xmax = 1e6, ymax = 1e6;
+    const X = x => L + (Math.log10(x) - 1) / (Math.log10(xmax) - 1) * (W - L - R);
+    const Y = y => H - B - (Math.log10(y) - 0) / (Math.log10(ymax) - 0) * (H - B - T);
+    let svg = '';
+    for (let e = 1; e <= 6; e++) {
+      const x = X(Math.pow(10, e)), y = Y(Math.pow(10, e));
+      svg += '<line x1="' + x + '" y1="' + T + '" x2="' + x + '" y2="' + (H - B) + '" stroke="#eee"/><text x="' + x + '" y="' + (H - B + 15) + '" text-anchor="middle" font-size="11" fill="#666">10^' + e + '</text>';
+      svg += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#eee"/><text x="' + (L - 5) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="11" fill="#666">10^' + e + '</text>';
+    }
+    svg += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="#555"/><line x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '" stroke="#555"/>';
+    svg += '<polyline fill="none" stroke="#c0281f" stroke-width="2" points="' + pts.map(p => X(p.x).toFixed(1) + ',' + Y(Math.max(p.lin, 1)).toFixed(1)).join(' ') + '"/>';
+    svg += '<polyline fill="none" stroke="#2e6da4" stroke-width="2" points="' + pts.map(p => X(p.x).toFixed(1) + ',' + Y(Math.max(p.log, 1)).toFixed(1)).join(' ') + '"/>';
+    svg += '<circle cx="' + X(n) + '" cy="' + Y(Math.max(lin, 1)) + '" r="4" fill="#c0281f" stroke="#fff"/>';
+    svg += '<circle cx="' + X(n) + '" cy="' + Y(Math.max(dicho, 1)) + '" r="4" fill="#2e6da4" stroke="#fff"/>';
+    svg += '<text x="' + X(n) + '" y="' + (Y(Math.max(lin, 1)) - 10) + '" text-anchor="middle" font-size="11" fill="#c0281f">linéaire : ' + fmtN(lin) + '</text>';
+    svg += '<text x="' + X(n) + '" y="' + (Y(Math.max(dicho, 1)) - 10) + '" text-anchor="middle" font-size="11" fill="#2e6da4">dichotomie : ' + dicho + '</text>';
+    svg += '<line x1="' + (L + 10) + '" y1="' + (T + 10) + '" x2="' + (L + 30) + '" y2="' + (T + 10) + '" stroke="#c0281f" stroke-width="2"/><text x="' + (L + 36) + '" y="' + (T + 14) + '" font-size="11" fill="#222">linéaire</text>';
+    svg += '<line x1="' + (L + 10) + '" y1="' + (T + 26) + '" x2="' + (L + 30) + '" y2="' + (T + 26) + '" stroke="#2e6da4" stroke-width="2"/><text x="' + (L + 36) + '" y="' + (T + 30) + '" font-size="11" fill="#222">dichotomie</text>';
+    $('#w4-chart').innerHTML = svg;
+  }
+  nEl.oninput = () => { W4.n = parseInt(nEl.value, 10); render(); };
+  render();
+}
+WORKSHOPS.push({ id: 'w4', title: 'Complexité comparative', hint: 'Mettre en évidence l\'accélération entre linéaire O(n) et logarithmique O(log n).',
+  mount: mountW4, reset: () => { W4.n = 1000; } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  w1: {
+    title: 'Recherche dichotomique', level: 'Niveau 1 · Découvrir', time: '20 min', course: 'recherche',
+    goal: 'Comprendre l\'algorithme de recherche dichotomique et le comparer à la recherche linéaire.',
+    steps: [
+      'Choisissez la recherche dichotomique et cherchez 23 dans le tableau de 10 éléments.',
+      'Combien de comparaisons ? Avec la recherche linéaire ?',
+      'Cherchez un élément absent : que se passe-t-il quand la zone de recherche devient vide ?',
+      'Modifiez la taille du tableau à 50 : combien de comparaisons au pire ?',
+      'Pourquoi le tableau doit-il être trié ?'
+    ],
+    defi: { q: 'Sur un tableau trié de 1 000 000 d\'éléments, combien de comparaisons fait la recherche dichotomique dans le pire cas ? Et la recherche linéaire ?',
+      a: 'Dichotomie : ⌈log₂(10⁶)⌉ ≈ <b>20 comparaisons</b>. Linéaire : jusqu\'à <b>1 000 000</b>. Le rapport est de 50 000.' },
+    qcm: [
+      { q: 'La recherche dichotomique exige que le tableau soit :', o: ['trié', 'de taille paire', 'sans doublons', 'de type entier'], a: 0, w: 'On ne peut éliminer une moitié que si les éléments sont ordonnés.' },
+      { q: 'La complexité de la recherche dichotomique est :', o: ['O(1)', 'O(log n)', 'O(n)', 'O(n log n)'], a: 1, w: 'Chaque étape divise l\'intervalle par 2 : environ log₂ n comparaisons.' },
+      { q: 'Sur un tableau de 1024 éléments triés, le nombre maximal de comparaisons est :', o: ['10', '11', '512', '1024'], a: 1, w: 'log₂(1024) = 10, mais avec la borne inclusive, il faut 11 comparaisons dans le pire cas (⌈log₂(1024+1)⌉).' },
+      { q: 'Que fait la recherche dichotomique si l\'élément est absent ?', o: ['Elle boucle indéfiniment', 'Elle renvoie -1 ou None quand la zone est vide', 'Elle trie le tableau', 'Elle renvoie 0'], a: 1, w: 'La boucle s\'arrête quand lo > hi : la zone de recherche est vide.' },
+      { q: 'Peut-on faire une recherche dichotomique sur une liste chaînée ?', o: ['Oui, toujours', 'Non, car l\'accès à un élément est en O(n)', 'Oui, si elle est triée', 'Seulement si elle est doublement chaînée'], a: 1, w: 'La dichotomie a besoin d\'un accès direct en O(1) : c\'est le cas des tableaux, pas des listes chaînées.' }
+    ]
+  },
+  w2: {
+    title: 'Exponentiation rapide', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'exponentiation',
+    goal: 'Comprendre comment la décomposition binaire de l\'exposant permet de calculer a^n en O(log n).',
+    steps: [
+      'Calculez 3^13 avec l\'exponentiation rapide. Combien de multiplications ?',
+      'Avec la méthode naïve ?',
+      'Que fait-on quand l\'exposant est impair ? quand il est pair ?',
+      'Testez avec un exposant plus grand (n = 30). Le nombre de multiplications double-t-il ?',
+      'Pourquoi dit-on que c\'est une méthode « dichotomique » ?'
+    ],
+    defi: { q: 'Pourquoi l\'exponentiation rapide divise-t-elle l\'exposant par 2 à chaque étape ?',
+      a: 'Parce que <code>a<sup>n</sup> = (a<sup>n/2</sup>)<sup>2</sup></code>. On calcule une seule fois <code>a<sup>n/2</sup></code> puis on l\'élève au carré : le nombre de multiplications est logarithmique en n.' },
+    qcm: [
+      { q: 'La complexité de l\'exponentiation rapide est :', o: ['O(n)', 'O(log n)', 'O(n²)', 'O(1)'], a: 1, w: 'Chaque étape divise l\'exposant par 2 (décalage binaire), donc log₂ n itérations.' },
+      { q: 'Pour calculer a^n, on utilise la relation :', o: ['a^n = a · a^n−1', 'a^n = (a^(n/2))² si n pair, a · a^(n−1) si impair', 'a^n = n · a', 'a^n = a + n'], a: 1, w: 'C\'est la relation de récurrence de l\'exponentiation rapide.' },
+      { q: 'Pour n = 13, combien de multiplications la version naïve fait-elle ?', o: ['12', '13', '6', '5'], a: 0, w: 'La version naïve calcule a × a × … × a : n − 1 multiplications = 12.' },
+      { q: 'Dans la version itérative de l\'exponentiation rapide, quand multiplie-t-on res par b ?', o: ['Toujours', 'Quand l\'exposant est impair', 'Quand l\'exposant est pair', 'À chaque étape'], a: 1, w: 'C\'est le bit de poids faible de l\'exposant : s\'il vaut 1, on multiplie le résultat.' },
+      { q: 'L\'exponentiation rapide est utilisée en cryptographie (RSA) car :', o: ['elle est plus lente', 'elle permet de calculer a^n mod m en O(log n)', 'elle ne fait aucune multiplication', 'elle ne nécessite aucun tableau'], a: 1, w: 'Les exposants en cryptographie sont énormes (des milliers de bits) : O(log n) est indispensable.' }
+    ]
+  },
+  w3: {
+    title: 'Jeux de tests', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'tests',
+    goal: 'Construire un jeu de tests complet pour la recherche dichotomique.',
+    steps: [
+      'Testez le premier élément : combien de comparaisons ?',
+      'Testez le dernier élément.',
+      'Testez un élément absent plus grand que tous : que se passe-t-il ?',
+      'Testez un tableau vide, puis un tableau à un seul élément.',
+      'Pourquoi doit-on tester les limites ?'
+    ],
+    defi: { q: 'Combien de tests faut-il pour bien couvrir une recherche dichotomique sur un tableau de n éléments ?',
+      a: 'Quelques tests bien choisis suffisent : premier élément, dernier élément, milieu, absent plus petit, absent plus grand, absent au milieu, tableau vide, tableau à un élément. Soit environ <b>8 tests</b> couvrant tous les cas.' },
+    qcm: [
+      { q: 'Un bon jeu de tests couvre :', o: ['seulement le cas normal', 'les cas normaux, les limites et les erreurs', 'seulement les erreurs', 'tous les cas possibles'], a: 1, w: 'On ne peut pas tout tester : on choisit les cas représentatifs et les limites.' },
+      { q: 'Sur un tableau vide, la recherche dichotomique :', o: ['plante', 'renvoie -1', 'renvoie 0', 'boucle'], a: 1, w: 'lo = 0, hi = -1, la boucle ne s\'exécute pas, on renvoie -1.' },
+      { q: 'Tester les bornes (premier, dernier élément) sert à :', o: ['vérifier les cas limites', 'tester la vitesse', 'tester la mémoire', 'vérifier la syntaxe'], a: 0, w: 'Les erreurs se cachent souvent aux frontières.' },
+      { q: 'Combien de tests suffisent pour couvrir la recherche dichotomique ?', o: ['1', 'Environ 8 (cas normaux, limites, erreurs)', '1000', 'Aucun'], a: 1, w: 'Quelques tests bien choisis couvrent toutes les partitions du domaine.' },
+      { q: 'Le test d\'un élément absent est important car :', o: ['il vérifie la terminaison', 'il vérifie la valeur de retour en cas d\'absence', 'il teste la vitesse', 'il est obligatoire'], a: 1, w: 'La fonction doit renvoyer une valeur particulière (souvent -1) en cas d\'absence.' }
+    ]
+  },
+  w4: {
+    title: 'Complexité comparative', level: 'Niveau 3 · Approfondir', time: '15 min', course: 'complexite',
+    goal: 'Visualiser l\'accélération entre complexité linéaire et logarithmique.',
+    steps: [
+      'Pour n = 1000, combien de comparaisons en linéaire ? en dichotomie ?',
+      'Augmentez n à 1 000 000 : quel est le nouveau rapport ?',
+      'Regardez le graphique : quelle courbe croît le plus vite ?',
+      'Que devient le rapport quand n double ?',
+      'Peut-on toujours utiliser la dichotomie ?'
+    ],
+    defi: { q: 'Pour n = 1 000 000, combien de fois la dichotomie est-elle plus rapide que la recherche linéaire ?',
+      a: 'Dichotomie : ≈ 20 comparaisons. Linéaire : 1 000 000. Rapport : <b>50 000 fois plus rapide</b>. Et ce rapport augmente avec n.' },
+    qcm: [
+      { q: 'La complexité O(log n) est :', o: ['plus rapide que O(n) pour n grand', 'plus lente que O(n)', 'constante', 'égale à O(n)'], a: 0, w: 'log n croît beaucoup moins vite que n.' },
+      { q: 'Si n passe de 1000 à 1 000 000, le nombre de comparaisons en dichotomie passe de :', o: ['10 à 1000', '10 à 20', '100 à 1000', '1 à 20'], a: 1, w: 'log₂(1000) ≈ 10, log₂(10⁶) ≈ 20.' },
+      { q: 'La dichotomie est plus rapide quand :', o: ['n est petit', 'n est grand', 'le tableau est petit', 'le tableau n\'est pas trié'], a: 1, w: 'Le gain est d\'autant plus grand que n est grand.' },
+      { q: 'La dichotomie peut s\'appliquer :', o: ['à un tableau trié', 'à n\'importe quel tableau', 'à une chaîne de caractères', 'à un arbre binaire'], a: 0, w: 'Il faut que les données soient ordonnées pour éliminer une moitié.' },
+      { q: 'Le nombre de comparaisons de la dichotomie est :', o: ['proportionnel à n', 'proportionnel à log n', 'constant', 'proportionnel à n²'], a: 1, w: 'Le nombre de comparaisons croît comme le logarithme de n.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'recherche', t: 'Recherche dichotomique', h: `
+<p>Dans un tableau <b>trié</b>, la recherche dichotomique permet de trouver un élément en divisant la zone de recherche par deux à chaque étape.</p>
+<h3>Principe</h3>
+<p>On compare l'élément cherché x à l'élément du milieu :</p>
+<ul><li>si x est plus petit, on cherche à gauche ;</li><li>si x est plus grand, on cherche à droite ;</li><li>si x est égal, on a trouvé.</li></ul>
+<pre class="code">def dichotomie(arr, x):
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == x:
+            return mid
+        elif arr[mid] < x:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1</pre>
+<h3>Complexité</h3>
+<p>Chaque étape divise la taille par 2 : il faut au plus ⌈log₂(n + 1)⌉ comparaisons. Complexité : <b>O(log n)</b>.</p>
+<table class="ctable"><thead><tr><th>n</th><th>Linéaire</th><th>Dichotomie</th></tr></thead><tbody>
+<tr><td>10</td><td>10</td><td>4</td></tr>
+<tr><td>1 000</td><td>1 000</td><td>10</td></tr>
+<tr><td>1 000 000</td><td>1 000 000</td><td>20</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> La dichotomie est en O(log n), mais elle nécessite un tableau trié et un accès direct aux éléments.</div>` });
+
+COURSE.push({ id: 'exponentiation', t: 'Exponentiation rapide', h: `
+<p>Pour calculer <code>a<sup>n</sup></code>, la méthode naïve fait n − 1 multiplications. L'exponentiation rapide utilise la décomposition binaire de n.</p>
+<h3>Principe</h3>
+<p>En binaire, <code>a<sup>n</sup></code> se calcule en élevant la base au carré et en multipliant le résultat quand le bit courant de n est 1.</p>
+<pre class="code">def puissance(a, n):
+    res = 1
+    b = a
+    e = n
+    while e > 0:
+        if e % 2 == 1:
+            res = res * b
+        b = b * b
+        e = e // 2
+    return res</pre>
+<h3>Exemple : 3^13</h3>
+<p>13 = 1101 en binaire.</p>
+<table class="ctable"><thead><tr><th>e</th><th>b</th><th>res</th></tr></thead><tbody>
+<tr><td>13</td><td>3</td><td>1</td></tr>
+<tr><td>6</td><td>9</td><td>3</td></tr>
+<tr><td>3</td><td>81</td><td>3</td></tr>
+<tr><td>1</td><td>6561</td><td>243</td></tr>
+<tr><td>0</td><td>—</td><td>1594323</td></tr>
+</tbody></table>
+<p>Résultat : 3<sup>13</sup> = 1 594 323. Nombre de multiplications : 5 (au lieu de 12).</p>
+<h3>Complexité</h3>
+<p>O(log n) : on divise l'exposant par 2 à chaque étape.</p>
+<div class="retain"><b>À retenir.</b> L'exponentiation rapide est une méthode dichotomique sur l'exposant : O(log n) multiplications au lieu de O(n).</div>` });
+
+COURSE.push({ id: 'tests', t: 'Jeux de tests', h: `
+<p>Pour valider un algorithme, on écrit un jeu de tests à la main. Pour la recherche dichotomique, il faut couvrir plusieurs cas.</p>
+<h3>Partitions du domaine</h3>
+<ul><li>Élément au début du tableau.</li><li>Élément au milieu.</li><li>Élément à la fin.</li><li>Élément absent plus petit que tous.</li><li>Élément absent plus grand que tous.</li><li>Élément absent au milieu.</li><li>Tableau vide.</li><li>Tableau à un seul élément.</li></ul>
+<h3>Table de tests</h3>
+<table class="ctable"><thead><tr><th>Entrée</th><th>Résultat attendu</th></tr></thead><tbody>
+<tr><td>([1, 3, 5], 1)</td><td>0</td></tr>
+<tr><td>([1, 3, 5], 5)</td><td>2</td></tr>
+<tr><td>([1, 3, 5], 0)</td><td>-1</td></tr>
+<tr><td>([1, 3, 5], 4)</td><td>-1</td></tr>
+<tr><td>([], 1)</td><td>-1</td></tr>
+<tr><td>([7], 7)</td><td>0</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> Un bon jeu de tests couvre les cas normaux, les limites et les erreurs.</div>` });
+
+COURSE.push({ id: 'complexite', t: 'Linéaire vs logarithmique', h: `
+<h3>Accélération</h3>
+<p>La recherche dichotomique a une complexité <b>logarithmique</b> (O(log n)), la recherche linéaire une complexité <b>linéaire</b> (O(n)).</p>
+<table class="ctable"><thead><tr><th>n</th><th>O(n)</th><th>O(log n)</th><th>Gain</th></tr></thead><tbody>
+<tr><td>10</td><td>10</td><td>4</td><td>×2,5</td></tr>
+<tr><td>1 000</td><td>1 000</td><td>10</td><td>×100</td></tr>
+<tr><td>1 000 000</td><td>1 000 000</td><td>20</td><td>×50 000</td></tr>
+</tbody></table>
+<h3>Conditions</h3>
+<ul><li>Le tableau doit être <b>trié</b>.</li><li>On doit pouvoir accéder à un élément par son indice en O(1).</li></ul>
+<p>Sur une liste chaînée, l'accès est en O(n) : la dichotomie est inutilisable.</p>
+<div class="retain"><b>À retenir.</b> La dichotomie accélère massivement la recherche sur les grands tableaux triés.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Dichotomie</dt><dd>Méthode qui divise un problème en deux sous-problèmes de taille moitié.</dd>
+<dt>Recherche dichotomique</dt><dd>Recherche d'un élément dans un tableau trié en O(log n).</dd>
+<dt>Exponentiation rapide</dt><dd>Calcul de a^n en O(log n) multiplications.</dd>
+<dt>Complexité logarithmique</dt><dd>O(log n) : croissance très lente, quasi constante.</dd>
+<dt>Complexité linéaire</dt><dd>O(n) : croissance proportionnelle à la taille.</dd>
+<dt>Jeu de tests</dt><dd>Ensemble de tests couvrant les cas normaux, les limites et les erreurs.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'w1' };
+const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'recherche' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : algorithmes dichotomiques'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Quatre ateliers sur les algorithmes dichotomiques (ITC, CPGE 1re année) : recherche dichotomique, exponentiation rapide, jeux de tests, complexité comparative.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
