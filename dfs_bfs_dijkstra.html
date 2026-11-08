@@ -442,7 +442,13 @@ function drawGraph(svg, g, opts) {
     else if (final.has(n)) cls += ' final';
     else if (frontier.has(n)) cls += ' frontier';
     else if (visited.has(n)) cls += ' visited';
-    s += '<circle class="' + cls + '" cx="' + x + '" cy="' + y + '" r="20"/>';
+    
+    let style = '';
+    if (o.nodeColor) style += 'fill:' + o.nodeColor(n) + ';';
+    if (o.nodeStroke) style += 'stroke:' + o.nodeStroke(n) + ';';
+    if (o.nodeStrokeWidth) style += 'stroke-width:' + o.nodeStrokeWidth(n) + ';';
+    
+    s += '<circle class="' + cls + '" cx="' + x + '" cy="' + y + '" r="20"' + (style ? ' style="' + style + '"' : '') + '/>';
     s += '<text class="glabel" x="' + x + '" y="' + y + '">' + esc(n) + '</text>';
     if (dist && dist.get(n) !== undefined && dist.get(n) !== Infinity) {
       s += '<text class="gdist" x="' + x + '" y="' + (y - 28) + '">' + dist.get(n) + '</text>';
@@ -462,10 +468,15 @@ function mountW1(root) {
     '<div id="w1-repr"></div>' +
     '<h3>Notations</h3><ul style="padding-left:22px;line-height:1.7"><li><b>Graphe non orienté</b> : les arêtes n\'ont pas de sens. Degré d(u) = nombre de voisins de u.</li><li><b>Graphe orienté</b> : les arcs ont un sens. Degré entrant d₋(u) et sortant d₊(u).</li><li><b>Chemin</b> : suite de sommets reliés par des arêtes. <b>Cycle</b> : chemin qui revient à son point de départ.</li><li><b>Connexe</b> (non orienté) : tout sommet est relié à tout autre par un chemin.</li></ul>';
   const S = W1;
-  $('#w1-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['pondere', 'Pondéré'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.highlight = null; render(); }, 'Graphe'));
-  $('#w1-r').append(chipsRow([['adj', 'Listes d\'adjacence'], ['mat', 'Matrice d\'adjacence']], S.repr, v => { S.repr = v; render(); }, 'Représentation'));
   function render() {
     const g = GRAPHS[S.graph];
+    
+    // Mise à jour des boutons (chips)
+    $('#w1-g').innerHTML = '';
+    $('#w1-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['pondere', 'Pondéré'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.highlight = null; render(); }, 'Graphe'));
+    $('#w1-r').innerHTML = '';
+    $('#w1-r').append(chipsRow([['adj', 'Listes d\'adjacence'], ['mat', 'Matrice d\'adjacence']], S.repr, v => { S.repr = v; render(); }, 'Représentation'));
+    
     drawGraph($('#w1-svg'), g, { current: S.highlight });
     // stats
     const adj = buildAdj(g);
@@ -537,10 +548,6 @@ function mountW2(root) {
     '<div id="w2-queue"></div>' +
     '<h3>Code Python</h3><div id="w2-code"></div>';
   const S = W2;
-  $('#w2-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
-  const Sg = $('#w2-s'); Sg.innerHTML = '';
-  Sg.append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Départ'));
-  $('#w2-m').append(chipsRow([['bfs', 'Largeur (BFS)'], ['dfs', 'Profondeur (DFS)']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w2-play'); if (b) b.textContent = 'Lecture'; }
   function buildFrames() {
     const g = GRAPHS[S.graph];
@@ -578,6 +585,13 @@ function mountW2(root) {
     }
   }
   function render() {
+    $('#w2-g').innerHTML = '';
+    $('#w2-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
+    $('#w2-s').innerHTML = '';
+    $('#w2-s').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Départ'));
+    $('#w2-m').innerHTML = '';
+    $('#w2-m').append(chipsRow([['bfs', 'Largeur (BFS)'], ['dfs', 'Profondeur (DFS)']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
+
     const g = GRAPHS[S.graph];
     if (!S.frames) S.frames = buildFrames();
     const f = S.frames.frames[S.step];
@@ -627,34 +641,22 @@ function mountW3(root) {
     '<div id="w3-comp"></div>' +
     '<h3>Code Python</h3><div id="w3-code"></div>';
   const S = W3;
-  $('#w3-g').append(chipsRow([['simple', 'Non orienté'], ['cycle', 'Deux triangles'], ['oriente', 'Orienté']], S.graph, v => { S.graph = v; render(); }, 'Graphe'));
   function render() {
+    $('#w3-g').innerHTML = '';
+    $('#w3-g').append(chipsRow([['simple', 'Non orienté'], ['cycle', 'Deux triangles'], ['oriente', 'Orienté']], S.graph, v => { S.graph = v; render(); }, 'Graphe'));
+
     const g = GRAPHS[S.graph];
     const comps = components(g), adj = buildAdj(g);
     const colors = ['#2e6da4', '#1e7a2e', '#9a5b00', '#7b4fc2', '#c0281f'];
-    const svg = $('#w3-svg');
-    // dessiner avec une couleur par composante
-    const pos = g.pos || {};
-    let s = '<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8a94a0"/></marker></defs>';
-    const drawn = new Set();
-    g.edges.forEach(([u, v, w]) => {
-      if (!pos[u] || !pos[v]) return;
-      const key = [u, v].sort().join('|');
-      if (drawn.has(key)) return; drawn.add(key);
-      const [x1, y1] = pos[u], [x2, y2] = pos[v];
-      const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
-      const r = 20;
-      s += '<line class="gedge" x1="' + (x1 + ux * r) + '" y1="' + (y1 + uy * r) + '" x2="' + (x2 - ux * r) + '" y2="' + (y2 - uy * r) + '"' + (g.directed ? ' marker-end="url(#arr)"' : '') + '/>';
-      if (g.edges.some(e => e[2] !== 1)) s += '<text class="gweight" x="' + ((x1 + x2) / 2 - uy * 10) + '" y="' + ((y1 + y2) / 2 + ux * 10) + '">' + w + '</text>';
-    });
     const compOf = new Map();
     comps.forEach((c, i) => c.forEach(n => compOf.set(n, i)));
-    g.nodes.forEach(n => {
-      const [x, y] = pos[n], ci = compOf.get(n) || 0, col = colors[ci % colors.length];
-      s += '<circle cx="' + x + '" cy="' + y + '" r="20" fill="' + col + '22" stroke="' + col + '" stroke-width="2.5"/>';
-      s += '<text class="glabel" x="' + x + '" y="' + y + '">' + esc(n) + '</text>';
+    
+    drawGraph($('#w3-svg'), g, {
+      nodeColor: n => colors[(compOf.get(n) || 0) % colors.length] + '22',
+      nodeStroke: n => colors[(compOf.get(n) || 0) % colors.length],
+      nodeStrokeWidth: () => 2.5
     });
-    svg.innerHTML = s;
+
     const cyc = hasCycle(g);
     $('#w3-stats').innerHTML = '';
     $('#w3-stats').append(stats([
@@ -667,7 +669,6 @@ function mountW3(root) {
     comps.forEach((c, i) => { html += '<p><b style="color:' + colors[i % colors.length] + '">Composante ' + (i + 1) + '</b> : ' + c.join(', ') + ' (' + c.length + ' sommet' + (c.length > 1 ? 's' : '') + ').</p>'; });
     html += '<h3>Détection de cycle</h3><p>Un parcours en profondeur détecte un cycle quand il rencontre un voisin déjà visité qui n\'est pas le parent du sommet courant.</p>';
     if (cyc) {
-      // trouver un cycle
       const seen = new Set(), parent = new Map(), stack = [g.nodes[0]];
       let cycleFound = null;
       const dfsCycle = (u, p) => {
@@ -708,19 +709,21 @@ function mountW4(root) {
     '<div id="w4-table"></div>' +
     '<h3>Code Python</h3><div id="w4-code"></div>';
   const S = W4;
-  $('#w4-g').append(chipsRow([['pondere', 'Pondéré'], ['oriente', 'Orienté'], ['heuristique', 'Pour A*']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.target = GRAPHS[v].nodes[GRAPHS[v].nodes.length - 1]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
-  const Sg = $('#w4-s'); Sg.innerHTML = '';
-  Sg.append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Source'));
-  const Tg = $('#w4-t'); Tg.innerHTML = '';
-  Tg.append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.target, v => { S.target = v; S.step = 0; S.frames = null; stop(); render(); }, 'Destination'));
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w4-play'); if (b) b.textContent = 'Lecture'; }
   function render() {
+    $('#w4-g').innerHTML = '';
+    $('#w4-g').append(chipsRow([['pondere', 'Pondéré'], ['oriente', 'Orienté'], ['heuristique', 'Pour A*']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.target = GRAPHS[v].nodes[GRAPHS[v].nodes.length - 1]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
+    $('#w4-s').innerHTML = '';
+    $('#w4-s').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Source'));
+    $('#w4-t').innerHTML = '';
+    $('#w4-t').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.target, v => { S.target = v; S.step = 0; S.frames = null; stop(); render(); }, 'Destination'));
+
     const g = GRAPHS[S.graph];
     if (!S.frames) S.frames = dijkstra(g, S.start);
     const steps = S.frames.steps;
     const st = steps[S.step] || steps[steps.length - 1];
     const visited = st.visited, current = st.u, dist = st.dist;
-    // chemin final si terminé
+    
     let pathEdges = new Set(), final = new Set();
     const lastStep = S.step >= steps.length - 1;
     if (lastStep && S.target) {
@@ -730,6 +733,7 @@ function mountW4(root) {
     }
     const treeEdges = new Set();
     for (const [v, u] of st.parent) treeEdges.add([u, v].sort().join('|'));
+    
     drawGraph($('#w4-svg'), g, { visited, current, dist, treeEdges, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
     const msg = st.phase === 'extract'
       ? 'On extrait <b>' + current + '</b> (distance provisoire ' + dist.get(current) + '). Sa distance devient définitive : c\'est le plus proche sommet non visité.'
@@ -743,7 +747,6 @@ function mountW4(root) {
       ['Sommet courant', current || '—'],
       ['Phase', st.phase === 'extract' ? 'extraction du minimum' : 'relâchement']
     ]));
-    // table des distances
     let tbl = '<div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>Distance</th><th>Parent</th><th>État</th></tr></thead><tbody>';
     g.nodes.forEach(n => {
       const d = dist.get(n);
@@ -789,9 +792,11 @@ function mountW5(root) {
     '<div id="w5-table"></div>' +
     '<h3>Code Python</h3><div id="w5-code"></div>';
   const S = W5;
-  $('#w5-m').append(chipsRow([['dijkstra', 'Dijkstra'], ['astar', 'A*']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w5-play'); if (b) b.textContent = 'Lecture'; }
   function render() {
+    $('#w5-m').innerHTML = '';
+    $('#w5-m').append(chipsRow([['dijkstra', 'Dijkstra'], ['astar', 'A*']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
+
     const g = GRAPHS.heuristique;
     if (!S.frames) S.frames = S.mode === 'astar' ? astar(g, S.start, S.target) : dijkstra(g, S.start);
     const steps = S.frames.steps;
@@ -801,6 +806,7 @@ function mountW5(root) {
     const closed = st.closed || st.visited || new Set();
     const current = st.u;
     const lastStep = S.step >= steps.length - 1;
+    
     let pathEdges = new Set(), final = new Set();
     if (lastStep) {
       const p = pathTo(S.frames.parent, S.target);
@@ -808,10 +814,21 @@ function mountW5(root) {
       for (let i = 0; i < p.length - 1; i++) pathEdges.add([p[i], p[i + 1]].sort().join('|'));
     }
     drawGraph($('#w5-svg'), g, { visited: closed, frontier: open, current, dist, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
+    
     const hval = n => g.heur ? (g.heur[n] || 0) : 0;
-    const msg = st.phase === 'goal' ? 'Le but ' + S.target + ' est atteint : distance = ' + dist.get(S.target) + '.'
-      : st.phase === 'extract' ? 'On extrait <b>' + current + '</b> (g = ' + dist.get(current) + ', h = ' + hval(current) + ', f = ' + (dist.get(current) + hval(current)) + ').'
-        : 'Relâchement ' + st.u + ' → ' + st.v + ' (poids ' + st.w + ') : g(' + st.v + ') = ' + dist.get(st.v) + '.';
+    let msg;
+    if (st.phase === 'goal') {
+      msg = 'Le but ' + S.target + ' est atteint : distance = ' + dist.get(S.target) + '.';
+    } else if (st.phase === 'extract') {
+      if (S.mode === 'astar') {
+        msg = 'On extrait <b>' + current + '</b> (g = ' + dist.get(current) + ', h = ' + hval(current) + ', f = ' + (dist.get(current) + hval(current)) + ').';
+      } else {
+        msg = 'On extrait <b>' + current + '</b> (distance provisoire ' + dist.get(current) + ').';
+      }
+    } else {
+      msg = 'Relâchement ' + st.u + ' → ' + st.v + ' (poids ' + st.w + ') : distance de ' + st.v + ' = ' + dist.get(st.v) + '.';
+    }
+    
     $('#w5-msg').className = 'verdict' + (lastStep ? ' yes' : '');
     $('#w5-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (steps.length - 1) + '.</b> ' + msg;
     $('#w5-stats').innerHTML = '';
