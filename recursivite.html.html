@@ -1,0 +1,928 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Récursivité</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:220px;max-width:100%}
+.opts input[type=number]{width:96px;font-family:var(--font-mono)}
+.opts input[type=text]{font-family:var(--font-mono)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start}
+.two>div{min-width:0}
+/* pile d'appels */
+.pile{display:flex;flex-direction:column;gap:5px;min-height:60px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel2)}
+.pile .empty{color:var(--muted);font-size:13px;padding:6px}
+.frame{border:1px solid var(--node-stroke);border-radius:6px;padding:6px 10px;background:#fff;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.frame b{font-family:var(--font-mono);font-size:13.5px}
+.frame span{font-size:12.5px;color:var(--muted)}
+.frame.top{background:var(--accent-soft);border-color:var(--accent)}
+.frame.ret{background:rgba(30,122,46,.15);border-color:var(--ok)}
+.pilelbl{font-size:12px;color:var(--muted);margin:2px 0}
+.journal{border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-height:290px;overflow:auto;font:12.5px/1.65 var(--font-mono);background:var(--panel)}
+.journal .jr{color:var(--ok)}.journal .jc{color:var(--accent-ink)}.journal .cur{background:var(--accent-soft);border-radius:4px}
+.journal div{white-space:pre}
+/* arbres */
+.gwrap{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:#fff}
+svg.g{display:block;height:auto}
+.tl{stroke:#8a949f;stroke-width:1.4}
+.tnode circle{fill:#fff;stroke:var(--node-stroke);stroke-width:1.6}
+.tnode.rep circle{fill:rgba(192,40,31,.16);stroke:var(--bad)}
+.tnode.hit circle{fill:rgba(30,122,46,.15);stroke:var(--ok);stroke-dasharray:3 3}
+.tnode text{font:600 12px var(--font-mono);text-anchor:middle;fill:var(--fg)}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 0}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:50%;border:1.6px solid var(--node-stroke);vertical-align:-2px;margin-right:5px;background:#fff}
+.leg i.r{background:rgba(192,40,31,.16);border-color:var(--bad)}.leg i.h{background:rgba(30,122,46,.15);border-color:var(--ok);border-style:dashed}
+.peg{stroke:var(--node-stroke);stroke-width:5;stroke-linecap:round}
+.base{stroke:var(--node-stroke);stroke-width:4}
+.disk{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+.disk.last{fill:rgba(154,91,0,.2);stroke:var(--warn);stroke-width:2.4}
+.dtxt{font:600 11px var(--font-mono);fill:var(--accent-ink);text-anchor:middle}
+.pname{font:600 13px var(--font-ui);fill:var(--muted);text-anchor:middle}
+/* tableau dichotomie */
+.arr{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.cell{width:42px;text-align:center}
+.cell .v{border:1px solid var(--line);border-radius:6px;padding:7px 0;font:600 14px var(--font-mono);background:#fff}
+.cell .i{font:11px var(--font-mono);color:var(--muted);margin-top:2px}
+.cell.out .v{background:var(--panel2);color:#9aa3ad;border-style:dashed}
+.cell.mid .v{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cell.found .v{background:var(--ok);color:#fff;border-color:var(--ok)}
+.mtn rect{fill:#fff;stroke:var(--line);stroke-width:1.4;rx:6}
+.mtn.vis rect{fill:var(--accent-soft);stroke:var(--accent)}
+.mtn.done rect{fill:rgba(30,122,46,.15);stroke:var(--ok);stroke-width:2}
+.mtn.hid{opacity:.25}
+.mtn text{font:600 12px var(--font-mono);text-anchor:middle;fill:var(--fg)}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:34px}.cell .v{font-size:12.5px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="2" width="22" height="22" fill="none" stroke="var(--fg)" stroke-width="1.6"/><rect x="6" y="6" width="14" height="14" fill="none" stroke="var(--accent)" stroke-width="1.6"/><rect x="9.5" y="9.5" width="7" height="7" fill="none" stroke="var(--ok)" stroke-width="1.6"/><rect x="12" y="12" width="2" height="2" fill="var(--warn)"/></svg><span>Atelier Récursivité <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-recursivite-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+/* trace des appels récursifs : événements 'call' et 'ret' */
+function trace(fn, args) {
+  const ev = []; let nid = 0;
+  function rec(a, depth) {
+    const id = nid++, label = fn + '(' + a.join(', ') + ')';
+    ev.push({ k: 'call', id, depth, label });
+    let val, expr = '', base = false;
+    if (fn === 'fact') {
+      const n = a[0];
+      if (n === 0) { val = 1; base = true; } else { const r = rec([n - 1], depth + 1); val = n * r; expr = n + ' × ' + r; }
+    } else if (fn === 'puiss') {
+      const x = a[0], n = a[1];
+      if (n === 0) { val = 1; base = true; } else {
+        const y = rec([x, Math.floor(n / 2)], depth + 1);
+        if (n % 2 === 0) { val = y * y; expr = y + ' × ' + y; } else { val = x * y * y; expr = x + ' × ' + y + ' × ' + y; }
+      }
+    } else if (fn === 'pgcd') {
+      const x = a[0], y = a[1];
+      if (y === 0) { val = x; base = true; } else { val = rec([y, x % y], depth + 1); expr = 'le résultat est transmis tel quel'; }
+    } else {
+      const n = a[0];
+      if (n < 2) { val = n; base = true; } else { const r1 = rec([n - 1], depth + 1), r2 = rec([n - 2], depth + 1); val = r1 + r2; expr = r1 + ' + ' + r2; }
+    }
+    ev.push({ k: 'ret', id, depth, label, val, expr, base });
+    return val;
+  }
+  const val = rec(args, 0);
+  let maxd = 0, calls = 0; ev.forEach(e => { if (e.k === 'call') { calls++; if (e.depth + 1 > maxd) maxd = e.depth + 1; } });
+  return { ev, val, calls, maxd };
+}
+function stackAt(ev, k) {
+  const st = [];
+  for (let i = 0; i < k; i++) {
+    const e = ev[i];
+    if (e.k === 'call') st.push({ id: e.id, label: e.label, ret: null });
+    else if (i === k - 1) { const f = st[st.length - 1]; f.ret = e; } else st.pop();
+  }
+  return st;
+}
+/* arbre de Fibonacci */
+function fibTree(n, memo) {
+  const seen = new Set(); let count = 0;
+  function rec(k) {
+    count++;
+    if (k < 2) return { n: k, kids: [], kind: 'base' };
+    if (memo && seen.has(k)) return { n: k, kids: [], kind: 'hit' };
+    seen.add(k);
+    const a = rec(k - 1), b = rec(k - 2);
+    return { n: k, kids: [a, b], kind: 'calc' };
+  }
+  const root = rec(n);
+  return { root, count };
+}
+function fibCalls(n) { let a = 1, b = 1; for (let i = 2; i <= n; i++) { const c = 1 + a + b; a = b; b = c; } return n < 2 ? 1 : b; }
+function fmtDur(s) {
+  if (s < 1e-3) return 'moins d’1 ms';
+  if (s < 1) return Math.round(s * 1000) + ' ms';
+  if (s < 60) return s.toFixed(1).replace('.', ',') + ' s';
+  if (s < 3600) return (s / 60).toFixed(1).replace('.', ',') + ' min';
+  if (s < 86400) return (s / 3600).toFixed(1).replace('.', ',') + ' h';
+  return Math.round(s / 86400) + ' jours';
+}
+/* tours de Hanoï */
+function hanoiMoves(n) { const m = []; (function r(k, a, b, c) { if (k === 0) return; r(k - 1, a, c, b); m.push([k, a, c]); r(k - 1, b, a, c); })(n, 'A', 'B', 'C'); return m; }
+function hanoiState(n, moves, k) {
+  const p = { A: [], B: [], C: [] };
+  for (let d = n; d >= 1; d--) p.A.push(d);
+  for (let i = 0; i < k; i++) { const [d, f, t] = moves[i]; const x = p[f].pop(); if (x !== d) throw new Error('coup invalide'); p[t].push(d); }
+  return p;
+}
+/* dichotomie */
+function dichoTrace(t, x) {
+  const ev = []; let idx = -1;
+  (function r(g, d) {
+    if (g > d) { ev.push({ g, d, m: null, out: 'vide' }); return; }
+    const m = Math.floor((g + d) / 2);
+    if (t[m] === x) { ev.push({ g, d, m, out: 'trouve' }); idx = m; return; }
+    if (t[m] < x) { ev.push({ g, d, m, out: 'droite' }); r(m + 1, d); } else { ev.push({ g, d, m, out: 'gauche' }); r(g, m - 1); }
+  })(0, t.length - 1);
+  return { ev, idx };
+}
+/* exponentiation rapide */
+const mulsFast = n => n === 0 ? 0 : mulsFast(Math.floor(n / 2)) + (n % 2 ? 2 : 1);
+const callsFast = n => n === 0 ? 1 : 1 + callsFast(Math.floor(n / 2));
+function halves(n) { const s = [n]; while (n > 0) { n = Math.floor(n / 2); s.push(n); } return s; }
+/* tri fusion */
+function mergeTrace(arr) {
+  const ev = []; let cmps = 0; const map = {};
+  function rec(a, path) {
+    const node = { path, arr: a.slice(), kids: [], sorted: null }; map[path] = node;
+    ev.push({ k: 'visit', path });
+    if (a.length <= 1) { node.sorted = a.slice(); ev.push({ k: 'base', path }); return node; }
+    const m = a.length >> 1, l = rec(a.slice(0, m), path + '0'), r = rec(a.slice(m), path + '1');
+    node.kids = [l, r];
+    const res = []; let i = 0, j = 0, c = 0;
+    while (i < l.sorted.length && j < r.sorted.length) { c++; if (l.sorted[i] <= r.sorted[j]) res.push(l.sorted[i++]); else res.push(r.sorted[j++]); }
+    node.sorted = res.concat(l.sorted.slice(i), r.sorted.slice(j)); cmps += c;
+    ev.push({ k: 'merge', path, cmp: c });
+    return node;
+  }
+  const root = rec(arr, 'r');
+  return { root, ev, cmps, map };
+}
+/*LOGIC-END*/
+
+/* ---------- aides d'interface ---------- */
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', null, k[0]), h('b', null, k[1])))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
+}
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; m.textContent = text; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+function stepBtns(prefix) {
+  return '<div class="files" style="margin:8px 0"><button class="btn" id="' + prefix + '-prev" type="button">◀ Précédent</button><button class="btn pri" id="' + prefix + '-next" type="button">Suivant ▶</button><button class="btn" id="' + prefix + '-all" type="button">Tout exécuter</button><button class="btn" id="' + prefix + '-reset" type="button">Départ</button></div>';
+}
+function wireSteps(prefix, get, set, max, draw) {
+  $('#' + prefix + '-prev').addEventListener('click', () => { if (get() > 0) { set(get() - 1); draw(); } });
+  $('#' + prefix + '-next').addEventListener('click', () => { if (get() < max()) { set(get() + 1); draw(); } });
+  $('#' + prefix + '-all').addEventListener('click', () => { set(max()); draw(); });
+  $('#' + prefix + '-reset').addEventListener('click', () => { set(0); draw(); });
+}
+function updSteps(prefix, k, max) { $('#' + prefix + '-prev').disabled = k === 0; $('#' + prefix + '-next').disabled = k >= max; }
+
+/* ================= Atelier 1 : pile d'appels ================= */
+const CODES = {
+  fact: 'def fact(n):\n    if n == 0:              # cas de base\n        return 1\n    return n * fact(n - 1)  # appel récursif',
+  puiss: 'def puiss(x, n):\n    if n == 0:              # cas de base\n        return 1\n    y = puiss(x, n // 2)    # appel récursif\n    if n % 2 == 0:\n        return y * y\n    return x * y * y',
+  pgcd: 'def pgcd(a, b):\n    if b == 0:              # cas de base\n        return a\n    return pgcd(b, a % b)   # appel récursif',
+  fibo: 'def fibo(n):\n    if n < 2:               # cas de base\n        return n\n    return fibo(n - 1) + fibo(n - 2)'
+};
+const FN_ARGS = { fact: [['n', 0, 10]], puiss: [['x', 1, 5], ['n', 0, 20]], pgcd: [['a', 0, 999], ['b', 0, 999]], fibo: [['n', 0, 7]] };
+const G1 = { fn: 'fact', args: { fact: [4], puiss: [2, 10], pgcd: [48, 18], fibo: [4] }, k: 0, lim: 500 };
+let T1 = null;
+function mountG1(root) {
+  root.innerHTML =
+    '<h2>La pile d’appels</h2>' +
+    '<p>Une fonction récursive s’appelle elle-même sur un problème plus petit. À chaque appel, Python crée un <b>cadre</b> (ses variables locales) qu’il empile ; il le dépile quand la fonction <b>retourne</b>. Choisissez une fonction, puis avancez pas à pas.</p>' +
+    '<div class="opts"><div class="fld"><span>Fonction</span><div id="p-fn"></div></div><div class="opts" id="p-args" style="margin:0"></div></div>' +
+    '<pre class="code" id="p-code"></pre>' +
+    stepBtns('p') +
+    '<div class="verdict" id="p-msg" aria-live="polite"></div>' +
+    '<div class="two"><div><p class="pilelbl">Pile d’appels (le sommet est en haut)</p><div class="pile" id="p-pile"></div></div><div><p class="pilelbl">Journal</p><div class="journal" id="p-jrn"></div></div></div>' +
+    '<div id="p-stats"></div>' +
+    '<h3>Limite de récursion</h3>' +
+    '<p>Chaque appel empilé occupe de la mémoire. Python limite la profondeur de la pile (par défaut environ 1000 appels imbriqués) et lève une <code>RecursionError</code> au-delà. Pour <code>fact(n)</code>, la profondeur vaut n + 1.</p>' +
+    '<div class="opts"><label class="fld"><span>n = <b id="p-lim-out"></b></span><input type="range" id="p-lim" min="1" max="2000" value="500" aria-label="Valeur de n"></label></div><div id="p-limv"></div>';
+  wireSteps('p', () => G1.k, v => { G1.k = v; }, () => T1.ev.length, drawStack);
+  $('#p-lim').addEventListener('input', e => { G1.lim = +e.target.value; drawLim(); });
+  $('#p-lim').value = G1.lim;
+  setupFn();
+  drawLim();
+}
+function setupFn() {
+  const fb = $('#p-fn'); fb.innerHTML = '';
+  fb.append(chipsRow([['fact', 'fact(n)'], ['puiss', 'puiss(x, n)'], ['pgcd', 'pgcd(a, b)'], ['fibo', 'fibo(n)']], G1.fn, f => { G1.fn = f; G1.k = 0; setupFn(); }, 'Fonction'));
+  const ab = $('#p-args'); ab.innerHTML = '';
+  FN_ARGS[G1.fn].forEach((a, i) => {
+    const inp = h('input', { type: 'number', min: a[1], max: a[2], value: G1.args[G1.fn][i], 'aria-label': 'Argument ' + a[0] });
+    inp.addEventListener('input', () => { G1.args[G1.fn][i] = clamp(Math.round(+inp.value || 0), a[1], a[2]); G1.k = 0; recompute(); });
+    ab.append(h('label', { class: 'fld' }, h('span', null, a[0] + ' (' + a[1] + ' à ' + a[2] + ')'), inp));
+  });
+  $('#p-code').textContent = CODES[G1.fn];
+  recompute();
+}
+function recompute() { T1 = trace(G1.fn, G1.args[G1.fn].slice()); drawStack(); }
+function drawStack() {
+  const ev = T1.ev, k = G1.k, st = stackAt(ev, k), box = $('#p-pile'); box.innerHTML = '';
+  if (!st.length) box.append(h('div', { class: 'empty' }, k === 0 ? 'La pile est vide. Appuyez sur « Suivant ».' : 'La pile est vide : tous les appels sont terminés.'));
+  for (let i = st.length - 1; i >= 0; i--) {
+    const f = st[i], top = i === st.length - 1;
+    box.append(h('div', { class: 'frame' + (f.ret ? ' ret' : top ? ' top' : '') }, h('b', null, f.label), h('span', null, f.ret ? 'retourne ' + f.ret.val : top ? 'en cours' : 'en attente du résultat de ' + st[i + 1].label)));
+  }
+  const j = $('#p-jrn'); j.innerHTML = '';
+  for (let i = 0; i < k; i++) {
+    const e = ev[i], pad = '  '.repeat(e.depth);
+    j.append(h('div', { class: (e.k === 'call' ? 'jc' : 'jr') + (i === k - 1 ? ' cur' : '') }, pad + (e.k === 'call' ? '→ appel ' + e.label : '← ' + e.label + ' retourne ' + e.val)));
+  }
+  j.scrollTop = j.scrollHeight;
+  let msg = 'Prêt. Le premier appel est ' + ev[0].label + '.', kind = '';
+  if (k > 0) {
+    const e = ev[k - 1];
+    if (e.k === 'call') msg = 'Appel de ' + e.label + ' : un nouveau cadre est empilé.';
+    else if (e.base) { msg = 'Cas de base : ' + e.label + ' retourne ' + e.val + ' sans nouvel appel. Le cadre va être dépilé.'; kind = 'yes'; }
+    else msg = e.label + ' reçoit les résultats des appels qu’il a lancés (' + e.expr + ') et retourne ' + e.val + '.';
+  }
+  setMsg('#p-msg', msg, kind);
+  const sb = $('#p-stats'); sb.innerHTML = '';
+  sb.append(stats([['Appels au total', String(T1.calls)], ['Profondeur maximale de la pile', String(T1.maxd)], ['Hauteur actuelle de la pile', String(st.length)], ['Résultat final', k === ev.length ? fmtN(T1.val) : '?']]));
+  updSteps('p', k, ev.length);
+}
+function drawLim() {
+  const n = G1.lim, d = n + 1, box = $('#p-limv'); if (!box) return;
+  $('#p-lim-out').textContent = n; box.innerHTML = '';
+  const ok = d <= 990, ko = d >= 1000;
+  box.append(stats([['fact(' + n + ') empile', d + ' appels'], ['Limite par défaut', '≈ 1000']]));
+  box.append(h('div', { class: 'verdict ' + (ok ? 'yes' : ko ? 'no' : 'warn') }, ok ? 'La pile ne dépasse pas la limite : fact(' + n + ') s’exécute normalement.' : ko ? 'RecursionError : maximum recursion depth exceeded. La pile est trop haute.' : 'On approche la limite : selon le nombre d’appels déjà empilés par ailleurs, Python peut lever une RecursionError.'));
+}
+WORKSHOPS.push({ id: 'r1', title: 'Pile d’appels', hint: 'Choisissez une fonction récursive, avancez pas à pas et regardez la pile se remplir puis se vider.', mount: mountG1, reset: () => { Object.assign(G1, { fn: 'fact', args: { fact: [4], puiss: [2, 10], pgcd: [48, 18], fibo: [4] }, k: 0, lim: 500 }); } });
+
+/* ================= Atelier 2 : arbres, mémoïsation, Hanoï ================= */
+const G2 = { n: 5, memo: false, cn: 20, hd: 3, hk: 0 };
+function layoutFib(node, depth, state) {
+  node.depth = depth;
+  if (!node.kids.length) { node.x = 24 + state.i * 36; state.i++; } else { node.kids.forEach(c => layoutFib(c, depth + 1, state)); node.x = (node.kids[0].x + node.kids[node.kids.length - 1].x) / 2; }
+  node.y = 26 + depth * 52; state.maxd = Math.max(state.maxd, depth); state.nodes.push(node);
+}
+function mountG2(root) {
+  root.innerHTML =
+    '<h2>Arbres d’appels, mémoïsation et Hanoï</h2>' +
+    '<p>Quand une fonction fait <b>plusieurs</b> appels récursifs, les appels forment un arbre. Si des sous-problèmes se répètent, cet arbre grossit très vite.</p>' +
+    '<h3>1. L’arbre d’appels de fibo(n)</h3>' +
+    '<div class="opts"><label class="fld"><span>n = <b id="t-n-out"></b></span><input type="range" id="t-n" min="1" max="7" value="5" aria-label="Valeur de n"></label><div class="fld"><span>Version</span><div id="t-mode"></div></div></div>' +
+    '<div class="gwrap"><svg class="g" id="t-svg" role="img" aria-label="Arbre des appels de fibo"></svg></div>' +
+    '<div class="leg"><span><i></i>premier calcul de fibo(k)</span><span><i class="r"></i>calcul répété</span><span><i class="h"></i>résultat lu dans le cache</span></div>' +
+    '<div id="t-stats"></div><div class="verdict" id="t-msg"></div>' +
+    '<h3>2. Combien d’appels ?</h3>' +
+    '<p>On compare le nombre d’appels de <code>fibo(n)</code> sans et avec mémoïsation. L’estimation du temps suppose environ 10<sup>7</sup> appels par seconde (ordre de grandeur pour Python).</p>' +
+    '<div class="opts"><label class="fld"><span>n = <b id="c-n-out"></b></span><input type="range" id="c-n" min="1" max="40" value="20" aria-label="Valeur de n"></label></div><div id="c-out"></div>' +
+    '<h3>3. Les tours de Hanoï</h3>' +
+    '<p>Il faut déplacer n disques de A vers C, un seul à la fois, sans jamais poser un disque sur un plus petit. On utilise B comme piquet intermédiaire. L’algorithme récursif est : déplacer n − 1 disques vers B, déplacer le plus grand disque vers C, puis déplacer les n − 1 disques de B vers C.</p>' +
+    '<div class="opts"><label class="fld"><span>Disques : <b id="h-n-out"></b></span><input type="range" id="h-n" min="1" max="6" value="3" aria-label="Nombre de disques"></label></div>' +
+    stepBtns('h') + '<div class="gwrap"><svg class="g" id="h-svg" role="img" aria-label="Tours de Hanoï" viewBox="0 0 480 190" style="width:100%;max-width:560px"></svg></div>' +
+    '<div class="verdict" id="h-msg" aria-live="polite"></div><div id="h-stats"></div>';
+  $('#t-n').addEventListener('input', e => { G2.n = +e.target.value; drawFib(); });
+  $('#c-n').addEventListener('input', e => { G2.cn = +e.target.value; drawCnt(); });
+  $('#h-n').addEventListener('input', e => { G2.hd = +e.target.value; G2.hk = 0; drawHanoi(); });
+  $('#t-n').value = G2.n; $('#c-n').value = G2.cn; $('#h-n').value = G2.hd;
+  wireSteps('h', () => G2.hk, v => { G2.hk = v; }, () => hanoiMoves(G2.hd).length, drawHanoi);
+  drawFib(); drawCnt(); drawHanoi();
+}
+function drawFib() {
+  $('#t-n-out').textContent = G2.n;
+  const mb = $('#t-mode'); mb.innerHTML = ''; mb.append(chipsRow([[false, 'Sans mémoïsation'], [true, 'Avec mémoïsation']], G2.memo, v => { G2.memo = v; drawFib(); }, 'Version'));
+  const { root, count } = fibTree(G2.n, G2.memo), st = { i: 0, maxd: 0, nodes: [] };
+  layoutFib(root, 0, st);
+  const seen = new Set(); let rep = 0;
+  (function pre(n) { if (seen.has(n.n) && n.kind !== 'hit') { n.rep = true; rep++; } seen.add(n.n); n.kids.forEach(pre); })(root);
+  const W = 48 + (st.i - 1) * 36, H = 52 + st.maxd * 52, svg = $('#t-svg'); svg.innerHTML = '';
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.style.width = W + 'px'; svg.style.minWidth = W + 'px';
+  st.nodes.forEach(n => n.kids.forEach(c => el('line', { x1: n.x, y1: n.y, x2: c.x, y2: c.y, 'class': 'tl' }, svg)));
+  st.nodes.forEach(n => {
+    const g = el('g', { 'class': 'tnode' + (n.rep ? ' rep' : '') + (n.kind === 'hit' ? ' hit' : '') }, svg);
+    el('circle', { cx: n.x, cy: n.y, r: 14 }, g); const t = el('text', { x: n.x, y: n.y + 4 }, g); t.textContent = n.n;
+  });
+  const sb = $('#t-stats'); sb.innerHTML = '';
+  sb.append(stats([['Appels de fibo', String(count)], ['Calculs répétés (rouge)', String(rep)], ['Formule sans mémoïsation', String(fibCalls(G2.n))]]));
+  setMsg('#t-msg', G2.memo ? 'Avec mémoïsation, chaque fibo(k) est calculé une seule fois : les autres occurrences lisent le cache (tirets verts). Le nombre d’appels est 2n − 1 = ' + (2 * G2.n - 1) + '.' : 'Sans mémoïsation, fibo(' + (G2.n - 2 >= 0 ? G2.n - 2 : 0) + ') et ses voisins sont recalculés plusieurs fois (rouge). Essayez n = 7 puis passez en mémoïsation.', G2.memo ? 'yes' : '');
+}
+function drawCnt() {
+  const n = G2.cn; $('#c-n-out').textContent = n;
+  const c = fibCalls(n), m = n < 2 ? 1 : 2 * n - 1, box = $('#c-out'); box.innerHTML = '';
+  box.append(stats([['Sans mémoïsation', fmtN(c) + ' appels'], ['Temps estimé', fmtDur(c / 1e7)], ['Avec mémoïsation', m + ' appels'], ['Temps estimé', fmtDur(m / 1e7)]]));
+  box.append(h('div', { class: 'verdict ' + (c / 1e7 > 1 ? 'no' : '') }, 'Le nombre d’appels sans mémoïsation est multiplié par environ 1,618 (le nombre d’or) à chaque incrément de n : la croissance est exponentielle. Avec mémoïsation elle est linéaire.'));
+}
+function drawHanoi() {
+  const n = G2.hd; $('#h-n-out').textContent = n;
+  const moves = hanoiMoves(n), k = clamp(G2.hk, 0, moves.length); G2.hk = k;
+  const p = hanoiState(n, moves, k), svg = $('#h-svg'); svg.innerHTML = '';
+  const px = { A: 80, B: 240, C: 400 }, by = 170, dh = 18;
+  el('line', { x1: 10, y1: by + 3, x2: 470, y2: by + 3, 'class': 'base' }, svg);
+  ['A', 'B', 'C'].forEach(name => {
+    el('line', { x1: px[name], y1: by, x2: px[name], y2: by - 8 - 6 * dh - 4, 'class': 'peg' }, svg);
+    const t = el('text', { x: px[name], y: 188, 'class': 'pname' }, svg); t.textContent = name;
+    p[name].forEach((d, i) => {
+      const w = 24 + d * 20, last = k > 0 && moves[k - 1][0] === d && moves[k - 1][2] === name && i === p[name].length - 1;
+      el('rect', { x: px[name] - w / 2, y: by - (i + 1) * dh, width: w, height: dh - 2, rx: 4, 'class': 'disk' + (last ? ' last' : '') }, svg);
+      const tt = el('text', { x: px[name], y: by - i * dh - 6, 'class': 'dtxt' }, svg); tt.textContent = d;
+    });
+  });
+  let msg = 'Départ : les ' + n + ' disques sont sur A.';
+  if (k > 0) { const m = moves[k - 1]; msg = 'Coup ' + k + ' : déplacer le disque ' + m[0] + ' de ' + m[1] + ' vers ' + m[2] + '.'; }
+  if (k === moves.length) msg += ' Terminé : tous les disques sont sur C.';
+  setMsg('#h-msg', msg, k === moves.length ? 'yes' : '');
+  const sb = $('#h-stats'); sb.innerHTML = '';
+  sb.append(stats([['Coups effectués', k + ' / ' + moves.length], ['Minimum pour ' + n + ' disque' + (n > 1 ? 's' : ''), '2^' + n + ' − 1 = ' + fmtN(Math.pow(2, n) - 1)], ['Pour 64 disques à 1 coup/s', '≈ 5,8·10¹¹ ans']]));
+  updSteps('h', k, moves.length);
+}
+WORKSHOPS.push({ id: 'r2', title: 'Arbres et mémoïsation', hint: 'Comparez les appels de fibo avec et sans cache, puis jouez les tours de Hanoï.', mount: mountG2, reset: () => { Object.assign(G2, { n: 5, memo: false, cn: 20, hd: 3, hk: 0 }); } });
+
+/* ================= Atelier 3 : diviser pour régner ================= */
+const G3 = { tab: [3, 8, 12, 17, 21, 26, 30, 35, 41, 44, 50, 53, 59, 62, 68], x: 41, dk: 0, pn: 100, mk: 0, marr: [38, 27, 43, 3, 9, 82, 10, 5] };
+let D3 = null, M3 = null;
+function mountG3(root) {
+  root.innerHTML =
+    '<h2>Diviser pour régner</h2>' +
+    '<p>On ramène un problème de taille n à un ou plusieurs problèmes de taille environ n/2. La profondeur de la récursion est alors de l’ordre de log₂ n, ce qui rend les algorithmes très efficaces.</p>' +
+    '<h3>1. Recherche dichotomique</h3>' +
+    '<p>On cherche x dans un tableau <b>trié</b>. On compare x à l’élément du milieu, puis on poursuit dans la moitié qui peut contenir x.</p>' +
+    '<div class="opts"><label class="fld"><span>Valeur cherchée x</span><input type="number" id="d-x" aria-label="Valeur cherchée"></label><div class="fld"><span>Cas prêts à l’emploi</span><div id="d-pre"></div></div><button class="btn" id="d-new" type="button" style="margin-bottom:9px">Nouveau tableau</button></div>' +
+    '<div class="arr" id="d-arr"></div>' + stepBtns('d') + '<div class="verdict" id="d-msg" aria-live="polite"></div><div id="d-stats"></div>' +
+    '<h3>2. Exponentiation rapide</h3>' +
+    '<p>Pour calculer x<sup>n</sup>, on calcule y = x<sup>n // 2</sup> puis on élève au carré. Combien de multiplications fait-on ?</p>' +
+    '<div class="opts"><label class="fld"><span>n = <b id="e-n-out"></b></span><input type="range" id="e-n" min="1" max="1000" value="100" aria-label="Valeur de n"></label></div><div id="e-out"></div>' +
+    '<h3>3. Tri fusion</h3>' +
+    '<p>On coupe le tableau en deux moitiés, on trie chaque moitié récursivement, puis on <b>fusionne</b> les deux moitiés triées en une seule liste triée. Avancez pas à pas et comptez les comparaisons.</p>' +
+    '<div class="opts"><div class="fld"><span>Tableau</span><div id="m-pre"></div></div></div>' +
+    stepBtns('m') + '<div class="gwrap"><svg class="g" id="m-svg" role="img" aria-label="Arbre du tri fusion"></svg></div><div class="verdict" id="m-msg" aria-live="polite"></div><div id="m-stats"></div>';
+  $('#d-x').addEventListener('input', e => { G3.x = Math.round(+e.target.value || 0); G3.dk = 0; drawDicho(); });
+  $('#d-new').addEventListener('click', () => { const s = new Set(); while (s.size < 15) s.add(randInt(1, 99)); G3.tab = [...s].sort((a, b) => a - b); G3.x = G3.tab[randInt(0, 14)]; G3.dk = 0; drawDicho(); });
+  $('#e-n').addEventListener('input', e => { G3.pn = +e.target.value; drawPow(); });
+  $('#e-n').value = G3.pn;
+  wireSteps('d', () => G3.dk, v => { G3.dk = v; }, () => D3.ev.length, drawDicho);
+  wireSteps('m', () => G3.mk, v => { G3.mk = v; }, () => M3.ev.length, drawMerge);
+  drawDicho(); drawPow(); drawMerge();
+}
+function drawDicho() {
+  const t = G3.tab; D3 = dichoTrace(t, G3.x);
+  $('#d-x').value = G3.x;
+  const pre = $('#d-pre'); pre.innerHTML = '';
+  pre.append(h('div', { class: 'chips', style: 'margin:0' }, [['Présent (milieu)', t[7]], ['Premier', t[0]], ['Dernier', t[14]], ['Absent', (() => { let v = t[5] + 1; while (t.includes(v)) v++; return v; })()]].map(p => h('button', { class: 'chip', type: 'button', onclick: () => { G3.x = p[1]; G3.dk = 0; drawDicho(); } }, p[0] + ' (' + p[1] + ')'))));
+  const k = clamp(G3.dk, 0, D3.ev.length); G3.dk = k;
+  const cur = k > 0 ? D3.ev[k - 1] : null, arr = $('#d-arr'); arr.innerHTML = '';
+  t.forEach((v, i) => {
+    let cls = 'cell';
+    if (cur) { if (i < cur.g || i > cur.d) cls += ' out'; if (cur.m === i) cls += cur.out === 'trouve' ? ' found' : ' mid'; }
+    arr.append(h('div', { class: cls }, h('div', { class: 'v' }, String(v)), h('div', { class: 'i' }, String(i))));
+  });
+  let msg = 'Cherchons ' + G3.x + ' dans le tableau de ' + t.length + ' éléments. Premier appel : dicho(t, ' + G3.x + ', 0, ' + (t.length - 1) + ').', kind = '';
+  if (cur) {
+    const hd = 'dicho(t, ' + G3.x + ', ' + cur.g + ', ' + cur.d + ') : ';
+    if (cur.out === 'vide') { msg = hd + 'g > d, la zone est vide. ' + G3.x + ' est absent du tableau.'; kind = 'no'; }
+    else if (cur.out === 'trouve') { msg = hd + 'm = ' + cur.m + ', t[' + cur.m + '] = ' + t[cur.m] + ' = ' + G3.x + '. Trouvé à l’indice ' + cur.m + '.'; kind = 'yes'; }
+    else msg = hd + 'm = ' + cur.m + ', t[' + cur.m + '] = ' + t[cur.m] + (cur.out === 'droite' ? ' < ' : ' > ') + G3.x + '. On poursuit dans la moitié ' + (cur.out === 'droite' ? 'droite' : 'gauche') + ' : [' + (cur.out === 'droite' ? cur.m + 1 : cur.g) + ' ; ' + (cur.out === 'droite' ? cur.d : cur.m - 1) + '].';
+  }
+  setMsg('#d-msg', msg, kind);
+  const sb = $('#d-stats'); sb.innerHTML = '';
+  sb.append(stats([['Appels pour ce x', String(D3.ev.length)], ['Appels d’une recherche séquentielle (au pire)', String(t.length)], ['Résultat', k === D3.ev.length ? (D3.idx >= 0 ? 'indice ' + D3.idx : '−1 (absent)') : '?']]));
+  updSteps('d', k, D3.ev.length);
+}
+function drawPow() {
+  const n = G3.pn; $('#e-n-out').textContent = n;
+  const box = $('#e-out'); box.innerHTML = '';
+  const hv = halves(n);
+  box.append(stats([['Version naïve x · x^(n−1)', n + ' multiplications'], ['Exponentiation rapide', mulsFast(n) + ' multiplications'], ['Appels récursifs (rapide)', String(callsFast(n))], ['⌊log₂ n⌋', String(Math.floor(Math.log2(n)))]]));
+  box.append(h('div', { class: 'verdict' }, 'Suite des exposants : ' + hv.join(' → ') + '. On divise n par 2 à chaque appel jusqu’à 0, soit ⌊log₂ n⌋ + 2 appels, et au plus 2 multiplications par appel.'));
+}
+function nodeW(n) { return Math.max(34, n.arr.length * 24 + 12); }
+function drawMerge() {
+  M3 = mergeTrace(G3.marr);
+  const pre = $('#m-pre'); pre.innerHTML = '';
+  pre.append(h('div', { class: 'chips', style: 'margin:0' }, [['Exemple', [38, 27, 43, 3, 9, 82, 10, 5]], ['Déjà trié', [3, 5, 9, 10, 27, 38, 43, 82]], ['Inversé', [82, 43, 38, 27, 10, 9, 5, 3]], ['Au hasard', null]].map(p => h('button', { class: 'chip', type: 'button', onclick: () => { G3.marr = p[1] ? p[1].slice() : Array.from({ length: 8 }, () => randInt(10, 99)); G3.mk = 0; drawMerge(); } }, p[0]))));
+  const k = clamp(G3.mk, 0, M3.ev.length); G3.mk = k;
+  const visited = new Set(), done = new Set(); let cmp = 0;
+  for (let i = 0; i < k; i++) { const e = M3.ev[i]; if (e.k === 'visit') visited.add(e.path); else { done.add(e.path); if (e.k === 'merge') cmp += e.cmp; } }
+  const lay = { i: 0, nodes: [] };
+  (function pos(n, d) { n.d = d; if (!n.kids.length) { n.x = 40 + lay.i * 64; lay.i++; } else { n.kids.forEach(c => pos(c, d + 1)); n.x = (n.kids[0].x + n.kids[1].x) / 2; } n.y = 30 + d * 62; lay.nodes.push(n); })(M3.root, 0);
+  const W = 80 + (lay.i - 1) * 64, H = 80 + 3 * 62, svg = $('#m-svg'); svg.innerHTML = '';
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.style.width = Math.max(W, 560) + 'px'; svg.style.minWidth = Math.max(W, 560) + 'px';
+  lay.nodes.forEach(n => n.kids.forEach(c => { el('line', { x1: n.x, y1: n.y + 14, x2: c.x, y2: c.y - 14, 'class': 'tl', opacity: visited.has(c.path) ? 1 : .2 }, svg); }));
+  lay.nodes.forEach(n => {
+    const vis = visited.has(n.path), dn = done.has(n.path), w = nodeW(n);
+    const g = el('g', { 'class': 'mtn ' + (dn ? 'done' : vis ? 'vis' : 'hid') }, svg);
+    el('rect', { x: n.x - w / 2, y: n.y - 14, width: w, height: 28 }, g);
+    const t = el('text', { x: n.x, y: n.y + 4 }, g); t.textContent = (dn ? n.sorted : n.arr).join(' ');
+  });
+  let msg = 'Départ : le tableau est ' + JSON.stringify(G3.marr).replace(/,/g, ', ') + '. Appuyez sur « Suivant » : on coupe en deux.', kind = '';
+  if (k > 0) {
+    const e = M3.ev[k - 1], n = M3.map[e.path], arrs = a => '[' + a.join(', ') + ']';
+    if (e.k === 'visit') msg = n.arr.length > 1 ? 'Appel fusion(' + arrs(n.arr) + ') : on coupe en ' + arrs(n.arr.slice(0, n.arr.length >> 1)) + ' et ' + arrs(n.arr.slice(n.arr.length >> 1)) + '.' : 'Appel fusion(' + arrs(n.arr) + ').';
+    else if (e.k === 'base') msg = 'Cas de base : une liste d’au plus un élément est déjà triée.';
+    else { msg = 'Fusion de ' + arrs(M3.map[e.path + '0'].sorted) + ' et ' + arrs(M3.map[e.path + '1'].sorted) + ' → ' + arrs(n.sorted) + ' (' + e.cmp + ' comparaison' + (e.cmp > 1 ? 's' : '') + ').'; kind = 'yes'; }
+  }
+  setMsg('#m-msg', msg, kind);
+  const sb = $('#m-stats'); sb.innerHTML = '';
+  sb.append(stats([['Comparaisons jusqu’ici', String(cmp)], ['Comparaisons au total', String(M3.cmps)], ['Niveaux de découpage', String(Math.ceil(Math.log2(G3.marr.length)))], ['n log₂ n', String(G3.marr.length * Math.log2(G3.marr.length))]]));
+  updSteps('m', k, M3.ev.length);
+}
+WORKSHOPS.push({ id: 'r3', title: 'Diviser pour régner', hint: 'Suivez une dichotomie, comptez les multiplications de l’exponentiation rapide et déroulez le tri fusion.', mount: mountG3, reset: () => { Object.assign(G3, { tab: [3, 8, 12, 17, 21, 26, 30, 35, 41, 44, 50, 53, 59, 62, 68], x: 41, dk: 0, pn: 100, mk: 0, marr: [38, 27, 43, 3, 9, 82, 10, 5] }); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  r1: {
+    title: 'Pile d’appels', level: 'Niveau 1 · Découvrir', time: '30 min', course: 'principe',
+    goal: 'Suivre l’exécution d’une fonction récursive : cas de base, appel récursif, empilement et dépilement des cadres, et valeur retournée.',
+    steps: [
+      'Avec fact(4), avancez pas à pas jusqu’au premier « retourne ». Quel est le cas de base ? Quelle est la hauteur maximale de la pile ?',
+      'Notez dans quel ordre les produits sont calculés : au moment des appels ou au retour ? Quelle est la première multiplication effectuée ?',
+      'Passez à n = 0 : que se passe-t-il ? Puis à n = 10 : combien d’appels et quelle profondeur ?',
+      'Choisissez pgcd(48, 18). Relevez la suite des arguments. Quelle quantité décroît strictement à chaque appel ?',
+      'Choisissez puiss(2, 10) : combien d’appels ? Comparez avec les 10 multiplications d’une version naïve.',
+      'Dans « Limite de récursion », déplacez n jusqu’à obtenir une RecursionError. À partir de quelle valeur ?'
+    ],
+    defi: { q: 'Combien d’appels (appel initial compris) faut-il pour calculer puiss(2, 10) avec la fonction du cours ? Quelle est la suite des valeurs de n ?',
+      a: 'La suite des valeurs de n est 10 → 5 → 2 → 1 → 0 : <b>5 appels</b> (⌊log₂ 10⌋ + 2). Le résultat est 1024.' },
+    qcm: [
+      { q: 'Que se passe-t-il si une fonction récursive n’a pas de cas de base ?', o: ['Elle retourne 0', 'Elle s’appelle indéfiniment, jusqu’à une RecursionError', 'Python l’exécute comme une boucle', 'Elle retourne None'], a: 1, w: 'Sans cas de base, la pile grandit sans fin : Python lève RecursionError quand sa limite est atteinte.' },
+      { q: 'Combien d’appels (appel initial compris) fait fact(5) ?', o: ['5', '6', '10', '120'], a: 1, w: 'Les appels sont fact(5), fact(4), …, fact(0) : 6 appels.' },
+      { q: 'Dans pgcd(a, b), quelle quantité décroît strictement à chaque appel ?', o: ['a', 'b', 'a + b au carré', 'Aucune'], a: 1, w: 'Le nouvel argument b est a % b, strictement inférieur à b. C’est un variant : il assure la terminaison.' },
+      { q: 'Dans fact(4), quelle est la première multiplication réellement effectuée ?', o: ['4 × fact(3), dès l’appel', '1 × 1, au retour du cas de base', '4 × 3', 'Aucune : fact(4) retourne directement 24'], a: 1, w: 'Les produits se font au retour. Le premier est celui de fact(1) : 1 × fact(0) = 1 × 1.' },
+      { q: 'Que se passe-t-il en Python vers 1000 appels imbriqués ?', o: ['Python passe en mode itératif', 'Une RecursionError est levée', 'La fonction retourne None', 'Le programme est plus lent mais continue'], a: 1, w: 'Python limite la profondeur de pile (1000 par défaut, modifiable avec sys.setrecursionlimit).' }
+    ]
+  },
+  r2: {
+    title: 'Arbres et mémoïsation', level: 'Niveau 2 · Analyser', time: '35 min', course: 'complexite',
+    goal: 'Dessiner l’arbre d’appels d’une fonction, repérer les calculs répétés, comprendre l’effet de la mémoïsation et dénombrer les coups de Hanoï.',
+    steps: [
+      'Pour fibo(5) sans mémoïsation, comptez les appels. Combien de fois fibo(2) est-il calculé ? Repérez les nœuds rouges.',
+      'Passez en « Avec mémoïsation » : combien d’appels reste-t-il ? Vérifiez la formule 2n − 1.',
+      'Dans « Combien d’appels ? », déplacez n jusqu’à 40. À partir de quel n le temps estimé dépasse-t-il 1 seconde ?',
+      'Aux tours de Hanoï, jouez avec 3 disques en entier. Relevez le nombre de coups, puis le nombre pour 4, 5 et 6 disques.',
+      'Cherchez la formule du nombre de coups en fonction de n et justifiez-la par la structure de l’algorithme récursif.'
+    ],
+    defi: { q: 'Combien d’appels fait fibo(30) sans mémoïsation ? Avec mémoïsation ? Combien de temps faudrait-il pour déplacer 64 disques à raison d’un coup par seconde ?',
+      a: 'Sans mémoïsation : <b>2 692 537 appels</b> (≈ 0,3 s). Avec mémoïsation : 2 × 30 − 1 = <b>59 appels</b>. Pour 64 disques il faut 2<sup>64</sup> − 1 ≈ 1,8·10<sup>19</sup> coups, soit environ <b>5,8·10<sup>11</sup> ans</b> à un coup par seconde.' },
+    qcm: [
+      { q: 'Combien d’appels fait fibo(5) avec la définition récursive naïve (appel initial compris) ?', o: ['8', '15', '25', '32'], a: 1, w: 'C(n) = 1 + C(n − 1) + C(n − 2) avec C(0) = C(1) = 1 : 1, 1, 3, 5, 9, 15. Pour n = 5 : 15 appels.' },
+      { q: 'Pourquoi le fibo naïf est-il exponentiel ?', o: ['Parce qu’il utilise une boucle', 'Parce que les mêmes sous-problèmes sont recalculés de nombreuses fois', 'Parce qu’il utilise un dictionnaire', 'Parce que Python est lent'], a: 1, w: 'Les appels fibo(n − 1) et fibo(n − 2) se chevauchent : le nombre d’appels croît comme φⁿ avec φ ≈ 1,618.' },
+      { q: 'En quoi consiste la mémoïsation ?', o: ['À remplacer la récursion par une boucle', 'À stocker les résultats déjà calculés pour ne pas les recalculer', 'À limiter la profondeur de la pile', 'À trier les appels'], a: 1, w: 'Un dictionnaire (ou @cache) associe à chaque argument son résultat.' },
+      { q: 'Avec mémoïsation, le nombre d’appels de fibo(n) est de l’ordre de :', o: ['2ⁿ', 'n²', 'n', 'log n'], a: 2, w: 'Il y a n + 1 valeurs distinctes à calculer, chacune une seule fois : 2n − 1 appels au total.' },
+      { q: 'Combien de coups faut-il au minimum pour déplacer 5 disques aux tours de Hanoï ?', o: ['10', '25', '31', '32'], a: 2, w: 'H(n) = 2H(n − 1) + 1 avec H(0) = 0, soit H(n) = 2ⁿ − 1. Pour n = 5 : 31.' }
+    ]
+  },
+  r3: {
+    title: 'Diviser pour régner', level: 'Niveau 3 · Optimiser', time: '35 min', course: 'diviser',
+    goal: 'Voir comment la division par 2 du problème donne des algorithmes en O(log n) ou O(n log n) : dichotomie, exponentiation rapide, tri fusion.',
+    steps: [
+      'Cherchez 41, puis 3, puis 68 dans le tableau. Combien d’appels à chaque fois ? Pour un élément absent, comment la recherche s’arrête-t-elle ?',
+      'Cliquez sur « Nouveau tableau » et cherchez un élément absent : combien d’appels faut-il au maximum ?',
+      'Dans « Exponentiation rapide », relevez le nombre de multiplications pour n = 10, 100 et 1000 et comparez avec la version naïve.',
+      'Dans le tri fusion, déroulez l’exemple. Relevez les comparaisons de chaque fusion. Quel est leur total ?',
+      'Passez au tableau « Déjà trié » puis « Inversé » : le nombre de comparaisons change-t-il ? Que vaut-il au maximum pour 8 éléments ?'
+    ],
+    defi: { q: 'Combien de comparaisons au plus pour une dichotomie dans un tableau trié de 1 000 000 d’éléments ? Combien de niveaux de découpage pour trier 1 000 éléments avec un tri fusion ?',
+      a: 'À chaque appel la zone est au moins divisée par 2 : <b>⌊log₂ 10<sup>6</sup>⌋ + 1 = 20</b> comparaisons au plus (2<sup>19</sup> = 524 288 &lt; 10<sup>6</sup> &lt; 2<sup>20</sup>). Pour 1000 éléments : ⌈log₂ 1000⌉ = <b>10 niveaux</b> (2<sup>10</sup> = 1024).' },
+    qcm: [
+      { q: 'Quelle est la complexité de la recherche dichotomique dans un tableau trié de n éléments ?', o: ['O(n)', 'O(log n)', 'O(n log n)', 'O(1)'], a: 1, w: 'La zone de recherche est divisée par 2 à chaque appel : au plus ⌊log₂ n⌋ + 1 comparaisons.' },
+      { q: 'Quel prérequis la recherche dichotomique exige-t-elle ?', o: ['Que le tableau ait un nombre pair d’éléments', 'Que le tableau soit trié', 'Que les éléments soient distincts', 'Aucun'], a: 1, w: 'On déduit la moitié où chercher en comparant x à l’élément du milieu : cela suppose le tableau trié.' },
+      { q: 'Combien de multiplications fait l’exponentiation rapide pour calculer xⁿ ?', o: ['n − 1', 'O(log n)', 'O(n²)', 'Toujours 2'], a: 1, w: 'On divise n par 2 à chaque appel : environ log₂ n appels, au plus 2 multiplications par appel.' },
+      { q: 'Quelle est la complexité du tri fusion d’un tableau de n éléments ?', o: ['O(n)', 'O(n²)', 'O(n log n)', 'O(log n)'], a: 2, w: 'Il y a environ log₂ n niveaux, et chaque niveau fusionne n éléments en temps linéaire.' },
+      { q: 'Que fait la fonction fusion(a, b) du tri fusion ?', o: ['Elle trie a puis b', 'Elle fusionne deux listes triées en une liste triée, en temps linéaire', 'Elle coupe une liste en deux', 'Elle concatène a et b sans les trier'], a: 1, w: 'On parcourt a et b en parallèle en prenant à chaque fois le plus petit des deux éléments courants.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'principe', t: 'Principe de la récursivité', h: `
+<p>Une fonction est <b>récursive</b> si elle s’appelle elle-même. Pour que cela fonctionne, il faut :</p>
+<ul><li>un ou plusieurs <b>cas de base</b>, résolus directement, sans appel récursif ;</li><li>un ou plusieurs <b>appels récursifs</b> sur des arguments « plus petits », qui rapprochent d’un cas de base.</li></ul>
+<pre class="code">def fact(n):
+    if n == 0:              # cas de base
+        return 1
+    return n * fact(n - 1)  # appel récursif</pre>
+<p>Cette fonction traduit directement la définition mathématique n! = n × (n − 1)! avec 0! = 1.</p>
+<h3>La pile d’appels</h3>
+<p>Chaque appel crée un <b>cadre</b> (arguments, variables locales, adresse de retour) empilé sur la pile d’appels. Un cadre est dépilé quand la fonction retourne. Pour <code>fact(3)</code> :</p>
+<pre class="code">fact(3)
+  fact(2)
+    fact(1)
+      fact(0)  retourne 1          # cas de base
+    fact(1)  retourne 1 * 1 = 1
+  fact(2)  retourne 2 * 1 = 2
+fact(3)  retourne 3 * 2 = 6</pre>
+<p>Les produits sont calculés au <b>retour</b> des appels, du plus profond au plus extérieur.</p>
+<h3>Limite de récursion</h3>
+<p>La pile est de taille limitée : Python lève une <code>RecursionError</code> au-delà d’environ 1000 appels imbriqués.</p>
+<pre class="code">import sys
+sys.getrecursionlimit()      # 1000 par défaut
+sys.setrecursionlimit(5000)  # à utiliser avec prudence</pre>
+<div class="retain"><b>À retenir.</b> Une fonction récursive a un cas de base et des appels sur des arguments plus petits. Les appels sont empilés puis les résultats remontent au retour.</div>` });
+
+COURSE.push({ id: 'terminaison', t: 'Terminaison et correction', h: `
+<h3>Terminaison : le variant</h3>
+<p>Pour prouver qu’une fonction récursive termine, on exhibe un <b>variant</b> : une quantité à valeurs dans ℕ qui <b>diminue strictement</b> à chaque appel récursif. Comme il n’existe pas de suite infinie strictement décroissante d’entiers naturels, les appels s’arrêtent.</p>
+<ul><li><code>fact(n)</code> : le variant est n (de n à n − 1).</li><li><code>pgcd(a, b)</code> : le variant est b, car le nouvel argument a % b est strictement inférieur à b.</li><li><code>dicho(t, x, g, d)</code> : le variant est d − g + 1, la longueur de la zone de recherche, qui au moins diminue de 1.</li></ul>
+<h3>Correction : récurrence</h3>
+<p>On prouve la correction par récurrence sur le variant (récurrence forte) : le cas de base est correct, et si les appels récursifs sont corrects, le résultat combiné l’est aussi.</p>
+<div class="formula">pgcd(a, b) = pgcd(b, a mod b) car les diviseurs communs de a et b sont ceux de b et a mod b</div>
+<h3>Complexité</h3>
+<p>On écrit une <b>relation de récurrence</b> sur le coût C(n) puis on la résout :</p>
+<table class="ctable"><thead><tr><th>Fonction</th><th>Relation</th><th>Coût</th></tr></thead><tbody>
+<tr><td>fact(n)</td><td>C(n) = C(n − 1) + O(1)</td><td>O(n)</td></tr>
+<tr><td>fibo(n) naïf</td><td>C(n) = C(n − 1) + C(n − 2) + 1</td><td>exponentiel, Θ(φⁿ), φ ≈ 1,618</td></tr>
+<tr><td>Hanoï (nombre de coups)</td><td>H(n) = 2·H(n − 1) + 1</td><td>2ⁿ − 1</td></tr>
+<tr><td>dichotomie</td><td>C(n) = C(n/2) + O(1)</td><td>O(log n)</td></tr>
+<tr><td>tri fusion</td><td>C(n) = 2·C(n/2) + O(n)</td><td>O(n log n)</td></tr></tbody></table>
+<div class="retain"><b>À retenir.</b> Variant strictement décroissant dans ℕ = terminaison. Correction = récurrence. Le coût se calcule avec une relation de récurrence, dont la forme (un ou deux appels, taille n − 1 ou n/2) donne l’ordre de grandeur.</div>` });
+
+COURSE.push({ id: 'complexite', t: 'Arbres d’appels et mémoïsation', h: `
+<p>Quand une fonction fait plusieurs appels récursifs, ses appels forment un <b>arbre</b>. Pour <code>fibo(4)</code> :</p>
+<pre class="code">fibo(4)
+├─ fibo(3)
+│  ├─ fibo(2)
+│  │  ├─ fibo(1)
+│  │  └─ fibo(0)
+│  └─ fibo(1)
+└─ fibo(2)            # recalculé !
+   ├─ fibo(1)
+   └─ fibo(0)</pre>
+<p>Les mêmes sous-problèmes sont recalculés : le nombre d’appels C(n) vérifie C(n) = 1 + C(n − 1) + C(n − 2), il croît exponentiellement (15 appels pour n = 5, plus de 2,6 millions pour n = 30).</p>
+<h3>Mémoïsation</h3>
+<p>On <b>mémorise</b> chaque résultat dans un dictionnaire, afin que chaque sous-problème ne soit résolu qu’une fois. Le nombre d’appels devient 2n − 1.</p>
+<pre class="code">def fibo(n, memo=None):
+    if memo is None:
+        memo = {}
+    if n < 2:
+        return n
+    if n not in memo:
+        memo[n] = fibo(n - 1, memo) + fibo(n - 2, memo)
+    return memo[n]
+
+from functools import cache   # même idée, automatique
+
+@cache
+def fibo2(n):
+    return n if n &lt; 2 else fibo2(n - 1) + fibo2(n - 2)</pre>
+<h3>Version itérative (programmation dynamique)</h3>
+<pre class="code">def fibo_iter(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a</pre>
+<p>Elle calcule les mêmes valeurs « du bas vers le haut », sans pile d’appels : coût O(n) en temps et O(1) en mémoire.</p>
+<h3>Tours de Hanoï</h3>
+<pre class="code">def hanoi(n, a, b, c):   # n disques de a vers c, avec b comme intermédiaire
+    if n &gt; 0:
+        hanoi(n - 1, a, c, b)
+        print(a, '-&gt;', c)
+        hanoi(n - 1, b, a, c)</pre>
+<p>Le nombre de coups vérifie H(n) = 2·H(n − 1) + 1, d’où H(n) = 2<sup>n</sup> − 1. Aucune mémoïsation ne peut y changer quoi que ce soit : la sortie elle-même est de taille exponentielle.</p>
+<div class="retain"><b>À retenir.</b> Si les appels se recouvrent, l’arbre d’appels est exponentiel. La mémoïsation ou la programmation dynamique ramène le coût au nombre de sous-problèmes distincts.</div>` });
+
+COURSE.push({ id: 'diviser', t: 'Diviser pour régner', h: `
+<p>On <b>divise</b> un problème de taille n en sous-problèmes de taille environ n/2, on les <b>résout</b> récursivement, puis on <b>combine</b> les résultats. La profondeur de récursion est de l’ordre de log₂ n.</p>
+<h3>Recherche dichotomique</h3>
+<pre class="code">def dicho(t, x, g, d):
+    if g &gt; d:
+        return -1
+    m = (g + d) // 2
+    if t[m] == x:
+        return m
+    if t[m] &lt; x:
+        return dicho(t, x, m + 1, d)
+    return dicho(t, x, g, m - 1)</pre>
+<p>Le tableau doit être <b>trié</b>. Au plus ⌊log₂ n⌋ + 1 comparaisons : coût O(log n).</p>
+<h3>Exponentiation rapide</h3>
+<pre class="code">def puiss(x, n):
+    if n == 0:
+        return 1
+    y = puiss(x, n // 2)
+    if n % 2 == 0:
+        return y * y
+    return x * y * y</pre>
+<p>On fait ⌊log₂ n⌋ + 2 appels et au plus 2 multiplications par appel : O(log n) multiplications au lieu de n − 1.</p>
+<h3>Tri fusion</h3>
+<pre class="code">def fusion(t):
+    if len(t) &lt;= 1:
+        return t
+    m = len(t) // 2
+    return merge(fusion(t[:m]), fusion(t[m:]))
+
+def merge(a, b):
+    i = j = 0
+    res = []
+    while i &lt; len(a) and j &lt; len(b):
+        if a[i] &lt;= b[j]:
+            res.append(a[i]); i += 1
+        else:
+            res.append(b[j]); j += 1
+    return res + a[i:] + b[j:]</pre>
+<p><code>merge</code> fusionne deux listes triées en temps linéaire. Il y a environ log₂ n niveaux et chaque niveau traite n éléments : coût <b>O(n log n)</b>.</p>
+<div class="retain"><b>À retenir.</b> Diviser le problème par 2 à chaque appel donne une profondeur log₂ n : dichotomie et exponentiation rapide en O(log n), tri fusion en O(n log n).</div>` });
+
+COURSE.push({ id: 'iteratif', t: 'Récursif ou itératif ?', h: `
+<p>Tout algorithme récursif peut s’écrire avec une boucle (au besoin avec une pile explicite), et inversement. Le choix est une question de clarté et de coût.</p>
+<table class="ctable"><thead><tr><th></th><th>Récursif</th><th>Itératif</th></tr></thead><tbody>
+<tr><td>Lisibilité</td><td>Proche de la définition mathématique, naturel pour les arbres et le diviser pour régner</td><td>Plus long à écrire pour certains problèmes</td></tr>
+<tr><td>Mémoire</td><td>Une pile d’appels de hauteur proportionnelle à la profondeur</td><td>Souvent O(1)</td></tr>
+<tr><td>Limite</td><td>RecursionError vers 1000 appels en Python</td><td>Aucune</td></tr></tbody></table>
+<h3>Récursion terminale</h3>
+<p>Un appel est <b>terminal</b> s’il est la dernière opération de la fonction. Certains langages le transforment en boucle, mais <b>pas Python</b>. Une fonction terminale se réécrit facilement avec une boucle :</p>
+<pre class="code">def pgcd(a, b):             # récursif terminal
+    if b == 0:
+        return a
+    return pgcd(b, a % b)
+
+def pgcd_iter(a, b):        # itératif équivalent
+    while b != 0:
+        a, b = b, a % b
+    return a</pre>
+<p>Ici le variant de la fonction récursive devient l’invariant de terminaison de la boucle : b décroît strictement.</p>
+<div class="retain"><b>À retenir.</b> Récursif = clair mais limité par la pile en Python. Un appel terminal se transforme en boucle ; on garde la récursivité pour les structures arborescentes et le diviser pour régner.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Récursivité</dt><dd>Fait pour une fonction de s’appeler elle-même.</dd>
+<dt>Cas de base</dt><dd>Situation traitée sans appel récursif ; elle arrête la récursion.</dd>
+<dt>Pile d’appels</dt><dd>Structure où Python empile un cadre par appel de fonction en cours.</dd>
+<dt>Cadre</dt><dd>Zone mémoire d’un appel : arguments, variables locales, adresse de retour.</dd>
+<dt>Variant</dt><dd>Quantité entière qui décroît strictement à chaque appel : elle prouve la terminaison.</dd>
+<dt>Arbre d’appels</dt><dd>Arbre dont les nœuds sont les appels et les fils les appels qu’ils déclenchent.</dd>
+<dt>Mémoïsation</dt><dd>Mémorisation des résultats déjà calculés pour éviter de les recalculer.</dd>
+<dt>Programmation dynamique</dt><dd>Calcul des sous-problèmes du plus petit au plus grand, en les stockant.</dd>
+<dt>Diviser pour régner</dt><dd>Diviser en sous-problèmes plus petits, résoudre récursivement, combiner.</dd>
+<dt>Récursion terminale</dt><dd>Appel récursif placé en dernière opération ; se transforme en boucle.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'r1' };
+const AS = { key: 'r1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'principe' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : la récursivité'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Trois ateliers sur la récursivité (ITC, CPGE 1re année) : pile d’appels, arbres d’appels et mémoïsation (avec les tours de Hanoï), diviser pour régner (dichotomie, exponentiation rapide, tri fusion).</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille toutes les notions.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
