@@ -1,1050 +1,881 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Entraînement aux tris en Python – CPGE</title>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Algorithmes de tri</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  :root {
-    /* Thème clair (GeoGebra-like) */
-    --bg: #ffffff;
-    --card: #f8fafc;
-    --accent: #2563eb;
-    --accent2: #7c3aed;
-    --success: #16a34a;
-    --error: #dc2626;
-    --text: #1e293b;
-    --muted: #64748b;
-    --border: #e2e8f0;
-    --input-bg: #ffffff;
-    --cell-bg: #e2e8f0;
-    --code-bg: #f1f5f9;
-  }
-
-  [data-theme="dark"] {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --accent: #38bdf8;
-    --accent2: #a78bfa;
-    --success: #4ade80;
-    --error: #f87171;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --border: #334155;
-    --input-bg: #0f172a;
-    --cell-bg: #334155;
-    --code-bg: #0f172a;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-    min-height: 100vh;
-    padding: 1rem;
-    transition: background 0.25s, color 0.25s;
-  }
-  h1 {
-    text-align: center;
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-    color: var(--accent);
-  }
-  .subtitle { text-align: center; color: var(--muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
-  .container { max-width: 1200px; margin: 0 auto; display: grid; gap: 1.25rem; }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem;
-    transition: background 0.25s, border-color 0.25s;
-  }
-  .card h2 { font-size: 1.15rem; margin-bottom: 0.75rem; color: var(--accent); }
-  .controls {
-    display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;
-  }
-  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
-  select, input[type="text"], textarea {
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.95rem;
-    width: 100%;
-  }
-  select { cursor: pointer; min-width: 180px; }
-  textarea {
-    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-    font-size: 0.9rem;
-    min-height: 280px;
-    resize: vertical;
-    line-height: 1.4;
-  }
-  .btn {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.95rem;
-    cursor: pointer;
-    font-weight: 600;
-    transition: transform 0.15s, opacity 0.15s;
-  }
-  [data-theme="dark"] .btn {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  }
-  .btn:hover { transform: translateY(-1px); opacity: 0.95; }
-  .btn:active { transform: translateY(0); }
-  .btn-secondary { background: #64748b; }
-  [data-theme="dark"] .btn-secondary { background: #475569; }
-  .btn-success { background: linear-gradient(135deg, #16a34a, #15803d); }
-  [data-theme="dark"] .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); }
-  .btn-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
-  #description {
-    background: var(--input-bg);
-    border-left: 4px solid var(--accent);
-    padding: 1rem;
-    border-radius: 0 8px 8px 0;
-    font-size: 0.95rem;
-    white-space: pre-wrap;
-  }
-  .props-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-  }
-  .prop-item label { margin-bottom: 0.35rem; }
-  .feedback {
-    margin-top: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    display: none;
-  }
-  .feedback.ok { background: rgba(22, 163, 74, 0.12); border: 1px solid var(--success); color: var(--success); display: block; }
-  .feedback.ko { background: rgba(220, 38, 38, 0.12); border: 1px solid var(--error); color: var(--error); display: block; }
-  .feedback.info { background: rgba(37, 99, 235, 0.1); border: 1px solid var(--accent); color: var(--accent); display: block; }
-  #viz-container {
-    min-height: 160px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  #array-display {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: center;
-    padding: 0.5rem;
-  }
-  .cell {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--cell-bg);
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 1.05rem;
-    transition: all 0.25s ease;
-    border: 2px solid transparent;
-  }
-  .cell.compare { background: #f59e0b; color: #000; border-color: #fbbf24; }
-  .cell.swap { background: #ef4444; color: #fff; border-color: #f87171; transform: scale(1.08); }
-  .cell.sorted { background: #22c55e; color: #000; border-color: #4ade80; }
-  .cell.pivot { background: #a78bfa; color: #000; border-color: #c4b5fd; }
-  .cell.insert { background: #38bdf8; color: #000; border-color: #7dd3fc; }
-  .cell.count { background: #f472b6; color: #000; }
-  #step-info {
-    font-size: 0.9rem;
-    color: var(--muted);
-    text-align: center;
-    min-height: 1.4em;
-  }
-  #corrected-code {
-    display: none;
-    margin-top: 1rem;
-  }
-  #corrected-code pre {
-    background: var(--code-bg);
-    padding: 1rem;
-    border-radius: 8px;
-    overflow-x: auto;
-    font-family: 'Fira Code', 'Consolas', monospace;
-    font-size: 0.88rem;
-    line-height: 1.45;
-    border: 1px solid var(--border);
-  }
-  .level-badge {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-left: 0.5rem;
-  }
-  .level-easy { background: #dcfce7; color: #166534; }
-  .level-medium { background: #fef9c3; color: #854d0e; }
-  .level-hard { background: #fee2e2; color: #991b1b; }
-  [data-theme="dark"] .level-easy { background: #166534; color: #bbf7d0; }
-  [data-theme="dark"] .level-medium { background: #854d0e; color: #fef08a; }
-  [data-theme="dark"] .level-hard { background: #7f1d1d; color: #fecaca; }
-  .hint { font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; }
-
-  /* Bouton thème */
-  .theme-toggle {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 100;
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 999px;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: all 0.2s;
-  }
-  .theme-toggle:hover { transform: translateY(-1px); }
-  [data-theme="dark"] .theme-toggle {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-
-  @media (max-width: 700px) {
-    .cell { width: 40px; height: 40px; font-size: 0.95rem; }
-    h1 { font-size: 1.4rem; }
-    .theme-toggle { top: 0.5rem; right: 0.5rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; }
-  }
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* barres de tri */
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px;background:#fff;margin:8px 0}
+.rowname{font-size:12px;color:var(--muted);margin:4px 2px 0}
+.bars{display:flex;align-items:flex-end;gap:4px;height:176px;padding-top:4px}
+.bars.short{height:120px}
+.bcol{flex:1 1 0;max-width:54px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bcol .v{font:600 12px var(--font-mono);margin-bottom:2px}
+.bcol .b{width:100%;border-radius:5px 5px 0 0;background:#9fb4ca;border:1px solid #6f8aa6;min-height:3px}
+.bcol .i{font:11px var(--font-mono);color:var(--muted);margin-top:3px}
+.bcol.sorted .b{background:rgba(30,122,46,.75);border-color:var(--ok)}
+.bcol.scan .b{background:var(--accent);border-color:var(--accent-ink)}
+.bcol.key .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.swap .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.min .b{background:var(--violet);border-color:#52308f}
+.bcol.pivot .b{background:var(--bad);border-color:#8e1d15}
+.bcol.left .b{background:#b9d3ee;border-color:var(--accent)}
+.bcol.right .b{background:#f3d6a6;border-color:var(--warn)}
+.bcol.dim{opacity:.32}
+.bcol.empty .b{background:transparent;border:1px dashed var(--line)}
+.leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid #6f8aa6;background:#9fb4ca}
+.leg i.s{background:rgba(30,122,46,.75);border-color:var(--ok)}.leg i.c{background:var(--accent);border-color:var(--accent-ink)}.leg i.k{background:#e8a33a;border-color:var(--warn)}.leg i.m{background:var(--violet);border-color:#52308f}.leg i.p{background:var(--bad);border-color:#8e1d15}
+/* cellules (comptage) */
+.cells{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px}
+.cell{width:40px;text-align:center}
+.cell .v{border:1px solid var(--line);border-radius:6px;padding:6px 0;font:600 14px var(--font-mono);background:#fff;min-height:33px}
+.cell .i{font:11px var(--font-mono);color:var(--muted);margin-top:2px}
+.cell.scan .v{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cell.key .v{background:#e8a33a;border-color:var(--warn)}
+.cell.sorted .v{background:rgba(30,122,46,.2);border-color:var(--ok)}
+.cell.zero .v{color:#9aa3ad}
+/* comparaison */
+.cmpr{display:grid;grid-template-columns:120px 1fr 80px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.cmpr i{display:block;height:12px;background:var(--accent);border-radius:3px;min-width:2px}
+.cmpr em{font-style:normal;font-family:var(--font-mono);text-align:right}
+.seqr{display:flex;gap:4px;flex-wrap:wrap}
+.card{border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:600 12.5px var(--font-mono);background:#fff}
+.card.t1{border-color:#2e6da4;color:#1b4a76}.card.t2{border-color:#9a5b00;color:#7a4700}.card.t3{border-color:#7b4fc2;color:#52308f}.card.t4{border-color:#1e7a2e;color:#1e7a2e}.card.t5{border-color:#c0281f;color:#8e1d15}.card.t6{border-color:#33475b;color:#33475b}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:30px}.cell .v{font-size:12px}
+  .cmpr{grid-template-columns:90px 1fr 70px}
+  .bcol .v{font-size:11px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}.bcol .b{transition:height .15s}}
 </style>
-</head>
-<body>
-  <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
-    <span id="theme-icon">🌙</span>
-    <span id="theme-label">Sombre</span>
-  </button>
-
-  <h1>Entraînement aux tris en Python</h1>
-  <p class="subtitle">CPGE – Visualisation, complexité, stabilité, en-place, comparatif</p>
-
-  <div class="container">
-    <!-- Choix -->
-    <div class="card">
-      <div class="controls">
-        <div>
-          <label for="algo-select">Algorithme</label>
-          <select id="algo-select">
-            <option value="insertion">Tri par insertion</option>
-            <option value="selection">Tri par sélection</option>
-            <option value="fusion">Tri fusion</option>
-            <option value="rapide">Tri rapide</option>
-            <option value="comptage">Tri par comptage</option>
-          </select>
-        </div>
-        <div>
-          <label for="level-select">Niveau d'aide</label>
-          <select id="level-select">
-            <option value="easy">Beaucoup aidé (code prérempli)</option>
-            <option value="medium">Moyennement aidé (squelette)</option>
-            <option value="hard">Pas aidé (vide)</option>
-          </select>
-        </div>
-        <div>
-          <label for="array-input">Liste d'exemple (entiers séparés par des espaces)</label>
-          <input type="text" id="array-input" value="5 2 8 1 9 3 7 4" style="min-width:220px">
-        </div>
-      </div>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="14" width="4" height="9" fill="var(--accent)"/><rect x="9" y="9" width="4" height="14" fill="var(--ok)"/><rect x="15" y="5" width="4" height="18" fill="var(--warn)"/><rect x="21" y="11" width="2.5" height="12" fill="var(--bad)"/></svg><span>Atelier Algorithmes de tri <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
     </div>
-
-    <!-- Description -->
-    <div class="card">
-      <h2>Présentation de l'algorithme <span id="level-badge" class="level-badge level-easy">Beaucoup aidé</span></h2>
-      <div id="description"></div>
-    </div>
-
-    <!-- Propriétés -->
-    <div class="card">
-      <h2>Propriétés de l'algorithme</h2>
-      <div class="props-grid">
-        <div class="prop-item">
-          <label for="complexity">Complexité temporelle (pire cas)</label>
-          <select id="complexity">
-            <option value="">— Choisir —</option>
-            <option value="O(n)">O(n)</option>
-            <option value="O(n+k)">O(n + k)</option>
-            <option value="O(n log n)">O(n log n)</option>
-            <option value="O(n²)">O(n²)</option>
-            <option value="O(n log n) moy / O(n²) pire">O(n log n) moy / O(n²) pire</option>
-          </select>
-        </div>
-        <div class="prop-item">
-          <label for="inplace">En place ?</label>
-          <select id="inplace">
-            <option value="">— Choisir —</option>
-            <option value="oui">Oui</option>
-            <option value="non">Non</option>
-          </select>
-        </div>
-        <div class="prop-item">
-          <label for="stable">Stable ?</label>
-          <select id="stable">
-            <option value="">— Choisir —</option>
-            <option value="oui">Oui</option>
-            <option value="non">Non</option>
-          </select>
-        </div>
-        <div class="prop-item">
-          <label for="comparative">Comparatif ?</label>
-          <select id="comparative">
-            <option value="">— Choisir —</option>
-            <option value="oui">Oui</option>
-            <option value="non">Non</option>
-          </select>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-success" onclick="checkProperties()">Vérifier les propriétés</button>
-        <button class="btn btn-secondary" onclick="showCorrected()">Afficher le corrigé (code + propriétés)</button>
-      </div>
-      <div id="props-feedback" class="feedback"></div>
-    </div>
-
-    <!-- Code élève -->
-    <div class="card">
-      <h2>Ton code Python</h2>
-      <p class="hint">Écris (ou complète) la fonction. Pour la visualisation, on utilise une version standard de l'algorithme ; compare ton code au corrigé.</p>
-      <textarea id="student-code" spellcheck="false"></textarea>
-      <div class="btn-row">
-        <button class="btn" onclick="startVisualization()">Visualiser les étapes</button>
-        <button class="btn btn-secondary" onclick="resetViz()">Réinitialiser</button>
-      </div>
-    </div>
-
-    <!-- Visualisation -->
-    <div class="card">
-      <h2>Illustration des étapes</h2>
-      <div id="viz-container">
-        <div id="array-display"></div>
-        <div id="step-info">Choisis un algorithme et clique sur « Visualiser les étapes ».</div>
-        <div class="btn-row">
-          <button class="btn btn-secondary" onclick="prevStep()" id="btn-prev" disabled>◀ Précédent</button>
-          <button class="btn" onclick="togglePlay()" id="btn-play" disabled>▶ Lecture</button>
-          <button class="btn btn-secondary" onclick="nextStep()" id="btn-next" disabled>Suivant ▶</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Corrigé code -->
-    <div class="card" id="corrected-code">
-      <h2>Code attendu (style CPGE)</h2>
-      <pre id="corrected-pre"></pre>
-      <div id="corrected-props" style="margin-top:0.75rem;font-size:0.95rem;"></div>
-    </div>
-  </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
 
 <script>
-// ========== Thème clair / sombre ==========
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  if (isDark) {
-    html.removeAttribute('data-theme');
-    document.getElementById('theme-icon').textContent = '🌙';
-    document.getElementById('theme-label').textContent = 'Sombre';
-    localStorage.setItem('theme', 'light');
-  } else {
-    html.setAttribute('data-theme', 'dark');
-    document.getElementById('theme-icon').textContent = '☀️';
-    document.getElementById('theme-label').textContent = 'Clair';
-    localStorage.setItem('theme', 'dark');
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
   }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
 }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-tris-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
 
-// Restaurer le thème sauvegardé
-(function() {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.getElementById('theme-icon').textContent = '☀️';
-    document.getElementById('theme-label').textContent = 'Clair';
+/*LOGIC-START*/
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const ALGO_NAME = { selection: 'Tri par sélection', insertion: 'Tri par insertion', fusion: 'Tri fusion', rapide: 'Tri rapide', comptage: 'Tri par comptage' };
+function genArray(kind, n, small) {
+  let a;
+  if (small) a = Array.from({ length: n }, () => randInt(0, 9));
+  else { const s = new Set(); const hi = Math.max(99, 3 * n); while (s.size < n) s.add(randInt(5, hi)); a = [...s]; for (let i = a.length - 1; i > 0; i--) { const j = randInt(0, i); [a[i], a[j]] = [a[j], a[i]]; } }
+  if (kind === 'trie') a.sort((x, y) => x - y);
+  else if (kind === 'inverse') a.sort((x, y) => y - x);
+  else if (kind === 'presque') { a.sort((x, y) => x - y); const sw = n < 2 ? 0 : Math.max(1, Math.floor(n / 8)); for (let s = 0; s < sw; s++) { const i = randInt(0, n - 2); [a[i], a[i + 1]] = [a[i + 1], a[i]]; } }
+  return a;
+}
+/* mesures : comparaisons de valeurs et mouvements (échanges, décalages, recopies) */
+function measure(algo, t) {
+  const a = t.slice(), n = a.length; let cmp = 0, mov = 0, out = a;
+  if (algo === 'selection') {
+    for (let i = 0; i < n - 1; i++) { let m = i; for (let j = i + 1; j < n; j++) { cmp++; if (a[j] < a[m]) m = j; } if (m !== i) { [a[i], a[m]] = [a[m], a[i]]; mov++; } }
+  } else if (algo === 'insertion') {
+    for (let i = 1; i < n; i++) { const x = a[i]; let j = i; while (j > 0) { cmp++; if (a[j - 1] > x) { a[j] = a[j - 1]; j--; mov++; } else break; } a[j] = x; }
+  } else if (algo === 'fusion') {
+    const ms = x => {
+      if (x.length <= 1) return x;
+      const m = x.length >> 1, l = ms(x.slice(0, m)), r = ms(x.slice(m)), res = []; let i = 0, j = 0;
+      while (i < l.length && j < r.length) { cmp++; if (l[i] <= r[j]) res.push(l[i++]); else res.push(r[j++]); }
+      mov += x.length; return res.concat(l.slice(i), r.slice(j));
+    };
+    out = ms(a);
+  } else if (algo === 'rapide') {
+    const qs = (lo, hi) => {
+      if (lo >= hi) return;
+      const p = a[hi]; let i = lo;
+      for (let j = lo; j < hi; j++) { cmp++; if (a[j] < p) { if (i !== j) { [a[i], a[j]] = [a[j], a[i]]; mov++; } i++; } }
+      if (i !== hi) { [a[i], a[hi]] = [a[hi], a[i]]; mov++; }
+      qs(lo, i - 1); qs(i + 1, hi);
+    };
+    qs(0, n - 1);
+  } else {
+    const vmax = Math.max(0, ...a), c = new Array(vmax + 1).fill(0); for (const x of a) { c[x]++; mov++; }
+    out = []; for (let v = 0; v <= vmax; v++) for (let k = 0; k < c[v]; k++) { out.push(v); mov++; }
   }
-})();
+  return { cmp, mov, out };
+}
+/* images successives d'un tri, pour l'animation */
+function genFrames(algo, t) {
+  const a = t.slice(), n = a.length, F = []; let cmp = 0, mov = 0;
+  const snap = (arr, roles, msg, o) => F.push(Object.assign({ a: arr.slice(), roles: roles || {}, msg, cmp, mov, aux: null, range: null }, o || {}));
+  const upto = (m, role) => { const r = {}; for (let i = 0; i < m; i++) r[i] = role; return r; };
+  if (algo === 'selection') {
+    snap(a, {}, 'Tableau de départ. La partie triée (en vert) est vide.');
+    for (let i = 0; i < n - 1; i++) {
+      let m = i;
+      snap(a, Object.assign(upto(i, 'sorted'), { [i]: 'min' }), 'i = ' + i + ' : on cherche le plus petit élément de t[' + i + ':]. Minimum provisoire : t[' + m + '] = ' + a[m] + '.');
+      for (let j = i + 1; j < n; j++) {
+        cmp++; const sm = a[j] < a[m];
+        snap(a, Object.assign(upto(i, 'sorted'), { [m]: 'min', [j]: 'scan' }), 't[' + j + '] = ' + a[j] + (sm ? ' < ' : ' ≥ ') + 't[' + m + '] = ' + a[m] + (sm ? ' : nouveau minimum.' : ' : le minimum ne change pas.'));
+        if (sm) m = j;
+      }
+      if (m !== i) { [a[i], a[m]] = [a[m], a[i]]; mov++; snap(a, Object.assign(upto(i, 'sorted'), { [i]: 'swap', [m]: 'swap' }), 'On échange t[' + i + '] et t[' + m + '] : ' + a[i] + ' est à sa place définitive.'); }
+      else snap(a, upto(i + 1, 'sorted'), 'Le minimum est déjà en position ' + i + ' : pas d’échange.');
+    }
+    snap(a, upto(n, 'sorted'), 'Tableau trié : après n − 1 passes, le dernier élément est forcément à sa place.');
+  } else if (algo === 'insertion') {
+    snap(a, { 0: 'sorted' }, 'Départ : t[0:1] est trivialement trié.');
+    for (let i = 1; i < n; i++) {
+      const x = a[i]; let j = i; const view = () => { const v = a.slice(); v[j] = x; return v; };
+      snap(a, Object.assign(upto(i, 'sorted'), { [i]: 'key' }), 'On prend x = t[' + i + '] = ' + x + ' à insérer dans t[0:' + i + '], qui est trié.');
+      while (j > 0) {
+        cmp++; const big = a[j - 1] > x;
+        snap(view(), Object.assign(upto(i + 1, 'sorted'), { [j - 1]: 'scan', [j]: 'key' }), 'On compare t[' + (j - 1) + '] = ' + a[j - 1] + ' avec x = ' + x + ' : ' + (big ? a[j - 1] + ' > ' + x + ', on le décale d’un cran vers la droite.' : a[j - 1] + ' ≤ ' + x + ', la place de x est trouvée.'));
+        if (!big) break;
+        a[j] = a[j - 1]; j--; mov++;
+      }
+      a[j] = x;
+      snap(a, upto(i + 1, 'sorted'), 'x = ' + x + ' est inséré en position ' + j + '. t[0:' + (i + 1) + '] est trié.');
+    }
+  } else if (algo === 'fusion') {
+    const rr = (lo, hi, mid) => { const r = {}; for (let i = lo; i < hi; i++) r[i] = i < mid ? 'left' : 'right'; return r; };
+    const merge = (lo, mid, hi) => {
+      let i = lo, j = mid; const aux = new Array(n).fill(null); let w = lo;
+      snap(a, rr(lo, hi, mid), 'Fusion de t[' + lo + ':' + mid + '] = [' + a.slice(lo, mid).join(', ') + '] et t[' + mid + ':' + hi + '] = [' + a.slice(mid, hi).join(', ') + '] dans un tableau auxiliaire.', { aux: aux.slice(), range: [lo, hi] });
+      while (i < mid && j < hi) {
+        cmp++; const left = a[i] <= a[j]; const roles = Object.assign(rr(lo, hi, mid), { [i]: 'scan', [j]: 'scan' });
+        aux[w++] = left ? a[i] : a[j]; mov++;
+        snap(a, roles, 't[' + i + '] = ' + a[i] + (left ? ' ≤ ' : ' > ') + 't[' + j + '] = ' + a[j] + ' : on recopie ' + (left ? a[i] : a[j]) + ' dans l’auxiliaire.' + (left && a[i] === a[j] ? ' (à égalité, on prend la gauche : le tri est stable)' : ''), { aux: aux.slice(), range: [lo, hi] });
+        if (left) i++; else j++;
+      }
+      const rest = (mid - i) + (hi - j);
+      if (rest > 0) { while (i < mid) { aux[w++] = a[i++]; mov++; } while (j < hi) { aux[w++] = a[j++]; mov++; } snap(a, rr(lo, hi, mid), 'Une moitié est épuisée : on recopie le reste de l’autre (' + rest + ' élément' + (rest > 1 ? 's' : '') + ').', { aux: aux.slice(), range: [lo, hi] }); }
+      for (let k = lo; k < hi; k++) a[k] = aux[k];
+      snap(a, upto(0, ''), 'On recopie le résultat dans t[' + lo + ':' + hi + '] : cette zone est triée.', { aux: aux.slice(), range: [lo, hi], roles: Object.assign({}, ...Array.from({ length: hi - lo }, (_, q) => ({ [lo + q]: 'sorted' }))) });
+    };
+    const ms = (lo, hi) => {
+      if (hi - lo <= 1) return;
+      const mid = (lo + hi) >> 1;
+      snap(a, (() => { const r = {}; for (let i = lo; i < hi; i++) r[i] = i < mid ? 'left' : 'right'; return r; })(), 'Tri de t[' + lo + ':' + hi + '] : on coupe en t[' + lo + ':' + mid + '] et t[' + mid + ':' + hi + '].', { range: [lo, hi] });
+      ms(lo, mid); ms(mid, hi); merge(lo, mid, hi);
+    };
+    snap(a, {}, 'Tableau de départ. On trie récursivement chaque moitié, puis on fusionne.');
+    ms(0, n);
+    snap(a, upto(n, 'sorted'), 'Tableau trié.');
+  } else if (algo === 'rapide') {
+    const done = {};
+    const qs = (lo, hi) => {
+      if (lo > hi) return;
+      if (lo === hi) { done[lo] = 'sorted'; snap(a, Object.assign({}, done), 'Sous-tableau d’un seul élément : t[' + lo + '] = ' + a[lo] + ' est à sa place.'); return; }
+      const p = a[hi]; let i = lo;
+      snap(a, Object.assign({}, done, { [hi]: 'pivot' }), 'Partition de t[' + lo + ':' + (hi + 1) + '] avec le pivot t[' + hi + '] = ' + p + ' (le dernier élément).', { range: [lo, hi + 1] });
+      for (let j = lo; j < hi; j++) {
+        cmp++; const less = a[j] < p; let msg;
+        if (less) { if (i !== j) { [a[i], a[j]] = [a[j], a[i]]; mov++; msg = 't[' + j + '] < ' + p + ' : on l’échange avec t[' + i + '] et la zone des petits grandit.'; } else msg = 't[' + j + '] < ' + p + ' : il est déjà à la bonne place, la zone des petits grandit.'; i++; }
+        else msg = 't[' + j + '] ≥ ' + p + ' : il reste à droite de la frontière.';
+        const roles = Object.assign({}, done); for (let q = lo; q < i; q++) roles[q] = 'left'; roles[hi] = 'pivot'; roles[j] = 'scan';
+        snap(a, roles, msg, { range: [lo, hi + 1] });
+      }
+      if (i !== hi) { [a[i], a[hi]] = [a[hi], a[i]]; mov++; }
+      done[i] = 'sorted';
+      snap(a, Object.assign({}, done), 'Le pivot ' + p + ' est placé en position ' + i + ', définitive : à gauche des éléments plus petits, à droite des éléments plus grands ou égaux.', { range: [lo, hi + 1] });
+      qs(lo, i - 1); qs(i + 1, hi);
+    };
+    snap(a, {}, 'Tableau de départ. On choisit un pivot, on partitionne, puis on trie récursivement chaque côté.');
+    qs(0, n - 1);
+    snap(a, upto(n, 'sorted'), 'Tableau trié.');
+  } else {
+    const vmax = 9, c = new Array(vmax + 1).fill(0), res = new Array(n).fill(null);
+    const sn = (roles, cr, rr, msg) => F.push({ a: a.slice(), c: c.slice(), res: res.slice(), roles, cr, rr, msg, cmp, mov, view: 'count' });
+    sn({}, {}, {}, 'Les valeurs sont des entiers entre 0 et ' + vmax + '. On crée un tableau c de compteurs, un par valeur possible.');
+    for (let i = 0; i < n; i++) { c[a[i]]++; mov++; sn({ [i]: 'scan' }, { [a[i]]: 'key' }, {}, 'On lit t[' + i + '] = ' + a[i] + ' : on incrémente c[' + a[i] + '], qui vaut maintenant ' + c[a[i]] + '.'); }
+    let pos = 0;
+    for (let v = 0; v <= vmax; v++) {
+      if (c[v] === 0) continue;
+      const rr = {}; for (let k = 0; k < pos; k++) rr[k] = 'sorted';
+      for (let k = 0; k < c[v]; k++) { res[pos] = v; rr[pos] = 'key'; pos++; mov++; }
+      sn({}, { [v]: 'key' }, rr, 'c[' + v + '] = ' + c[v] + ' : on écrit ' + v + ' ' + c[v] + ' fois dans le résultat. Aucune comparaison entre éléments n’a eu lieu.');
+    }
+    const rr = {}; for (let k = 0; k < n; k++) rr[k] = 'sorted';
+    sn({}, {}, rr, 'Tableau trié : n lectures puis n écritures, soit O(n + vmax).');
+  }
+  return F;
+}
+/* stabilité : on trie des couples (clé, étiquette) selon la clé */
+function sortRecords(algo, items) {
+  const a = items.slice(), n = a.length;
+  if (algo === 'selection') { for (let i = 0; i < n - 1; i++) { let m = i; for (let j = i + 1; j < n; j++) if (a[j].k < a[m].k) m = j; if (m !== i) [a[i], a[m]] = [a[m], a[i]]; } return a; }
+  if (algo === 'insertion') { for (let i = 1; i < n; i++) { const x = a[i]; let j = i; while (j > 0 && a[j - 1].k > x.k) { a[j] = a[j - 1]; j--; } a[j] = x; } return a; }
+  if (algo === 'fusion') {
+    const ms = x => { if (x.length <= 1) return x; const m = x.length >> 1, l = ms(x.slice(0, m)), r = ms(x.slice(m)), res = []; let i = 0, j = 0; while (i < l.length && j < r.length) { if (l[i].k <= r[j].k) res.push(l[i++]); else res.push(r[j++]); } return res.concat(l.slice(i), r.slice(j)); };
+    return ms(a);
+  }
+  if (algo === 'rapide') { const qs = (lo, hi) => { if (lo >= hi) return; const p = a[hi]; let i = lo; for (let j = lo; j < hi; j++) if (a[j].k < p.k) { [a[i], a[j]] = [a[j], a[i]]; i++; } [a[i], a[hi]] = [a[hi], a[i]]; qs(lo, i - 1); qs(i + 1, hi); }; qs(0, n - 1); return a; }
+  return a.slice().sort((p, q) => p.k - q.k);
+}
+function stableCheck(input, out) {
+  for (let i = 1; i < out.length; i++) if (out[i - 1].k === out[i].k && input.indexOf(out[i - 1]) > input.indexOf(out[i])) return { ok: false, a: out[i], b: out[i - 1] };
+  return { ok: true };
+}
+const makeRecords = keys => keys.map((k, i) => ({ k, tag: String.fromCharCode(97 + i) }));
+/*LOGIC-END*/
 
-// ========== Données des algorithmes ==========
-const ALGOS = {
-  insertion: {
-    name: "Tri par insertion",
-    complexity: "O(n²)",
-    inplace: "oui",
-    stable: "oui",
-    comparative: "oui",
-    desc: {
-      easy: `Le tri par insertion construit progressivement une portion triée à gauche de la liste.
-À chaque étape i (de 1 à n-1) :
-  1. On mémorise la valeur x = L[i].
-  2. On décale vers la droite tous les éléments de L[0..i-1] qui sont > x.
-  3. On place x dans le « trou » ainsi créé.
+/* ---------- aides d'interface ---------- */
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', null, k[0]), h('b', null, k[1])))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
+}
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; m.textContent = text; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+const KINDS = [['aleatoire', 'Aléatoire'], ['trie', 'Déjà trié'], ['inverse', 'Inversé'], ['presque', 'Presque trié']];
 
-C'est exactement le geste d'un joueur de cartes qui range une nouvelle carte dans sa main déjà triée.
+/* ================= ateliers d'animation ================= */
+const LABS = [
+  { id: 's1', title: 'Sélection et insertion', algos: ['selection', 'insertion'], nmin: 4, nmax: 12, n: 8, hint: 'Choisissez un tri et un tableau, puis avancez pas à pas : la partie triée grandit de gauche à droite.',
+    intro: 'Ces deux tris construisent le résultat <b>de gauche à droite</b> : à chaque tour, la partie gauche du tableau est triée et la partie droite ne l’est pas encore. Ils diffèrent par la façon d’agrandir la partie triée.' },
+  { id: 's2', title: 'Fusion et rapide', algos: ['fusion', 'rapide'], nmin: 4, nmax: 10, n: 8, hint: 'Observez comment « diviser pour régner » trie un tableau : fusion de moitiés triées, ou partition autour d’un pivot.',
+    intro: 'Ces tris sont <b>récursifs</b> : ils découpent le tableau en deux sous-tableaux plus petits. Le tri fusion coupe en deux moitiés puis fusionne ; le tri rapide choisit un pivot puis répartit les éléments de part et d’autre.' },
+  { id: 's3', title: 'Tri par comptage', algos: ['comptage'], nmin: 5, nmax: 12, n: 10, small: true, hint: 'Un tri sans aucune comparaison : on compte les occurrences de chaque valeur puis on reconstruit le tableau.',
+    intro: 'Le tri par comptage ne compare jamais deux éléments. Il suppose que les valeurs sont des <b>entiers</b> d’un petit intervalle [0 ; vmax] : on compte combien de fois apparaît chaque valeur, puis on réécrit le tableau dans l’ordre.' }
+];
+const SL = {};
+function labState(lab) { return SL[lab.id] || (SL[lab.id] = { algo: lab.algos[0], kind: 'aleatoire', n: lab.n, arr: null, frames: null, k: 0, timer: null }); }
+function labStop(lab) { const S = labState(lab); clearInterval(S.timer); S.timer = null; const b = $('#' + lab.id + '-play'); if (b) b.textContent = 'Lecture'; }
+function labReset(lab) { labStop(lab); delete SL[lab.id]; }
+function labPrepare(lab, newArr) {
+  const S = labState(lab); labStop(lab);
+  if (newArr || !S.arr || S.arr.length !== S.n) S.arr = genArray(S.kind, S.n, lab.small);
+  S.frames = genFrames(S.algo, S.arr); S.k = 0;
+}
+function mountLab(root, lab) {
+  const S = labState(lab), id = lab.id;
+  root.innerHTML = '<h2>' + lab.title + '</h2><p>' + lab.intro + '</p>' +
+    '<div class="opts"><div class="fld" ' + (lab.algos.length < 2 ? 'hidden' : '') + '><span>Algorithme</span><div id="' + id + '-algo"></div></div><div class="fld"><span>Tableau</span><div id="' + id + '-kind"></div></div>' +
+    '<label class="fld"><span>Taille n = <b id="' + id + '-nout"></b></span><input type="range" id="' + id + '-n" min="' + lab.nmin + '" max="' + lab.nmax + '" aria-label="Taille du tableau"></label>' +
+    '<button class="btn" id="' + id + '-new" type="button" style="margin-bottom:9px">Nouveau tableau</button></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="' + id + '-prev" type="button">◀ Précédent</button><button class="btn pri" id="' + id + '-next" type="button">Suivant ▶</button><button class="btn" id="' + id + '-play" type="button">Lecture</button><button class="btn" id="' + id + '-all" type="button">Tout exécuter</button><button class="btn" id="' + id + '-reset" type="button">Départ</button></div>' +
+    '<div class="stagebox" id="' + id + '-stage"></div>' +
+    '<div class="leg"><span><i class="s"></i>partie triée</span><span><i class="c"></i>élément comparé</span><span><i class="k"></i>élément déplacé</span><span><i class="m"></i>minimum</span><span><i class="p"></i>pivot</span></div>' +
+    '<div class="verdict" id="' + id + '-msg" aria-live="polite"></div><div id="' + id + '-stats"></div><div id="' + id + '-note"></div><h3>Code Python</h3><pre class="code" id="' + id + '-code"></pre>';
+  $('#' + id + '-n').value = S.n;
+  $('#' + id + '-n').addEventListener('input', e => { S.n = +e.target.value; labPrepare(lab, true); drawLab(lab); });
+  $('#' + id + '-new').addEventListener('click', () => { labPrepare(lab, true); drawLab(lab); });
+  $('#' + id + '-prev').addEventListener('click', () => { labStop(lab); if (S.k > 0) { S.k--; drawLab(lab); } });
+  $('#' + id + '-next').addEventListener('click', () => { labStop(lab); if (S.k < S.frames.length - 1) { S.k++; drawLab(lab); } });
+  $('#' + id + '-all').addEventListener('click', () => { labStop(lab); S.k = S.frames.length - 1; drawLab(lab); });
+  $('#' + id + '-reset').addEventListener('click', () => { labStop(lab); S.k = 0; drawLab(lab); });
+  $('#' + id + '-play').addEventListener('click', () => {
+    if (S.timer) { labStop(lab); return; }
+    if (S.k >= S.frames.length - 1) S.k = 0;
+    $('#' + id + '-play').textContent = 'Pause';
+    S.timer = setInterval(() => { if (S.k >= S.frames.length - 1) { labStop(lab); drawLab(lab); return; } S.k++; drawLab(lab); }, 650);
+    drawLab(lab);
+  });
+  if (!S.frames) labPrepare(lab, true);
+  drawLab(lab);
+}
+function barsRow(vals, roles, range, maxv, short, offset) {
+  const box = h('div', { class: 'bars' + (short ? ' short' : '') });
+  vals.forEach((v, i) => {
+    let cls = 'bcol';
+    if (v == null) cls += ' empty';
+    const r = roles && roles[i]; if (r) cls += ' ' + r;
+    if (range && (i < range[0] || i >= range[1]) && r !== 'sorted') cls += ' dim';
+    const ht = v == null ? 3 : Math.max(4, Math.round(v / maxv * (short ? 80 : 128)));
+    box.append(h('div', { class: cls }, h('div', { class: 'v' }, v == null ? '' : String(v)), h('div', { class: 'b', style: 'height:' + ht + 'px' }), h('div', { class: 'i' }, String(i))));
+  });
+  return box;
+}
+function cellsRow(vals, roles, name, zeroDim) {
+  const wrap = h('div'); wrap.append(h('div', { class: 'rowname' }, name));
+  const box = h('div', { class: 'cells' });
+  vals.forEach((v, i) => box.append(h('div', { class: 'cell' + (roles && roles[i] ? ' ' + roles[i] : '') + (zeroDim && v === 0 ? ' zero' : '') }, h('div', { class: 'v' }, v == null ? '' : String(v)), h('div', { class: 'i' }, String(i)))));
+  wrap.append(box); return wrap;
+}
+function drawLab(lab) {
+  const S = labState(lab), id = lab.id; if (!$('#' + id + '-stage')) return;
+  const f = S.frames[S.k], last = S.k === S.frames.length - 1;
+  const ab = $('#' + id + '-algo'); ab.innerHTML = '';
+  ab.append(chipsRow(lab.algos.map(a => [a, ALGO_NAME[a]]), S.algo, a => { S.algo = a; labPrepare(lab, false); drawLab(lab); }, 'Algorithme'));
+  const kb = $('#' + id + '-kind'); kb.innerHTML = '';
+  kb.append(chipsRow(KINDS, S.kind, k => { S.kind = k; labPrepare(lab, true); drawLab(lab); }, 'Type de tableau'));
+  $('#' + id + '-nout').textContent = S.n;
+  $('#' + id + '-code').textContent = CODES[S.algo];
+  const st = $('#' + id + '-stage'); st.innerHTML = '';
+  if (f.view === 'count') {
+    st.append(cellsRow(f.a, f.roles, 'Tableau t'), cellsRow(f.c, f.cr, 'Compteurs c (c[v] = nombre d’occurrences de v)', true), cellsRow(f.res, f.rr, 'Résultat'));
+  } else {
+    const maxv = Math.max(...S.arr, 1);
+    st.append(h('div', { class: 'rowname' }, 'Tableau t'), barsRow(f.a, f.roles, f.range, maxv, false));
+    if (f.aux) { st.append(h('div', { class: 'rowname' }, 'Tableau auxiliaire (résultat de la fusion en cours)'), barsRow(f.aux, {}, null, maxv, true)); }
+  }
+  setMsg('#' + id + '-msg', f.msg, last ? 'yes' : '');
+  const sb = $('#' + id + '-stats'); sb.innerHTML = '';
+  sb.append(stats([['Étape', S.k + ' / ' + (S.frames.length - 1)], ['Comparaisons', String(f.cmp)], [S.algo === 'selection' ? 'Échanges' : S.algo === 'insertion' ? 'Décalages' : S.algo === 'fusion' ? 'Recopies dans l’auxiliaire' : S.algo === 'rapide' ? 'Échanges' : 'Lectures et écritures', String(f.mov)]]));
+  const nb = $('#' + id + '-note'); nb.innerHTML = '';
+  if (last) { const n = S.arr.length; nb.append(h('div', { class: 'verdict' }, NOTES[S.algo](n, f.cmp))); }
+  $('#' + id + '-prev').disabled = S.k === 0; $('#' + id + '-next').disabled = last;
+}
+const NOTES = {
+  selection: (n, c) => 'Bilan : ' + c + ' comparaisons = n(n − 1)/2 avec n = ' + n + '. Ce nombre ne dépend pas du tableau : le tri par sélection est toujours quadratique.',
+  insertion: (n, c) => 'Bilan : ' + c + ' comparaisons. Entre n − 1 = ' + (n - 1) + ' (tableau déjà trié) et n(n − 1)/2 = ' + n * (n - 1) / 2 + ' (tableau inversé). Essayez « Déjà trié » puis « Inversé ».',
+  fusion: (n, c) => 'Bilan : ' + c + ' comparaisons, de l’ordre de n log₂ n = ' + (n * Math.log2(n)).toFixed(1).replace('.', ',') + ', quel que soit le tableau, au prix d’un tableau auxiliaire de taille n.',
+  rapide: (n, c) => 'Bilan : ' + c + ' comparaisons. Avec le dernier élément comme pivot, un tableau déjà trié ou inversé est le pire cas : n(n − 1)/2 = ' + n * (n - 1) / 2 + ' comparaisons. Essayez « Déjà trié ».',
+  comptage: (n, c) => 'Bilan : ' + c + ' comparaison de valeurs. Le coût est O(n + vmax), mais il faut connaître vmax et n’avoir que des entiers.'
+};
+const CODES = {
+  selection: 'def tri_selection(t):\n    n = len(t)\n    for i in range(n - 1):\n        m = i                      # indice du minimum de t[i:]\n        for j in range(i + 1, n):\n            if t[j] < t[m]:\n                m = j\n        if m != i:\n            t[i], t[m] = t[m], t[i]  # échange',
+  insertion: 'def tri_insertion(t):\n    for i in range(1, len(t)):\n        x = t[i]                   # élément à insérer\n        j = i\n        while j > 0 and t[j - 1] > x:\n            t[j] = t[j - 1]        # décalage vers la droite\n            j -= 1\n        t[j] = x',
+  fusion: 'def tri_fusion(t):\n    if len(t) <= 1:\n        return t\n    m = len(t) // 2\n    return fusion(tri_fusion(t[:m]), tri_fusion(t[m:]))\n\ndef fusion(a, b):\n    i = j = 0\n    res = []\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            res.append(a[i]); i += 1\n        else:\n            res.append(b[j]); j += 1\n    return res + a[i:] + b[j:]',
+  rapide: 'def partition(t, lo, hi):         # pivot = t[hi]\n    pivot = t[hi]\n    i = lo\n    for j in range(lo, hi):\n        if t[j] < pivot:\n            t[i], t[j] = t[j], t[i]\n            i += 1\n    t[i], t[hi] = t[hi], t[i]\n    return i                      # position définitive du pivot\n\ndef tri_rapide(t, lo, hi):\n    if lo < hi:\n        p = partition(t, lo, hi)\n        tri_rapide(t, lo, p - 1)\n        tri_rapide(t, p + 1, hi)',
+  comptage: 'def tri_comptage(t, vmax):\n    c = [0] * (vmax + 1)\n    for x in t:\n        c[x] += 1                  # compte les occurrences\n    res = []\n    for v in range(vmax + 1):\n        res += [v] * c[v]          # écrit v autant de fois\n    return res'
+};
+LABS.forEach(lab => WORKSHOPS.push({ id: lab.id, title: lab.title, hint: lab.hint, mount: root => mountLab(root, lab), leave: () => labStop(lab), reset: () => labReset(lab) }));
 
-Complexité : O(n²) dans le pire cas (liste inversée), O(n) dans le meilleur cas (liste déjà triée).
-En place, stable, comparatif.`,
-      medium: `Principe : pour i de 1 à n-1, insérer L[i] à sa place dans la sous-liste déjà triée L[0..i-1] en décalant les éléments plus grands.
+/* ================= Atelier 4 : comparer et stabilité ================= */
+const CK = [['aleatoire', 'Aléatoire'], ['trie', 'Déjà trié'], ['inverse', 'Inversé'], ['presque', 'Presque trié'], ['peu', 'Peu de valeurs (0 à 9)']];
+const G4 = { n: 100, kind: 'aleatoire', arr: null, keys: '2, 3, 2, 1, 3, 1' };
+const ORDER = { selection: 'Θ(n²)', insertion: 'O(n²), O(n) si trié', fusion: 'Θ(n log n)', rapide: 'O(n log n) en moyenne, O(n²) au pire', comptage: 'O(n + vmax)' };
+function mountG4(root) {
+  root.innerHTML =
+    '<h2>Comparer les tris</h2>' +
+    '<p>Les cinq algorithmes sont ici exécutés sur le même tableau et leurs opérations sont comptées. Les mouvements sont des échanges (sélection, rapide), des décalages (insertion) ou des recopies (fusion, comptage).</p>' +
+    '<h3>1. Mesurer</h3>' +
+    '<div class="opts"><label class="fld"><span>Taille n = <b id="m-n-out"></b></span><input type="range" id="m-n" min="8" max="500" value="100" aria-label="Taille du tableau"></label><div class="fld"><span>Tableau</span><div id="m-kind"></div></div><button class="btn" id="m-new" type="button" style="margin-bottom:9px">Nouveau tirage</button></div>' +
+    '<div id="m-out"></div>' +
+    '<h3>2. Stabilité</h3>' +
+    '<p>Un tri est <b>stable</b> si deux éléments de même clé restent dans leur ordre d’origine. Chaque élément est écrit « clé + lettre » (2a, 2c, …) : on trie selon la clé et on regarde si les lettres restent dans l’ordre.</p>' +
+    '<div class="opts"><label class="fld"><span>Clés (de 0 à 99, séparées par des virgules, 12 au plus)</span><input type="text" id="s-keys" autocomplete="off" aria-label="Clés à trier"></label></div>' +
+    '<div id="s-out"></div>';
+  $('#m-n').addEventListener('input', e => { G4.n = +e.target.value; G4.arr = null; drawMeasure(); });
+  $('#m-new').addEventListener('click', () => { G4.arr = null; drawMeasure(); });
+  $('#s-keys').value = G4.keys;
+  $('#s-keys').addEventListener('input', e => { G4.keys = e.target.value; drawStab(); });
+  drawMeasure(); drawStab();
+}
+function drawMeasure() {
+  $('#m-n-out').textContent = G4.n; $('#m-n').value = G4.n;
+  const kb = $('#m-kind'); kb.innerHTML = ''; kb.append(chipsRow(CK, G4.kind, k => { G4.kind = k; G4.arr = null; drawMeasure(); }, 'Type de tableau'));
+  if (!G4.arr) G4.arr = G4.kind === 'peu' ? genArray('aleatoire', G4.n, true) : genArray(G4.kind, G4.n, false);
+  const n = G4.arr.length, algos = ['selection', 'insertion', 'fusion', 'rapide', 'comptage'], res = algos.map(a => Object.assign({ a }, measure(a, G4.arr)));
+  const maxc = Math.max(...res.map(r => r.cmp), 1), maxm = Math.max(...res.map(r => r.mov), 1), box = $('#m-out'); box.innerHTML = '';
+  const tb = h('tbody');
+  res.forEach(r => tb.append(h('tr', null, h('td', null, ALGO_NAME[r.a]), h('td', { class: 'm' }, fmtN(r.cmp)), h('td', { class: 'm' }, fmtN(r.mov)), h('td', null, ORDER[r.a]))));
+  box.append(stats([['n', String(n)], ['n(n − 1)/2', fmtN(n * (n - 1) / 2)], ['n log₂ n', fmtN(Math.round(n * Math.log2(n)))]]));
+  box.append(h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['Tri', 'Comparaisons', 'Mouvements', 'Ordre de grandeur'].map(t => h('th', null, t)))), tb)));
+  const bars = h('div'); bars.append(h('p', { class: 'small', style: 'margin:4px 0' }, 'Comparaisons (même échelle pour tous) :'));
+  res.forEach(r => bars.append(h('div', { class: 'cmpr' }, h('span', null, ALGO_NAME[r.a].replace('Tri ', '').replace('par ', '')), h('div', null, h('i', { style: 'width:' + Math.max(0.5, r.cmp / maxc * 100) + '%' })), h('em', null, fmtN(r.cmp)))));
+  box.append(bars);
+  const byC = res.slice().sort((p, q) => p.cmp - q.cmp);
+  let txt;
+  if (G4.kind === 'trie') txt = 'Tableau déjà trié : l’insertion ne fait que n − 1 = ' + (n - 1) + ' comparaisons (cas le meilleur), alors que le tri rapide avec le dernier élément comme pivot atteint n(n − 1)/2 (cas le pire).';
+  else if (G4.kind === 'inverse') txt = 'Tableau inversé : c’est le pire cas de l’insertion et du tri rapide (pivot en dernier), qui font tous deux n(n − 1)/2 comparaisons.';
+  else if (G4.kind === 'presque') txt = 'Tableau presque trié : l’insertion ne fait presque aucun décalage et bat les tris en n log n.';
+  else if (G4.kind === 'peu') txt = 'Peu de valeurs différentes : le tri par comptage ne fait aucune comparaison et écrit 2n valeurs.';
+  else txt = 'Tableau aléatoire : fusion et rapide font de l’ordre de n log₂ n comparaisons, alors que sélection et insertion sont quadratiques. Le moins de comparaisons ici : ' + ALGO_NAME[byC[0].a].toLowerCase() + '.';
+  box.append(h('div', { class: 'verdict' }, txt));
+}
+function drawStab() {
+  const box = $('#s-out'); box.innerHTML = '';
+  const keys = G4.keys.split(/[,\s;]+/).filter(s => /^\d{1,2}$/.test(s)).map(Number).slice(0, 12);
+  if (keys.length < 2) { box.append(h('div', { class: 'verdict warn' }, 'Saisissez au moins deux nombres entre 0 et 99, par exemple 2, 3, 2, 1, 3, 1.')); return; }
+  const rec = makeRecords(keys), cardOf = r => h('span', { class: 'card t' + ((r.tag.charCodeAt(0) - 97) % 6 + 1) }, r.k + r.tag);
+  const tb = h('tbody'); let allStable = true;
+  tb.append(h('tr', null, h('td', null, 'Départ'), h('td', null, h('div', { class: 'seqr' }, rec.map(cardOf))), h('td', null, '')));
+  [['selection', 'Tri par sélection'], ['insertion', 'Tri par insertion'], ['fusion', 'Tri fusion'], ['rapide', 'Tri rapide'], ['sorted', 'sorted() de Python']].forEach(p => {
+    const out = sortRecords(p[0], rec), sc = stableCheck(rec, out);
+    tb.append(h('tr', null, h('td', null, p[1]), h('td', null, h('div', { class: 'seqr' }, out.map(cardOf))), h('td', null, sc.ok ? 'stable' : 'pas stable : ' + sc.a.k + sc.a.tag + ' passe avant ' + sc.b.k + sc.b.tag)));
+    if (!sc.ok) allStable = false;
+  });
+  box.append(h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['Tri', 'Résultat', 'Stabilité'].map(t => h('th', null, t)))), tb)));
+  box.append(h('div', { class: 'verdict' }, 'La stabilité permet de trier successivement selon plusieurs critères : on trie d’abord par le critère secondaire puis, avec un tri stable, par le critère principal. Les tris par insertion et fusion sont stables, le tri par sélection (avec échanges) et le tri rapide ne le sont pas en général.'));
+}
+WORKSHOPS.push({ id: 's4', title: 'Comparer les tris', hint: 'Mesurez les comparaisons des cinq tris sur le même tableau, puis testez la stabilité.', mount: mountG4, reset: () => { Object.assign(G4, { n: 100, kind: 'aleatoire', arr: null, keys: '2, 3, 2, 1, 3, 1' }); } });
 
-Tu dois écrire une boucle for + une boucle while de décalage.`,
-      hard: `Implémente le tri par insertion en place. La liste doit être modifiée (pas de nouvelle liste créée).`
-    },
-    code: {
-      easy: `def tri_insertion(L):
-    """Trie la liste L en place par insertion."""
-    n = len(L)
-    for i in range(1, n):
-        x = L[i]          # élément à insérer
-        j = i - 1
-        while j >= 0 and L[j] > x:
-            L[j + 1] = L[j]   # décalage
-            j -= 1
-        L[j + 1] = x      # insertion
-    return L`,
-      medium: `def tri_insertion(L):
-    n = len(L)
-    for i in range(1, n):
-        x = L[i]
-        j = i - 1
-        # À compléter : décaler les éléments > x puis insérer
-        while j >= 0 and L[j] > x:
-            # ...
-            pass
-        # L[...] = x
-    return L`,
-      hard: `def tri_insertion(L):
-    # À écrire entièrement
-    pass`
-    },
-    corrected: `def tri_insertion(L):
-    """Trie la liste L en place par insertion (style CPGE)."""
-    n = len(L)
-    for i in range(1, n):
-        x = L[i]
-        j = i - 1
-        while j >= 0 and L[j] > x:
-            L[j + 1] = L[j]
-            j -= 1
-        L[j + 1] = x
-    return L`
+/* ---------- activités ---------- */
+const ACT = {
+  s1: {
+    title: 'Sélection et insertion', level: 'Niveau 1 · Découvrir', time: '30 min', course: 'selection',
+    goal: 'Suivre deux tris simples, énoncer leur invariant et compter leurs comparaisons selon l’état du tableau.',
+    steps: [
+      'Avec le tri par sélection sur un tableau aléatoire de 8 éléments, avancez jusqu’à la fin du premier tour. Quel élément est placé ? Comment est-il choisi ?',
+      'Notez le nombre de comparaisons à la fin. Recommencez avec « Déjà trié » puis « Inversé ». Que constatez-vous ?',
+      'Passez au tri par insertion. Avancez sur un tableau aléatoire : que représente l’élément orange ? Que fait-on des éléments plus grands que lui ?',
+      'Relevez le nombre de comparaisons de l’insertion pour « Déjà trié », « Presque trié » et « Inversé ». Quel est le meilleur cas ? le pire ?',
+      'Pour chaque tri, énoncez ce qui est vrai de t[0:i] au début du tour i (invariant).'
+    ],
+    defi: { q: 'Combien de comparaisons font le tri par insertion et le tri par sélection sur [5, 4, 3, 2, 1] ? Et sur [1, 2, 3, 4, 5] ?',
+      a: 'Sélection : <b>10</b> comparaisons dans les deux cas (4 + 3 + 2 + 1). Insertion sur [5, 4, 3, 2, 1] : chaque élément est comparé à tous ceux qui le précèdent, soit 1 + 2 + 3 + 4 = <b>10</b>. Insertion sur [1, 2, 3, 4, 5] : une seule comparaison par élément, soit <b>4</b>.' },
+    qcm: [
+      { q: 'Combien de comparaisons le tri par sélection fait-il sur un tableau de n éléments ?', o: ['Entre n − 1 et n(n − 1)/2 selon le tableau', 'Toujours n(n − 1)/2', 'Toujours n log₂ n', 'n − 1 seulement'], a: 1, w: 'Pour chaque i, on parcourt tout t[i+1:] pour trouver le minimum : (n − 1) + (n − 2) + … + 1 = n(n − 1)/2, quel que soit l’état du tableau.' },
+      { q: 'Quel est le meilleur cas du tri par insertion ?', o: ['Un tableau trié en ordre décroissant', 'Un tableau déjà trié : n − 1 comparaisons', 'Un tableau dont tous les éléments sont distincts', 'Il n’y a pas de meilleur cas'], a: 1, w: 'Sur un tableau trié, chaque élément est comparé une seule fois (à son prédécesseur) et n’est pas déplacé : O(n).' },
+      { q: 'Quel est l’invariant du tri par insertion au début du tour i ?', o: ['t[0:i] contient les i plus petits éléments du tableau, à leur place définitive', 'La liste t[0:i] est triée (mais ses éléments ne sont pas forcément à leur place définitive)', 'Le tableau est trié à partir de l’indice i', 'Le minimum est en t[0]'], a: 1, w: 'L’insertion maintient t[0:i] trié, sans que ses éléments soient définitifs : le suivant peut venir s’y glisser.' },
+      { q: 'Après i tours du tri par sélection, que peut-on dire de t[0:i] ?', o: ['Il est trié et contient les i plus petits éléments du tableau, à leur place définitive', 'Il est seulement trié', 'Il contient les i derniers éléments lus', 'Rien de particulier'], a: 0, w: 'À chaque tour on place le minimum de la partie non triée : ces éléments ne bougeront plus.' },
+      { q: 'Quel tri est stable ?', o: ['Sélection avec échanges', 'Insertion', 'Les deux', 'Aucun des deux'], a: 1, w: 'L’insertion ne décale que les éléments strictement plus grands : deux éléments égaux restent dans leur ordre. L’échange de la sélection peut enjamber un élément égal.' }
+    ]
   },
-  selection: {
-    name: "Tri par sélection",
-    complexity: "O(n²)",
-    inplace: "oui",
-    stable: "non",
-    comparative: "oui",
-    desc: {
-      easy: `Le tri par sélection place à chaque étape le plus petit élément restant à sa position définitive.
-Pour i de 0 à n-2 :
-  1. On cherche l'indice m du minimum dans L[i..n-1].
-  2. On échange L[i] et L[m].
-
-Ainsi la portion L[0..i] est triée et ne bougera plus.
-
-Complexité toujours O(n²) (même nombre de comparaisons).
-En place, non stable (les échanges peuvent casser l'ordre relatif des égaux), comparatif.`,
-      medium: `Principe : à chaque i, trouver le min de la partie non triée et l'échanger avec L[i].
-
-Écris une double boucle : la boucle externe fixe la position, la boucle interne cherche le minimum.`,
-      hard: `Implémente le tri par sélection en place.`
-    },
-    code: {
-      easy: `def tri_selection(L):
-    """Trie la liste L en place par sélection."""
-    n = len(L)
-    for i in range(n - 1):
-        m = i
-        for j in range(i + 1, n):
-            if L[j] < L[m]:
-                m = j
-        L[i], L[m] = L[m], L[i]   # échange
-    return L`,
-      medium: `def tri_selection(L):
-    n = len(L)
-    for i in range(n - 1):
-        m = i
-        # À compléter : trouver l'indice du min dans L[i+1..]
-        for j in range(i + 1, n):
-            # ...
-            pass
-        # échanger L[i] et L[m]
-    return L`,
-      hard: `def tri_selection(L):
-    # À écrire entièrement
-    pass`
-    },
-    corrected: `def tri_selection(L):
-    """Trie la liste L en place par sélection (style CPGE)."""
-    n = len(L)
-    for i in range(n - 1):
-        m = i
-        for j in range(i + 1, n):
-            if L[j] < L[m]:
-                m = j
-        L[i], L[m] = L[m], L[i]
-    return L`
+  s2: {
+    title: 'Fusion et rapide', level: 'Niveau 2 · Comprendre', time: '35 min', course: 'fusion',
+    goal: 'Comprendre les deux tris récursifs en O(n log n) : fusion de moitiés triées et partition autour d’un pivot, et repérer leurs différences (mémoire, pire cas).',
+    steps: [
+      'Dans le tri fusion, avancez jusqu’à la première fusion. Quelle est la taille des sous-tableaux fusionnés ? Que contient le tableau auxiliaire ?',
+      'Notez à quel moment « une moitié est épuisée » et ce qu’on fait alors. Combien de comparaisons au total ?',
+      'Passez au tri rapide. Avancez pour la première partition : que représentent les barres bleues claires ? Où le pivot est-il placé à la fin ?',
+      'Choisissez « Déjà trié » pour le tri rapide : que remarquez-vous sur la taille des sous-tableaux et le nombre de comparaisons ?',
+      'Comparez avec « Déjà trié » pour le tri fusion : le nombre de comparaisons change-t-il ?'
+    ],
+    defi: { q: 'Combien de comparaisons fait le tri rapide (pivot en dernier) sur [1, 2, 3, 4, 5, 6, 7, 8] ? Et le tri fusion sur le même tableau ?',
+      a: 'Tri rapide : chaque partition place le pivot en dernière position et laisse un sous-tableau de taille n − 1 : 7 + 6 + 5 + 4 + 3 + 2 + 1 = <b>28</b> comparaisons, soit n(n − 1)/2. Tri fusion : <b>12</b> comparaisons sur un tableau trié (chaque fusion s’arrête dès que la moitié gauche est épuisée), contre 17 au maximum.' },
+    qcm: [
+      { q: 'Quelle est la complexité du tri fusion dans le pire cas ?', o: ['O(n)', 'O(n log n)', 'O(n²)', 'O(log n)'], a: 1, w: 'Il y a environ log₂ n niveaux de récursion et chaque niveau fusionne n éléments en temps linéaire, quelle que soit la forme du tableau.' },
+      { q: 'Avec le dernier élément comme pivot, quel est le pire cas du tri rapide ?', o: ['Un tableau de valeurs toutes différentes', 'Un tableau déjà trié (ou inversé)', 'Un tableau de grande taille', 'Il n’y a pas de pire cas'], a: 1, w: 'Le pivot est alors le plus grand (ou le plus petit) : les sous-tableaux ont des tailles n − 1 et 0, ce qui donne n(n − 1)/2 comparaisons : O(n²).' },
+      { q: 'Que garantit l’appel partition(t, lo, hi) ?', o: ['Le tableau est trié entre lo et hi', 'Le pivot est à sa place définitive, avec les plus petits à gauche et les plus grands à droite', 'Le pivot est le minimum', 'Le tableau est coupé en deux moitiés égales'], a: 1, w: 'Après la partition, le pivot est à sa position finale : il reste à trier récursivement chaque côté.' },
+      { q: 'Quel surcoût mémoire le tri fusion présenté ici demande-t-il ?', o: ['Aucun', 'O(log n)', 'O(n) : un tableau auxiliaire', 'O(n²)'], a: 2, w: 'Chaque fusion construit une nouvelle liste de la taille des deux moitiés réunies : O(n) en mémoire supplémentaire. Le tri rapide, en place, n’utilise que la pile de récursion.' },
+      { q: 'Le tri rapide (partition de Lomuto) est-il stable ?', o: ['Oui, toujours', 'Non, pas en général', 'Seulement avec un pivot au milieu', 'Seulement sur des entiers'], a: 1, w: 'Les échanges à longue distance peuvent inverser l’ordre de deux éléments égaux. Le tri fusion, lui, est stable si on prend l’élément de gauche en cas d’égalité.' }
+    ]
   },
-  fusion: {
-    name: "Tri fusion",
-    complexity: "O(n log n)",
-    inplace: "non",
-    stable: "oui",
-    comparative: "oui",
-    desc: {
-      easy: `Le tri fusion utilise la stratégie « diviser pour régner » :
-  1. Si la liste a 0 ou 1 élément → déjà triée.
-  2. Sinon on la coupe en deux moitiés, on trie récursivement chaque moitié,
-  3. puis on fusionne les deux listes triées en une seule liste triée.
-
-La fusion compare les têtes des deux listes et prend le plus petit à chaque fois.
-
-Complexité O(n log n) dans tous les cas.
-Pas en place (nécessite de la mémoire supplémentaire), stable, comparatif.`,
-      medium: `Écris d'abord une fonction fusion(L1, L2) qui fusionne deux listes déjà triées.
-Puis une fonction récursive tri_fusion(L) qui coupe, trie les moitiés et fusionne.`,
-      hard: `Implémente le tri fusion (fonction récursive + fonction de fusion).`
-    },
-    code: {
-      easy: `def fusion(L1, L2):
-    """Fusionne deux listes déjà triées."""
-    L = []
-    i = j = 0
-    while i < len(L1) and j < len(L2):
-        if L1[i] <= L2[j]:
-            L.append(L1[i])
-            i += 1
-        else:
-            L.append(L2[j])
-            j += 1
-    L += L1[i:]
-    L += L2[j:]
-    return L
-
-def tri_fusion(L):
-    """Trie L par fusion (renvoie une nouvelle liste)."""
-    if len(L) <= 1:
-        return L[:]
-    m = len(L) // 2
-    return fusion(tri_fusion(L[:m]), tri_fusion(L[m:]))`,
-      medium: `def fusion(L1, L2):
-    L = []
-    i = j = 0
-    # À compléter : boucle de fusion + ajouts des restes
-    return L
-
-def tri_fusion(L):
-    if len(L) <= 1:
-        return L[:]
-    m = len(L) // 2
-    # À compléter : appels récursifs + fusion
-    return ...`,
-      hard: `def fusion(L1, L2):
-    # À écrire
-    pass
-
-def tri_fusion(L):
-    # À écrire
-    pass`
-    },
-    corrected: `def fusion(L1, L2):
-    """Fusionne deux listes déjà triées en une liste triée."""
-    L = []
-    i = j = 0
-    while i < len(L1) and j < len(L2):
-        if L1[i] <= L2[j]:
-            L.append(L1[i])
-            i += 1
-        else:
-            L.append(L2[j])
-            j += 1
-    L += L1[i:]
-    L += L2[j:]
-    return L
-
-def tri_fusion(L):
-    """Trie L par le tri fusion (renvoie une nouvelle liste)."""
-    if len(L) <= 1:
-        return L[:]
-    m = len(L) // 2
-    return fusion(tri_fusion(L[:m]), tri_fusion(L[m:]))`
+  s3: {
+    title: 'Tri par comptage', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'comptage',
+    goal: 'Comprendre un tri qui ne compare pas ses éléments, son coût O(n + vmax) et ses limites.',
+    steps: [
+      'Lancez l’animation sur le tableau proposé. Que contient c[v] à la fin de la première phase ?',
+      'Dans la deuxième phase, observez comment le résultat est construit. Que se passe-t-il quand c[v] = 0 ?',
+      'Relevez le nombre de comparaisons. Pourquoi vaut-il 0 ?',
+      'Prenez le type « Déjà trié » puis « Inversé » : le coût change-t-il ?',
+      'Imaginez que les valeurs aillent jusqu’à 10⁹ : que devrait-on créer ? Est-ce raisonnable ?'
+    ],
+    defi: { q: 'On veut trier 1 000 000 de notes entières entre 0 et 20. Estimez le nombre d’opérations d’un tri par comptage et d’un tri fusion. Peut-on utiliser le comptage pour 1 000 entiers compris entre 0 et 10¹² ?',
+      a: 'Comptage : environ n + vmax = 10<sup>6</sup> + 21 ≈ <b>10<sup>6</sup></b> opérations. Tri fusion : environ n log₂ n ≈ 10<sup>6</sup> × 20 = <b>2·10<sup>7</sup></b> comparaisons. Pour 1 000 entiers jusqu’à 10<sup>12</sup>, il faudrait un tableau de 10<sup>12</sup> compteurs : <b>non</b>, le coût en mémoire et en temps O(n + vmax) est prohibitif ; on utilise un tri par comparaison.' },
+    qcm: [
+      { q: 'Quelle est la complexité du tri par comptage de n entiers compris entre 0 et vmax ?', o: ['O(n²)', 'O(n log n)', 'O(n + vmax)', 'O(vmax²)'], a: 2, w: 'On parcourt les n éléments pour compter, puis les vmax + 1 compteurs pour reconstruire : n + vmax opérations (et n + vmax cases mémoire).' },
+      { q: 'Que contient c[v] à la fin de la première phase ?', o: ['La position de v dans le tableau trié', 'Le nombre d’occurrences de v dans t', 'La somme des valeurs inférieures à v', 'La plus petite valeur supérieure à v'], a: 1, w: 'Pour chaque x lu, on exécute c[x] += 1 : c[v] est le nombre de fois où v apparaît.' },
+      { q: 'Le tri par comptage est-il un tri par comparaison ?', o: ['Oui, comme tous les tris', 'Non : aucun élément n’est comparé à un autre', 'Oui, mais seulement dans la deuxième phase', 'Non, c’est un tri récursif'], a: 1, w: 'Il utilise les valeurs comme indices d’un tableau. C’est pourquoi il peut battre n log n, mais seulement pour des entiers de petite amplitude.' },
+      { q: 'Quand le tri par comptage est-il inadapté ?', o: ['Quand les valeurs sont des entiers petits et très répétés', 'Quand vmax est très grand devant n, ou que les valeurs ne sont pas des entiers', 'Quand le tableau est déjà trié', 'Quand n est petit'], a: 1, w: 'Il faut un tableau de taille vmax + 1 : si vmax est énorme, le coût dépasse celui d’un tri par comparaison. Il est inutilisable pour des flottants ou des chaînes.' },
+      { q: 'Quelle place mémoire supplémentaire le tri par comptage utilise-t-il ?', o: ['O(1)', 'O(log n)', 'O(n + vmax)', 'Aucune'], a: 2, w: 'Il faut le tableau de compteurs (vmax + 1 cases) et le tableau résultat (n cases).' }
+    ]
   },
-  rapide: {
-    name: "Tri rapide",
-    complexity: "O(n log n) moy / O(n²) pire",
-    inplace: "oui",
-    stable: "non",
-    comparative: "oui",
-    desc: {
-      easy: `Le tri rapide (quicksort) choisit un pivot, partitionne la liste autour de lui, puis trie récursivement les deux parties.
-Version pédagogique (pivot = dernier élément) :
-  - partition : on place le pivot à sa position définitive, tous les plus petits à gauche, les plus grands à droite.
-  - puis appels récursifs sur [début..pivot-1] et [pivot+1..fin].
-
-Complexité moyenne O(n log n), pire cas O(n²) (liste déjà triée avec ce choix de pivot).
-En place (version classique), non stable, comparatif.`,
-      medium: `Écris une fonction partition(L, deb, fin) qui place le pivot (L[fin]) à sa place et retourne son indice.
-Puis une fonction récursive tri_rapide(L, deb, fin).`,
-      hard: `Implémente le tri rapide en place (avec partition).`
-    },
-    code: {
-      easy: `def partition(L, deb, fin):
-    """Place le pivot L[fin] à sa position et retourne son indice."""
-    pivot = L[fin]
-    i = deb
-    for j in range(deb, fin):
-        if L[j] <= pivot:
-            L[i], L[j] = L[j], L[i]
-            i += 1
-    L[i], L[fin] = L[fin], L[i]
-    return i
-
-def tri_rapide(L, deb=0, fin=None):
-    """Trie L en place par le tri rapide."""
-    if fin is None:
-        fin = len(L) - 1
-    if deb < fin:
-        p = partition(L, deb, fin)
-        tri_rapide(L, deb, p - 1)
-        tri_rapide(L, p + 1, fin)
-    return L`,
-      medium: `def partition(L, deb, fin):
-    pivot = L[fin]
-    i = deb
-    # À compléter : boucle de partition + placement du pivot
-    return i
-
-def tri_rapide(L, deb=0, fin=None):
-    if fin is None:
-        fin = len(L) - 1
-    if deb < fin:
-        # À compléter
-        pass
-    return L`,
-      hard: `def tri_rapide(L, deb=0, fin=None):
-    # À écrire (avec une fonction partition auxiliaire)
-    pass`
-    },
-    corrected: `def partition(L, deb, fin):
-    """Partition autour du pivot L[fin]. Retourne l'indice final du pivot."""
-    pivot = L[fin]
-    i = deb
-    for j in range(deb, fin):
-        if L[j] <= pivot:
-            L[i], L[j] = L[j], L[i]
-            i += 1
-    L[i], L[fin] = L[fin], L[i]
-    return i
-
-def tri_rapide(L, deb=0, fin=None):
-    """Trie L en place par le tri rapide (pivot = dernier élément)."""
-    if fin is None:
-        fin = len(L) - 1
-    if deb < fin:
-        p = partition(L, deb, fin)
-        tri_rapide(L, deb, p - 1)
-        tri_rapide(L, p + 1, fin)
-    return L`
-  },
-  comptage: {
-    name: "Tri par comptage",
-    complexity: "O(n+k)",
-    inplace: "non",
-    stable: "oui",
-    comparative: "non",
-    desc: {
-      easy: `Le tri par comptage (counting sort) ne compare pas les éléments entre eux.
-Il suppose que les valeurs sont des entiers appartenant à un intervalle [a, b] de taille k = b-a+1 raisonnable.
-  1. On compte le nombre d'occurrences de chaque valeur (tableau de taille k).
-  2. On reconstruit la liste triée en recopiant chaque valeur autant de fois qu'elle apparaît.
-
-Complexité O(n + k).
-Pas en place (tableau de comptage), stable (si on reconstruit dans l'ordre), non comparatif.`,
-      medium: `Écris une fonction qui :
-  - trouve min et max,
-  - crée un tableau de comptage,
-  - compte les occurrences,
-  - reconstruit la liste triée.`,
-      hard: `Implémente le tri par comptage (pour des entiers).`
-    },
-    code: {
-      easy: `def tri_comptage(L):
-    """Trie une liste d'entiers par comptage (renvoie une nouvelle liste)."""
-    if not L:
-        return []
-    a, b = min(L), max(L)
-    k = b - a + 1
-    C = [0] * k
-    for x in L:
-        C[x - a] += 1
-    R = []
-    for v in range(k):
-        R += [v + a] * C[v]
-    return R`,
-      medium: `def tri_comptage(L):
-    if not L:
-        return []
-    a, b = min(L), max(L)
-    C = [0] * (b - a + 1)
-    # À compléter : comptage puis reconstruction
-    return R`,
-      hard: `def tri_comptage(L):
-    # À écrire entièrement
-    pass`
-    },
-    corrected: `def tri_comptage(L):
-    """Trie une liste d'entiers par comptage (renvoie une nouvelle liste)."""
-    if not L:
-        return []
-    a, b = min(L), max(L)
-    k = b - a + 1
-    C = [0] * k
-    for x in L:
-        C[x - a] += 1
-    R = []
-    for v in range(k):
-        R += [v + a] * C[v]
-    return R`
+  s4: {
+    title: 'Comparer les tris', level: 'Niveau 3 · Choisir', time: '35 min', course: 'bilan',
+    goal: 'Comparer expérimentalement les cinq tris, relier les mesures aux complexités du cours et comprendre la stabilité.',
+    steps: [
+      'Avec n = 100 et un tableau aléatoire, relevez les comparaisons de chaque tri. Classez-les. Comparez à n(n − 1)/2 et n log₂ n.',
+      'Passez à « Déjà trié » : quel tri devient le plus efficace ? lequel devient le pire ? Expliquez.',
+      'Prenez « Presque trié » : quel tri est très bon ? Pourquoi ?',
+      'Avec « Peu de valeurs », que fait le tri par comptage ? Quel intérêt par rapport aux tris par comparaison ?',
+      'Dans « Stabilité », repérez quels tris sont instables sur les clés proposées. Modifiez les clés pour trouver un exemple minimal à 3 éléments qui rend la sélection instable.'
+    ],
+    defi: { q: 'On veut trier des élèves par classe, puis, à l’intérieur de chaque classe, par ordre alphabétique de nom. Comment procéder avec sorted() ? Pourquoi la stabilité est-elle indispensable ?',
+      a: 'On trie <b>d’abord</b> par le critère secondaire (nom), <b>puis</b> par le critère principal (classe) : <code>sorted(sorted(L, key=nom), key=classe)</code>. Le deuxième tri étant <b>stable</b>, les élèves de même classe gardent l’ordre alphabétique obtenu au premier tri. Avec un tri instable, cet ordre serait perdu.' },
+    qcm: [
+      { q: 'Sur un grand tableau aléatoire de nombres flottants, quels tris choisir en priorité ?', o: ['Sélection ou insertion', 'Fusion ou rapide (n log n)', 'Comptage', 'N’importe lequel : ils coûtent pareil'], a: 1, w: 'Sélection et insertion sont quadratiques ; le comptage ne s’applique pas à des flottants. Fusion et rapide sont en O(n log n).' },
+      { q: 'Sur un tableau presque trié, quel tri est particulièrement efficace ?', o: ['Le tri par sélection', 'Le tri par insertion', 'Le tri rapide avec le dernier pivot', 'Aucun : tous coûtent pareil'], a: 1, w: 'L’insertion coûte O(n + nombre d’inversions) : très peu de décalages quand le tableau est presque trié.' },
+      { q: 'Qu’est-ce qu’un tri stable ?', o: ['Un tri qui ne plante jamais', 'Un tri qui conserve l’ordre relatif des éléments de même clé', 'Un tri dont le coût est constant', 'Un tri qui ne modifie pas le tableau d’origine'], a: 1, w: 'Si a et b ont la même clé et que a est avant b dans l’entrée, a reste avant b dans la sortie.' },
+      { q: 'Quelle est la complexité garantie de sorted() en Python ?', o: ['O(n²)', 'O(n log n)', 'O(n)', 'O(n log² n)'], a: 1, w: 'sorted() et list.sort() utilisent Timsort : O(n log n) au pire, O(n) sur un tableau déjà trié, et ils sont stables.' },
+      { q: 'Quel est le meilleur compromis pour un tri généraliste ?', o: ['Utiliser sorted() ou list.sort() de Python', 'Réécrire un tri par sélection', 'Réécrire un tri par comptage', 'Trier avec des boucles imbriquées'], a: 0, w: 'En pratique on utilise le tri natif, rapide, stable et bien testé. Les tris du cours servent à comprendre les algorithmes et leurs coûts.' }
+    ]
   }
 };
 
-// ========== État visualisation ==========
-let steps = [];
-let currentStep = 0;
-let playInterval = null;
-let isPlaying = false;
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'notions', t: 'Trier : notions générales', h: `
+<p><b>Trier</b> un tableau, c’est le réarranger pour que ses éléments soient rangés dans l’ordre croissant (pour une relation d’ordre donnée). Les tris servent partout : recherche dichotomique, statistiques (médiane), affichage, regroupement.</p>
+<h3>Critères de comparaison</h3>
+<ul>
+<li><b>Coût en temps</b> : nombre de comparaisons et de mouvements en fonction de la taille n. On distingue le meilleur cas, le pire cas et le cas moyen.</li>
+<li><b>Coût en mémoire</b> : un tri est <b>en place</b> s’il n’utilise qu’un espace supplémentaire O(1) (ou O(log n) pour la pile de récursion).</li>
+<li><b>Stabilité</b> : un tri est <b>stable</b> s’il conserve l’ordre relatif des éléments de même clé.</li>
+<li><b>Tri par comparaison</b> : il n’utilise que des comparaisons entre éléments (sélection, insertion, fusion, rapide). Le tri par comptage n’en utilise pas.</li>
+<li><b>En ligne</b> : un tri en ligne peut trier au fur et à mesure que les éléments arrivent (insertion).</li>
+</ul>
+<h3>Invariants</h3>
+<p>Pour prouver un tri itératif, on énonce un <b>invariant de boucle</b> : une propriété vraie avant chaque tour, qui à la fin donne le résultat. Pour la terminaison, on utilise un variant (une quantité entière qui décroît).</p>
+<h3>Python</h3>
+<pre class="code">&gt;&gt;&gt; sorted([3, 1, 2])          # nouvelle liste triée
+[1, 2, 3]
+&gt;&gt;&gt; t = [3, 1, 2]; t.sort()    # tri en place
+&gt;&gt;&gt; sorted(noms, key=len, reverse=True)</pre>
+<p>Ces deux fonctions sont stables et de complexité O(n log n) (algorithme Timsort).</p>
+<div class="retain"><b>À retenir.</b> Un tri se caractérise par son coût en temps, sa mémoire, sa stabilité et sa nature (par comparaison ou non). Un invariant de boucle prouve sa correction.</div>` });
 
-// ========== Initialisation ==========
-function updateUI() {
-  const algo = document.getElementById('algo-select').value;
-  const level = document.getElementById('level-select').value;
-  const data = ALGOS[algo];
+COURSE.push({ id: 'selection', t: 'Tri par sélection', h: `
+<p><b>Principe.</b> On cherche le plus petit élément de la partie non triée et on le place à la suite de la partie triée.</p>
+<pre class="code">def tri_selection(t):
+    n = len(t)
+    for i in range(n - 1):
+        m = i                        # indice du minimum de t[i:]
+        for j in range(i + 1, n):
+            if t[j] &lt; t[m]:
+                m = j
+        if m != i:
+            t[i], t[m] = t[m], t[i]  # échange</pre>
+<p><b>Invariant.</b> Au début du tour i, t[0:i] est trié et contient les i plus petits éléments du tableau, à leur place définitive.</p>
+<p><b>Coût.</b> Le nombre de comparaisons est (n − 1) + (n − 2) + … + 1 = n(n − 1)/2 dans <b>tous les cas</b> : Θ(n²). Au plus n − 1 échanges. Mémoire : O(1).</p>
+<p><b>Propriétés.</b> En place, par comparaison, <b>non stable</b> : l’échange d’un élément avec le minimum peut passer par-dessus un élément égal. Exemple : [2a, 2b, 1c] devient [1c, 2b, 2a].</p>
+<div class="retain"><b>À retenir.</b> Sélection : n(n − 1)/2 comparaisons toujours, peu d’échanges, non stable.</div>` });
 
-  const badge = document.getElementById('level-badge');
-  badge.className = 'level-badge level-' + level;
-  badge.textContent = level === 'easy' ? 'Beaucoup aidé' : level === 'medium' ? 'Moyennement aidé' : 'Pas aidé';
+COURSE.push({ id: 'insertion', t: 'Tri par insertion', h: `
+<p><b>Principe.</b> On considère que la partie gauche est triée, puis on insère chaque élément suivant à sa bonne place en décalant vers la droite les éléments plus grands, comme on trie des cartes dans sa main.</p>
+<pre class="code">def tri_insertion(t):
+    for i in range(1, len(t)):
+        x = t[i]                 # élément à insérer
+        j = i
+        while j &gt; 0 and t[j - 1] &gt; x:
+            t[j] = t[j - 1]      # décalage vers la droite
+            j -= 1
+        t[j] = x</pre>
+<p><b>Invariant.</b> Au début du tour i, t[0:i] est trié (ce sont les mêmes éléments qu’au départ, rangés dans l’ordre).</p>
+<p><b>Coût.</b> Le nombre de décalages est le nombre d’<b>inversions</b> du tableau (paires i &lt; j avec t[i] &gt; t[j]).</p>
+<table class="ctable"><thead><tr><th>Cas</th><th>Tableau</th><th>Comparaisons</th></tr></thead><tbody>
+<tr><td>Meilleur</td><td>déjà trié</td><td>n − 1 : O(n)</td></tr>
+<tr><td>Pire</td><td>trié à l’envers</td><td>n(n − 1)/2 : O(n²)</td></tr>
+<tr><td>Moyen</td><td>aléatoire</td><td>≈ n²/4 : O(n²)</td></tr></tbody></table>
+<p><b>Propriétés.</b> En place, par comparaison, <b>stable</b> (on ne décale que les éléments strictement plus grands), <b>en ligne</b>. Très efficace sur les tableaux presque triés.</p>
+<div class="retain"><b>À retenir.</b> Insertion : O(n) si le tableau est trié, O(n²) sinon ; stable et adapté aux petits tableaux ou aux tableaux presque triés.</div>` });
 
-  document.getElementById('description').textContent = data.desc[level];
-  document.getElementById('student-code').value = data.code[level];
+COURSE.push({ id: 'fusion', t: 'Tri fusion et tri rapide', h: `
+<p>Ces deux tris sont récursifs, du type <b>diviser pour régner</b> : ils ramènent le tri d’un tableau de taille n à celui de deux sous-tableaux de taille environ n/2.</p>
+<h3>Tri fusion</h3>
+<pre class="code">def tri_fusion(t):
+    if len(t) &lt;= 1:
+        return t
+    m = len(t) // 2
+    return fusion(tri_fusion(t[:m]), tri_fusion(t[m:]))
 
-  document.getElementById('props-feedback').className = 'feedback';
-  document.getElementById('props-feedback').style.display = 'none';
-  document.getElementById('corrected-code').style.display = 'none';
+def fusion(a, b):
+    i = j = 0
+    res = []
+    while i &lt; len(a) and j &lt; len(b):
+        if a[i] &lt;= b[j]:
+            res.append(a[i]); i += 1
+        else:
+            res.append(b[j]); j += 1
+    return res + a[i:] + b[j:]</pre>
+<ul><li>La fusion de deux listes triées de tailles p et q coûte au plus p + q − 1 comparaisons.</li><li>Relation de récurrence : C(n) = 2·C(n/2) + O(n), donc <b>O(n log n)</b> dans tous les cas.</li><li><b>Stable</b> (on prend a[i] en cas d’égalité), mémoire supplémentaire O(n).</li></ul>
+<h3>Tri rapide</h3>
+<pre class="code">def partition(t, lo, hi):          # pivot = t[hi]
+    pivot = t[hi]
+    i = lo
+    for j in range(lo, hi):
+        if t[j] &lt; pivot:
+            t[i], t[j] = t[j], t[i]
+            i += 1
+    t[i], t[hi] = t[hi], t[i]
+    return i                       # position définitive du pivot
 
-  document.getElementById('complexity').value = '';
-  document.getElementById('inplace').value = '';
-  document.getElementById('stable').value = '';
-  document.getElementById('comparative').value = '';
+def tri_rapide(t, lo, hi):
+    if lo &lt; hi:
+        p = partition(t, lo, hi)
+        tri_rapide(t, lo, p - 1)
+        tri_rapide(t, p + 1, hi)</pre>
+<p>Après <code>partition</code>, le pivot est à sa place définitive : tout ce qui est à gauche est plus petit, tout ce qui est à droite est plus grand ou égal. Il reste à trier chaque côté.</p>
+<ul><li><b>Meilleur cas et cas moyen</b> : O(n log n) quand le pivot partage bien le tableau.</li><li><b>Pire cas</b> : O(n²), par exemple un tableau déjà trié avec le dernier élément comme pivot (sous-tableaux de taille n − 1 et 0). On l’évite en choisissant un pivot aléatoire ou au milieu.</li><li>En place, non stable, pile de récursion O(log n) en moyenne.</li></ul>
+<div class="retain"><b>À retenir.</b> Fusion : O(n log n) garanti, stable, mémoire O(n). Rapide : O(n log n) en moyenne, O(n²) au pire, en place, non stable.</div>` });
 
-  resetViz();
+COURSE.push({ id: 'comptage', t: 'Tri par comptage', h: `
+<p><b>Principe.</b> Les éléments sont des entiers compris entre 0 et vmax. On compte combien de fois apparaît chaque valeur, puis on reconstruit le tableau en écrivant chaque valeur autant de fois qu’elle apparaît, dans l’ordre croissant.</p>
+<pre class="code">def tri_comptage(t, vmax):
+    c = [0] * (vmax + 1)
+    for x in t:
+        c[x] += 1                  # c[v] = nombre d'occurrences de v
+    res = []
+    for v in range(vmax + 1):
+        res += [v] * c[v]
+    return res</pre>
+<ul>
+<li><b>Coût</b> : O(n + vmax) en temps comme en mémoire, dans tous les cas.</li>
+<li><b>Aucune comparaison</b> entre éléments : ce n’est pas un tri par comparaison, et il n’est donc pas soumis à la borne O(n log n) des tris par comparaison.</li>
+<li><b>Limites</b> : il faut des entiers (ou des clés entières) et un vmax raisonnable devant n. Inutilisable pour des flottants ou pour des valeurs de l’ordre de 10<sup>12</sup>.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Comptage : O(n + vmax), sans comparaison, réservé aux entiers de petite amplitude.</div>` });
+
+COURSE.push({ id: 'bilan', t: 'Bilan comparatif', h: `
+<table class="ctable"><thead><tr><th>Tri</th><th>Meilleur cas</th><th>Cas moyen</th><th>Pire cas</th><th>Mémoire</th><th>Stable</th></tr></thead><tbody>
+<tr><td>Sélection</td><td>O(n²)</td><td>O(n²)</td><td>O(n²)</td><td>O(1)</td><td>non</td></tr>
+<tr><td>Insertion</td><td>O(n)</td><td>O(n²)</td><td>O(n²)</td><td>O(1)</td><td>oui</td></tr>
+<tr><td>Fusion</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n)</td><td>oui</td></tr>
+<tr><td>Rapide</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n²)</td><td>O(log n) (pile)</td><td>non</td></tr>
+<tr><td>Comptage</td><td colspan="3">O(n + vmax)</td><td>O(n + vmax)</td><td>oui</td></tr></tbody></table>
+<h3>Que choisir ?</h3>
+<ul><li><b>Petit tableau ou presque trié</b> : insertion.</li><li><b>Cas général</b> : tri natif de Python (<code>sorted</code>, <code>sort</code>), ou fusion pour une garantie O(n log n) stable.</li><li><b>Peu de mémoire disponible</b> : tri rapide en place (avec un bon pivot).</li><li><b>Entiers de petite amplitude</b> : comptage.</li><li><b>Plusieurs critères</b> : un tri stable, appliqué du critère le moins important au plus important.</li></ul>
+<div class="retain"><b>À retenir.</b> Aucun tri n’est le meilleur partout : le choix dépend de la taille, de l’état du tableau, de la mémoire, de la stabilité et de la nature des valeurs.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Tri par comparaison</dt><dd>Tri qui n’utilise que des comparaisons entre éléments.</dd>
+<dt>Tri en place</dt><dd>Tri qui n’utilise qu’une mémoire supplémentaire négligeable (O(1) ou O(log n)).</dd>
+<dt>Tri stable</dt><dd>Tri qui conserve l’ordre relatif des éléments de même clé.</dd>
+<dt>Tri en ligne</dt><dd>Tri qui peut s’effectuer à mesure que les éléments arrivent.</dd>
+<dt>Invariant de boucle</dt><dd>Propriété vraie avant chaque tour de boucle, qui prouve la correction.</dd>
+<dt>Inversion</dt><dd>Paire d’indices i &lt; j telle que t[i] &gt; t[j]. Le nombre d’inversions mesure le désordre.</dd>
+<dt>Pivot</dt><dd>Élément autour duquel le tri rapide partitionne le tableau.</dd>
+<dt>Partition</dt><dd>Réorganisation qui place le pivot à sa position finale, les plus petits à gauche, les plus grands à droite.</dd>
+<dt>Fusion</dt><dd>Construction d’une liste triée à partir de deux listes triées.</dd>
+<dt>Timsort</dt><dd>Algorithme de tri de Python : stable, O(n log n) au pire, O(n) sur un tableau déjà trié.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 's1' };
+const AS = { key: 's1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'notions' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
 }
-
-document.getElementById('algo-select').addEventListener('change', updateUI);
-document.getElementById('level-select').addEventListener('change', updateUI);
-
-// ========== Vérification propriétés ==========
-function checkProperties() {
-  const algo = document.getElementById('algo-select').value;
-  const data = ALGOS[algo];
-  const fb = document.getElementById('props-feedback');
-
-  const c = document.getElementById('complexity').value;
-  const i = document.getElementById('inplace').value;
-  const s = document.getElementById('stable').value;
-  const comp = document.getElementById('comparative').value;
-
-  if (!c || !i || !s || !comp) {
-    fb.className = 'feedback info';
-    fb.textContent = 'Remplis toutes les propriétés avant de vérifier.';
-    return;
-  }
-
-  const okC = c === data.complexity;
-  const okI = i === data.inplace;
-  const okS = s === data.stable;
-  const okComp = comp === data.comparative;
-
-  const allOk = okC && okI && okS && okComp;
-
-  let msg = '';
-  if (allOk) {
-    msg = '✅ Toutes les propriétés sont correctes !';
-    fb.className = 'feedback ok';
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
   } else {
-    msg = '❌ Certaines réponses sont incorrectes :\n';
-    if (!okC) msg += `• Complexité : tu as mis « ${c} », attendu « ${data.complexity} »\n`;
-    if (!okI) msg += `• En place : tu as mis « ${i} », attendu « ${data.inplace} »\n`;
-    if (!okS) msg += `• Stable : tu as mis « ${s} », attendu « ${data.stable} »\n`;
-    if (!okComp) msg += `• Comparatif : tu as mis « ${comp} », attendu « ${data.comparative} »\n`;
-    fb.className = 'feedback ko';
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
   }
-  fb.textContent = msg;
+  box.append(body); body.scrollTop = keep;
 }
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
 
-// ========== Corrigé ==========
-function showCorrected() {
-  const algo = document.getElementById('algo-select').value;
-  const data = ALGOS[algo];
-  document.getElementById('corrected-pre').textContent = data.corrected;
-  document.getElementById('corrected-props').innerHTML = `
-    <strong>Propriétés attendues :</strong><br>
-    Complexité (pire cas) : <code>${data.complexity}</code><br>
-    En place : <code>${data.inplace}</code> &nbsp;|&nbsp;
-    Stable : <code>${data.stable}</code> &nbsp;|&nbsp;
-    Comparatif : <code>${data.comparative}</code>
-  `;
-  document.getElementById('corrected-code').style.display = 'block';
-  document.getElementById('corrected-code').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : les algorithmes de tri'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
 }
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
 
-// ========== Visualisation ==========
-function parseArray() {
-  const txt = document.getElementById('array-input').value.trim();
-  if (!txt) return [5, 2, 8, 1, 9, 3, 7, 4];
-  return txt.split(/\s+/).map(Number).filter(x => !isNaN(x));
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
 }
-
-function recordStep(arr, highlights = {}, message = '') {
-  steps.push({
-    arr: arr.slice(),
-    highlights: { ...highlights },
-    message
-  });
-}
-
-function generateSteps(algo, arr) {
-  steps = [];
-  const A = arr.slice();
-  recordStep(A, {}, 'État initial');
-
-  if (algo === 'insertion') {
-    const n = A.length;
-    for (let i = 1; i < n; i++) {
-      const x = A[i];
-      let j = i - 1;
-      recordStep(A, { insert: i }, `On prend x = ${x} (index ${i})`);
-      while (j >= 0 && A[j] > x) {
-        recordStep(A, { compare: [j, i], insert: i }, `Comparaison A[${j}]=${A[j]} > ${x} → décalage`);
-        A[j + 1] = A[j];
-        recordStep(A, { swap: [j, j+1], insert: i }, `Décalage de ${A[j+1]} vers la droite`);
-        j--;
-      }
-      A[j + 1] = x;
-      recordStep(A, { sorted: Array.from({length: i+1}, (_,k)=>k) }, `Insertion de ${x} à l'index ${j+1}`);
-    }
-    recordStep(A, { sorted: Array.from({length: A.length}, (_,k)=>k) }, 'Liste triée !');
-  }
-  else if (algo === 'selection') {
-    const n = A.length;
-    for (let i = 0; i < n - 1; i++) {
-      let m = i;
-      recordStep(A, { pivot: i }, `Recherche du minimum à partir de l'index ${i}`);
-      for (let j = i + 1; j < n; j++) {
-        recordStep(A, { compare: [j, m], pivot: i }, `Comparaison A[${j}]=${A[j]} et min actuel A[${m}]=${A[m]}`);
-        if (A[j] < A[m]) m = j;
-      }
-      if (m !== i) {
-        recordStep(A, { swap: [i, m] }, `Échange A[${i}]=${A[i]} et A[${m}]=${A[m]}`);
-        [A[i], A[m]] = [A[m], A[i]];
-      }
-      recordStep(A, { sorted: Array.from({length: i+1}, (_,k)=>k) }, `Position ${i} fixée`);
-    }
-    recordStep(A, { sorted: Array.from({length: A.length}, (_,k)=>k) }, 'Liste triée !');
-  }
-  else if (algo === 'fusion') {
-    function mergeSortViz(L, depth = 0) {
-      if (L.length <= 1) {
-        recordStep(L, {}, `Cas de base (taille ≤ 1)`);
-        return L.slice();
-      }
-      const m = Math.floor(L.length / 2);
-      recordStep(L, {}, `Division en deux moitiés (profondeur ${depth})`);
-      const left = mergeSortViz(L.slice(0, m), depth + 1);
-      const right = mergeSortViz(L.slice(m), depth + 1);
-      const res = [];
-      let i = 0, j = 0;
-      while (i < left.length && j < right.length) {
-        if (left[i] <= right[j]) {
-          res.push(left[i++]);
-        } else {
-          res.push(right[j++]);
-        }
-        recordStep(res.concat(left.slice(i)).concat(right.slice(j)), { insert: res.length-1 }, `Fusion : on prend ${res[res.length-1]}`);
-      }
-      while (i < left.length) res.push(left[i++]);
-      while (j < right.length) res.push(right[j++]);
-      recordStep(res, { sorted: Array.from({length: res.length}, (_,k)=>k) }, `Fin de fusion → [${res.join(', ')}]`);
-      return res;
-    }
-    const sorted = mergeSortViz(A);
-    recordStep(sorted, { sorted: Array.from({length: sorted.length}, (_,k)=>k) }, 'Résultat final du tri fusion');
-  }
-  else if (algo === 'rapide') {
-    function partitionViz(L, deb, fin) {
-      const pivot = L[fin];
-      recordStep(L, { pivot: fin }, `Pivot = ${pivot} (index ${fin})`);
-      let i = deb;
-      for (let j = deb; j < fin; j++) {
-        recordStep(L, { compare: [j, fin], pivot: fin }, `Comparaison A[${j}]=${L[j]} avec pivot ${pivot}`);
-        if (L[j] <= pivot) {
-          if (i !== j) {
-            recordStep(L, { swap: [i, j], pivot: fin }, `Échange A[${i}] et A[${j}]`);
-            [L[i], L[j]] = [L[j], L[i]];
-          }
-          i++;
-        }
-      }
-      recordStep(L, { swap: [i, fin], pivot: fin }, `Placement final du pivot`);
-      [L[i], L[fin]] = [L[fin], L[i]];
-      recordStep(L, { sorted: [i] }, `Pivot ${L[i]} à sa place définitive (index ${i})`);
-      return i;
-    }
-    function quickViz(L, deb, fin) {
-      if (deb < fin) {
-        const p = partitionViz(L, deb, fin);
-        quickViz(L, deb, p - 1);
-        quickViz(L, p + 1, fin);
-      }
-    }
-    quickViz(A, 0, A.length - 1);
-    recordStep(A, { sorted: Array.from({length: A.length}, (_,k)=>k) }, 'Liste triée !');
-  }
-  else if (algo === 'comptage') {
-    if (A.length === 0) {
-      recordStep([], {}, 'Liste vide');
-      return;
-    }
-    const a = Math.min(...A);
-    const b = Math.max(...A);
-    const k = b - a + 1;
-    const C = new Array(k).fill(0);
-    recordStep(A, {}, `min=${a}, max=${b}, k=${k}`);
-    for (let x of A) {
-      C[x - a]++;
-      recordStep(A, { count: A.indexOf(x) }, `Comptage de ${x} → C[${x-a}] = ${C[x-a]}`);
-    }
-    const R = [];
-    for (let v = 0; v < k; v++) {
-      for (let t = 0; t < C[v]; t++) {
-        R.push(v + a);
-        recordStep(R, { insert: R.length-1 }, `Ajout de ${v+a} (reste ${C[v]-t-1})`);
-      }
-    }
-    recordStep(R, { sorted: Array.from({length: R.length}, (_,k)=>k) }, 'Liste triée par comptage !');
-  }
-}
-
-function renderStep() {
-  if (steps.length === 0) return;
-  const s = steps[currentStep];
-  const disp = document.getElementById('array-display');
-  disp.innerHTML = '';
-  s.arr.forEach((val, idx) => {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.textContent = val;
-    if (s.highlights.sorted && s.highlights.sorted.includes(idx)) cell.classList.add('sorted');
-    if (s.highlights.compare && s.highlights.compare.includes(idx)) cell.classList.add('compare');
-    if (s.highlights.swap && s.highlights.swap.includes(idx)) cell.classList.add('swap');
-    if (s.highlights.pivot === idx) cell.classList.add('pivot');
-    if (s.highlights.insert === idx) cell.classList.add('insert');
-    if (s.highlights.count === idx) cell.classList.add('count');
-    disp.appendChild(cell);
-  });
-  document.getElementById('step-info').textContent =
-    `Étape ${currentStep + 1}/${steps.length} — ${s.message}`;
-  document.getElementById('btn-prev').disabled = currentStep === 0;
-  document.getElementById('btn-next').disabled = currentStep === steps.length - 1;
-}
-
-function startVisualization() {
-  const algo = document.getElementById('algo-select').value;
-  const arr = parseArray();
-  if (arr.length === 0) {
-    alert('Liste vide ou invalide.');
-    return;
-  }
-  if (algo === 'comptage' && arr.some(x => !Number.isInteger(x))) {
-    alert('Le tri par comptage nécessite des entiers.');
-    return;
-  }
-  generateSteps(algo, arr);
-  currentStep = 0;
-  isPlaying = false;
-  clearInterval(playInterval);
-  document.getElementById('btn-play').textContent = '▶ Lecture';
-  document.getElementById('btn-play').disabled = false;
-  document.getElementById('btn-prev').disabled = false;
-  document.getElementById('btn-next').disabled = false;
-  renderStep();
-}
-
-function nextStep() {
-  if (currentStep < steps.length - 1) {
-    currentStep++;
-    renderStep();
-  } else {
-    stopPlay();
-  }
-}
-
-function prevStep() {
-  if (currentStep > 0) {
-    currentStep--;
-    renderStep();
-  }
-}
-
-function togglePlay() {
-  if (isPlaying) {
-    stopPlay();
-  } else {
-    isPlaying = true;
-    document.getElementById('btn-play').textContent = '⏸ Pause';
-    playInterval = setInterval(() => {
-      if (currentStep >= steps.length - 1) {
-        stopPlay();
-        return;
-      }
-      nextStep();
-    }, 700);
-  }
-}
-
-function stopPlay() {
-  isPlaying = false;
-  clearInterval(playInterval);
-  document.getElementById('btn-play').textContent = '▶ Lecture';
-}
-
-function resetViz() {
-  stopPlay();
-  steps = [];
-  currentStep = 0;
-  document.getElementById('array-display').innerHTML = '';
-  document.getElementById('step-info').textContent = 'Choisis un algorithme et clique sur « Visualiser les étapes ».';
-  document.getElementById('btn-prev').disabled = true;
-  document.getElementById('btn-next').disabled = true;
-  document.getElementById('btn-play').disabled = true;
-}
-
-// Init
-updateUI();
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Quatre ateliers sur les algorithmes de tri (ITC, CPGE 1re année) : sélection et insertion, fusion et rapide, comptage, et une comparaison chiffrée avec test de stabilité.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut, puis un algorithme et un type de tableau.</li><li>Avancez pas à pas ou lancez la lecture automatique.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque tri.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
 </script>
-</body>
-</html>
+
+</body></html>
