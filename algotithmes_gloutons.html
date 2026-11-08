@@ -1,0 +1,768 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Algorithmes gloutons</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* Visuels spécifiques */
+.timeline{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.tl-row{display:flex;align-items:center;gap:8px;font-size:13px}
+.tl-label{width:60px;text-align:right;color:var(--muted);font-size:12px}
+.tl-track{flex:1;position:relative;height:22px;background:var(--panel2);border-radius:4px;overflow:hidden}
+.tl-block{position:absolute;top:2px;bottom:2px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;overflow:hidden;white-space:nowrap}
+.bar-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:13px}
+.bar-row .lbl{width:80px;font-family:var(--font-mono);font-size:12px}
+.bar-row .track{flex:1;background:var(--panel2);height:20px;border-radius:4px;overflow:hidden;position:relative}
+.bar-row .fill{height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;color:#fff;font-size:11px;font-weight:600}
+.bar-row .val{width:50px;text-align:right;font-family:var(--font-mono);font-size:12px}
+.knap-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin:8px 0}
+.knap-item{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;text-align:center;font-size:13px}
+.knap-item.taken{background:var(--accent-soft);border-color:var(--accent)}
+.knap-item .vw{font-weight:600;margin-bottom:2px}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .tl-label{width:44px}
+  .bar-row .lbl{width:60px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="6" cy="6" r="3" fill="var(--warn)"/><circle cx="13" cy="6" r="3" fill="var(--accent)"/><circle cx="20" cy="6" r="3" fill="var(--ok)"/><path d="M6,10 L6,20 M13,10 L13,20 M20,10 L20,20" stroke="#55555f" stroke-width="2"/><path d="M3,23 h20" stroke="#55555f" stroke-width="1.5"/></svg><span>Atelier Algorithmes gloutons <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-glouton-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* Code Python coloré (léger) */
+function codeBlock(code, on) {
+  const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield|None)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|True|False|isinstance|TypeError|ValueError|Exception|AssertionError|abs|round|min|max)$/;
+  const lines = code.split('\n').map(line => {
+    let out = '', i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '#') { out += '<span style="color:#7a7a88;font-style:italic">' + esc(line.slice(i)) + '</span>'; break; }
+      if (ch === '"' || ch === "'") { let j = i + 1; while (j < line.length && line[j] !== ch) j++; out += '<span style="color:#1c6b40">' + esc(line.slice(i, j + 1)) + '</span>'; i = j + 1; continue; }
+      let j = i; while (j < line.length && line[j] !== '#' && line[j] !== '"' && line[j] !== "'") j++;
+      let seg = esc(line.slice(i, j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g, m => /^\d/.test(m) ? '<span style="color:#b05a00">' + m + '</span>' : KW.test(m) ? '<span style="color:#7c3aa8">' + m + '</span>' : BI.test(m) ? '<span style="color:#1f3fa0">' + m + '</span>' : m);
+      out += seg; i = j;
+    }
+    return out;
+  });
+  return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/* ================= Atelier 1 : Rendu de monnaie ================= */
+const W1 = { coins: [1, 2, 5, 10], amount: 11 };
+function mountW1(root) {
+  root.innerHTML = '<h2>Rendu de monnaie</h2><p>On veut rendre une somme avec le minimum de pièces. L\'algorithme <b>glouton</b> choisit toujours la plus grande pièce possible. Est-ce toujours optimal ?</p>' +
+    '<div class="opts"><label class="fld"><span>Pièces (séparées par des virgules)</span><input type="text" id="w1-coins" class="mono" value="1, 2, 5, 10"></label><label class="fld"><span>Somme S</span><input type="number" id="w1-amount" value="11" style="width:80px"></label></div>' +
+    '<div id="w1-out"></div>' +
+    '<h3>Code Python</h3><pre class="code">def rendu_glouton(coins, S):\n    coins = sorted(coins, reverse=True)\n    res = []\n    for c in coins:\n        while S >= c:\n            res.append(c)\n            S -= c\n    return res  # optimal seulement pour certains systèmes</pre>';
+  function render() {
+    const coins = $('#w1-coins').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x) && x > 0);
+    const amount = parseInt($('#w1-amount').value, 10);
+    if (!coins.length || !isFinite(amount) || amount < 0) { $('#w1-out').innerHTML = '<p class="verdict no">Entrée invalide.</p>'; return; }
+    // Glouton
+    const sorted = coins.slice().sort((a, b) => b - a);
+    let r = amount, used = [];
+    for (const c of sorted) { while (r >= c) { used.push(c); r -= c; } }
+    const gOk = r === 0;
+    // DP pour l'optimal
+    const dp = new Array(amount + 1).fill(Infinity); dp[0] = 0;
+    const choice = new Array(amount + 1).fill(-1);
+    for (let s = 1; s <= amount; s++) {
+      for (const c of coins) {
+        if (c <= s && dp[s - c] + 1 < dp[s]) { dp[s] = dp[s - c] + 1; choice[s] = c; }
+      }
+    }
+    let r2 = amount, opt = [];
+    while (r2 > 0 && choice[r2] > 0) { opt.push(choice[r2]); r2 -= choice[r2]; }
+    const optOk = dp[amount] !== Infinity;
+    let html = '<h3>Comparaison</h3><div class="dwrap"><table class="dt"><thead><tr><th>Méthode</th><th>Résultat</th><th>Nombre de pièces</th></tr></thead><tbody>' +
+      '<tr><td>Glouton</td><td class="m">' + (gOk ? used.join(' + ') + ' = ' + amount : 'échec (reste ' + r + ')') + '</td><td class="m">' + (gOk ? used.length : '—') + '</td></tr>' +
+      '<tr><td>Optimal (DP)</td><td class="m">' + (optOk ? opt.join(' + ') + ' = ' + amount : 'impossible') + '</td><td class="m">' + (optOk ? opt.length : '—') + '</td></tr>' +
+      '</tbody></table></div>';
+    if (gOk && optOk && used.length === opt.length) {
+      html += '<p class="verdict yes">Le glouton trouve une solution optimale (' + used.length + ' pièces).</p>';
+    } else if (gOk && optOk) {
+      html += '<p class="verdict no"><b>Le glouton échoue !</b> Il propose ' + used.length + ' pièces (' + used.join(' + ') + '), alors que la solution optimale en utilise ' + opt.length + ' (' + opt.join(' + ') + ').</p>';
+    } else if (!gOk) {
+      html += '<p class="verdict no">Le glouton ne trouve pas de solution avec ces pièces.</p>';
+    }
+    html += '<p class="small">Le glouton est optimal pour le système euro (1, 2, 5, 10, 20, 50, 100…), mais pas pour tous. Contre-exemple : pièces {1, 3, 4}, somme 6 → le glouton prend 4 + 1 + 1 (3 pièces) alors que 3 + 3 est optimal (2 pièces).</p>';
+    $('#w1-out').innerHTML = html;
+  }
+  $('#w1-coins').oninput = render;
+  $('#w1-amount').oninput = render;
+  render();
+}
+WORKSHOPS.push({ id: 'w1', title: 'Rendu de monnaie', hint: 'Comparez le glouton et la solution optimale. Le glouton est-il toujours optimal ?',
+  mount: mountW1, reset: () => { Object.assign(W1, { coins: [1, 2, 5, 10], amount: 11 }); } });
+
+/* ================= Atelier 2 : Sélection d'activités ================= */
+const W2 = { acts: [
+  { id: 'A', start: 1, end: 4 },
+  { id: 'B', start: 3, end: 5 },
+  { id: 'C', start: 0, end: 6 },
+  { id: 'D', start: 5, end: 7 },
+  { id: 'E', start: 3, end: 9 },
+  { id: 'F', start: 5, end: 9 },
+  { id: 'G', start: 6, end: 10 },
+  { id: 'H', start: 8, end: 11 },
+  { id: 'I', start: 8, end: 12 },
+  { id: 'J', start: 2, end: 14 },
+  { id: 'K', start: 12, end: 16 }
+]};
+function mountW2(root) {
+  root.innerHTML = '<h2>Sélection d\'activités</h2><p>On a un ensemble d\'activités, chacune avec un début et une fin. On veut en choisir un <b>nombre maximal</b> qui ne se chevauchent pas. L\'algorithme glouton qui trie par <b>date de fin croissante</b> est optimal.</p>' +
+    '<div class="controls"><button class="btn" id="w2-glouton" type="button">Résoudre (glouton)</button><button class="btn" id="w2-reset" type="button">Réinitialiser</button></div>' +
+    '<div id="w2-out"></div>' +
+    '<h3>Code Python</h3><pre class="code">def selection(activites):\n    # tri par date de fin croissante\n    activites = sorted(activites, key=lambda a: a[1])\n    choisies = []\n    fin_courante = -1\n    for debut, fin in activites:\n        if debut >= fin_courante:\n            choisies.append((debut, fin))\n            fin_courante = fin\n    return choisies</pre>';
+  function render(selected) {
+    const acts = W2.acts;
+    const maxT = Math.max(...acts.map(a => a.end));
+    // timeline
+    let html = '<h3>Activités</h3><div class="timeline">';
+    acts.forEach(a => {
+      const left = (a.start / maxT * 100).toFixed(1) + '%';
+      const width = ((a.end - a.start) / maxT * 100).toFixed(1) + '%';
+      const sel = selected && selected.includes(a.id);
+      const bg = sel ? 'var(--ok)' : (a.end - a.start > 5 ? 'var(--bad)' : 'var(--accent)');
+      html += '<div class="tl-row"><div class="tl-label">' + a.id + ' [' + a.start + '–' + a.end + ']</div><div class="tl-track"><div class="tl-block" style="left:' + left + ';width:' + width + ';background:' + bg + '">' + (sel ? '✓' : '') + '</div></div></div>';
+    });
+    html += '</div>';
+    html += '<p class="small">En vert : activités sélectionnées. La longueur de chaque bloc est proportionnelle à sa durée.</p>';
+    if (selected) {
+      html += '<h3>Résultat</h3><p class="verdict yes">Le glouton choisit <b>' + selected.length + ' activités</b> : ' + selected.join(', ') + '.</p>';
+      html += '<p class="small">Cet ensemble est de taille maximale : aucun autre ensemble d\'activités compatibles n\'en contient davantage.</p>';
+    } else {
+      html += '<p class="verdict">Cliquez sur « Résoudre » pour exécuter l\'algorithme glouton.</p>';
+    }
+    html += '<h3>Pourquoi trier par date de fin ?</h3><p class="small">Trier par date de début ou par durée ne garantit pas l\'optimum. Trier par date de fin laisse toujours le plus de place possible pour les activités suivantes : c\'est l\'argument d\'échange qui prouve l\'optimalité.</p>';
+    $('#w2-out').innerHTML = html;
+  }
+  $('#w2-glouton').onclick = () => {
+    const acts = W2.acts.slice().sort((a, b) => a.end - b.end);
+    const chosen = [];
+    let lastEnd = -Infinity;
+    for (const a of acts) { if (a.start >= lastEnd) { chosen.push(a.id); lastEnd = a.end; } }
+    render(chosen);
+  };
+  $('#w2-reset').onclick = () => render(null);
+  render(null);
+}
+WORKSHOPS.push({ id: 'w2', title: 'Sélection d\'activités', hint: 'Trier par date de fin croissante donne un ensemble d\'activités compatibles de taille maximale.',
+  mount: mountW2, reset: () => {} });
+
+/* ================= Atelier 3 : Allocation de salles ================= */
+const W3 = { courses: [
+  { id: 'C1', start: 8, end: 10 },
+  { id: 'C2', start: 9, end: 11 },
+  { id: 'C3', start: 10, end: 12 },
+  { id: 'C4', start: 11, end: 13 },
+  { id: 'C5', start: 12, end: 14 },
+  { id: 'C6', start: 13, end: 15 },
+  { id: 'C7', start: 14, end: 16 }
+]};
+function mountW3(root) {
+  root.innerHTML = '<h2>Allocation de salles</h2><p>On a des cours avec des horaires fixes. On veut utiliser le <b>minimum de salles</b> pour tous les accueillir. C\'est un problème de coloration d\'intervalles. L\'algorithme glouton qui trie par <b>heure de début</b> (et alloue la première salle libre) est optimal.</p>' +
+    '<div class="controls"><button class="btn pri" id="w3-run" type="button">Allouer les salles</button><button class="btn" id="w3-reset" type="button">Réinitialiser</button></div>' +
+    '<div id="w3-out"></div>' +
+    '<h3>Code Python</h3><pre class="code">def allouer_salles(cours):\n    # tri par heure de début\n    cours = sorted(cours, key=lambda c: c[0])\n    salles = []  # liste des heures de fin de chaque salle\n    affectation = {}\n    for debut, fin in cours:\n        # chercher une salle libre\n        placee = False\n        for i in range(len(salles)):\n            if salles[i] <= debut:\n                salles[i] = fin\n                affectation[(debut, fin)] = i\n                placee = True\n                break\n        if not placee:\n            salles.append(fin)\n            affectation[(debut, fin)] = len(salles) - 1\n    return len(salles), affectation</pre>';
+  function render(result) {
+    const courses = W3.courses;
+    const minT = Math.min(...courses.map(c => c.start));
+    const maxT = Math.max(...courses.map(c => c.end));
+    const scale = 100 / (maxT - minT);
+    let html = '<h3>Emploi du temps</h3>';
+    if (!result) {
+      html += '<div class="timeline">';
+      courses.forEach(c => {
+        const left = ((c.start - minT) * scale).toFixed(1) + '%';
+        const width = ((c.end - c.start) * scale).toFixed(1) + '%';
+        html += '<div class="tl-row"><div class="tl-label">' + c.id + '</div><div class="tl-track"><div class="tl-block" style="left:' + left + ';width:' + width + ';background:var(--accent)">' + c.id + '</div></div></div>';
+      });
+      html += '</div>';
+      html += '<p class="verdict">Cliquez sur « Allouer les salles » pour exécuter l\'algorithme glouton.</p>';
+    } else {
+      const colors = ['var(--accent)', 'var(--ok)', 'var(--warn)', 'var(--violet)', 'var(--bad)'];
+      const byRoom = {};
+      courses.forEach(c => { const r = result.aff[c.id]; if (!byRoom[r]) byRoom[r] = []; byRoom[r].push(c); });
+      const rooms = Object.keys(byRoom).sort((a, b) => a - b);
+      html += '<div class="timeline">';
+      rooms.forEach(r => {
+        html += '<div class="tl-row"><div class="tl-label" style="font-weight:600">Salle ' + (parseInt(r) + 1) + '</div><div class="tl-track">';
+        byRoom[r].forEach(c => {
+          const left = ((c.start - minT) * scale).toFixed(1) + '%';
+          const width = ((c.end - c.start) * scale).toFixed(1) + '%';
+          html += '<div class="tl-block" style="left:' + left + ';width:' + width + ';background:' + colors[(parseInt(r)) % colors.length] + '">' + c.id + '</div>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+      html += '<h3>Résultat</h3><p class="verdict yes">Le glouton utilise <b>' + rooms.length + ' salle' + (rooms.length > 1 ? 's' : '') + '</b>.</p>';
+      html += '<p class="small">C\'est le minimum possible : à l\'heure de pointe, le nombre de cours simultanés est de ' + rooms.length + '. Aucune allocation ne peut faire mieux.</p>';
+      html += '<div class="dwrap"><table class="dt"><thead><tr><th>Cours</th><th>Début</th><th>Fin</th><th>Salle</th></tr></thead><tbody>';
+      courses.forEach(c => { html += '<tr><td>' + c.id + '</td><td class="m">' + c.start + ' h</td><td class="m">' + c.end + ' h</td><td>Salle ' + (result.aff[c.id] + 1) + '</td></tr>'; });
+      html += '</tbody></table></div>';
+    }
+    $('#w3-out').innerHTML = html;
+  }
+  $('#w3-run').onclick = () => {
+    const sorted = W3.courses.slice().sort((a, b) => a.start - b.start);
+    const roomEnd = [], aff = {};
+    for (const c of sorted) {
+      let placed = false;
+      for (let i = 0; i < roomEnd.length; i++) {
+        if (roomEnd[i] <= c.start) { roomEnd[i] = c.end; aff[c.id] = i; placed = true; break; }
+      }
+      if (!placed) { roomEnd.push(c.end); aff[c.id] = roomEnd.length - 1; }
+    }
+    render({ rooms: roomEnd.length, aff });
+  };
+  $('#w3-reset').onclick = () => render(null);
+  render(null);
+}
+WORKSHOPS.push({ id: 'w3', title: 'Allocation de salles', hint: 'Trier les cours par heure de début et allouer la première salle libre donne le nombre minimal de salles.',
+  mount: mountW3, reset: () => {} });
+
+/* ================= Atelier 4 : Sac à dos ================= */
+const W4 = { mode: 'fractionnaire' };
+const ITEMS = [
+  { name: 'A', w: 10, v: 60 },
+  { name: 'B', w: 20, v: 100 },
+  { name: 'C', w: 30, v: 120 }
+];
+const CAP = 50;
+function mountW4(root) {
+  root.innerHTML = '<h2>Sac à dos</h2><p>On a des objets avec un poids et une valeur, et un sac de capacité limitée. On veut maximiser la valeur totale. Le glouton (tri par valeur/poids décroissant) est <b>optimal</b> pour le sac à dos <b>fractionnaire</b> (objets divisibles), mais <b>pas</b> pour le sac à dos <b>0/1</b> (objets entiers).</p>' +
+    '<div class="controls"><div class="chip-group" style="display:flex;gap:6px"><button class="chip' + (W4.mode === 'fractionnaire' ? ' on' : '') + '" data-mode="fractionnaire" type="button">Fractionnaire</button><button class="chip' + (W4.mode === '01' ? ' on' : '') + '" data-mode="01" type="button">0/1</button></div><button class="btn pri" id="w4-run" type="button">Résoudre</button></div>' +
+    '<div id="w4-out"></div>' +
+    '<h3>Code Python (fractionnaire)</h3><pre class="code">def sac_fractionnaire(objets, capacite):\n    # tri par valeur/poids décroissant\n    objets = sorted(objets, key=lambda o: o[1] / o[0], reverse=True)\n    valeur = 0\n    choisis = []\n    for poids, val in objets:\n        if capacite >= poids:\n            valeur += val\n            choisis.append((poids, val, 1.0))\n            capacite -= poids\n        else:\n            fraction = capacite / poids\n            valeur += val * fraction\n            choisis.append((poids, val, fraction))\n            break\n    return valeur, choisis</pre>';
+  root.querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    W4.mode = b.dataset.mode;
+    root.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x.dataset.mode === W4.mode));
+    render(null);
+  });
+  function render(result) {
+    let html = '<h3>Objets</h3><div class="knap-items">';
+    ITEMS.forEach(o => {
+      const sel = result && result.taken && result.taken.includes(o.name);
+      html += '<div class="knap-item' + (sel ? ' taken' : '') + '"><div class="vw">' + o.name + '</div><div class="small">poids ' + o.w + ', valeur ' + o.v + '</div><div class="small">v/p = ' + (o.v / o.w).toFixed(2) + '</div></div>';
+    });
+    html += '</div><p class="small">Capacité du sac : <b>' + CAP + '</b>.</p>';
+    if (!result) {
+      html += '<p class="verdict">Choisissez un mode et cliquez sur « Résoudre ».</p>';
+    } else {
+      html += '<h3>Résultat glouton (' + W4.mode + ')</h3>';
+      html += '<p class="verdict ' + (result.optimal ? 'yes' : 'no') + '">Valeur totale : <b>' + result.value.toFixed(1) + '</b>.</p>';
+      html += '<p class="small">' + result.explanation + '</p>';
+      if (result.optValue !== undefined) {
+        html += '<p class="small">Valeur optimale (DP) : <b>' + result.optValue + '</b>.</p>';
+      }
+    }
+    html += '<h3>Pourquoi le glouton échoue en 0/1 ?</h3><p class="small">Exemple : objets {A: poids 10, valeur 60}, {B: poids 20, valeur 100}, {C: poids 30, valeur 120}, capacité 50. Le glouton prend A puis B (160), il reste 20 → impossible de prendre C (30). La solution optimale est B + C = 220. Le glouton ne peut pas « défaire » son choix.</p>';
+    $('#w4-out').innerHTML = html;
+  }
+  $('#w4-run').onclick = () => {
+    const sorted = ITEMS.slice().sort((a, b) => (b.v / b.w) - (a.v / a.w));
+    if (W4.mode === 'fractionnaire') {
+      let cap = CAP, val = 0, taken = [];
+      for (const o of sorted) {
+        if (cap >= o.w) { val += o.v; taken.push(o.name); cap -= o.w; }
+        else { val += o.v * (cap / o.w); taken.push(o.name); cap = 0; break; }
+      }
+      render({ value: val, taken, optimal: true, explanation: 'Les objets sont divisibles : le glouton est optimal.' });
+    } else {
+      let cap = CAP, val = 0, taken = [];
+      for (const o of sorted) {
+        if (cap >= o.w) { val += o.v; taken.push(o.name); cap -= o.w; }
+      }
+      // DP pour l'optimal
+      const n = ITEMS.length;
+      const dp = Array.from({ length: n + 1 }, () => new Array(CAP + 1).fill(0));
+      for (let i = 1; i <= n; i++) {
+        for (let c = 0; c <= CAP; c++) {
+          dp[i][c] = dp[i - 1][c];
+          if (ITEMS[i - 1].w <= c) dp[i][c] = Math.max(dp[i][c], dp[i - 1][c - ITEMS[i - 1].w] + ITEMS[i - 1].v);
+        }
+      }
+      const optValue = dp[n][CAP];
+      const optimal = Math.abs(val - optValue) < 1e-9;
+      render({ value: val, taken, optimal, optValue, explanation: 'Les objets sont entiers : le glouton ne trouve pas toujours l\'optimum.' });
+    }
+  };
+  render(null);
+}
+WORKSHOPS.push({ id: 'w4', title: 'Sac à dos', hint: 'Le glouton (valeur/poids) est optimal pour le sac fractionnaire, mais pas pour le sac 0/1.',
+  mount: mountW4, reset: () => { W4.mode = 'fractionnaire'; } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  w1: {
+    title: 'Rendu de monnaie', level: 'Niveau 1 · Découvrir', time: '15 min', course: 'rendu',
+    goal: 'Comprendre le principe du glouton et repérer un cas où il échoue.',
+    steps: [
+      'Avec les pièces {1, 2, 5, 10} et la somme 11, le glouton est-il optimal ?',
+      'Modifiez les pièces pour {1, 3, 4} et la somme 6. Comparez le glouton et l\'optimal.',
+      'Essayez {1, 5, 6, 9} avec S = 11. Que fait le glouton ? Que fait l\'optimum ?',
+      'Quel est le coût du glouton en fonction du nombre de pièces k ?',
+      'Pour quels systèmes de pièces le glouton est-il prouvé optimal ?'
+    ],
+    defi: { q: 'Donnez un exemple de système de pièces et de somme où le glouton échoue.',
+      a: 'Pièces {1, 3, 4}, somme 6. Le glouton prend 4 puis 1 + 1 (3 pièces). L\'optimum est 3 + 3 (2 pièces). Le glouton est piégé par son choix local.' },
+    qcm: [
+      { q: 'Un algorithme glouton fait :', o: ['un choix local optimal à chaque étape', 'un choix aléatoire', 'un parcours exhaustif', 'une récursion'], a: 0, w: 'Le glouton choisit le meilleur élément à chaque étape sans revenir en arrière.' },
+      { q: 'Le glouton de rendu de monnaie est optimal :', o: ['toujours', 'pour certains systèmes de pièces seulement', 'jamais', 'seulement pour les pièces paires'], a: 1, w: 'Pour le système euro (1, 2, 5, 10…) il l\'est ; pour {1, 3, 4} il ne l\'est pas.' },
+      { q: 'Avec les pièces {1, 3, 4} et S = 6, le glouton renvoie :', o: ['3 + 3', '4 + 1 + 1', '4 + 2', 'impossible'], a: 1, w: 'Le glouton prend la plus grande pièce possible, 4, puis il ne reste que 2 → 1 + 1.' },
+      { q: 'Le coût du glouton de rendu de monnaie est :', o: ['O(S)', 'O(k × S)', 'O(S²)', 'O(2^S)'], a: 0, w: 'On parcourt les S unités au plus une fois avec une boucle sur les pièces triées.' },
+      { q: 'Quand le glouton est-il optimal ?', o: ['Quand le problème a une structure de matroïde (ou que l\'on peut le prouver par argument d\'échange)', 'Toujours', 'Jamais', 'Quand les données sont triées'], a: 0, w: 'Il faut une démonstration (souvent par échange) pour prouver l\'optimalité.' }
+    ]
+  },
+  w2: {
+    title: 'Sélection d\'activités', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'selection',
+    goal: 'Comprendre pourquoi trier par date de fin donne l\'optimum, et pourquoi trier par date de début ne suffit pas.',
+    steps: [
+      'Lancez le glouton avec les activités proposées. Combien en choisit-il ?',
+      'Essayez de faire mieux à la main : peut-on choisir plus d\'activités ?',
+      'Que se passerait-il si on triait par date de début ? par durée ?',
+      'Quel est le coût du tri ? du parcours ?',
+      'Énoncez l\'argument d\'échange qui prouve l\'optimalité.'
+    ],
+    defi: { q: 'Pourquoi trier par date de début ne donne-t-il pas forcément l\'optimum ?',
+      a: 'Une activité qui commence tôt peut durer très longtemps et bloquer de nombreuses activités plus courtes. Le tri par date de fin garantit que l\'on libère le plus tôt possible la salle pour la suite : c\'est l\'argument d\'échange.' },
+    qcm: [
+      { q: 'Pour la sélection d\'activités, il faut trier par :', o: ['date de début', 'date de fin', 'durée', 'ordre alphabétique'], a: 1, w: 'Le tri par date de fin croissante donne l\'ensemble compatible de taille maximale.' },
+      { q: 'Le tri coûte O(n log n). Le parcours ensuite coûte :', o: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], a: 2, w: 'On parcourt une seule fois la liste des activités triées.' },
+      { q: 'Pourquoi le tri par date de fin est-il optimal ?', o: ['Il laisse le plus de place possible pour les activités suivantes', 'Il sélectionne les activités les plus courtes', 'Il sélectionne les activités les plus longues', 'Il est aléatoire'], a: 0, w: 'C\'est l\'argument d\'échange : la première activité choisie peut toujours être remplacée par celle qui finit le plus tôt sans perdre d\'optimalité.' },
+      { q: 'Le problème de sélection d\'activités est :', o: ['NP-complet', 'résolu de manière optimale par glouton', 'sans solution', 'toujours de taille 1'], a: 1, w: 'C\'est un cas où le glouton est prouvé optimal.' },
+      { q: 'Peut-on choisir deux activités qui se chevauchent ?', o: ['Oui', 'Non', 'Seulement si elles ont la même durée', 'Seulement le week-end'], a: 1, w: 'Les activités doivent être compatibles : la fin de l\'une est antérieure ou égale au début de l\'autre.' }
+    ]
+  },
+  w3: {
+    title: 'Allocation de salles', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'salles',
+    goal: 'Comprendre pourquoi trier par heure de début et allouer la première salle libre donne le minimum de salles.',
+    steps: [
+      'Lancez l\'allocation. Combien de salles sont utilisées ?',
+      'À l\'heure de pointe, combien de cours sont simultanés ?',
+      'Modifiez les horaires pour créer plus de chevauchements.',
+      'Quel est le coût du glouton ?',
+      'Pourquoi ne peut-on pas faire mieux que le nombre maximal de cours simultanés ?'
+    ],
+    defi: { q: 'Trois cours ont lieu de 8 h à 10 h, deux de 9 h à 11 h et un de 10 h à 12 h. Combien de salles faut-il au minimum ?',
+      a: 'À 9 h, il y a 3 + 2 = <b>5 cours simultanés</b>. Il faut donc au moins 5 salles. Le glouton, en triant par début, en utilise exactement 5.' },
+    qcm: [
+      { q: 'Pour l\'allocation de salles, on trie par :', o: ['heure de fin', 'heure de début', 'durée', 'numéro de salle'], a: 1, w: 'On traite les cours dans l\'ordre de leur début, en leur attribuant la première salle libre.' },
+      { q: 'Le nombre minimal de salles est :', o: ['le nombre maximal de cours simultanés', 'le nombre total de cours', 'toujours 1', 'le nombre de cours divisé par 2'], a: 0, w: 'C\'est une borne inférieure, et le glouton l\'atteint exactement.' },
+      { q: 'Le coût du glouton de salles est :', o: ['O(n)', 'O(n log n)', 'O(n²)', 'O(2ⁿ)'], a: 1, w: 'Le tri domine, puis l\'allocation se fait en un parcours avec une recherche linéaire dans les salles (O(n × salles), mais salles ≤ n).' },
+      { q: 'Ce problème est équivalent à :', o: ['colorer un graphe d\'intervalles', 'trier des nombres', 'chercher un plus court chemin', 'résoudre un sudoku'], a: 0, w: 'Chaque cours est un intervalle, deux cours incompatibles sont adjacents : il faut colorer le graphe d\'intervalles.' },
+      { q: 'Le glouton de salles est :', o: ['optimal', 'approché', 'faux', 'aléatoire'], a: 0, w: 'Le graphe d\'intervalles est parfait : le glouton par début atteint le nombre chromatique.' }
+    ]
+  },
+  w4: {
+    title: 'Sac à dos', level: 'Niveau 3 · Approfondir', time: '25 min', course: 'sacados',
+    goal: 'Comprendre pourquoi le glouton est optimal en sac fractionnaire mais pas en sac 0/1.',
+    steps: [
+      'En mode fractionnaire, lancez le glouton. Quel est le résultat ?',
+      'En mode 0/1, lancez le glouton. Comparez avec l\'optimum (donné par DP).',
+      'Pourquoi le glouton échoue-t-il en 0/1 avec {A: 10/60, B: 20/100, C: 30/120} et capacité 50 ?',
+      'Quel critère de tri utilise-t-on ?',
+      'Quel est le coût du glouton fractionnaire ?'
+    ],
+    defi: { q: 'Pourquoi le glouton du sac fractionnaire est-il optimal, alors que celui du sac 0/1 ne l\'est pas ?',
+      a: 'En fractionnaire, on peut prendre une fraction de l\'objet suivant : le choix glouton reste optimal car on peut toujours remplir exactement le sac. En 0/1, on doit prendre ou laisser chaque objet : un mauvais choix initial ne peut pas être corrigé.' },
+    qcm: [
+      { q: 'Pour le sac à dos fractionnaire, le critère du glouton est :', o: ['valeur maximale', 'poids minimal', 'valeur/poids maximal', 'ordre alphabétique'], a: 2, w: 'On trie par ratio valeur/poids décroissant.' },
+      { q: 'Le sac fractionnaire est résolu de manière optimale par :', o: ['un glouton', 'une recherche exhaustive', 'un algorithme de Dijkstra', 'une récursion'], a: 0, w: 'C\'est un cas classique où le glouton donne l\'optimum.' },
+      { q: 'Le sac à dos 0/1 est :', o: ['NP-complet', 'linéaire', 'résolu par glouton', 'sans solution'], a: 0, w: 'Il est NP-complet, mais la programmation dynamique le résout en O(n × capacité).' },
+      { q: 'Avec A(10/60), B(20/100), C(30/120) et capacité 50, le glouton 0/1 donne :', o: ['A + B = 160', 'B + C = 220', 'A + C = 180', 'C seul = 120'], a: 0, w: 'Le glouton prend A (60/10 = 6) puis B (5). Il ne reste que 20, donc C (30) ne rentre pas.' },
+      { q: 'Le glouton fractionnaire a une complexité :', o: ['O(n)', 'O(n log n)', 'O(n²)', 'O(2ⁿ)'], a: 1, w: 'Le tri domine, puis le parcours est linéaire.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'rendu', t: 'Rendu de monnaie', h: `
+<h3>Principe</h3>
+<p>Pour rendre une somme S avec le minimum de pièces, le glouton choisit toujours la <b>plus grande pièce possible</b>.</p>
+<pre class="code">def rendu_glouton(coins, S):
+    coins = sorted(coins, reverse=True)
+    res = []
+    for c in coins:
+        while S >= c:
+            res.append(c)
+            S -= c
+    return res</pre>
+<h3>Optimalité</h3>
+<p>Le glouton est optimal pour le système de pièces <b>européen</b> {1, 2, 5, 10, 20, 50, 100, 200}, mais <b>pas</b> pour tous les systèmes.</p>
+<p>Contre-exemple : pièces {1, 3, 4}, somme 6.</p>
+<ul>
+<li>Glouton : 4, puis il reste 2 → 1 + 1. Total : <b>3 pièces</b>.</li>
+<li>Optimal : 3 + 3. Total : <b>2 pièces</b>.</li>
+</ul>
+<p>Le glouton ne peut pas revenir sur son choix initial.</p>
+<h3>Coût</h3>
+<p>O(S) dans le pire cas, ou O(k × S) si on utilise une boucle sur les pièces. Une solution optimale existe par programmation dynamique en O(k × S), mais elle n\'est pas gloutonne.</p>
+<div class="retain"><b>À retenir.</b> Le glouton est rapide mais pas toujours optimal. Il faut prouver l\'optimalité (ou exhiber un contre-exemple).</div>` });
+
+COURSE.push({ id: 'selection', t: 'Sélection d\'activités', h: `
+<h3>Principe</h3>
+<p>On a n activités, chacune avec un début et une fin. On veut en choisir le maximum qui ne se chevauchent pas.</p>
+<p>Algorithme : <b>trier par date de fin croissante</b>, puis prendre chaque activité si elle commence après la fin de la dernière prise.</p>
+<pre class="code">def selection(activites):
+    activites = sorted(activites, key=lambda a: a[1])
+    choisies = []
+    fin_courante = -1
+    for debut, fin in activites:
+        if debut >= fin_courante:
+            choisies.append((debut, fin))
+            fin_courante = fin
+    return choisies</pre>
+<h3>Optimalité</h3>
+<p>Argument d\'échange : soit G l\'ensemble choisi par le glouton. L\'activité qui finit le plus tôt peut toujours remplacer la première activité d\'une solution optimale (elle ne bloque rien de plus). Par récurrence, on construit une solution optimale identique à G.</p>
+<h3>Coût</h3>
+<p>Tri : O(n log n). Parcours : O(n). Total : O(n log n).</p>
+<div class="retain"><b>À retenir.</b> Trier par date de fin. Le glouton est prouvé optimal par échange.</div>` });
+
+COURSE.push({ id: 'salles', t: 'Allocation de salles', h: `
+<h3>Principe</h3>
+<p>On a n cours avec des horaires fixes. On veut utiliser le minimum de salles.</p>
+<p>Algorithme : <b>trier par heure de début croissante</b>, puis attribuer à chaque cours la première salle dont le dernier cours est terminé.</p>
+<pre class="code">def allouer_salles(cours):
+    cours = sorted(cours, key=lambda c: c[0])
+    salles = []  # heure de fin de chaque salle
+    affectation = {}
+    for debut, fin in cours:
+        placee = False
+        for i in range(len(salles)):
+            if salles[i] <= debut:
+                salles[i] = fin
+                affectation[(debut, fin)] = i
+                placee = True
+                break
+        if not placee:
+            salles.append(fin)
+            affectation[(debut, fin)] = len(salles) - 1
+    return len(salles), affectation</pre>
+<h3>Optimalité</h3>
+<p>À l\'instant t où le plus de cours sont simultanés, il faut au moins k salles. Le glouton atteint exactement k. C\'est une borne inférieure qu\'il réalise : il est optimal.</p>
+<h3>Coût</h3>
+<p>Tri : O(n log n). Allocation : O(n × salles) dans le pire cas, avec salles ≤ n. On peut améliorer avec un tas (O(n log n)).</p>
+<div class="retain"><b>À retenir.</b> Trier par heure de début. Le nombre de salles est le nombre maximal de cours simultanés.</div>` });
+
+COURSE.push({ id: 'sacados', t: 'Sac à dos', h: `
+<h3>Principe</h3>
+<p>On a n objets, chacun avec un poids et une valeur. Le sac a une capacité limitée. On veut maximiser la valeur totale.</p>
+<h3>Sac fractionnaire</h3>
+<p>Les objets sont divisibles. On trie par <b>valeur/poids décroissant</b> et on remplit le sac.</p>
+<pre class="code">def sac_fractionnaire(objets, capacite):
+    objets = sorted(objets, key=lambda o: o[1] / o[0], reverse=True)
+    valeur = 0
+    for poids, val in objets:
+        if capacite >= poids:
+            valeur += val
+            capacite -= poids
+        else:
+            valeur += val * (capacite / poids)
+            break
+    return valeur</pre>
+<p>Le glouton est <b>optimal</b> : on peut toujours remplir exactement le sac, et le choix local ne bloque pas de meilleur choix global.</p>
+<h3>Sac 0/1</h3>
+<p>Les objets sont indivisibles. Le glouton (valeur/poids) n\'est <b>pas optimal</b> :</p>
+<ul>
+<li>A : poids 10, valeur 60 (ratio 6)</li>
+<li>B : poids 20, valeur 100 (ratio 5)</li>
+<li>C : poids 30, valeur 120 (ratio 4)</li>
+</ul>
+<p>Capacité 50. Glouton : A + B = 160. Optimal : B + C = 220.</p>
+<p>Le sac 0/1 se résout par programmation dynamique en O(n × capacité).</p>
+<div class="retain"><b>À retenir.</b> Fractionnaire : glouton optimal. 0/1 : glouton faux, DP optimale.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Algorithme glouton</dt><dd>Algorithme qui fait le meilleur choix local à chaque étape, sans revenir en arrière.</dd>
+<dt>Choix local</dt><dd>Décision prise à une étape, sans vision globale du problème.</dd>
+<dt>Optimalité</dt><dd>Propriété d\'un algorithme qui trouve toujours la meilleure solution.</dd>
+<dt>Argument d\'échange</dt><dd>Preuve d\'optimalité : on montre qu\'un choix glouton peut toujours remplacer un choix d\'une solution optimale.</dd>
+<dt>Contre-exemple</dt><dd>Cas où le glouton ne trouve pas l\'optimum.</dd>
+<dt>Sac à dos fractionnaire</dt><dd>Sac à dos où l\'on peut prendre une fraction d\'objet.</dd>
+<dt>Sac à dos 0/1</dt><dd>Sac à dos où chaque objet est pris en entier ou pas du tout.</dd>
+<dt>Graphe d\'intervalles</dt><dd>Graphe où les sommets sont des intervalles, deux sommets étant reliés s\'ils se chevauchent.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'w1' };
+const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'rendu' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : algorithmes gloutons'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Quatre ateliers sur les algorithmes gloutons (ITC, CPGE 1re année) : rendu de monnaie, sélection d\'activités, allocation de salles, sac à dos.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
