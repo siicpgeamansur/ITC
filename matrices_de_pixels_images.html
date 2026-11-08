@@ -130,13 +130,16 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .mat-table td{width:22px;height:22px;text-align:center;padding:0;border:1px solid #eee}
 .kernel-grid{display:inline-grid;grid-template-columns:repeat(3,1fr);gap:2px;margin:4px 0}
 .kernel-grid input{width:44px;height:36px;text-align:center;padding:0;font:12px var(--font-mono)}
-.kernel-display{font-family:var(--font-mono);font-size:12.5px;background:var(--panel2);padding:8px;border-radius:6px;margin-top:8px;display:inline-block;line-height:1.4;color:var(--fg);border:1px solid var(--line)}
+.kernel-display-table { border-collapse: collapse; margin-top: 4px; background: var(--panel2); border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.kernel-display-table td { padding: 4px 8px; font-family: var(--font-mono); font-size: 12.5px; text-align: center; border: 1px solid var(--line); min-width: 30px; }
+.kernel-display-table td.neg { color: var(--bad); font-weight: 600; }
+.kernel-display-table td.pos { color: var(--ok); font-weight: 600; }
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
 .zoom{display:flex;gap:4px;align-items:center;font-size:12.5px;color:var(--muted)}
 .code-tabs{display:flex;gap:0;margin-bottom:-1px;position:relative;z-index:1}
 .code-tabs button{border:1px solid var(--line);border-bottom:0;background:var(--panel2);padding:6px 12px;font-size:12.5px;border-radius:6px 6px 0 0;cursor:pointer;color:var(--muted)}
-.code-tabs button.on{background:#fff;color:var(--fg);font-weight:600;border-bottom:1px solid #fff}
-.code-container pre.code{margin-top:0;border-top-left-radius:0}
+.code-tabs button.on{background:var(--bg);color:var(--fg);font-weight:600;border-bottom:1px solid var(--bg)}
+.code-container pre.code{margin-top:0;border-top-left-radius:0;background:var(--bg);}
 @media (max-width:820px){
   .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
   #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -432,7 +435,11 @@ function mountW3(root) {
     '<div class="controls"><div class="zoom"><span>Préréglage</span><div id="w3-preset" style="display:flex;gap:4px"></div></div><button class="btn" id="w3-apply" type="button">Appliquer</button><button class="btn" id="w3-reset" type="button">Réinitialiser l\'image</button></div>' +
     '<div class="img-wrap"><div class="img-panel"><div class="img-title">Image d\'origine</div><canvas id="w3-canvas-orig"></canvas></div><div class="img-panel"><div class="img-title">Image convoluée</div><canvas id="w3-canvas-res"></canvas></div></div>' +
     '<h3>Noyau de convolution (3 × 3)</h3>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start"><div><div class="kernel-grid" id="w3-kernel"></div><div class="kernel-display" id="w3-kernel-display"></div></div><p class="small" style="flex:1;min-width:180px">Un noyau est une petite matrice <code>K</code>. Pour chaque pixel, on calcule la somme <code>Σ K[i][j] · pixel(i, j)</code> sur le voisinage, puis on borne le résultat dans [0, 255]. La somme des coefficients d\'un noyau de flou vaut 1, celle d\'un noyau de contour vaut 0.</p></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;margin-bottom:12px">' +
+      '<div><div class="small" style="margin-bottom:4px">Éditable :</div><div class="kernel-grid" id="w3-kernel"></div></div>' +
+      '<div><div class="small" style="margin-bottom:4px">Matrice appliquée :</div><table class="kernel-display-table" id="w3-kernel-display"></table></div>' +
+      '<p class="small" style="flex:1;min-width:180px;margin-top:24px">La somme des coefficients d\'un noyau de flou vaut 1, celle d\'un noyau de contour vaut 0.</p>' +
+    '</div>' +
     '<div class="gstats" id="w3-stats"></div>' +
     '<h3>Code Python</h3><div class="code-tabs" id="w3-tabs"><button type="button" class="on" data-tab="list">Version Listes</button><button type="button" data-tab="numpy">Version NumPy</button></div><div class="code-container" id="w3-code"></div>';
   const S = W3;
@@ -475,17 +482,28 @@ function mountW3(root) {
     S.kernel.forEach((row, i) => row.forEach((v, j) => {
       const inp = document.createElement('input');
       inp.type = 'text';
-      inp.value = v;
+      inp.value = typeof v === 'number' ? Number(v.toFixed(2)) : v;
       inp.oninput = () => {
         const x = parseFloat(inp.value);
-        if (!isNaN(x)) S.kernel[i][j] = x;
+        if (!isNaN(x)) { S.kernel[i][j] = x; updateKernelDisplay(); }
       };
       kg.appendChild(inp);
     }));
-    
-    // Affichage formaté de la matrice
-    const disp = S.kernel.map(row => '[' + row.map(v => String(v).padStart(5, ' ')).join(', ') + ']').join('\n');
-    $('#w3-kernel-display').innerText = disp;
+    updateKernelDisplay();
+  }
+
+  function updateKernelDisplay() {
+    let html = '';
+    S.kernel.forEach(row => {
+      html += '<tr>';
+      row.forEach(v => {
+        const cls = v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+        const disp = Number(v.toFixed(2));
+        html += `<td class="${cls}">${disp}</td>`;
+      });
+      html += '</tr>';
+    });
+    $('#w3-kernel-display').innerHTML = html;
   }
 
   function render() {
