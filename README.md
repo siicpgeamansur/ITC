@@ -52,6 +52,12 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 |:---:|---|---|
 | 2ème année | [SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Atelier complet sur SQL et les bases de données relationnelles : modèle relationnel et algèbre ($\pi$, $\sigma$, $\bowtie$), console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
 
+## A trier
+
+| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+
+| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+
 ---
 
 ## Utilisation en local
