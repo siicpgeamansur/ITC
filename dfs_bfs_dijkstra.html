@@ -245,6 +245,42 @@ const GRAPHS = {
   }
 };
 
+/* Génère un arbre binaire complet selon le nombre de sommets souhaité */
+function generateTree(n) {
+  const nodes = Array.from({ length: n }, (_, i) => String(i + 1));
+  const edges = [];
+  const pos = {};
+  
+  let maxLvl = 0;
+  for (let i = 0; i < n; i++) {
+    const lvl = Math.floor(Math.log2(i + 1));
+    if (lvl > maxLvl) maxLvl = lvl;
+  }
+  
+  const W = 640, H = 360;
+  const topPad = 50, botPad = 50;
+  const yStep = maxLvl > 0 ? (H - topPad - botPad) / maxLvl : 0;
+  
+  for (let i = 0; i < n; i++) {
+    const lvl = Math.floor(Math.log2(i + 1));
+    const posInLvl = i - (Math.pow(2, lvl) - 1);
+    const totalInLvl = Math.pow(2, lvl);
+    
+    const spacing = W / (totalInLvl + 1);
+    const x = spacing * (posInLvl + 1);
+    const y = topPad + lvl * yStep;
+    
+    pos[String(i + 1)] = [x, y];
+    
+    if (i > 0) {
+      const parent = Math.floor((i - 1) / 2);
+      edges.push([String(parent + 1), String(i + 1), 1]);
+    }
+  }
+  
+  return { name: 'Arbre binaire', directed: false, nodes, edges, pos };
+}
+
 /* Construction de la liste d'adjacence */
 function buildAdj(g) {
   const adj = new Map();
@@ -471,7 +507,6 @@ function mountW1(root) {
   function render() {
     const g = GRAPHS[S.graph];
     
-    // Mise à jour des boutons (chips)
     $('#w1-g').innerHTML = '';
     $('#w1-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['pondere', 'Pondéré'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.highlight = null; render(); }, 'Graphe'));
     $('#w1-r').innerHTML = '';
@@ -536,10 +571,11 @@ WORKSHOPS.push({ id: 'w1', title: 'Vocabulaire et représentations', hint: 'Expl
   mount: mountW1, reset: () => { Object.assign(W1, { graph: 'simple', repr: 'adj', highlight: null }); } });
 
 /* ================= Atelier 2 : parcours BFS / DFS ================= */
-const W2 = { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null, timer: null };
+const W2 = { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null, timer: null, treeN: 15 };
 function mountW2(root) {
   root.innerHTML = '<h2>Parcours en largeur et en profondeur</h2><p>Parcourir un graphe, c\'est visiter ses sommets en suivant ses arêtes. Deux stratégies classiques : <b>en largeur</b> (BFS, avec une file) et <b>en profondeur</b> (DFS, avec une pile).</p>' +
     '<div class="opts"><div class="fld"><span>Graphe</span><div id="w2-g"></div></div><div class="fld"><span>Sommet de départ</span><div id="w2-s"></div></div><div class="fld"><span>Algorithme</span><div id="w2-m"></div></div></div>' +
+    '<div class="opts" id="w2-tree-ctrl" style="display:none; align-items:center; gap:10px; margin-bottom:10px;"><label for="w2-tree-n" class="small" style="margin:0;">Nombre de sommets : <b id="w2-tree-nval">15</b></label><input type="range" id="w2-tree-n" min="3" max="15" value="15" style="width:150px;"></div>' +
     '<div class="files" style="margin:8px 0"><button class="btn" id="w2-prev" type="button">◀ Précédent</button><button class="btn pri" id="w2-next" type="button">Suivant ▶</button><button class="btn" id="w2-play" type="button">Lecture</button><button class="btn" id="w2-reset" type="button">Départ</button></div>' +
     '<div class="gwrap"><svg id="w2-svg" viewBox="0 0 640 360"></svg></div>' +
     '<div class="legend"><span><i></i>non visité</span><span><i class="f"></i>dans la file / pile</span><span><i class="v"></i>visité</span><span><i class="c"></i>courant</span><span><i class="t"></i>arête de l\'arbre</span></div>' +
@@ -548,9 +584,18 @@ function mountW2(root) {
     '<div id="w2-queue"></div>' +
     '<h3>Code Python</h3><div id="w2-code"></div>';
   const S = W2;
+  
+  $('#w2-tree-n').addEventListener('input', (e) => {
+    S.treeN = parseInt(e.target.value, 10);
+    $('#w2-tree-nval').textContent = S.treeN;
+    S.start = '1';
+    S.step = 0; S.frames = null; stop(); render();
+  });
+
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w2-play'); if (b) b.textContent = 'Lecture'; }
+  
   function buildFrames() {
-    const g = GRAPHS[S.graph];
+    const g = S.graph === 'tree' ? generateTree(S.treeN) : GRAPHS[S.graph];
     const adj = buildAdj(g);
     const frames = [];
     if (S.mode === 'bfs') {
@@ -584,19 +629,34 @@ function mountW2(root) {
       return { frames, parent: new Map(), dist: null, order };
     }
   }
+  
   function render() {
     $('#w2-g').innerHTML = '';
-    $('#w2-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
+    $('#w2-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['cycle', 'Avec cycles'], ['tree', 'Arbre']], S.graph, v => { 
+      S.graph = v; 
+      S.start = v === 'tree' ? '1' : GRAPHS[v].nodes[0]; 
+      S.step = 0; S.frames = null; stop(); render(); 
+    }, 'Graphe'));
+    
+    const treeCtrl = $('#w2-tree-ctrl');
+    if (S.graph === 'tree') treeCtrl.style.display = 'flex';
+    else treeCtrl.style.display = 'none';
+
+    const g = S.graph === 'tree' ? generateTree(S.treeN) : GRAPHS[S.graph];
+    if (!g.nodes.includes(S.start)) S.start = g.nodes[0];
+
     $('#w2-s').innerHTML = '';
-    $('#w2-s').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Départ'));
+    $('#w2-s').append(chipsRow(g.nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Départ'));
+    
     $('#w2-m').innerHTML = '';
     $('#w2-m').append(chipsRow([['bfs', 'Largeur (BFS)'], ['dfs', 'Profondeur (DFS)']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
 
-    const g = GRAPHS[S.graph];
     if (!S.frames) S.frames = buildFrames();
     const f = S.frames.frames[S.step];
     const frontier = new Set(f.queue || f.stack || []);
+    
     drawGraph($('#w2-svg'), g, { visited: f.visited, frontier, current: f.current, treeEdges: f.treeEdges, dist: f.dist });
+    
     const last = S.step === S.frames.frames.length - 1;
     $('#w2-msg').className = 'verdict' + (last ? ' yes' : '');
     $('#w2-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.frames.length - 1) + '.</b> ' + f.msg;
@@ -629,7 +689,7 @@ function mountW2(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w2', title: 'Parcours BFS et DFS', hint: 'Comparez parcours en largeur (file) et en profondeur (pile) : ordre de visite, arbre couvrant, distance en nombre d\'arêtes.',
-  mount: mountW2, reset: () => { Object.assign(W2, { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
+  mount: mountW2, reset: () => { Object.assign(W2, { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null, treeN: 15 }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
 
 /* ================= Atelier 3 : connexité et cycles ================= */
 const W3 = { graph: 'cycle', start: '1' };
