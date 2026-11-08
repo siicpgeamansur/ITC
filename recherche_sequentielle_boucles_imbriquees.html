@@ -1,0 +1,871 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Recherches séquentielles et boucles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* visuels */
+.cells{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0}
+.cell{width:44px;height:44px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:15px;background:#fff;position:relative;transition:all .15s}
+.cell .idx{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);font-family:var(--font-mono)}
+.cell.scan{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.cell.max{background:rgba(154,91,0,.15);border-color:var(--warn);font-weight:600}
+.cell.second{background:rgba(123,79,194,.15);border-color:var(--violet);font-weight:600}
+.cell.found{background:rgba(30,122,46,.2);border-color:var(--ok);font-weight:600}
+.cell.eliminated{background:#ececf1;color:#aaa;border-color:#d4d4dc}
+.txt-viz{font-family:var(--font-mono);font-size:16px;margin:8px 0;display:flex;flex-wrap:wrap}
+.txt-viz span{padding:2px 4px;border:1px solid transparent}
+.txt-viz span.match{background:rgba(30,122,46,.2);border-color:var(--ok);font-weight:600;border-radius:3px}
+.txt-viz span.mismatch{background:rgba(192,40,31,.15);border-color:var(--bad);border-radius:3px}
+.txt-viz span.shift{opacity:.35;text-decoration:line-through}
+.txt-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-family:var(--font-mono);font-size:14px}
+.txt-label{width:80px;color:var(--muted);font-size:12px}
+.txt-track{position:relative;height:26px;background:var(--panel2);border-radius:4px;flex:1;overflow:hidden}
+.txt-block{position:absolute;top:2px;bottom:2px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.bubble{display:flex;align-items:flex-end;gap:4px;height:120px;margin:10px 0}
+.bcol{flex:1;max-width:44px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bcol .b{width:100%;background:#9fb4ca;border-radius:3px 3px 0 0;border:1px solid #6f8aa6;transition:height .15s}
+.bcol .v{font:600 12px var(--font-mono);margin-bottom:2px}
+.bcol.swap .b{background:var(--warn);border-color:var(--bad)}
+.bcol.sorted .b{background:rgba(30,122,46,.75);border-color:var(--ok)}
+.bcol.scan .b{background:var(--accent);border-color:var(--accent-ink)}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:32px;height:32px;font-size:13px}
+  .txt-label{width:60px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="13" width="20" height="2" fill="var(--accent)"/><circle cx="6" cy="14" r="3" fill="var(--accent-soft)" stroke="var(--accent)"/><circle cx="13" cy="14" r="3" fill="var(--accent)" stroke="var(--accent)"/><circle cx="20" cy="14" r="3" fill="var(--accent-soft)" stroke="var(--accent)"/><path d="M10,5 L10,10 M16,18 L16,23" stroke="var(--ok)" stroke-width="2"/></svg><span>Atelier Recherches séquentielles et boucles <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-recherche-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* Code Python coloré (léger) */
+function codeBlock(code, on) {
+  const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield|None)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|True|False|isinstance|TypeError|ValueError|Exception|AssertionError|abs|round|min|max)$/;
+  const lines = code.split('\n').map(line => {
+    let out = '', i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '#') { out += '<span style="color:#7a7a88;font-style:italic">' + esc(line.slice(i)) + '</span>'; break; }
+      if (ch === '"' || ch === "'") { let j = i + 1; while (j < line.length && line[j] !== ch) j++; out += '<span style="color:#1c6b40">' + esc(line.slice(i, j + 1)) + '</span>'; i = j + 1; continue; }
+      let j = i; while (j < line.length && line[j] !== '#' && line[j] !== '"' && line[j] !== "'") j++;
+      let seg = esc(line.slice(i, j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g, m => /^\d/.test(m) ? '<span style="color:#b05a00">' + m + '</span>' : KW.test(m) ? '<span style="color:#7c3aa8">' + m + '</span>' : BI.test(m) ? '<span style="color:#1f3fa0">' + m + '</span>' : m);
+      out += seg; i = j;
+    }
+    return out;
+  });
+  return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/* ================= Atelier 1 : Recherche séquentielle ================= */
+const W1 = { arr: [4, 8, 15, 16, 23, 42], target: 15, mode: 'search', step: 0, frames: null, timer: null };
+function mountW1(root) {
+  root.innerHTML = '<h2>Recherche séquentielle</h2><p>La recherche séquentielle (ou linéaire) parcourt le tableau élément par élément. C\'est la méthode la plus simple pour chercher une valeur, un maximum, ou le second maximum.</p>' +
+    '<div class="opts"><div class="fld"><span>Opération</span><div id="w1-mode"></div></div><label class="fld"><span>Élément recherché</span><input type="number" id="w1-target" value="15" style="width:80px"></label></div>' +
+    '<div class="cells" id="w1-arr"></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w1-prev" type="button">◀ Précédent</button><button class="btn pri" id="w1-next" type="button">Suivant ▶</button><button class="btn" id="w1-play" type="button">Lecture</button><button class="btn" id="w1-reset" type="button">Départ</button></div>' +
+    '<div class="gstats" id="w1-stats"></div>' +
+    '<div class="verdict" id="w1-msg" aria-live="polite"></div>' +
+    '<h3>Code Python</h3><div id="w1-code"></div>';
+  const S = W1;
+  $('#w1-mode').append(chipsRow([['search', 'Recherche'], ['max', 'Maximum'], ['second', 'Second max']], S.mode, v => { S.mode = v; S.frames = null; S.step = 0; stop(); render(); }, 'Opération'));
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w1-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const arr = S.arr, frames = [];
+    if (S.mode === 'search') {
+      const t = S.target;
+      let found = false;
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] === t) { frames.push({ i, max: null, second: null, found: true, msg: 'arr[' + i + '] = ' + arr[i] + ' : trouvé !' }); found = true; break; }
+        frames.push({ i, max: null, second: null, found: false, msg: 'arr[' + i + '] = ' + arr[i] + ' ≠ ' + t + ' : on continue.' });
+      }
+      if (!found) frames.push({ i: null, max: null, second: null, found: false, msg: t + ' absent (parcours complet).' });
+    } else if (S.mode === 'max') {
+      let max = arr[0], maxIdx = 0;
+      frames.push({ i: 0, max: arr[0], second: null, msg: 'On initialise le maximum à arr[0] = ' + arr[0] + '.' });
+      for (let i = 1; i < arr.length; i++) {
+        if (arr[i] > max) { max = arr[i]; maxIdx = i; frames.push({ i, max, second: null, msg: 'arr[' + i + '] = ' + arr[i] + ' > ' + max + ' : nouveau maximum.' }); }
+        else frames.push({ i, max, second: null, msg: 'arr[' + i + '] = ' + arr[i] + ' ≤ ' + max + ' : le maximum ne change pas.' });
+      }
+      frames.push({ i: null, max, second: null, msg: 'Terminé : le maximum est ' + max + ' (indice ' + maxIdx + ').' });
+    } else {
+      let max = -Infinity, second = -Infinity;
+      frames.push({ i: -1, max: null, second: null, msg: 'On initialise max et second max à -∞.' });
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] > max) { second = max; max = arr[i]; frames.push({ i, max, second, msg: 'arr[' + i + '] = ' + arr[i] + ' > max : l\'ancien max (' + second + ') devient second.' }); }
+        else if (arr[i] > second && arr[i] !== max) { second = arr[i]; frames.push({ i, max, second, msg: 'arr[' + i + '] = ' + arr[i] + ' : nouveau second maximum.' }); }
+        else frames.push({ i, max, second, msg: 'arr[' + i + '] = ' + arr[i] + ' : ni max ni second.' });
+      }
+      frames.push({ i: null, max, second, msg: 'Terminé : max = ' + max + ', second max = ' + second + '.' });
+    }
+    return frames;
+  }
+  function render() {
+    if (!S.frames) S.frames = buildFrames();
+    if (S.step >= S.frames.length) S.step = S.frames.length - 1;
+    const f = S.frames[S.step];
+    let html = '';
+    S.arr.forEach((v, i) => {
+      let cls = 'cell';
+      if (f.found && f.i === i) cls += ' found';
+      else if (f.i === i) cls += ' scan';
+      else if (f.max === v) cls += ' max';
+      else if (f.second === v) cls += ' second';
+      else if (f.i !== null && i < f.i) cls += ' eliminated';
+      html += '<div class="' + cls + '"><span class="idx">' + i + '</span>' + v + '</div>';
+    });
+    $('#w1-arr').innerHTML = html;
+    $('#w1-msg').className = 'verdict ' + (f.found || f.i === null ? 'yes' : '');
+    $('#w1-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
+    $('#w1-stats').innerHTML = '';
+    $('#w1-stats').append(stats([
+      ['Étape', String(S.step + 1)],
+      ['n', String(S.arr.length)],
+      ['Complexité', 'O(n)'],
+      ['Comparaisons', String(S.step + 1)]
+    ]));
+    const codes = {
+      search: 'def recherche(arr, x):\n    for i in range(len(arr)):\n        if arr[i] == x:\n            return i\n    return -1',
+      max: 'def maximum(arr):\n    max = arr[0]\n    for i in range(1, len(arr)):\n        if arr[i] > max:\n            max = arr[i]\n    return max',
+      second: 'def second_max(arr):\n    max, second = -float("inf"), -float("inf")\n    for x in arr:\n        if x > max:\n            second = max\n            max = x\n        elif x > second and x != max:\n            second = x\n    return second'
+    };
+    $('#w1-code').innerHTML = codeBlock(codes[S.mode]);
+    $('#w1-prev').disabled = S.step === 0;
+    $('#w1-next').disabled = S.step >= S.frames.length - 1;
+  }
+  $('#w1-target').oninput = () => { const v = parseInt($('#w1-target').value, 10); if (isFinite(v)) { S.target = v; S.frames = null; S.step = 0; stop(); render(); } };
+  $('#w1-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w1-next').onclick = () => { stop(); if (S.step < S.frames.length - 1) { S.step++; render(); } };
+  $('#w1-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w1-play').onclick = () => {
+    if (S.timer) { stop(); render(); return; }
+    if (S.step >= S.frames.length - 1) S.step = 0;
+    S.timer = setInterval(() => { if (S.step >= S.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 600);
+    render();
+  };
+  render();
+}
+WORKSHOPS.push({ id: 'w1', title: 'Recherche séquentielle', hint: 'Rechercher un élément, le maximum ou le second maximum en un seul parcours linéaire.',
+  mount: mountW1, reset: () => { Object.assign(W1, { arr: [4, 8, 15, 16, 23, 42], target: 15, mode: 'search', step: 0, frames: null }); if (W1.timer) { clearInterval(W1.timer); W1.timer = null; } } });
+
+/* ================= Atelier 2 : Comptage avec dictionnaire ================= */
+const W2 = { arr: [1, 3, 1, 2, 3, 1, 4] };
+function mountW2(root) {
+  root.innerHTML = '<h2>Comptage avec un dictionnaire</h2><p>Pour compter les occurrences de chaque élément d\'un tableau, on peut utiliser un <b>dictionnaire</b> : les clés sont les éléments, les valeurs sont les compteurs. L\'accès à une clé est en O(1), donc le comptage total est en O(n).</p>' +
+    '<div class="opts"><label class="fld"><span>Tableau</span><input type="text" id="w2-arr" class="mono" value="1, 3, 1, 2, 3, 1, 4" style="width:260px"></label></div>' +
+    '<div class="cells" id="w2-cells"></div>' +
+    '<div id="w2-out"></div>' +
+    '<h3>Code Python</h3><pre class="code">def compter(arr):\n    compteurs = {}\n    for x in arr:\n        if x in compteurs:\n            compteurs[x] += 1\n        else:\n            compteurs[x] = 1\n    return compteurs</pre>';
+  function render() {
+    const arr = $('#w2-arr').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x));
+    let cells = '';
+    arr.forEach((v, i) => cells += '<div class="cell"><span class="idx">' + i + '</span>' + v + '</div>');
+    $('#w2-cells').innerHTML = cells;
+    const counts = {};
+    arr.forEach(x => counts[x] = (counts[x] || 0) + 1);
+    let html = '<h3>Dictionnaire des occurrences</h3><div class="dwrap"><table class="dt"><thead><tr><th>Clé (élément)</th><th>Valeur (occurrences)</th></tr></thead><tbody>';
+    Object.keys(counts).sort((a, b) => a - b).forEach(k => {
+      html += '<tr><td class="m"><b>' + k + '</b></td><td class="m">' + counts[k] + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<p class="verdict yes">Le dictionnaire contient <b>' + Object.keys(counts).length + ' clés distinctes</b> pour ' + arr.length + ' éléments.</p>';
+    html += '<h3>Comparaison avec une recherche par force brute</h3>';
+    html += '<div class="dwrap"><table class="dt"><thead><tr><th>Méthode</th><th>Complexité</th><th>Coût sur ' + arr.length + ' éléments</th></tr></thead><tbody>' +
+      '<tr><td>Dictionnaire</td><td>O(n)</td><td class="m">' + arr.length + ' insertions O(1)</td></tr>' +
+      '<tr><td>Boucles imbriquées</td><td>O(n²)</td><td class="m">' + (arr.length * (arr.length - 1) / 2) + ' comparaisons</td></tr>' +
+      '</tbody></table></div>';
+    $('#w2-out').innerHTML = html;
+  }
+  $('#w2-arr').oninput = render;
+  render();
+}
+WORKSHOPS.push({ id: 'w2', title: 'Comptage', hint: 'Compter les occurrences avec un dictionnaire : O(n) au lieu de O(n²) par force brute.',
+  mount: mountW2, reset: () => { W2.arr = [1, 3, 1, 2, 3, 1, 4]; } });
+
+/* ================= Atelier 3 : Recherche de facteur (boucles imbriquées) ================= */
+const W3 = { text: 'abracadabra', pattern: 'cad', step: 0, frames: null, timer: null };
+function mountW3(root) {
+  root.innerHTML = '<h2>Recherche de facteur (boucles imbriquées)</h2><p>Pour chercher un motif dans un texte, on peut aligner le motif à chaque position du texte et comparer caractère par caractère. C\'est l\'algorithme naïf de recherche de sous-chaîne, en O(n × m).</p>' +
+    '<div class="opts"><label class="fld"><span>Texte</span><input type="text" id="w3-text" class="mono" value="abracadabra" style="width:200px"></label><label class="fld"><span>Motif</span><input type="text" id="w3-pat" class="mono" value="cad" style="width:100px"></label></div>' +
+    '<div id="w3-viz"></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w3-prev" type="button">◀ Précédent</button><button class="btn pri" id="w3-next" type="button">Suivant ▶</button><button class="btn" id="w3-play" type="button">Lecture</button><button class="btn" id="w3-reset" type="button">Départ</button></div>' +
+    '<div class="verdict" id="w3-msg" aria-live="polite"></div>' +
+    '<h3>Code Python</h3><pre class="code">def recherche_naive(texte, motif):\n    n, m = len(texte), len(motif)\n    for i in range(n - m + 1):\n        j = 0\n        while j < m and texte[i + j] == motif[j]:\n            j += 1\n        if j == m:\n            return i\n    return -1</pre>';
+  const S = W3;
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w3-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const T = S.text, P = S.pattern, n = T.length, m = P.length;
+    const frames = [];
+    for (let i = 0; i <= n - m; i++) {
+      let j = 0;
+      while (j < m && T[i + j] === P[j]) j++;
+      frames.push({ i, j, match: j === m, msg: j === m ? 'Motif trouvé à l\'indice ' + i + ' !' : 'Échec à l\'indice ' + i + ' : ' + (j > 0 ? 'les ' + j + ' premiers caractères correspondent, mais' : '') + ' "' + T[i + j] + '" ≠ "' + P[j] + '". On décale le motif.' });
+      if (j === m) break;
+    }
+    if (!frames.length || !frames[frames.length - 1].match) frames.push({ i: n - m + 1, j: 0, match: false, msg: 'Motif absent du texte.' });
+    return frames;
+  }
+  function render() {
+    if (!S.frames) S.frames = buildFrames();
+    if (S.step >= S.frames.length) S.step = S.frames.length - 1;
+    const f = S.frames[S.step];
+    const T = S.text, P = S.pattern;
+    let html = '<div class="txt-viz">';
+    for (let k = 0; k < T.length; k++) {
+      let cls = '';
+      if (k >= f.i && k < f.i + f.j) cls = 'match';
+      else if (k === f.i + f.j && f.j < P.length && !f.match) cls = 'mismatch';
+      else if (k < f.i) cls = 'shift';
+      html += '<span class="' + cls + '">' + esc(T[k]) + '</span>';
+    }
+    html += '</div>';
+    html += '<div class="txt-viz" style="padding-left:' + (f.i * 24) + 'px">';
+    for (let k = 0; k < P.length; k++) {
+      let cls = k < f.j ? 'match' : k === f.j && !f.match ? 'mismatch' : '';
+      html += '<span class="' + cls + '">' + esc(P[k]) + '</span>';
+    }
+    html += '</div>';
+    $('#w3-viz').innerHTML = html;
+    $('#w3-msg').className = 'verdict ' + (f.match ? 'yes' : f.i >= T.length - P.length + 1 ? 'no' : '');
+    $('#w3-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
+    $('#w3-prev').disabled = S.step === 0;
+    $('#w3-next').disabled = S.step >= S.frames.length - 1;
+  }
+  $('#w3-text').oninput = () => { S.text = $('#w3-text').value; S.frames = null; S.step = 0; stop(); render(); };
+  $('#w3-pat').oninput = () => { S.pattern = $('#w3-pat').value; S.frames = null; S.step = 0; stop(); render(); };
+  $('#w3-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w3-next').onclick = () => { stop(); if (S.step < S.frames.length - 1) { S.step++; render(); } };
+  $('#w3-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w3-play').onclick = () => {
+    if (S.timer) { stop(); render(); return; }
+    if (S.step >= S.frames.length - 1) S.step = 0;
+    S.timer = setInterval(() => { if (S.step >= S.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 800);
+    render();
+  };
+  render();
+}
+WORKSHOPS.push({ id: 'w3', title: 'Recherche de facteur', hint: 'Rechercher un motif dans un texte avec des boucles imbriquées : O(n × m) comparaisons dans le pire cas.',
+  mount: mountW3, reset: () => { Object.assign(W3, { text: 'abracadabra', pattern: 'cad', step: 0, frames: null }); if (W3.timer) { clearInterval(W3.timer); W3.timer = null; } } });
+
+/* ================= Atelier 4 : Les deux valeurs les plus proches ================= */
+const W4 = { arr: [10, 2, 5, 8, 15], step: 0, frames: null, timer: null };
+function mountW4(root) {
+  root.innerHTML = '<h2>Les deux valeurs les plus proches</h2><p>Pour trouver les deux valeurs les plus proches dans un tableau, on peut comparer <b>toutes les paires</b> avec deux boucles imbriquées. Le coût est O(n²).</p>' +
+    '<div class="opts"><label class="fld"><span>Tableau</span><input type="text" id="w4-arr" class="mono" value="10, 2, 5, 8, 15" style="width:260px"></label></div>' +
+    '<div class="cells" id="w4-cells"></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w4-prev" type="button">◀ Précédent</button><button class="btn pri" id="w4-next" type="button">Suivant ▶</button><button class="btn" id="w4-play" type="button">Lecture</button><button class="btn" id="w4-reset" type="button">Départ</button></div>' +
+    '<div class="verdict" id="w4-msg" aria-live="polite"></div>' +
+    '<h3>Code Python</h3><pre class="code">def plus_proches(arr):\n    min_diff = float("inf")\n    paire = None\n    for i in range(len(arr)):\n        for j in range(i + 1, len(arr)):\n            diff = abs(arr[i] - arr[j])\n            if diff < min_diff:\n                min_diff = diff\n                paire = (arr[i], arr[j])\n    return paire, min_diff</pre>';
+  const S = W4;
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w4-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const arr = S.arr, frames = [];
+    let minDiff = Infinity, pair = null;
+    frames.push({ i: -1, j: -1, minDiff, pair, msg: 'On initialise la différence minimale à ∞.' });
+    for (let i = 0; i < arr.length; i++) {
+      for (let j = i + 1; j < arr.length; j++) {
+        const diff = Math.abs(arr[i] - arr[j]);
+        let changed = false;
+        if (diff < minDiff) { minDiff = diff; pair = [arr[i], arr[j]]; changed = true; }
+        frames.push({ i, j, minDiff, pair, changed, msg: 'Comparaison de arr[' + i + '] = ' + arr[i] + ' et arr[' + j + '] = ' + arr[j] + ' : différence = ' + diff + (changed ? ' → nouveau minimum !' : '') });
+      }
+    }
+    frames.push({ i: null, j: null, minDiff, pair, msg: 'Terminé : la paire la plus proche est (' + pair[0] + ', ' + pair[1] + ') avec une différence de ' + minDiff + '.' });
+    return frames;
+  }
+  function render() {
+    if (!S.frames) S.frames = buildFrames();
+    if (S.step >= S.frames.length) S.step = S.frames.length - 1;
+    const f = S.frames[S.step];
+    let cells = '';
+    S.arr.forEach((v, i) => {
+      let cls = 'cell';
+      if (f.pair && (v === f.pair[0] || v === f.pair[1]) && !f.changed) cls += ' found';
+      else if (i === f.i || i === f.j) cls += ' scan';
+      cells += '<div class="' + cls + '"><span class="idx">' + i + '</span>' + v + '</div>';
+    });
+    $('#w4-cells').innerHTML = cells;
+    $('#w4-msg').className = 'verdict ' + (f.i === null ? 'yes' : '');
+    $('#w4-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
+    $('#w4-prev').disabled = S.step === 0;
+    $('#w4-next').disabled = S.step >= S.frames.length - 1;
+  }
+  $('#w4-arr').oninput = () => {
+    S.arr = $('#w4-arr').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x));
+    S.frames = null; S.step = 0; stop(); render();
+  };
+  $('#w4-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w4-next').onclick = () => { stop(); if (S.step < S.frames.length - 1) { S.step++; render(); } };
+  $('#w4-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w4-play').onclick = () => {
+    if (S.timer) { stop(); render(); return; }
+    if (S.step >= S.frames.length - 1) S.step = 0;
+    S.timer = setInterval(() => { if (S.step >= S.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 600);
+    render();
+  };
+  render();
+}
+WORKSHOPS.push({ id: 'w4', title: 'Valeurs les plus proches', hint: 'Trouver les deux valeurs les plus proches avec deux boucles imbriquées : O(n²) comparaisons.',
+  mount: mountW4, reset: () => { Object.assign(W4, { arr: [10, 2, 5, 8, 15], step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } } });
+
+/* ================= Atelier 5 : Tri à bulles ================= */
+const W5 = { arr: [5, 1, 4, 2, 8], step: 0, frames: null, timer: null };
+function mountW5(root) {
+  root.innerHTML = '<h2>Tri à bulles</h2><p>Le tri à bulles compare les éléments voisins et les échange s\'ils sont dans le mauvais ordre. Il répète ce parcours jusqu\'à ce que le tableau soit trié. C\'est un algorithme à <b>boucles imbriquées</b>, de complexité O(n²).</p>' +
+    '<div class="opts"><label class="fld"><span>Tableau</span><input type="text" id="w5-arr" class="mono" value="5, 1, 4, 2, 8" style="width:200px"></label></div>' +
+    '<div class="bubble" id="w5-bars"></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w5-prev" type="button">◀ Précédent</button><button class="btn pri" id="w5-next" type="button">Suivant ▶</button><button class="btn" id="w5-play" type="button">Lecture</button><button class="btn" id="w5-reset" type="button">Départ</button></div>' +
+    '<div class="gstats" id="w5-stats"></div>' +
+    '<div class="verdict" id="w5-msg" aria-live="polite"></div>' +
+    '<h3>Code Python</h3><pre class="code">def tri_bulles(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n - i - 1):\n            if arr[j] > arr[j + 1]:\n                arr[j], arr[j + 1] = arr[j + 1], arr[j]\n    return arr</pre>';
+  const S = W5;
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w5-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const arr = S.arr.slice(), n = arr.length, frames = [];
+    frames.push({ arr: arr.slice(), i: -1, j: -1, swapped: false, msg: 'État initial du tableau.' });
+    for (let i = 0; i < n - 1; i++) {
+      let swapped = false;
+      for (let j = 0; j < n - i - 1; j++) {
+        if (arr[j] > arr[j + 1]) {
+          [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+          swapped = true;
+          frames.push({ arr: arr.slice(), i, j, swapped: true, msg: 'arr[' + j + '] > arr[' + (j + 1) + '] : on échange.' });
+        } else {
+          frames.push({ arr: arr.slice(), i, j, swapped: false, msg: 'arr[' + j + '] ≤ arr[' + (j + 1) + '] : pas d\'échange.' });
+        }
+      }
+      if (!swapped) break;
+    }
+    frames.push({ arr: arr.slice(), i: n, j: -1, swapped: false, msg: 'Tableau trié !' });
+    return frames;
+  }
+  function render() {
+    if (!S.frames) S.frames = buildFrames();
+    if (S.step >= S.frames.length) S.step = S.frames.length - 1;
+    const f = S.frames[S.step];
+    const maxV = Math.max(...f.arr, 1);
+    let html = '';
+    f.arr.forEach((v, i) => {
+      const ht = Math.max(10, Math.round(v / maxV * 90));
+      let cls = 'bcol';
+      if (i >= f.arr.length - f.i - 1 && f.i >= 0) cls += ' sorted';
+      if (i === f.j || i === f.j + 1) cls += f.swapped ? ' swap' : ' scan';
+      html += '<div class="' + cls + '"><div class="v">' + v + '</div><div class="b" style="height:' + ht + 'px"></div></div>';
+    });
+    $('#w5-bars').innerHTML = html;
+    $('#w5-msg').className = 'verdict ' + (f.i >= f.arr.length - 1 ? 'yes' : '');
+    $('#w5-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
+    $('#w5-stats').innerHTML = '';
+    $('#w5-stats').append(stats([
+      ['Passe', String(f.i >= 0 ? f.i + 1 : '—')],
+      ['n', String(f.arr.length)],
+      ['Comparaisons (max)', String(f.arr.length * (f.arr.length - 1) / 2)],
+      ['Complexité', 'O(n²)']
+    ]));
+    $('#w5-prev').disabled = S.step === 0;
+    $('#w5-next').disabled = S.step >= S.frames.length - 1;
+  }
+  $('#w5-arr').oninput = () => {
+    S.arr = $('#w5-arr').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x));
+    if (S.arr.length > 1) { S.frames = null; S.step = 0; stop(); render(); }
+  };
+  $('#w5-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w5-next').onclick = () => { stop(); if (S.step < S.frames.length - 1) { S.step++; render(); } };
+  $('#w5-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w5-play').onclick = () => {
+    if (S.timer) { stop(); render(); return; }
+    if (S.step >= S.frames.length - 1) S.step = 0;
+    S.timer = setInterval(() => { if (S.step >= S.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 600);
+    render();
+  };
+  render();
+}
+WORKSHOPS.push({ id: 'w5', title: 'Tri à bulles', hint: 'Trier un tableau par échanges successifs d\'éléments voisins : O(n²) comparaisons.',
+  mount: mountW5, reset: () => { Object.assign(W5, { arr: [5, 1, 4, 2, 8], step: 0, frames: null }); if (W5.timer) { clearInterval(W5.timer); W5.timer = null; } } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  w1: {
+    title: 'Recherche séquentielle', level: 'Niveau 1 · Découvrir', time: '15 min', course: 'recherche',
+    goal: 'Maîtriser le parcours linéaire : recherche, maximum, second maximum.',
+    steps: [
+      'Cherchez 15 dans [4, 8, 15, 16, 23, 42]. Combien de comparaisons ?',
+      'Cherchez 42. Combien de comparaisons ?',
+      'Cherchez 0 (absent). Que se passe-t-il à la fin ?',
+      'Passez au maximum : combien de comparaisons ?',
+      'Passez au second maximum : comment met-on à jour max et second ?'
+    ],
+    defi: { q: 'Pourquoi dit-on que la recherche séquentielle est en O(n) ?',
+      a: 'Dans le pire cas (élément absent ou en dernière position), on parcourt les n éléments du tableau une fois chacun : le nombre de comparaisons est proportionnel à n.' },
+    qcm: [
+      { q: 'La recherche séquentielle a une complexité :', o: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], a: 2, w: 'On parcourt le tableau élément par élément dans le pire cas.' },
+      { q: 'Pour trouver le maximum d\'un tableau, il faut :', o: ['trier le tableau', 'parcourir le tableau une fois', 'parcourir le tableau n fois', 'utiliser la dichotomie'], a: 1, w: 'Un seul parcours suffit : on garde le plus grand vu jusqu\'ici.' },
+      { q: 'Pour trouver le second maximum, on maintient :', o: ['le maximum seul', 'le maximum et le second maximum', 'le minimum et le maximum', 'la moyenne'], a: 1, w: 'À chaque nouvel élément, on décale le max dans second si nécessaire.' },
+      { q: 'Combien de comparaisons fait le second maximum ?', o: ['n', 'n − 1', '2n', 'n²'], a: 1, w: 'On compare chaque élément (sauf le premier) à max et éventuellement à second.' },
+      { q: 'Si le tableau est vide, la recherche séquentielle renvoie :', o: ['0', '-1', 'None', 'une erreur'], a: 1, w: 'La boucle ne s\'exécute pas et on renvoie -1 (ou None selon la convention).' }
+    ]
+  },
+  w2: {
+    title: 'Comptage', level: 'Niveau 1 · Découvrir', time: '15 min', course: 'comptage',
+    goal: 'Compter les occurrences avec un dictionnaire pour un coût linéaire.',
+    steps: [
+      'Comptez les occurrences dans [1, 3, 1, 2, 3, 1, 4].',
+      'Combien de clés distinctes ?',
+      'Quel est le coût du dictionnaire ?',
+      'Comparez avec un comptage par boucles imbriquées.',
+      'Que se passe-t-il si les éléments ne sont pas hachables ?'
+    ],
+    defi: { q: 'Pourquoi le comptage par dictionnaire est-il en O(n) alors qu\'une recherche naïve est en O(n²) ?',
+      a: 'L\'accès à une clé dans un dictionnaire est en O(1) en moyenne : une mise à jour coûte O(1), donc n mises à jour coûtent O(n). Une recherche naïve doit parcourir la liste des éléments déjà vus pour chaque nouvel élément, soit O(n) par élément, donc O(n²) au total.' },
+    qcm: [
+      { q: 'Le comptage avec un dictionnaire a une complexité :', o: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], a: 2, w: 'Un parcours du tableau, avec une mise à jour O(1) par élément.' },
+      { q: 'Le dictionnaire stocke :', o: ['les éléments et leur nombre d\'occurrences', 'seulement les éléments', 'seulement les compteurs', 'les indices'], a: 0, w: 'Clé = élément, valeur = nombre d\'occurrences.' },
+      { q: 'Si un élément apparaît 3 fois, la valeur associée est :', o: ['1', '2', '3', 'l\'élément lui-même'], a: 2, w: 'On incrémente à chaque rencontre.' },
+      { q: 'Que se passe-t-il pour un élément non hachable (une liste) ?', o: ['Il est ignoré', 'TypeError', 'ValueError', 'Il est converti'], a: 1, w: 'Une liste ne peut pas être une clé de dictionnaire.' },
+      { q: 'Le nombre de clés distinctes est :', o: ['toujours n', 'au plus n', 'toujours 1', 'au moins n'], a: 1, w: 'Il peut y avoir des doublons, donc moins de clés que d\'éléments.' }
+    ]
+  },
+  w3: {
+    title: 'Recherche de facteur', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'facteur',
+    goal: 'Comprendre l\'algorithme naïf de recherche de sous-chaîne par boucles imbriquées.',
+    steps: [
+      'Cherchez « cad » dans « abracadabra ». À quel indice est-il trouvé ?',
+      'Combien de décalages avant de trouver ?',
+      'Cherchez un motif absent. Que se passe-t-il à chaque position ?',
+      'Pourquoi parle-t-on de complexité O(n × m) ?',
+      'Peut-on faire mieux ?'
+    ],
+    defi: { q: 'Dans le pire cas (texte de n caractères, motif de m caractères), combien de comparaisons fait l\'algorithme naïf ?',
+      a: 'Au pire, on essaie de placer le motif à n − m + 1 positions, et à chaque position on compare jusqu\'à m caractères. Soit <b>(n − m + 1) × m</b> comparaisons, en O(n × m).' },
+    qcm: [
+      { q: 'La recherche naïve de sous-chaîne a une complexité :', o: ['O(n)', 'O(m)', 'O(n × m)', 'O(n + m)'], a: 2, w: 'Boucles imbriquées : n positions × m caractères.' },
+      { q: 'Quand s\'arrête-t-on de comparer à une position donnée ?', o: ['Quand on a comparé tout le motif', 'Au premier caractère différent', 'Après 2 caractères', 'Jamais'], a: 1, w: 'Dès qu\'un caractère diffère, le motif ne peut pas être à cette position.' },
+      { q: 'Le résultat de la recherche est :', o: ['l\'indice de la première occurrence', 'la longueur du texte', 'le nombre d\'occurrences', 'le motif'], a: 0, w: 'On renvoie l\'indice où commence le motif.' },
+      { q: 'Si le motif est plus long que le texte :', o: ['Il est trouvé', 'Il est absent', 'Erreur', 'Boucle infinie'], a: 1, w: 'Le motif ne peut pas être contenu dans le texte.' },
+      { q: 'Les boucles imbriquées sont ici :', o: ['sur les positions du texte et les caractères du motif', 'sur les lettres de l\'alphabet', 'sur les mots', 'sur les lignes'], a: 0, w: 'Boucle externe : position dans le texte. Boucle interne : caractère du motif.' }
+    ]
+  },
+  w4: {
+    title: 'Valeurs les plus proches', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'proches',
+    goal: 'Trouver les deux valeurs les plus proches d\'un tableau par comparaison de toutes les paires.',
+    steps: [
+      'Avec [10, 2, 5, 8, 15], quelles sont les deux valeurs les plus proches ?',
+      'Combien de paires compare-t-on ?',
+      'Pourquoi la complexité est-elle O(n²) ?',
+      'Peut-on faire mieux en triant le tableau ?',
+      'Écrivez le code de l\'algorithme.'
+    ],
+    defi: { q: 'Combien de paires distinctes y a-t-il dans un tableau de n éléments ?',
+      a: 'Il y a <b>n(n − 1) / 2</b> paires. Par exemple, pour n = 5, il y a 10 paires. C\'est ce qui donne la complexité O(n²).' },
+    qcm: [
+      { q: 'La recherche des deux valeurs les plus proches par force brute a une complexité :', o: ['O(n)', 'O(n log n)', 'O(n²)', 'O(1)'], a: 2, w: 'On compare toutes les paires, soit n(n−1)/2 comparaisons.' },
+      { q: 'Quelle est la paire la plus proche dans [10, 2, 5, 8, 15] ?', o: ['(10, 8)', '(5, 8)', '(2, 5)', '(15, 10)'], a: 0, w: 'La différence est 2 pour (10, 8), 3 pour (5, 8) et (2, 5).' },
+      { q: 'Combien de paires compare-t-on pour n = 4 ?', o: ['4', '6', '8', '12'], a: 1, w: '4 × 3 / 2 = 6 paires.' },
+      { q: 'Peut-on trouver les deux valeurs les plus proches en O(n log n) ?', o: ['Oui, en triant puis en parcourant les voisins', 'Non, c\'est impossible', 'Oui, mais seulement pour des entiers', 'Non, il faut O(n²)'], a: 0, w: 'Après tri, les deux valeurs les plus proches sont voisines dans le tableau trié.' },
+      { q: 'La force brute est-elle toujours la meilleure approche ?', o: ['Oui', 'Non, le tri permet d\'accélérer', 'Oui, pour les grands tableaux', 'Non, il faut toujours trier'], a: 1, w: 'La force brute est simple mais O(n²) ; le tri est O(n log n).' }
+    ]
+  },
+  w5: {
+    title: 'Tri à bulles', level: 'Niveau 3 · Approfondir', time: '20 min', course: 'bulles',
+    goal: 'Comprendre le tri à bulles et sa complexité quadratique.',
+    steps: [
+      'Lancez le tri sur [5, 1, 4, 2, 8]. Combien de passes ?',
+      'Observez comment le plus grand élément remonte à la fin à chaque passe.',
+      'Pourquoi parle-t-on de « bulles » ?',
+      'Peut-on améliorer l\'algorithme si le tableau est déjà trié ?',
+      'Quelle est la complexité dans le pire cas ? dans le meilleur cas ?'
+    ],
+    defi: { q: 'Pourquoi le tri à bulles est-il en O(n²) dans le pire cas ?',
+      a: 'Il y a n − 1 passes, et la i-ème passe fait n − i comparaisons. Le total est (n−1) + (n−2) + … + 1 = n(n−1)/2, soit O(n²).' },
+    qcm: [
+      { q: 'Le tri à bulles a une complexité dans le pire cas :', o: ['O(n)', 'O(n log n)', 'O(n²)', 'O(1)'], a: 2, w: 'Deux boucles imbriquées : n(n−1)/2 comparaisons.' },
+      { q: 'À chaque passe, quel élément remonte à la fin ?', o: ['Le plus petit', 'Le plus grand', 'Le premier', 'Le dernier'], a: 1, w: 'Le plus grand élément « fait des bulles » jusqu\'à la fin.' },
+      { q: 'Le tri à bulles est :', o: ['stable', 'non stable', 'en place', 'les deux (stable et en place)'], a: 3, w: 'Il est en place (pas de tableau auxiliaire) et stable (ne permute que si strictement supérieur).' },
+      { q: 'Si le tableau est déjà trié, le tri à bulles fait :', o: ['n² comparaisons', 'n comparaisons', '1 comparaison', '0 comparaison'], a: 1, w: 'Sans l\'optimisation, il fait n−1 comparaisons à la première passe (toutes sans échange) puis s\'arrête si on a le drapeau.' },
+      { q: 'Le tri à bulles est :', o: ['un tri par comparaison', 'un tri par comptage', 'un tri par hachage', 'un tri par distribution'], a: 0, w: 'Il compare des paires d\'éléments.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'recherche', t: 'Recherche séquentielle', h: `
+<p>La <b>recherche séquentielle</b> (ou recherche linéaire) parcourt un tableau élément par élément.</p>
+<h3>Recherche d'un élément</h3>
+<pre class="code">def recherche(arr, x):
+    for i in range(len(arr)):
+        if arr[i] == x:
+            return i
+    return -1</pre>
+<p>Complexité : <b>O(n)</b> dans le pire cas. O(1) si l'élément est en tête.</p>
+<h3>Recherche du maximum</h3>
+<pre class="code">def maximum(arr):
+    max = arr[0]
+    for i in range(1, len(arr)):
+        if arr[i] > max:
+            max = arr[i]
+    return max</pre>
+<p>Complexité : n − 1 comparaisons, soit O(n).</p>
+<h3>Recherche du second maximum</h3>
+<pre class="code">def second_max(arr):
+    max, second = -float("inf"), -float("inf")
+    for x in arr:
+        if x > max:
+            second = max
+            max = x
+        elif x > second and x != max:
+            second = x
+    return second</pre>
+<p>Complexité : O(n). On maintient deux variables.</p>
+<div class="retain"><b>À retenir.</b> La recherche séquentielle est en O(n). Elle s'applique à des tableaux non triés.</div>` });
+
+COURSE.push({ id: 'comptage', t: 'Comptage avec un dictionnaire', h: `
+<p>Pour compter les occurrences de chaque élément d'un tableau, on utilise un <b>dictionnaire</b>.</p>
+<pre class="code">def compter(arr):
+    compteurs = {}
+    for x in arr:
+        if x in compteurs:
+            compteurs[x] += 1
+        else:
+            compteurs[x] = 1
+    return compteurs</pre>
+<p>Complexité : O(n) en moyenne, car l'accès et la mise à jour d'une clé dans un dictionnaire coûtent O(1).</p>
+<p>Sans dictionnaire, on ferait une boucle imbriquée pour chercher si l'élément a déjà été compté : O(n²).</p>
+<div class="retain"><b>À retenir.</b> Le dictionnaire est la structure adaptée au comptage : O(n) au lieu de O(n²).</div>` });
+
+COURSE.push({ id: 'facteur', t: 'Recherche de facteur', h: `
+<p>Rechercher un motif dans un texte, c'est chercher une sous-chaîne.</p>
+<h3>Algorithme naïf</h3>
+<p>On essaie d'aligner le motif à chaque position possible du texte, et on compare caractère par caractère.</p>
+<pre class="code">def recherche_naive(texte, motif):
+    n, m = len(texte), len(motif)
+    for i in range(n - m + 1):
+        j = 0
+        while j < m and texte[i + j] == motif[j]:
+            j += 1
+        if j == m:
+            return i
+    return -1</pre>
+<p>Complexité : O(n × m) dans le pire cas. C'est un exemple typique de <b>boucles imbriquées</b>.</p>
+<div class="retain"><b>À retenir.</b> La recherche naïve de sous-chaîne est quadratique : n positions × m caractères.</div>` });
+
+COURSE.push({ id: 'proches', t: 'Valeurs les plus proches', h: `
+<p>Pour trouver les deux valeurs les plus proches, on compare toutes les paires d'éléments.</p>
+<pre class="code">def plus_proches(arr):
+    min_diff = float("inf")
+    paire = None
+    for i in range(len(arr)):
+        for j in range(i + 1, len(arr)):
+            diff = abs(arr[i] - arr[j])
+            if diff < min_diff:
+                min_diff = diff
+                paire = (arr[i], arr[j])
+    return paire, min_diff</pre>
+<p>Complexité : O(n²) à cause des deux boucles imbriquées.</p>
+<p>En triant le tableau (O(n log n)), on peut trouver la paire la plus proche en un seul parcours des voisins.</p>
+<div class="retain"><b>À retenir.</b> La force brute est en O(n²), le tri permet d'atteindre O(n log n).</div>` });
+
+COURSE.push({ id: 'bulles', t: 'Tri à bulles', h: `
+<p>Le tri à bulles compare les éléments voisins et les échange s'ils sont mal ordonnés.</p>
+<pre class="code">def tri_bulles(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+    return arr</pre>
+<p>À chaque passe, le plus grand élément restant remonte à la fin (comme une bulle).</p>
+<p>Complexité : O(n²) dans le pire cas et le cas moyen. O(n) si le tableau est déjà trié (avec un drapeau d'arrêt).</p>
+<p>Le tri à bulles est <b>en place</b> et <b>stable</b>.</p>
+<div class="retain"><b>À retenir.</b> Tri à bulles = boucles imbriquées = O(n²).</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Recherche séquentielle</dt><dd>Parcours d'un tableau élément par élément.</dd>
+<dt>Complexité linéaire</dt><dd>O(n) : le coût est proportionnel à la taille.</dd>
+<dt>Complexité quadratique</dt><dd>O(n²) : le coût est proportionnel au carré de la taille.</dd>
+<dt>Boucles imbriquées</dt><dd>Une boucle à l'intérieur d'une autre boucle.</dd>
+<dt>Dictionnaire</dt><dd>Structure d'association clé-valeur, accès en O(1).</dd>
+<dt>Sous-chaîne</dt><dd>Suite de caractères contiguë dans une chaîne.</dd>
+<dt>Tri à bulles</dt><dd>Tri par échanges successifs d'éléments voisins.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'w1' };
+const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'recherche' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : recherches séquentielles et boucles'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur les recherches séquentielles et les boucles imbriquées (ITC, CPGE 1re année) : recherche séquentielle, comptage, recherche de facteur, valeurs les plus proches, tri à bulles.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
