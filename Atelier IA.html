@@ -1,0 +1,1021 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier IA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* barres de tri */
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px;background:#fff;margin:8px 0}
+.rowname{font-size:12px;color:var(--muted);margin:4px 2px 0}
+.bars{display:flex;align-items:flex-end;gap:4px;height:176px;padding-top:4px}
+.bars.short{height:120px}
+.bcol{flex:1 1 0;max-width:54px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bcol .v{font:600 12px var(--font-mono);margin-bottom:2px}
+.bcol .b{width:100%;border-radius:5px 5px 0 0;background:#9fb4ca;border:1px solid #6f8aa6;min-height:3px}
+.bcol .i{font:11px var(--font-mono);color:var(--muted);margin-top:3px}
+.bcol.sorted .b{background:rgba(30,122,46,.75);border-color:var(--ok)}
+.bcol.scan .b{background:var(--accent);border-color:var(--accent-ink)}
+.bcol.key .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.swap .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.min .b{background:var(--violet);border-color:#52308f}
+.bcol.pivot .b{background:var(--bad);border-color:#8e1d15}
+.bcol.left .b{background:#b9d3ee;border-color:var(--accent)}
+.bcol.right .b{background:#f3d6a6;border-color:var(--warn)}
+.bcol.dim{opacity:.32}
+.bcol.empty .b{background:transparent;border:1px dashed var(--line)}
+.leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid #6f8aa6;background:#9fb4ca}
+.leg i.s{background:rgba(30,122,46,.75);border-color:var(--ok)}.leg i.c{background:var(--accent);border-color:var(--accent-ink)}.leg i.k{background:#e8a33a;border-color:var(--warn)}.leg i.m{background:var(--violet);border-color:#52308f}.leg i.p{background:var(--bad);border-color:#8e1d15}
+/* cellules (comptage) */
+.cells{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px}
+.cell{width:40px;text-align:center}
+.cell .v{border:1px solid var(--line);border-radius:6px;padding:6px 0;font:600 14px var(--font-mono);background:#fff;min-height:33px}
+.cell .i{font:11px var(--font-mono);color:var(--muted);margin-top:2px}
+.cell.scan .v{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cell.key .v{background:#e8a33a;border-color:var(--warn)}
+.cell.sorted .v{background:rgba(30,122,46,.2);border-color:var(--ok)}
+.cell.zero .v{color:#9aa3ad}
+/* comparaison */
+.cmpr{display:grid;grid-template-columns:120px 1fr 80px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.cmpr i{display:block;height:12px;background:var(--accent);border-radius:3px;min-width:2px}
+.cmpr em{font-style:normal;font-family:var(--font-mono);text-align:right}
+.seqr{display:flex;gap:4px;flex-wrap:wrap}
+.card{border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:600 12.5px var(--font-mono);background:#fff}
+.card.t1{border-color:#2e6da4;color:#1b4a76}.card.t2{border-color:#9a5b00;color:#7a4700}.card.t3{border-color:#7b4fc2;color:#52308f}.card.t4{border-color:#1e7a2e;color:#1e7a2e}.card.t5{border-color:#c0281f;color:#8e1d15}.card.t6{border-color:#33475b;color:#33475b}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:30px}.cell .v{font-size:12px}
+  .cmpr{grid-template-columns:90px 1fr 70px}
+  .bcol .v{font-size:11px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}.bcol .b{transition:height .15s}}
+.plot{width:100%;max-width:440px;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff;display:block;touch-action:manipulation}
+#k1-plot .plot{cursor:crosshair}
+.twocol{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.twocol>*{min-width:0}.plotcol{flex:1 1 320px;max-width:440px}.infocol{flex:1 1 300px}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:9px}.chk input{width:auto}
+.dt th.num{text-align:right}.dt td.diag{background:rgba(30,122,46,.18);font-weight:600}.dt td.offd{background:rgba(192,40,31,.14)}
+.dt tr.hl td{background:rgba(46,109,164,.14)}
+.cmpr2{display:grid;grid-template-columns:1fr 46px;gap:8px;align-items:center;min-width:130px}
+.cmpr2 i{display:block;height:10px;background:var(--accent);border-radius:3px;min-width:1px}.cmpr2.alt i{background:var(--warn)}
+.cmpr2 em{font:12px var(--font-mono);font-style:normal;text-align:right}
+.gscroll{overflow-x:auto}.gsvg{width:100%;min-width:520px;height:auto;display:block}.msvg{width:100%;min-width:700px;height:auto;display:block}
+.dt th{vertical-align:bottom}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="6" cy="7" r="3" fill="var(--accent)"/><circle cx="6" cy="19" r="3" fill="var(--accent)"/><circle cx="14" cy="13" r="3" fill="var(--warn)"/><circle cx="21" cy="7" r="3" fill="var(--ok)"/><circle cx="21" cy="19" r="3" fill="var(--ok)"/><path d="M6 7L14 13L21 7M6 19L14 13L21 19" stroke="var(--node-stroke)" stroke-width="1.3" fill="none"/></svg><span>Atelier IA <small>ITC · CPGE 2<sup>e</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-ia-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+function rng(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function gauss(r) { let u = 0; while (u === 0) u = r(); const v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const clampv = (v, a, b) => Math.max(a, Math.min(b, v));
+const DATASETS = {
+  deux: { name: 'Deux nuages', classes: ['A', 'B'], blobs: [[3, 3, 0.9, 20], [7, 7, 0.9, 20]] },
+  trois: { name: 'Trois classes', classes: ['A', 'B', 'C'], blobs: [[2.5, 2.5, 1, 15], [7.5, 3, 1, 15], [5, 7.5, 1, 15]] },
+  meles: { name: 'Classes mêlées', classes: ['A', 'B'], blobs: [[4.3, 5, 1.5, 25], [5.9, 5, 1.5, 25]] },
+  quatre: { name: 'Quatre groupes', classes: ['A', 'B', 'C', 'D'], blobs: [[2, 2, 0.8, 12], [8, 2.4, 0.8, 12], [2.6, 8, 0.8, 12], [7.6, 7.4, 0.8, 12]] }
+};
+function genData(key, seed) {
+  const d = DATASETS[key], r = rng(seed * 7919 + 13), pts = [], lab = [];
+  d.blobs.forEach((b, c) => { for (let i = 0; i < b[3]; i++) { pts.push([+clampv(b[0] + gauss(r) * b[2], 0.2, 9.8).toFixed(2), +clampv(b[1] + gauss(r) * b[2], 0.2, 9.8).toFixed(2)]); lab.push(c); } });
+  return { pts, lab };
+}
+const dist2 = (a, b) => (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]);
+const dist = (a, b) => Math.sqrt(dist2(a, b));
+function knnClassify(pts, lab, x, k, ncls) {
+  const idx = pts.map((p, i) => i).sort((i, j) => dist2(pts[i], x) - dist2(pts[j], x) || i - j).slice(0, Math.min(k, pts.length));
+  const votes = new Array(ncls).fill(0); idx.forEach(i => votes[lab[i]]++);
+  const mx = Math.max(...votes); let pred = -1;
+  for (const i of idx) if (votes[lab[i]] === mx) { pred = lab[i]; break; }
+  return { nb: idx, votes, pred, tie: votes.filter(v => v === mx).length > 1 };
+}
+function splitData(n, seed, frac) {
+  const r = rng(seed * 31337 + 5), idx = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  const nt = Math.round(n * frac); return { test: idx.slice(0, nt).sort((a, b) => a - b), train: idx.slice(nt).sort((a, b) => a - b) };
+}
+function confusion(real, pred, ncls) { const M = Array.from({ length: ncls }, () => new Array(ncls).fill(0)); real.forEach((t, i) => M[t][pred[i]]++); return M; }
+const accuracy = M => { let d = 0, s = 0; M.forEach((row, i) => row.forEach((v, j) => { s += v; if (i === j) d += v; })); return s ? d / s : 0; };
+function evalKnn(data, split, k, ncls) {
+  const trP = split.train.map(i => data.pts[i]), trL = split.train.map(i => data.lab[i]);
+  const run = ids => ids.map(i => knnClassify(trP, trL, data.pts[i], k, ncls).pred);
+  const pTest = run(split.test), pTrain = run(split.train);
+  const Mt = confusion(split.test.map(i => data.lab[i]), pTest, ncls), Mr = confusion(split.train.map(i => data.lab[i]), pTrain, ncls);
+  return { pTest, pTrain, Mtest: Mt, accTest: accuracy(Mt), accTrain: accuracy(Mr) };
+}
+/* k-moyennes */
+function kmInit(pts, k, seed) { const r = rng(seed * 104729 + 7), idx = []; while (idx.length < k) { const i = Math.floor(r() * pts.length); if (!idx.includes(i)) idx.push(i); } return idx.map(i => pts[i].slice()); }
+function kmAssign(pts, C) { return pts.map(p => { let b = 0, bd = Infinity; C.forEach((c, j) => { const d = dist2(p, c); if (d < bd - 1e-12) { bd = d; b = j; } }); return b; }); }
+function kmUpdate(pts, asg, C) { return C.map((c, j) => { const m = pts.filter((p, i) => asg[i] === j); if (!m.length) return c.slice(); return [m.reduce((s, p) => s + p[0], 0) / m.length, m.reduce((s, p) => s + p[1], 0) / m.length]; }); }
+const inertia = (pts, asg, C) => pts.reduce((s, p, i) => s + dist2(p, C[asg[i]]), 0);
+function kmFrames(pts, C0) {
+  const F = []; let C = C0.map(c => c.slice()), prev = null;
+  F.push({ phase: 'init', C: C.map(c => c.slice()), prevC: null, asg: null, inertia: null, it: 0, changed: null });
+  for (let it = 1; it <= 60; it++) {
+    const asg = kmAssign(pts, C), changed = prev ? asg.filter((a, i) => a !== prev[i]).length : asg.length;
+    F.push({ phase: prev && changed === 0 ? 'done' : 'assign', C: C.map(c => c.slice()), prevC: null, asg, inertia: inertia(pts, asg, C), it, changed });
+    if (prev && changed === 0) break;
+    prev = asg; const oldC = C; C = kmUpdate(pts, asg, C);
+    F.push({ phase: 'update', C: C.map(c => c.slice()), prevC: oldC.map(c => c.slice()), asg, inertia: inertia(pts, asg, C), it, changed });
+  }
+  return F;
+}
+function kmRun(pts, k, seed) { const F = kmFrames(pts, kmInit(pts, k, seed)), L = F[F.length - 1]; return { inertia: L.inertia, iters: L.it, asg: L.asg }; }
+/* jeux d'accessibilité : attracteur de J1 */
+function attractor(V, target) {
+  const rank = {}; target.forEach(t => { rank[t] = 0; }); let r = 0, changed = true;
+  while (changed) {
+    changed = false; r++; const add = [];
+    for (const v of V) {
+      if (rank[v.id] !== undefined) continue;
+      const inA = v.succ.filter(s => rank[s] !== undefined);
+      const ok = v.owner === 1 ? inA.length > 0 : (v.succ.length > 0 && inA.length === v.succ.length);
+      if (ok) add.push(v.id);
+    }
+    add.forEach(a => { rank[a] = r; }); if (add.length) changed = true;
+  }
+  const strat = {};
+  V.forEach(v => { if (v.owner === 1 && rank[v.id] > 0) { let best = null; v.succ.forEach(s => { if (rank[s] !== undefined && (best === null || rank[s] < rank[best])) best = s; }); strat[v.id] = best; } });
+  return { rank, strat };
+}
+const GRAPH1 = {
+  V: [
+    { id: 'A', owner: 1, succ: ['B', 'C'], x: 70, y: 150 }, { id: 'B', owner: 2, succ: ['D', 'E'], x: 190, y: 80 }, { id: 'C', owner: 2, succ: ['E', 'F'], x: 190, y: 220 },
+    { id: 'D', owner: 1, succ: ['G'], x: 330, y: 40 }, { id: 'E', owner: 1, succ: ['G', 'B'], x: 330, y: 140 }, { id: 'F', owner: 1, succ: ['C'], x: 330, y: 250 }, { id: 'G', owner: 2, succ: [], x: 480, y: 90 }],
+  target: ['G']
+};
+function nimGraph(N) {
+  const V = [], X0 = 36, W = 560 - 2 * X0;
+  for (let n = N; n >= 0; n--) for (const p of [1, 2]) {
+    const succ = []; for (let t = 1; t <= 3; t++) if (n - t >= 0) succ.push((n - t) + '-' + (3 - p));
+    V.push({ id: n + '-' + p, owner: p, succ, n, x: X0 + (N - n) * W / N, y: p === 1 ? 70 : 190 });
+  }
+  return { V, target: ['0-2'] };
+}
+/* minmax avec heuristique */
+const TREE = { id: 'R', h: 0, kids: [
+  { id: 'a', h: 3, kids: [{ id: 'a1', h: 4, kids: [{ id: 'a1x', v: 7 }, { id: 'a1y', v: 2 }] }, { id: 'a2', h: 6, kids: [{ id: 'a2x', v: 6 }, { id: 'a2y', v: 9 }] }] },
+  { id: 'b', h: 5, kids: [{ id: 'b1', h: 1, kids: [{ id: 'b1x', v: 1 }, { id: 'b1y', v: 3 }] }, { id: 'b2', h: 7, kids: [{ id: 'b2x', v: 4 }, { id: 'b2y', v: 2 }] }] },
+  { id: 'c', h: 2, kids: [{ id: 'c1', h: 8, kids: [{ id: 'c1x', v: 5 }, { id: 'c1y', v: 8 }] }, { id: 'c2', h: 5, kids: [{ id: 'c2x', v: 3 }, { id: 'c2y', v: 2 }] }] }] };
+function mmEval(node, depth, p, vals, best) {
+  let v;
+  if (!node.kids) v = node.v;
+  else if (depth === p) v = node.h;
+  else {
+    const cv = node.kids.map(k => mmEval(k, depth + 1, p, vals, best)), isMax = depth % 2 === 0;
+    v = isMax ? Math.max(...cv) : Math.min(...cv); best[node.id] = node.kids[cv.indexOf(v)].id;
+  }
+  vals[node.id] = v; return v;
+}
+function minmax(p) { const vals = {}, best = {}; mmEval(TREE, 0, p, vals, best); return { vals, best, value: vals.R, move: best.R }; }
+
+/*LOGIC-END*/
+
+/* ---------- aides d'interface ---------- */
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', null, k[0]), h('b', null, k[1])))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
+}
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; m.textContent = text; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+const SVGNS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, ...kids) {
+  const e = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) { if (v == null || v === false) continue; if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c));
+  return e;
+}
+const f1 = v => (Math.round(v * 100) / 100).toString().replace('.', ',');
+const CCOL = ['#2e6da4', '#e08a1e', '#1e7a2e', '#7b4fc2', '#c0281f'];
+const PX = x => x * 40, PY = y => 400 - y * 40;
+function shape(cls, x, y, r, attrs) {
+  const cx = PX(x), cy = PY(y);
+  if (cls % 4 === 0) return sv('circle', Object.assign({ cx, cy, r }, attrs));
+  if (cls % 4 === 1) return sv('rect', Object.assign({ x: cx - r, y: cy - r, width: 2 * r, height: 2 * r }, attrs));
+  if (cls % 4 === 2) return sv('polygon', Object.assign({ points: cx + ',' + (cy - r * 1.25) + ' ' + (cx - r * 1.15) + ',' + (cy + r * 0.9) + ' ' + (cx + r * 1.15) + ',' + (cy + r * 0.9) }, attrs));
+  return sv('polygon', Object.assign({ points: cx + ',' + (cy - r * 1.3) + ' ' + (cx + r * 1.3) + ',' + cy + ' ' + cx + ',' + (cy + r * 1.3) + ' ' + (cx - r * 1.3) + ',' + cy }, attrs));
+}
+function plotBase(label) {
+  const s = sv('svg', { viewBox: '0 0 400 400', class: 'plot', role: 'img', 'aria-label': label });
+  for (let v = 0; v <= 10; v += 2) {
+    s.append(sv('line', { x1: PX(v), y1: 0, x2: PX(v), y2: 400, stroke: '#e3e7ec' }), sv('line', { x1: 0, y1: PY(v), x2: 400, y2: PY(v), stroke: '#e3e7ec' }));
+    if (v > 0 && v < 10) s.append(sv('text', { x: PX(v), y: 395, 'text-anchor': 'middle', 'font-size': 10, fill: '#6b7280' }, v), sv('text', { x: 4, y: PY(v) + 3, 'font-size': 10, fill: '#6b7280' }, v));
+  }
+  return s;
+}
+function legendRow(names) {
+  return h('div', { class: 'leg' }, names.map((n, i) => {
+    const sh = sv('svg', { width: 14, height: 14, viewBox: '0 0 14 14', style: 'vertical-align:-2px;margin-right:4px' });
+    const c = { fill: CCOL[i], stroke: '#fff', 'stroke-width': 1 };
+    if (i % 4 === 0) sh.append(sv('circle', Object.assign({ cx: 7, cy: 7, r: 5 }, c)));
+    else if (i % 4 === 1) sh.append(sv('rect', Object.assign({ x: 2, y: 2, width: 10, height: 10 }, c)));
+    else if (i % 4 === 2) sh.append(sv('polygon', Object.assign({ points: '7,1.5 1.5,12 12.5,12' }, c)));
+    else sh.append(sv('polygon', Object.assign({ points: '7,1 13,7 7,13 1,7' }, c)));
+    return h('span', null, sh, n);
+  }));
+}
+function dsChips(cur, cb, keys) { return chipsRow((keys || ['deux', 'trois', 'meles']).map(k => [k, DATASETS[k].name]), cur, cb, 'Jeu de données'); }
+function sliderField(id, label, min, max, step, val, cb) {
+  const out = h('b', { id: id + '-o' }, String(val)), inp = h('input', { type: 'range', id, min, max, step: step || 1, value: val, 'aria-label': label });
+  inp.addEventListener('input', () => { out.textContent = inp.value; cb(+inp.value); });
+  return h('label', { class: 'fld' }, h('span', null, label + ' = ', out), inp);
+}
+
+/* ================= Atelier 1 : k plus proches voisins ================= */
+const K1 = { ds: 'deux', seed: 1, k: 3, q: [5, 5], reg: false };
+function mountKnn(root) {
+  root.innerHTML = '<h2>Classer avec les k plus proches voisins</h2>' +
+    '<p>On dispose de points dont la <b>classe</b> est connue (le jeu d’<b>apprentissage</b>). Pour classer un nouveau point, on cherche ses <b>k plus proches voisins</b> au sens de la distance euclidienne et on retient la classe majoritaire. Cliquez dans le plan pour placer le point à classer.</p>' +
+    '<div class="opts"><div class="fld"><span>Jeu de données</span><div id="k1-ds"></div></div><div id="k1-k"></div></div>' +
+    '<div class="twocol"><div class="plotcol"><div id="k1-plot"></div><div id="k1-leg"></div>' +
+    '<div class="opts"><label class="fld"><span>x du point</span><input type="number" id="k1-x" min="0" max="10" step="0.1" style="width:90px"></label><label class="fld"><span>y du point</span><input type="number" id="k1-y" min="0" max="10" step="0.1" style="width:90px"></label>' +
+    '<label class="chk"><input type="checkbox" id="k1-reg"> Colorer les régions de décision</label></div></div>' +
+    '<div class="infocol"><div class="verdict" id="k1-msg" aria-live="polite"></div><div id="k1-st"></div><div id="k1-tab"></div></div></div>';
+  $('#k1-x').addEventListener('input', e => { const v = parseFloat(e.target.value); if (!isNaN(v)) { K1.q[0] = clampv(v, 0, 10); drawKnn(false); } });
+  $('#k1-y').addEventListener('input', e => { const v = parseFloat(e.target.value); if (!isNaN(v)) { K1.q[1] = clampv(v, 0, 10); drawKnn(false); } });
+  $('#k1-reg').addEventListener('change', e => { K1.reg = e.target.checked; drawKnn(true); });
+  drawKnn(true);
+}
+function drawKnn(full) {
+  const d = DATASETS[K1.ds], data = genData(K1.ds, K1.seed), nc = d.classes.length;
+  if (full) {
+    const a = $('#k1-ds'); a.innerHTML = ''; a.append(dsChips(K1.ds, k => { K1.ds = k; drawKnn(true); }));
+    const kb = $('#k1-k'); kb.innerHTML = ''; kb.append(sliderField('k1-ks', 'k', 1, 15, 1, K1.k, v => { K1.k = v; drawKnn(false); }));
+    const lg = $('#k1-leg'); lg.innerHTML = ''; lg.append(legendRow(d.classes.map(c => 'classe ' + c)));
+    $('#k1-reg').checked = K1.reg;
+  }
+  $('#k1-x').value = f1(K1.q[0]).replace(',', '.'); $('#k1-y').value = f1(K1.q[1]).replace(',', '.');
+  const r = knnClassify(data.pts, data.lab, K1.q, K1.k, nc);
+  const svg = plotBase('Nuage de points avec le point à classer');
+  if (K1.reg) for (let i = 0; i < 25; i++) for (let j = 0; j < 25; j++) {
+    const x = (i + 0.5) * 0.4, y = (j + 0.5) * 0.4, p = knnClassify(data.pts, data.lab, [x, y], K1.k, nc).pred;
+    svg.append(sv('rect', { x: PX(i * 0.4), y: PY((j + 1) * 0.4), width: 16, height: 16, fill: CCOL[p], opacity: 0.16 }));
+  }
+  const far = dist(data.pts[r.nb[r.nb.length - 1]], K1.q);
+  svg.append(sv('circle', { cx: PX(K1.q[0]), cy: PY(K1.q[1]), r: far * 40, fill: 'none', stroke: '#33475b', 'stroke-dasharray': '5 4', 'stroke-width': 1.3 }));
+  r.nb.forEach(i => svg.append(sv('line', { x1: PX(K1.q[0]), y1: PY(K1.q[1]), x2: PX(data.pts[i][0]), y2: PY(data.pts[i][1]), stroke: '#33475b', 'stroke-width': 1.2 })));
+  data.pts.forEach((p, i) => svg.append(shape(data.lab[i], p[0], p[1], 5.5, { fill: CCOL[data.lab[i]], stroke: r.nb.includes(i) ? '#111' : '#fff', 'stroke-width': r.nb.includes(i) ? 2 : 1 })));
+  svg.append(sv('path', { d: 'M' + (PX(K1.q[0]) - 9) + ' ' + PY(K1.q[1]) + 'h18M' + PX(K1.q[0]) + ' ' + (PY(K1.q[1]) - 9) + 'v18', stroke: '#111', 'stroke-width': 3, 'stroke-linecap': 'round' }));
+  svg.addEventListener('click', e => {
+    const b = svg.getBoundingClientRect();
+    K1.q = [clampv(Math.round((e.clientX - b.left) / b.width * 100) / 10, 0, 10), clampv(Math.round((10 - (e.clientY - b.top) / b.height * 10) * 10) / 10, 0, 10)]; drawKnn(false);
+  });
+  const box = $('#k1-plot'); box.innerHTML = ''; box.append(svg);
+  const vt = d.classes.map((c, i) => c + ' : ' + r.votes[i]).join(' · ');
+  setMsg('#k1-msg', 'Votes des ' + Math.min(K1.k, data.pts.length) + ' plus proches voisins : ' + vt + '. Classe prédite : ' + d.classes[r.pred] + '.' + (r.tie ? ' Égalité : on retient, parmi les classes à égalité, celle du voisin le plus proche.' : ''), 'yes');
+  const st = $('#k1-st'); st.innerHTML = ''; st.append(stats([['Point à classer', '(' + f1(K1.q[0]) + " ; " + f1(K1.q[1]) + ')'], ['Rayon du voisinage', f1(far)], ['Jeu d’apprentissage', data.pts.length + ' points']]));
+  const tb = h('tbody'); r.nb.forEach((i, rk) => tb.append(h('tr', null, h('td', { class: 'm num' }, String(rk + 1)), h('td', { class: 'm' }, '(' + f1(data.pts[i][0]) + ' ; ' + f1(data.pts[i][1]) + ')'), h('td', { class: 'm num' }, f1(dist(data.pts[i], K1.q))), h('td', null, d.classes[data.lab[i]]))));
+  const tab = $('#k1-tab'); tab.innerHTML = ''; tab.append(h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['Rang', 'Voisin', 'Distance', 'Classe'].map(t => h('th', null, t)))), tb)));
+}
+WORKSHOPS.push({ id: 's1', title: 'k plus proches voisins', hint: 'Placez un point dans le plan : ses k plus proches voisins votent pour sa classe.', mount: mountKnn, reset: () => { Object.assign(K1, { ds: 'deux', seed: 1, k: 3, q: [5, 5], reg: false }); } });
+
+/* ================= Atelier 2 : évaluer ================= */
+const K2 = { ds: 'meles', seed: 1, k: 3 };
+function mountEval(root) {
+  root.innerHTML = '<h2>Évaluer un classifieur</h2>' +
+    '<p>Pour mesurer la qualité d’un classifieur, on sépare les données en un jeu d’<b>apprentissage</b> (utilisé par l’algorithme) et un jeu de <b>test</b> (jamais vu). On compare la classe prédite à la classe réelle dans une <b>matrice de confusion</b>.</p>' +
+    '<div class="opts"><div class="fld"><span>Jeu de données</span><div id="k2-ds"></div></div><div id="k2-k"></div><button class="btn" id="k2-new" type="button" style="margin-bottom:9px">Nouveau tirage</button></div>' +
+    '<div class="twocol"><div class="plotcol"><div id="k2-plot"></div><div id="k2-leg"></div></div><div class="infocol"><div id="k2-st"></div><div id="k2-cm"></div><div class="verdict" id="k2-msg"></div></div></div>' +
+    '<h3>Effet du choix de k</h3><p class="small">Taux de bonnes réponses pour chaque valeur de k (sur le jeu d’apprentissage, un point est son propre voisin).</p><div id="k2-sweep"></div>';
+  $('#k2-new').addEventListener('click', () => { K2.seed++; drawEval(); });
+  drawEval(true);
+}
+function drawEval(full) {
+  const d = DATASETS[K2.ds], nc = d.classes.length, data = genData(K2.ds, K2.seed), split = splitData(data.pts.length, K2.seed, 0.3);
+  if (full !== false) {
+    const a = $('#k2-ds'); a.innerHTML = ''; a.append(dsChips(K2.ds, k => { K2.ds = k; drawEval(true); }));
+    const kb = $('#k2-k'); kb.innerHTML = ''; kb.append(sliderField('k2-ks', 'k', 1, 15, 1, K2.k, v => { K2.k = v; drawEval(false); }));
+    const lg = $('#k2-leg'); lg.innerHTML = ''; lg.append(legendRow(d.classes.map(c => 'classe ' + c)), h('div', { class: 'leg' }, h('span', null, 'Petits points : apprentissage'), h('span', null, 'Grands points : test, cerclés de vert (bien classé) ou de rouge (erreur)')));
+  }
+  const ev = evalKnn(data, split, K2.k, nc);
+  const svg = plotBase('Jeu d’apprentissage et jeu de test');
+  split.train.forEach(i => svg.append(shape(data.lab[i], data.pts[i][0], data.pts[i][1], 3.5, { fill: CCOL[data.lab[i]], opacity: 0.55 })));
+  split.test.forEach((i, j) => { const ok = ev.pTest[j] === data.lab[i]; svg.append(shape(data.lab[i], data.pts[i][0], data.pts[i][1], 6.5, { fill: CCOL[data.lab[i]], stroke: ok ? '#1e7a2e' : '#c0281f', 'stroke-width': ok ? 2 : 3.2 })); });
+  const pb = $('#k2-plot'); pb.innerHTML = ''; pb.append(svg);
+  const nt = split.test.length, nerr = ev.pTest.filter((p, j) => p !== data.lab[split.test[j]]).length;
+  const st = $('#k2-st'); st.innerHTML = ''; st.append(stats([['Apprentissage', split.train.length + ' points'], ['Test', nt + ' points'], ['Bonnes réponses (test)', (nt - nerr) + ' / ' + nt + ' = ' + Math.round(ev.accTest * 100) + ' %'], ['Bonnes réponses (apprentissage)', Math.round(ev.accTrain * 100) + ' %']]));
+  const M = ev.Mtest, head = h('tr', null, h('th', null, 'réelle ↓ · prédite →'), d.classes.map(c => h('th', { class: 'num' }, c)));
+  const body = h('tbody'); M.forEach((row, i) => body.append(h('tr', null, h('th', null, 'classe ' + d.classes[i]), row.map((v, j) => h('td', { class: 'm num' + (i === j ? ' diag' : v > 0 ? ' offd' : '') }, String(v))))));
+  const cm = $('#k2-cm'); cm.innerHTML = ''; cm.append(h('p', { class: 'small', style: 'margin:0 0 4px' }, 'Matrice de confusion (jeu de test)'), h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, head), body)));
+  setMsg('#k2-msg', nerr === 0 ? 'Aucune erreur sur le jeu de test.' : nerr + ' erreur' + (nerr > 1 ? 's' : '') + ' sur ' + nt + ' : ce sont les valeurs hors de la diagonale de la matrice.' + (ev.accTrain - ev.accTest > 0.15 ? ' Le taux est bien meilleur sur l’apprentissage que sur le test : signe de surapprentissage.' : ''), nerr === 0 ? 'yes' : '');
+  const sw = $('#k2-sweep'); sw.innerHTML = '';
+  const tb = h('tbody');
+  for (let k = 1; k <= 15; k++) {
+    const e = evalKnn(data, split, k, nc);
+    tb.append(h('tr', { class: k === K2.k ? 'hl' : '' }, h('td', { class: 'm num' }, String(k)),
+      h('td', null, h('div', { class: 'cmpr2' }, h('i', { style: 'width:' + Math.round(e.accTrain * 100) + '%' }), h('em', null, Math.round(e.accTrain * 100) + ' %'))),
+      h('td', null, h('div', { class: 'cmpr2 alt' }, h('i', { style: 'width:' + Math.round(e.accTest * 100) + '%' }), h('em', null, Math.round(e.accTest * 100) + ' %')))));
+  }
+  sw.append(h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['k', 'Apprentissage', 'Test'].map(t => h('th', null, t)))), tb)));
+}
+WORKSHOPS.push({ id: 's2', title: 'Évaluer', hint: 'Séparez apprentissage et test, lisez la matrice de confusion et comparez plusieurs valeurs de k.', mount: mountEval, reset: () => { Object.assign(K2, { ds: 'meles', seed: 1, k: 3 }); } });
+
+/* ================= Atelier 3 : k-moyennes ================= */
+const K3 = { ds: 'quatre', k: 4, seed: 1, frames: null, i: 0, timer: null };
+function k3Stop() { clearInterval(K3.timer); K3.timer = null; const b = $('#k3-play'); if (b) b.textContent = 'Lecture'; }
+function k3Prep() { k3Stop(); const data = genData(K3.ds, 1); K3.data = data; K3.frames = kmFrames(data.pts, kmInit(data.pts, K3.k, K3.seed)); K3.i = 0; }
+function mountKm(root) {
+  root.innerHTML = '<h2>Regrouper avec les k-moyennes</h2>' +
+    '<p>Ici, aucune classe n’est connue : l’algorithme cherche lui-même des <b>groupes</b> homogènes (<b>apprentissage non supervisé</b>). Il choisit k centres au hasard, puis répète : <b>affecter</b> chaque point au centre le plus proche, puis <b>recalculer</b> chaque centre comme la moyenne de son groupe.</p>' +
+    '<div class="opts"><div class="fld"><span>Jeu de données</span><div id="k3-ds"></div></div><div id="k3-k"></div><div id="k3-s"></div></div>' +
+    '<div class="files" style="margin:6px 0"><button class="btn" id="k3-prev" type="button">◀ Précédent</button><button class="btn pri" id="k3-next" type="button">Suivant ▶</button><button class="btn" id="k3-play" type="button">Lecture</button><button class="btn" id="k3-all" type="button">Tout exécuter</button><button class="btn" id="k3-reset" type="button">Départ</button></div>' +
+    '<div class="twocol"><div class="plotcol"><div id="k3-plot"></div></div><div class="infocol"><div class="verdict" id="k3-msg" aria-live="polite"></div><div id="k3-st"></div><div id="k3-hist"></div></div></div>' +
+    '<h3>Dix initialisations différentes</h3><p class="small">Chaque ligne relance l’algorithme avec d’autres centres initiaux. L’inertie est la somme des carrés des distances de chaque point à son centre : plus elle est faible, meilleur est le regroupement.</p><div id="k3-runs"></div>';
+  $('#k3-prev').addEventListener('click', () => { k3Stop(); if (K3.i > 0) { K3.i--; drawKm(false); } });
+  $('#k3-next').addEventListener('click', () => { k3Stop(); if (K3.i < K3.frames.length - 1) { K3.i++; drawKm(false); } });
+  $('#k3-all').addEventListener('click', () => { k3Stop(); K3.i = K3.frames.length - 1; drawKm(false); });
+  $('#k3-reset').addEventListener('click', () => { k3Stop(); K3.i = 0; drawKm(false); });
+  $('#k3-play').addEventListener('click', () => {
+    if (K3.timer) { k3Stop(); return; }
+    if (K3.i >= K3.frames.length - 1) K3.i = 0;
+    $('#k3-play').textContent = 'Pause';
+    K3.timer = setInterval(() => { if (K3.i >= K3.frames.length - 1) { k3Stop(); drawKm(false); return; } K3.i++; drawKm(false); }, 800); drawKm(false);
+  });
+  k3Prep(); drawKm(true);
+}
+function drawKm(full) {
+  if (!$('#k3-plot')) return;
+  if (full) {
+    const a = $('#k3-ds'); a.innerHTML = ''; a.append(dsChips(K3.ds, k => { K3.ds = k; k3Prep(); drawKm(true); }, ['quatre', 'trois', 'meles']));
+    const kb = $('#k3-k'); kb.innerHTML = ''; kb.append(sliderField('k3-ks', 'k', 2, 6, 1, K3.k, v => { K3.k = v; k3Prep(); drawKm(true); }));
+    const sb = $('#k3-s'); sb.innerHTML = ''; sb.append(sliderField('k3-ss', 'Initialisation n°', 1, 10, 1, K3.seed, v => { K3.seed = v; k3Prep(); drawKm(false); }));
+    drawRuns();
+  }
+  const f = K3.frames[K3.i], last = K3.i === K3.frames.length - 1, pts = K3.data.pts;
+  const svg = plotBase('Points et centres des k-moyennes');
+  pts.forEach((p, i) => svg.append(sv('circle', { cx: PX(p[0]), cy: PY(p[1]), r: 5.5, fill: f.asg ? CCOL[f.asg[i]] : '#8a94a0', stroke: '#fff', 'stroke-width': 1 })));
+  if (f.prevC) f.prevC.forEach((c, j) => { svg.append(sv('circle', { cx: PX(c[0]), cy: PY(c[1]), r: 8, fill: 'none', stroke: CCOL[j], 'stroke-width': 2, 'stroke-dasharray': '3 2' }), sv('line', { x1: PX(c[0]), y1: PY(c[1]), x2: PX(f.C[j][0]), y2: PY(f.C[j][1]), stroke: CCOL[j], 'stroke-width': 1.5 })); });
+  f.C.forEach((c, j) => svg.append(shape(3, c[0], c[1], 7.5, { fill: CCOL[j], stroke: '#111', 'stroke-width': 2.2 })));
+  const pb = $('#k3-plot'); pb.innerHTML = ''; pb.append(svg);
+  let msg;
+  if (f.phase === 'init') msg = 'Initialisation : ' + K3.k + ' points du jeu sont choisis comme centres (losanges). Aucun point n’est encore affecté.';
+  else if (f.phase === 'assign') msg = 'Itération ' + f.it + ', affectation : chaque point prend la couleur du centre le plus proche. ' + (f.it === 1 ? 'Tous les points sont affectés.' : f.changed + ' point' + (f.changed > 1 ? 's' : '') + ' ont changé de groupe.') + ' Inertie : ' + f1(f.inertia) + '.';
+  else if (f.phase === 'update') msg = 'Itération ' + f.it + ', recalcul : chaque centre devient la moyenne de son groupe (les anneaux pointillés montrent les anciennes positions). Inertie : ' + f1(f.inertia) + '.';
+  else msg = 'Convergence : plus aucun point ne change de groupe, l’algorithme s’arrête après ' + f.it + ' affectations. Inertie finale : ' + f1(f.inertia) + '.';
+  setMsg('#k3-msg', msg, f.phase === 'done' ? 'yes' : '');
+  const st = $('#k3-st'); st.innerHTML = ''; st.append(stats([['Étape', K3.i + ' / ' + (K3.frames.length - 1)], ['Inertie', f.inertia == null ? '—' : f1(f.inertia)], ['Itération', String(f.it)]]));
+  const hs = K3.frames.slice(0, K3.i + 1).filter(x => x.phase === 'assign' || x.phase === 'done');
+  const hb = $('#k3-hist'); hb.innerHTML = '';
+  if (hs.length) hb.append(h('p', { class: 'small', style: 'margin:0' }, 'Inertie après chaque affectation : ' + hs.map(x => f1(x.inertia)).join(' → ')));
+  $('#k3-prev').disabled = K3.i === 0; $('#k3-next').disabled = last;
+}
+function drawRuns() {
+  const box = $('#k3-runs'); box.innerHTML = '';
+  const data = genData(K3.ds, 1), runs = []; for (let s = 1; s <= 10; s++) runs.push(Object.assign({ s }, kmRun(data.pts, K3.k, s)));
+  const best = Math.min(...runs.map(r => r.inertia)), tb = h('tbody');
+  runs.forEach(r => tb.append(h('tr', { class: r.s === K3.seed ? 'hl' : '' }, h('td', { class: 'm num' }, String(r.s)), h('td', { class: 'm num' }, String(r.iters)), h('td', { class: 'm num' }, f1(r.inertia)), h('td', null, r.inertia < best + 1e-6 ? 'meilleur regroupement' : 'minimum local, ' + Math.round((r.inertia / best - 1) * 100) + ' % de plus'),
+    h('td', null, h('button', { class: 'btn sm', type: 'button', onclick: () => { K3.seed = r.s; k3Prep(); drawKm(true); } }, 'Voir')))));
+  box.append(h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['Initialisation', 'Affectations', 'Inertie finale', 'Remarque', ''].map(t => h('th', null, t)))), tb)));
+  const kinds = new Set(runs.map(r => r.inertia.toFixed(1)));
+  box.append(h('div', { class: 'verdict' }, kinds.size > 1 ? 'L’algorithme converge toujours, mais pas toujours vers la même partition : selon les centres initiaux, il peut s’arrêter dans un minimum local. On le relance donc plusieurs fois et on garde le meilleur résultat.' : 'Pour ce jeu et ce k, toutes les initialisations donnent la même inertie. Essayez le jeu « Quatre groupes » avec k = 4 pour voir apparaître des minima locaux.'));
+}
+WORKSHOPS.push({ id: 's3', title: 'k-moyennes', hint: 'Suivez pas à pas l’alternance affectation / recalcul des centres et comparez plusieurs initialisations.', mount: mountKm, leave: k3Stop, reset: () => { k3Stop(); Object.assign(K3, { ds: 'quatre', k: 4, seed: 1, frames: null, i: 0 }); } });
+
+/* ================= Atelier 4 : jeux d'accessibilité ================= */
+const G4 = { game: 'graphe', N: 10, s: 0 };
+function g4Graph() { return G4.game === 'nim' ? nimGraph(G4.N) : GRAPH1; }
+function mountGames(root) {
+  root.innerHTML = '<h2>Jeux d’accessibilité et attracteurs</h2>' +
+    '<p>Un <b>jeu d’accessibilité</b> se joue sur un graphe : chaque sommet appartient à J1 (cercles) ou à J2 (carrés), qui choisit à son tour une arête sortante. J1 gagne s’il atteint un sommet cible (en vert). L’<b>attracteur</b> de la cible est l’ensemble des positions <b>gagnantes</b> pour J1 : on le construit étape par étape.</p>' +
+    '<div class="opts"><div class="fld"><span>Jeu</span><div id="g4-g"></div></div><div id="g4-n"></div></div>' +
+    '<div class="files" style="margin:6px 0"><button class="btn" id="g4-prev" type="button">◀ Précédent</button><button class="btn pri" id="g4-next" type="button">Suivant ▶</button><button class="btn" id="g4-all" type="button">Tout calculer</button><button class="btn" id="g4-reset" type="button">Départ</button></div>' +
+    '<div class="stagebox gscroll" id="g4-svg"></div><div class="leg" id="g4-leg"></div><div class="verdict" id="g4-msg" aria-live="polite"></div><div id="g4-st"></div><div id="g4-note"></div>';
+  $('#g4-prev').addEventListener('click', () => { if (G4.s > 0) { G4.s--; drawGames(false); } });
+  $('#g4-next').addEventListener('click', () => { G4.s++; drawGames(false); });
+  $('#g4-all').addEventListener('click', () => { G4.s = 99; drawGames(false); });
+  $('#g4-reset').addEventListener('click', () => { G4.s = 0; drawGames(false); });
+  drawGames(true);
+}
+function drawGames(full) {
+  if (full) {
+    const a = $('#g4-g'); a.innerHTML = ''; a.append(chipsRow([['graphe', 'Graphe exemple'], ['nim', 'Jeu de Nim']], G4.game, g => { G4.game = g; G4.s = 0; drawGames(true); }, 'Jeu'));
+    const nb = $('#g4-n'); nb.innerHTML = '';
+    if (G4.game === 'nim') nb.append(sliderField('g4-ns', 'Allumettes', 5, 14, 1, G4.N, v => { G4.N = v; G4.s = 0; drawGames(false); }));
+    const lg = $('#g4-leg'); lg.innerHTML = '';
+    lg.append(h('span', null, '● sommet de J1'), h('span', null, '■ sommet de J2'), h('span', null, h('i', { class: 's' }), 'cible ou position gagnante pour J1 (plus foncé : atteint plus tôt)'), h('span', null, 'flèche épaisse : stratégie gagnante de J1'));
+  }
+  const g = g4Graph(), res = attractor(g.V, g.target), maxR = Math.max(...Object.values(res.rank));
+  G4.s = clampv(G4.s, 0, maxR);
+  const s = G4.s, W = 560, H = G4.game === 'nim' ? 260 : 290, byId = {}; g.V.forEach(v => { byId[v.id] = v; });
+  const svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'gsvg', role: 'img', 'aria-label': 'Graphe du jeu' });
+  svg.append(sv('defs', null, sv('marker', { id: 'ar', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }, sv('path', { d: 'M0 0L10 5L0 10z', fill: '#6b7280' })),
+    sv('marker', { id: 'ar2', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 5, markerHeight: 5, orient: 'auto-start-reverse' }, sv('path', { d: 'M0 0L10 5L0 10z', fill: '#1e7a2e' }))));
+  const R = 14;
+  if (G4.game === 'nim') { svg.append(sv('text', { x: 4, y: 52, 'font-size': 11, fill: '#6b7280' }, 'J1 joue'), sv('text', { x: 4, y: 172, 'font-size': 11, fill: '#6b7280' }, 'J2 joue')); }
+  g.V.forEach(v => v.succ.forEach(t => {
+    const w = byId[t], dx = w.x - v.x, dy = w.y - v.y, L = Math.hypot(dx, dy) || 1, strat = v.owner === 1 && res.strat[v.id] === t && res.rank[v.id] <= s && s > 0;
+    svg.append(sv('line', { x1: v.x + dx / L * (R + 1), y1: v.y + dy / L * (R + 1), x2: w.x - dx / L * (R + 4), y2: w.y - dy / L * (R + 4), stroke: strat ? '#1e7a2e' : '#9aa3ad', 'stroke-width': strat ? 3 : 1.2, 'marker-end': strat ? 'url(#ar2)' : 'url(#ar)' }));
+  }));
+  g.V.forEach(v => {
+    const rk = res.rank[v.id], inA = rk !== undefined && rk <= s, shade = inA ? Math.max(0.35, 1 - rk * 0.13) : 0;
+    const fill = inA ? 'rgba(30,122,46,' + (rk === 0 ? 0.95 : shade) + ')' : '#fff', tc = inA && (rk === 0 || shade > 0.55) ? '#fff' : '#111';
+    const sh = v.owner === 1 ? sv('circle', { cx: v.x, cy: v.y, r: R, fill, stroke: '#33475b', 'stroke-width': 2 }) : sv('rect', { x: v.x - R, y: v.y - R, width: 2 * R, height: 2 * R, fill, stroke: '#33475b', 'stroke-width': 2, rx: 2 });
+    svg.append(sh, sv('text', { x: v.x, y: v.y + 4, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600, fill: tc }, G4.game === 'nim' ? v.n : v.id));
+    if (inA && s > 0) svg.append(sv('text', { x: v.x + R - 2, y: v.y - R + 2, 'font-size': 9, 'font-weight': 600, fill: '#1e7a2e' }, rk));
+  });
+  const sb = $('#g4-svg'); sb.innerHTML = ''; sb.append(svg);
+  const cnt = g.V.filter(v => res.rank[v.id] !== undefined && res.rank[v.id] <= s).length;
+  let msg;
+  if (s === 0) msg = 'Étape 0 : l’attracteur est réduit à la cible (position où J1 a déjà gagné).';
+  else {
+    const add = g.V.filter(v => res.rank[v.id] === s);
+    msg = 'Étape ' + s + ' : on ajoute ' + add.map(v => (G4.game === 'nim' ? v.n + (v.owner === 1 ? ' (J1)' : ' (J2)') : v.id)).join(', ') + '. Un sommet de J1 est ajouté s’il a UN successeur dans l’attracteur ; un sommet de J2 est ajouté si TOUS ses successeurs y sont.';
+  }
+  setMsg('#g4-msg', msg, s === maxR ? 'yes' : '');
+  const st = $('#g4-st'); st.innerHTML = ''; st.append(stats([['Étape', s + ' / ' + maxR], ['Sommets dans l’attracteur', cnt + ' / ' + g.V.length]]));
+  const nt = $('#g4-note'); nt.innerHTML = '';
+  if (s === maxR) {
+    if (G4.game === 'nim') {
+      const losing = []; for (let n = 0; n <= G4.N; n++) if (res.rank[n + '-1'] === undefined) losing.push(n);
+      nt.append(h('div', { class: 'verdict' }, 'Le point fixe est atteint. Pour J1 qui doit jouer, les positions perdantes (hors de l’attracteur) sont : ' + losing.join(', ') + ' allumettes, c’est-à-dire les multiples de 4. La stratégie gagnante consiste à laisser un multiple de 4 à l’adversaire.'));
+    } else nt.append(h('div', { class: 'verdict' }, 'Le point fixe est atteint : J1 gagne depuis A, B, D, E et G. Depuis C et F, J2 peut éviter la cible indéfiniment en alternant C → F → C : ce sont des positions perdantes pour J1. La stratégie de J1 (flèches épaisses) choisit toujours un successeur d’attracteur de rang plus faible.'));
+  }
+  $('#g4-prev').disabled = s === 0; $('#g4-next').disabled = s >= maxR;
+}
+WORKSHOPS.push({ id: 's4', title: 'Jeux et attracteurs', hint: 'Construisez l’attracteur étape par étape pour trouver les positions gagnantes et une stratégie sans mémoire.', mount: mountGames, reset: () => { Object.assign(G4, { game: 'graphe', N: 10, s: 0 }); } });
+
+/* ================= Atelier 5 : minmax avec heuristique ================= */
+const M5 = { p: 1, s: 0 };
+function mountMm(root) {
+  root.innerHTML = '<h2>Minmax avec une heuristique</h2>' +
+    '<p>Quand l’arbre du jeu est trop grand pour être exploré jusqu’aux positions finales, on s’arrête à une <b>profondeur limite</b> et on estime la valeur des positions atteintes par une <b>heuristique</b>. Les nœuds ▲ de J1 prennent le <b>maximum</b> de leurs fils, les nœuds ▽ de J2 le <b>minimum</b>. Chaque nœud interne porte sa valeur heuristique h ; les feuilles portent leur valeur exacte.</p>' +
+    '<div class="opts"><div class="fld"><span>Profondeur d’exploration</span><div id="m5-p"></div></div></div>' +
+    '<div class="files" style="margin:6px 0"><button class="btn" id="m5-prev" type="button">◀ Précédent</button><button class="btn pri" id="m5-next" type="button">Suivant ▶</button><button class="btn" id="m5-all" type="button">Tout calculer</button><button class="btn" id="m5-reset" type="button">Départ</button></div>' +
+    '<div class="stagebox gscroll" id="m5-svg"></div><div class="verdict" id="m5-msg" aria-live="polite"></div><div id="m5-cmp"></div>';
+  $('#m5-prev').addEventListener('click', () => { if (M5.s > 0) { M5.s--; drawMm(); } });
+  $('#m5-next').addEventListener('click', () => { if (M5.s < M5.p) { M5.s++; drawMm(); } });
+  $('#m5-all').addEventListener('click', () => { M5.s = M5.p; drawMm(); });
+  $('#m5-reset').addEventListener('click', () => { M5.s = 0; drawMm(); });
+  drawMm(true);
+}
+function treeLayout() {
+  const pos = {}, leafs = []; let li = 0;
+  (function walk(n, d) { if (!n.kids) { pos[n.id] = { x: 50 + li * 60, d }; li++; leafs.push(n.id); return; } n.kids.forEach(k => walk(k, d + 1)); const xs = n.kids.map(k => pos[k.id].x); pos[n.id] = { x: (Math.min(...xs) + Math.max(...xs)) / 2, d }; })(TREE, 0);
+  return pos;
+}
+function drawMm() {
+  const a = $('#m5-p'); a.innerHTML = ''; a.append(chipsRow([[1, 'Profondeur 1'], [2, 'Profondeur 2'], [3, 'Profondeur 3 (arbre complet)']], M5.p, p => { M5.p = p; M5.s = 0; drawMm(); }, 'Profondeur'));
+  const r = minmax(M5.p), pos = treeLayout(), Y = d => 40 + d * 90, W = 50 * 2 + 11 * 60, svg = sv('svg', { viewBox: '0 0 ' + W + ' 350', class: 'msvg', role: 'img', 'aria-label': 'Arbre de jeu' });
+  const reveal = n => { const d = pos[n.id].d; return d <= M5.p && d >= M5.p - M5.s; };
+  const nodes = []; (function walk(n) { nodes.push(n); (n.kids || []).forEach(walk); })(TREE);
+  nodes.forEach(n => (n.kids || []).forEach(k => {
+    const p1 = pos[n.id], p2 = pos[k.id], vis = pos[k.id].d <= M5.p, chosen = vis && reveal(n) && r.best[n.id] === k.id && pos[n.id].d < M5.p;
+    svg.append(sv('line', { x1: p1.x, y1: Y(p1.d) + 14, x2: p2.x, y2: Y(p2.d) - 14, stroke: chosen ? '#1e7a2e' : '#9aa3ad', 'stroke-width': chosen ? 3.2 : 1.3, opacity: vis ? 1 : 0.25 }));
+  }));
+  nodes.forEach(n => {
+    const p = pos[n.id], x = p.x, y = Y(p.d), vis = p.d <= M5.p, rv = vis && reveal(n), isLeaf = !n.kids, isMax = p.d % 2 === 0;
+    const at = { fill: rv ? (isLeaf || p.d === M5.p ? '#fff4dd' : '#dcebf8') : '#fff', stroke: '#33475b', 'stroke-width': 2, opacity: vis ? 1 : 0.28 };
+    if (isLeaf) svg.append(sv('rect', Object.assign({ x: x - 16, y: y - 13, width: 32, height: 26, rx: 4 }, at)));
+    else if (isMax) svg.append(sv('polygon', Object.assign({ points: x + ',' + (y - 17) + ' ' + (x + 19) + ',' + (y + 13) + ' ' + (x - 19) + ',' + (y + 13) }, at)));
+    else svg.append(sv('polygon', Object.assign({ points: x + ',' + (y + 17) + ' ' + (x + 19) + ',' + (y - 13) + ' ' + (x - 19) + ',' + (y - 13) }, at)));
+    if (rv) svg.append(sv('text', { x, y: y + (isLeaf ? 5 : isMax ? 8 : 0), 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: '#111' }, r.vals[n.id]));
+    if (!isLeaf) svg.append(sv('text', { x: x + 24, y: y + 4, 'font-size': 10.5, fill: '#6b7280', opacity: vis ? 1 : 0.4 }, p.d === 0 ? n.id : n.id + ' · h=' + n.h));
+  });
+  svg.append(sv('text', { x: 6, y: Y(0) - 22, 'font-size': 11, fill: '#6b7280' }, 'J1 (max)'), sv('text', { x: 6, y: Y(1) - 22, 'font-size': 11, fill: '#6b7280' }, 'J2 (min)'), sv('text', { x: 6, y: Y(2) - 22, 'font-size': 11, fill: '#6b7280' }, 'J1 (max)'), sv('text', { x: 6, y: Y(3) - 22, 'font-size': 11, fill: '#6b7280' }, 'positions finales'));
+  const box = $('#m5-svg'); box.innerHTML = ''; box.append(svg);
+  let msg;
+  if (M5.s === 0) msg = 'Profondeur ' + M5.p + ' : on s’arrête aux nœuds de profondeur ' + M5.p + ' et on prend ' + (M5.p === 3 ? 'les valeurs exactes des positions finales.' : 'leur valeur heuristique h.');
+  else msg = 'On remonte d’un niveau : les nœuds ' + ((M5.p - M5.s) % 2 === 0 ? '▲ prennent le maximum' : '▽ prennent le minimum') + ' de leurs fils.';
+  if (M5.s === M5.p) msg += ' Valeur de la racine : ' + r.value + ' ; coup choisi : ' + r.move + '.';
+  setMsg('#m5-msg', msg, M5.s === M5.p ? 'yes' : '');
+  const tb = h('tbody'); [1, 2, 3].forEach(p => { const m = minmax(p); tb.append(h('tr', { class: p === M5.p ? 'hl' : '' }, h('td', null, 'Profondeur ' + p), h('td', { class: 'm num' }, String(m.value)), h('td', null, 'coup ' + m.move))); });
+  const cb = $('#m5-cmp'); cb.innerHTML = ''; cb.append(h('p', { class: 'small', style: 'margin:6px 0 4px' }, 'Décision selon la profondeur (calculée sans animation) :'), h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['Exploration', 'Valeur de la racine', 'Coup choisi'].map(t => h('th', null, t)))), tb)));
+  $('#m5-prev').disabled = M5.s === 0; $('#m5-next').disabled = M5.s >= M5.p;
+}
+WORKSHOPS.push({ id: 's5', title: 'Minmax et heuristique', hint: 'Remontez les valeurs de l’arbre niveau par niveau et comparez la décision selon la profondeur d’exploration.', mount: mountMm, reset: () => { Object.assign(M5, { p: 1, s: 0 }); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  s1: {
+    title: 'k plus proches voisins', level: 'Niveau 1 · Découvrir', time: '30 min', course: 'knn',
+    goal: 'Comprendre l’algorithme des k plus proches voisins avec la distance euclidienne et voir l’effet du choix de k sur la classe prédite.',
+    steps: [
+      'Avec « Deux nuages » et k = 3, cliquez près du nuage bleu puis près du nuage orange : lisez le tableau des voisins et les votes.',
+      'Placez le point à égale distance des deux nuages. Que se passe-t-il quand les votes sont à égalité ? Faites varier k.',
+      'Passez à « Trois classes » et cochez « Colorer les régions de décision ». À quoi ressemblent les frontières avec k = 1 ? avec k = 15 ?',
+      'Prenez « Classes mêlées » avec k = 1 puis k = 15 : quelle frontière est la plus irrégulière ?',
+      'Vérifiez à la main une distance du tableau avec la formule √((x₁ − x₂)² + (y₁ − y₂)²).'
+    ],
+    defi: { q: 'Jeu d’apprentissage : classe A = (2 ; 2), (0 ; 0), (0 ; 4) ; classe B = (4,2 ; 2), (4 ; 3), (5 ; 0). Quelle classe prédit-on pour le point (3 ; 2) avec k = 1 ? avec k = 3 ?',
+      a: 'Distances au point (3 ; 2) : (2 ; 2) → <b>1</b> (A) ; (4,2 ; 2) → <b>1,2</b> (B) ; (4 ; 3) → <b>≈ 1,41</b> (B) ; les autres sont plus loin. Avec k = 1, le plus proche est de classe A : <b>A</b>. Avec k = 3, les voisins sont A, B, B : <b>B</b> l’emporte (2 voix contre 1). Le résultat dépend de k.' },
+    qcm: [
+      { q: 'Que signifie « apprentissage supervisé » ?', o: ['Les classes des données d’apprentissage sont connues', 'Un humain valide chaque prédiction', 'On cherche des groupes sans connaître de classes', 'L’algorithme s’exécute sans données'], a: 0, w: 'En apprentissage supervisé, chaque donnée d’apprentissage est associée à sa classe. L’algorithme des k plus proches voisins en est un exemple.' },
+      { q: 'Comment l’algorithme des k plus proches voisins classe-t-il un nouveau point ?', o: ['Il prend la classe du point le plus éloigné', 'Il prend la classe majoritaire parmi ses k plus proches voisins', 'Il calcule la moyenne de toutes les classes', 'Il tire une classe au hasard'], a: 1, w: 'On calcule la distance du nouveau point à tous les points d’apprentissage, on retient les k plus proches et on vote.' },
+      { q: 'Avec k = 1, quelle est la classe prédite pour un nouveau point ?', o: ['La classe majoritaire du jeu', 'La classe de son voisin le plus proche', 'Toujours la classe A', 'La classe de son voisin le plus éloigné'], a: 1, w: 'Avec un seul voisin, la classe prédite est celle de ce voisin : les frontières de décision deviennent très irrégulières.' },
+      { q: 'Quelle est la distance euclidienne entre (0 ; 0) et (3 ; 4) ?', o: ['7', '5', '12', '3,5'], a: 1, w: '√(3² + 4²) = √25 = 5.' },
+      { q: 'Combien de distances calcule-t-on pour classer un point avec un jeu de n points ?', o: ['k', 'n', 'n²', 'Une seule'], a: 1, w: 'On calcule la distance du point à chacun des n points du jeu, puis on retient les k plus petites : le coût d’une prédiction est proportionnel à n.' }
+    ]
+  },
+  s2: {
+    title: 'Évaluer', level: 'Niveau 2 · Comprendre', time: '35 min', course: 'eval',
+    goal: 'Mesurer la qualité d’un classifieur avec un jeu de test et une matrice de confusion, et repérer le surapprentissage.',
+    steps: [
+      'Avec « Deux nuages » et k = 3, lisez la matrice de confusion. Combien d’erreurs ? Où se trouvent-elles dans la matrice ?',
+      'Passez à « Classes mêlées ». Notez les taux d’apprentissage et de test pour k = 1.',
+      'Augmentez k : comment évolue le taux de test ? le taux d’apprentissage ?',
+      'Cliquez plusieurs fois sur « Nouveau tirage » : le meilleur k est-il toujours le même ?',
+      'Expliquez pourquoi le taux d’apprentissage vaut 100 % pour k = 1.'
+    ],
+    defi: { q: 'Sur un jeu de test de 30 points, la matrice de confusion (lignes : classe réelle A puis B ; colonnes : classe prédite A puis B) est [[12 ; 3], [5 ; 10]]. Quel est le taux de bonnes réponses ? Combien de points de classe B ont été pris pour des A ?',
+      a: 'Bonnes réponses : 12 + 10 = 22 sur 30, soit <b>≈ 73 %</b>. Les points de classe B pris pour des A sont dans la ligne B, colonne A : <b>5</b>.' },
+    qcm: [
+      { q: 'Pourquoi évalue-t-on le classifieur sur un jeu de test distinct du jeu d’apprentissage ?', o: ['Pour aller plus vite', 'Pour mesurer sa capacité à classer des données jamais vues', 'Pour augmenter le jeu d’apprentissage', 'Pour changer la distance'], a: 1, w: 'Un classifieur évalué sur ses propres données d’apprentissage paraît meilleur qu’il ne l’est réellement.' },
+      { q: 'Que contient la case (i, j) d’une matrice de confusion ?', o: ['La distance entre les classes i et j', 'Le nombre de points de classe réelle i prédits dans la classe j', 'Le nombre de voisins', 'La valeur de k'], a: 1, w: 'Les bonnes réponses sont sur la diagonale ; toute case hors diagonale est une erreur.' },
+      { q: 'Matrice de confusion [[8 ; 2], [1 ; 9]] sur 20 points : quel est le taux de bonnes réponses ?', o: ['80 %', '85 %', '90 %', '17 %'], a: 1, w: '(8 + 9) / 20 = 17 / 20 = 85 %.' },
+      { q: 'Pourquoi le taux d’apprentissage vaut-il 100 % avec k = 1 ?', o: ['Les classes sont faciles', 'Chaque point est son propre plus proche voisin', 'k = 1 est toujours optimal', 'Le jeu de test est vide'], a: 1, w: 'Lorsqu’on classe un point du jeu d’apprentissage, il se trouve à distance 0 de lui-même et impose sa propre classe.' },
+      { q: 'Quel symptôme révèle un surapprentissage ?', o: ['Un taux élevé en apprentissage et nettement plus faible en test', 'Un taux faible en apprentissage et en test', 'Un taux identique partout', 'Une matrice nulle'], a: 0, w: 'Le modèle « apprend par cœur » les données d’apprentissage sans bien généraliser.' }
+    ]
+  },
+  s3: {
+    title: 'k-moyennes', level: 'Niveau 2 · Comprendre', time: '35 min', course: 'kmeans',
+    goal: 'Comprendre l’algorithme des k-moyennes, l’inertie et la dépendance à l’initialisation (minima locaux).',
+    steps: [
+      'Avec « Quatre groupes », k = 4 et l’initialisation n° 1, avancez pas à pas jusqu’à la convergence. Combien d’affectations ?',
+      'Observez l’inertie après chaque affectation : décroît-elle toujours ?',
+      'Dans le tableau des dix initialisations, repérez les inertie différentes. Cliquez sur « Voir » pour une initialisation moins bonne.',
+      'Comment se positionnent les centres initiaux qui conduisent à un minimum local ?',
+      'Passez à « Classes mêlées » avec k = 2 : l’algorithme trouve-t-il les deux classes d’origine ?'
+    ],
+    defi: { q: 'On regroupe les quatre nombres 0, 2, 10 et 12 avec k = 2, les centres initiaux étant 0 et 2. Donnez les groupes, les centres finaux, l’inertie finale et le nombre d’affectations effectuées.',
+      a: 'Affectation 1 : {0} et {2, 10, 12} ; centres 0 et 8. Affectation 2 : {0, 2} et {10, 12} ; centres 1 et 11. Affectation 3 : rien ne change, l’algorithme s’arrête. Groupes finaux <b>{0, 2}</b> et <b>{10, 12}</b>, centres <b>1 et 11</b>, inertie <b>1 + 1 + 1 + 1 = 4</b>, soit <b>3 affectations</b>.' },
+    qcm: [
+      { q: 'Quelle est la particularité de l’apprentissage non supervisé ?', o: ['Il utilise des classes connues', 'Il cherche des regroupements sans classes connues', 'Il n’utilise aucune donnée', 'Il ne peut pas être évalué'], a: 1, w: 'Les k-moyennes regroupent des données qui ne portent aucune étiquette.' },
+      { q: 'Quelles opérations l’algorithme des k-moyennes répète-t-il ?', o: ['Trier puis fusionner', 'Affecter chaque point au centre le plus proche, puis recalculer chaque centre comme la moyenne de son groupe', 'Choisir un pivot puis partitionner', 'Calculer un attracteur'], a: 1, w: 'Ce sont les deux étapes d’affectation et de mise à jour.' },
+      { q: 'Que mesure l’inertie ?', o: ['Le nombre de groupes', 'La somme des carrés des distances de chaque point au centre de son groupe', 'La distance entre les centres', 'Le nombre d’itérations'], a: 1, w: 'Plus l’inertie est faible, plus les groupes sont compacts. Elle ne peut que diminuer au fil des itérations.' },
+      { q: 'Pourquoi relance-t-on parfois l’algorithme avec d’autres centres initiaux ?', o: ['Parce qu’il ne converge jamais', 'Parce qu’il peut converger vers un minimum local selon l’initialisation', 'Pour augmenter k', 'Pour normaliser les données'], a: 1, w: 'La convergence est assurée, mais la partition obtenue dépend des centres initiaux ; on garde la meilleure.' },
+      { q: 'Quand l’algorithme s’arrête-t-il ?', o: ['Après exactement k itérations', 'Lorsque plus aucun point ne change de groupe', 'Lorsque l’inertie vaut 0', 'Lorsque les centres sont tous alignés'], a: 1, w: 'Si l’affectation ne change plus, les centres ne changent plus non plus. La démonstration de la convergence n’est pas au programme.' }
+    ]
+  },
+  s4: {
+    title: 'Jeux et attracteurs', level: 'Niveau 2 · Comprendre', time: '35 min', course: 'jeux',
+    goal: 'Déterminer les positions gagnantes d’un jeu d’accessibilité à deux joueurs par le calcul de l’attracteur et en déduire une stratégie gagnante sans mémoire.',
+    steps: [
+      'Dans le « Graphe exemple », avancez étape par étape. Quels sommets entrent dans l’attracteur à l’étape 1 ? Pourquoi ?',
+      'À l’étape 2, pourquoi B (sommet de J2) entre-t-il alors que C n’entre pas ?',
+      'Allez jusqu’au point fixe : quelles positions sont gagnantes pour J1 ? Pourquoi C et F ne le sont-ils pas ?',
+      'Passez au jeu de Nim avec 10 allumettes (on retire 1, 2 ou 3 allumettes, celui qui prend la dernière gagne). Quels nombres d’allumettes restent hors de l’attracteur ?',
+      'Quel premier coup J1 doit-il jouer avec 10 allumettes ? Lisez la flèche épaisse.'
+    ],
+    defi: { q: 'Au jeu de Nim (on retire 1, 2 ou 3 allumettes, celui qui prend la dernière gagne), J1 commence avec 13 allumettes. Quel coup gagnant joue-t-il, et quelle est la stratégie ensuite ?',
+      a: 'Les positions perdantes pour le joueur qui doit jouer sont les multiples de 4. Avec 13 allumettes, J1 retire <b>1</b> pour laisser <b>12</b>. Ensuite, si J2 retire t allumettes (1, 2 ou 3), J1 en retire 4 − t pour revenir à un multiple de 4 : 8, puis 4, puis 0. Vérifiez avec le curseur réglé sur 13.' },
+    qcm: [
+      { q: 'Que représente l’attracteur de la cible pour J1 ?', o: ['L’ensemble des positions gagnantes pour J1', 'Le plus court chemin vers la cible', 'L’ensemble des sommets de J2', 'Le nombre de coups restants'], a: 0, w: 'Depuis un sommet de l’attracteur, J1 peut forcer l’arrivée dans la cible quoi que joue J2.' },
+      { q: 'Quand ajoute-t-on un sommet de J2 à l’attracteur ?', o: ['Si l’un de ses successeurs y est', 'Si tous ses successeurs y sont', 'Si aucun de ses successeurs n’y est', 'Jamais'], a: 1, w: 'J2 choisit le coup : pour que J1 soit sûr de gagner, tous les choix de J2 doivent mener dans l’attracteur. Un sommet de J1, lui, y entre dès qu’un successeur y est.' },
+      { q: 'Au jeu de Nim (1 à 3 allumettes, la dernière prise gagne), quelles positions sont perdantes pour le joueur qui doit jouer ?', o: ['Les nombres pairs', 'Les multiples de 4', 'Les multiples de 3', 'Le nombre 1'], a: 1, w: 'Depuis un multiple de 4, tout coup mène à un non-multiple de 4, d’où l’on peut revenir à un multiple de 4.' },
+      { q: 'Qu’est-ce qu’une stratégie sans mémoire ?', o: ['Une stratégie qui oublie la cible', 'Une stratégie où le coup joué ne dépend que de la position courante', 'Une stratégie sans aucun coup', 'Une stratégie qui dépend de tout l’historique'], a: 1, w: 'On ne considère que ces stratégies. Dans l’attracteur, J1 choisit un successeur de rang plus faible.' },
+      { q: 'Dans le graphe exemple, pourquoi J2 gagne-t-il depuis C ?', o: ['Parce que C est la cible', 'Parce qu’il peut jouer C → F, puis F → C, indéfiniment, sans jamais atteindre la cible', 'Parce que C a trois successeurs', 'Parce que J1 n’a pas de coup'], a: 1, w: 'Le cycle C → F → C empêche J1 d’atteindre G : C n’est pas dans l’attracteur.' }
+    ]
+  },
+  s5: {
+    title: 'Minmax et heuristique', level: 'Niveau 3 · Maîtriser', time: '30 min', course: 'minmax',
+    goal: 'Appliquer l’algorithme minmax avec une heuristique à profondeur limitée et comprendre pourquoi la décision peut changer avec la profondeur.',
+    steps: [
+      'À profondeur 1, avancez jusqu’à la racine. Quelles valeurs sont comparées ? Quel coup est choisi ?',
+      'À profondeur 2, que valent les nœuds ▽ a, b, c ? D’où viennent ces valeurs ?',
+      'À profondeur 3, les nœuds ▲ du niveau 2 prennent le maximum de leurs feuilles. Calculez à la main la valeur de a, de b, de c, puis comparez avec l’animation.',
+      'Lisez le tableau récapitulatif : que remarquez-vous sur le coup choisi selon la profondeur ?',
+      'Expliquez pourquoi une heuristique ne garantit pas le meilleur coup.'
+    ],
+    defi: { q: 'Donnez, pour chaque profondeur d’exploration (1, 2 et 3), la valeur de la racine et le coup choisi.',
+      a: 'Profondeur 1 : max(3, 5, 2) = <b>5</b>, coup <b>b</b>. Profondeur 2 : a = min(4, 6) = 4, b = min(1, 7) = 1, c = min(8, 5) = 5, donc <b>5</b>, coup <b>c</b>. Profondeur 3 (valeurs exactes) : a = min(7, 9) = 7, b = min(3, 4) = 3, c = min(8, 3) = 3, donc <b>7</b>, coup <b>a</b>. Trois profondeurs, trois coups différents : l’heuristique n’est qu’une estimation.' },
+    qcm: [
+      { q: 'À quoi sert une heuristique dans l’algorithme minmax ?', o: ['À trier les coups', 'À estimer la valeur d’une position non finale quand on arrête l’exploration', 'À éviter de jouer', 'À calculer l’attracteur'], a: 1, w: 'On ne peut généralement pas explorer le jeu jusqu’aux positions finales : on évalue les positions de profondeur limite avec une heuristique.' },
+      { q: 'Que fait un nœud de J1 (maximisant) ?', o: ['Il prend le minimum de ses fils', 'Il prend le maximum de ses fils', 'Il prend la moyenne', 'Il prend le premier fils'], a: 1, w: 'J1 choisit le coup qui maximise la valeur ; J2, supposé jouer au mieux, la minimise.' },
+      { q: 'Dans l’arbre de l’atelier, quel coup est choisi à profondeur 2 ?', o: ['a', 'b', 'c', 'Aucun'], a: 2, w: 'a vaut min(4, 6) = 4, b vaut min(1, 7) = 1 et c vaut min(8, 5) = 5 : le maximum est 5, atteint par c.' },
+      { q: 'Pourquoi le coup choisi peut-il changer avec la profondeur ?', o: ['Parce que l’algorithme est aléatoire', 'Parce que l’heuristique est une estimation : en explorant plus loin, on remplace des estimations par des valeurs plus fiables', 'Parce que les joueurs changent', 'Parce que l’arbre est modifié'], a: 1, w: 'Plus on explore profondément, plus la valeur se rapproche de la valeur réelle.' },
+      { q: 'L’élagage alpha-bêta est-il au programme d’ITC ?', o: ['Oui, entièrement', 'Non, le programme précise qu’il n’est pas au programme', 'Seulement en deuxième semestre', 'Seulement pour les jeux à un joueur'], a: 1, w: 'Le programme indique : « L’élagage alpha-bêta n’est pas au programme. »' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'cadre', t: 'Cadre du cours', h: `
+<p>Ce cours suit la partie <b>« Algorithmique pour l’intelligence artificielle et l’étude des jeux »</b> du programme d’informatique de tronc commun (troisième semestre). Elle permet de revisiter les notions de programmation et de représentation de données par un graphe, vues en première année, en les appliquant à des enjeux contemporains.</p>
+<h3>Au programme</h3>
+<table class="ctable"><thead><tr><th>Notion</th><th>Précisions</th></tr></thead><tbody>
+<tr><td>Algorithme des k plus proches voisins avec distance euclidienne</td><td>Matrice de confusion. Lien avec l’apprentissage supervisé.</td></tr>
+<tr><td>Algorithme des k-moyennes</td><td>Lien avec l’apprentissage non supervisé. On observe des convergences vers des minima locaux.</td></tr>
+<tr><td>Jeux d’accessibilité à deux joueurs sur un graphe : stratégie, stratégie gagnante, position gagnante</td><td>Calcul des attracteurs, construction de stratégies gagnantes. On ne considère que les stratégies sans mémoire.</td></tr>
+<tr><td>Notion d’heuristique, algorithme minmax avec une heuristique</td><td>—</td></tr></tbody></table>
+<h3>Hors programme</h3>
+<ul><li>L’élagage alpha-bêta.</li><li>La démonstration de la convergence des k-moyennes.</li><li>La connaissance détaillée de ces algorithmes n’est pas un attendu : il s’agit surtout de se familiariser avec les idées, qu’on pourra réutiliser dans des situations guidées.</li></ul>
+<p class="small">Ce récapitulatif est établi à partir d’extraits cités du programme officiel ; le texte complet fait foi.</p>
+<div class="retain"><b>À retenir.</b> Deux algorithmes d’apprentissage (k plus proches voisins, k-moyennes) et deux outils pour les jeux (attracteurs, minmax avec heuristique).</div>` });
+
+COURSE.push({ id: 'apprent', t: 'Apprendre à partir de données', h: `
+<p>L’<b>intelligence artificielle</b> regroupe des méthodes qui permettent à une machine de réaliser des tâches jugées « intelligentes ». L’<b>apprentissage automatique</b> en est une branche : au lieu de programmer des règles, on laisse l’algorithme les déduire de <b>données</b>.</p>
+<ul>
+<li>Une donnée est décrite par ses <b>attributs</b> (ici, deux nombres : un point du plan).</li>
+<li>En <b>apprentissage supervisé</b>, chaque donnée d’apprentissage est associée à sa <b>classe</b> (étiquette). On veut prédire la classe d’une nouvelle donnée : c’est la <b>classification</b>. Exemple : k plus proches voisins.</li>
+<li>En <b>apprentissage non supervisé</b>, les données n’ont pas de classe : on cherche des <b>groupes</b> (clusters) de données semblables. Exemple : k-moyennes.</li>
+<li>On sépare les données en un jeu d’<b>apprentissage</b> et un jeu de <b>test</b> pour évaluer l’algorithme sur des données qu’il n’a pas vues.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Supervisé : les classes sont connues et on prédit. Non supervisé : on cherche des groupes sans classes connues.</div>` });
+
+COURSE.push({ id: 'knn', t: 'k plus proches voisins', h: `
+<p>Pour classer un point x, on cherche dans le jeu d’apprentissage ses <b>k plus proches voisins</b>, et on lui attribue la classe <b>majoritaire</b> parmi eux.</p>
+<p>La distance utilisée est la <b>distance euclidienne</b> : entre x = (x₁ ; x₂) et y = (y₁ ; y₂),</p>
+<div class="formula">d(x, y) = √((x₁ − y₁)² + (x₂ − y₂)²)</div>
+<p>Pour comparer des distances, il suffit de comparer leurs carrés : on évite la racine carrée.</p>
+<pre class="code">def dist2(a, b):
+    return sum((u - v) ** 2 for u, v in zip(a, b))
+
+def knn(points, classes, x, k):
+    ordre = sorted(range(len(points)), key=lambda i: dist2(points[i], x))
+    votes = {}
+    for i in ordre[:k]:
+        votes[classes[i]] = votes.get(classes[i], 0) + 1
+    return max(votes, key=votes.get)</pre>
+<ul>
+<li><b>Coût</b> d’une prédiction : n calculs de distance (n points d’apprentissage), puis la sélection des k plus petites.</li>
+<li><b>Choix de k</b> : avec k = 1, la frontière suit chaque point du jeu et peut être très irrégulière ; avec k grand, elle est plus lisse mais peut « gommer » de petites classes. Il n’y a pas de valeur universelle : on compare des valeurs de k sur un jeu de test.</li>
+<li><b>Égalité de votes</b> : on doit se donner une règle, par exemple choisir la classe du voisin le plus proche parmi les classes à égalité. Pour deux classes, un k impair évite le problème.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> k plus proches voisins : calculer les distances, garder les k plus petites, voter. C’est un algorithme d’apprentissage supervisé.</div>` });
+
+COURSE.push({ id: 'eval', t: 'Évaluer : matrice de confusion', h: `
+<p>On évalue un classifieur sur le jeu de <b>test</b>, en comparant la classe prédite à la classe réelle.</p>
+<p>La <b>matrice de confusion</b> M a une ligne par classe réelle et une colonne par classe prédite : M[i][j] est le nombre de points de classe réelle i que l’algorithme a classés en j. Les bonnes réponses sont sur la diagonale.</p>
+<table class="ctable"><thead><tr><th></th><th>prédit A</th><th>prédit B</th></tr></thead><tbody>
+<tr><th>réel A</th><td>12</td><td>3</td></tr><tr><th>réel B</th><td>5</td><td>10</td></tr></tbody></table>
+<p>Le <b>taux de bonnes réponses</b> est la somme de la diagonale divisée par le nombre total de points : (12 + 10) / 30 ≈ 73 %.</p>
+<pre class="code">def confusion(reelles, predites, nb_classes):
+    M = [[0] * nb_classes for _ in range(nb_classes)]
+    for r, p in zip(reelles, predites):
+        M[r][p] += 1
+    return M</pre>
+<h3>Surapprentissage</h3>
+<p>Un taux excellent sur le jeu d’apprentissage mais nettement plus faible sur le jeu de test signale un <b>surapprentissage</b> : l’algorithme a trop collé aux données d’apprentissage. C’est typique de k = 1 sur des classes qui se chevauchent.</p>
+<div class="retain"><b>À retenir.</b> Matrice de confusion : réel en ligne, prédit en colonne, bonnes réponses sur la diagonale. On évalue toujours sur des données de test.</div>` });
+
+COURSE.push({ id: 'kmeans', t: 'k-moyennes', h: `
+<p>On dispose de points sans classe et on cherche à les répartir en <b>k groupes</b> homogènes. L’algorithme des <b>k-moyennes</b> :</p>
+<ol><li>choisir k centres initiaux (par exemple k points du jeu tirés au hasard) ;</li><li><b>affectation</b> : chaque point est affecté au centre le plus proche ;</li><li><b>mise à jour</b> : chaque centre devient la moyenne (le barycentre) des points de son groupe ;</li><li>recommencer 2 et 3 jusqu’à ce que les groupes ne changent plus.</li></ol>
+<pre class="code">def k_moyennes(points, k):
+    centres = random.sample(points, k)
+    while True:
+        groupes = [[] for _ in range(k)]
+        for p in points:
+            j = min(range(k), key=lambda j: dist2(p, centres[j]))
+            groupes[j].append(p)
+        nouveaux = [moyenne(g) if g else centres[j] for j, g in enumerate(groupes)]
+        if nouveaux == centres:
+            return centres, groupes
+        centres = nouveaux</pre>
+<p>L’<b>inertie</b> d’une partition est la somme, sur tous les points, du carré de la distance au centre de leur groupe. Chaque étape la fait décroître ou la laisse inchangée.</p>
+<ul>
+<li>L’algorithme <b>converge</b> (la démonstration n’est pas au programme), mais pas forcément vers la meilleure partition : selon les centres initiaux, on peut obtenir un <b>minimum local</b>.</li>
+<li>On relance donc l’algorithme plusieurs fois et on garde la partition d’inertie minimale.</li>
+<li>Le nombre de groupes k est choisi par l’utilisateur.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> k-moyennes : alterner affectation au centre le plus proche et recalcul des centres. Apprentissage non supervisé, convergence vers un minimum local possible.</div>` });
+
+COURSE.push({ id: 'jeux', t: 'Jeux d’accessibilité', h: `
+<p>Un <b>jeu d’accessibilité à deux joueurs sur un graphe</b> est défini par un graphe orienté dont les sommets (positions) sont partagés entre J1 et J2, et par un ensemble de sommets cibles. Un jeton est placé sur un sommet ; le joueur auquel appartient le sommet choisit un arc sortant et déplace le jeton. J1 gagne s’il atteint la cible.</p>
+<ul>
+<li>Une <b>stratégie</b> d’un joueur indique quel arc choisir à chaque position ; on ne considère que les stratégies <b>sans mémoire</b> (le choix ne dépend que de la position courante).</li>
+<li>Une stratégie est <b>gagnante</b> si elle mène à la victoire quels que soient les choix de l’adversaire. Une <b>position gagnante</b> est une position depuis laquelle J1 possède une stratégie gagnante.</li>
+</ul>
+<h3>Calcul de l’attracteur</h3>
+<p>L’<b>attracteur</b> de la cible est l’ensemble des positions gagnantes de J1. On le construit par étapes :</p>
+<ol><li>Attr₀ = la cible ;</li><li>on ajoute un sommet de <b>J1</b> s’il possède <b>au moins un</b> successeur dans l’attracteur ;</li><li>on ajoute un sommet de <b>J2</b> si <b>tous</b> ses successeurs (il en faut au moins un) sont dans l’attracteur ;</li><li>on recommence jusqu’à ce que plus rien ne s’ajoute (point fixe).</li></ol>
+<pre class="code">def attracteur(sommets, succ, joueur, cible):
+    attr = set(cible)
+    change = True
+    while change:
+        change = False
+        for s in sommets:
+            if s in attr:
+                continue
+            dans = [t for t in succ[s] if t in attr]
+            if (joueur[s] == 1 and dans) or \\
+               (joueur[s] == 2 and succ[s] and len(dans) == len(succ[s])):
+                attr.add(s)
+                change = True
+    return attr</pre>
+<p><b>Stratégie gagnante</b> : en notant rang(s) l’étape d’entrée de s dans l’attracteur, J1 joue depuis chaque sommet de l’attracteur vers un successeur de rang strictement plus petit. Le rang diminue à chaque coup : la cible est atteinte.</p>
+<p><b>Exemple : le jeu de Nim.</b> Une position est le couple (allumettes restantes, joueur qui doit jouer). On retire 1, 2 ou 3 allumettes, celui qui prend la dernière gagne. Les positions perdantes pour le joueur qui doit jouer sont les multiples de 4.</p>
+<div class="retain"><b>À retenir.</b> Positions gagnantes de J1 = attracteur de la cible. Un sommet de J1 y entre avec un successeur dans l’attracteur ; un sommet de J2 y entre si tous ses successeurs y sont.</div>` });
+
+COURSE.push({ id: 'minmax', t: 'Heuristique et minmax', h: `
+<p>Pour la plupart des jeux, l’arbre des parties est trop grand pour être exploré en entier. On s’arrête alors à une <b>profondeur limite</b> et on évalue les positions atteintes par une <b>heuristique</b> : une fonction qui estime la qualité d’une position pour J1 (grande valeur : favorable à J1). Une heuristique est une estimation, qui peut se tromper.</p>
+<p>L’algorithme <b>minmax</b> suppose que chaque joueur joue au mieux : J1 choisit le fils de valeur maximale, J2 le fils de valeur minimale.</p>
+<pre class="code">def minmax(pos, prof, tour_de_j1):
+    if prof == 0 or est_finale(pos):
+        return heuristique(pos)
+    valeurs = [minmax(q, prof - 1, not tour_de_j1) for q in coups(pos)]
+    return max(valeurs) if tour_de_j1 else min(valeurs)</pre>
+<ul>
+<li>Le coût croît exponentiellement avec la profondeur : si chaque position a b coups, on explore de l’ordre de b<sup>p</sup> positions à la profondeur p.</li>
+<li>Une exploration plus profonde donne en général une meilleure décision, mais le coup choisi peut changer d’une profondeur à l’autre.</li>
+<li>L’élagage alpha-bêta, qui évite d’explorer certaines branches, <b>n’est pas au programme</b>.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Minmax avec heuristique : remonter les valeurs depuis la profondeur limite, en prenant le maximum aux nœuds de J1 et le minimum aux nœuds de J2.</div>` });
+
+COURSE.push({ id: 'bilan', t: 'Synthèse', h: `
+<table class="ctable"><thead><tr><th></th><th>k plus proches voisins</th><th>k-moyennes</th></tr></thead><tbody>
+<tr><td>Type d’apprentissage</td><td>supervisé</td><td>non supervisé</td></tr>
+<tr><td>Données</td><td>points avec leur classe</td><td>points sans classe</td></tr>
+<tr><td>Résultat</td><td>classe prédite pour un nouveau point</td><td>partition en k groupes et leurs centres</td></tr>
+<tr><td>Paramètre</td><td>k (nombre de voisins)</td><td>k (nombre de groupes), centres initiaux</td></tr>
+<tr><td>Évaluation</td><td>matrice de confusion sur un jeu de test</td><td>inertie</td></tr>
+<tr><td>Point de vigilance</td><td>surapprentissage (k trop petit)</td><td>minimum local</td></tr></tbody></table>
+<table class="ctable"><thead><tr><th></th><th>Attracteur</th><th>Minmax avec heuristique</th></tr></thead><tbody>
+<tr><td>But</td><td>trouver les positions gagnantes et une stratégie gagnante</td><td>choisir un coup quand on ne peut pas tout explorer</td></tr>
+<tr><td>Jeu</td><td>graphe, cible d’accessibilité</td><td>arbre de parties à profondeur limitée</td></tr>
+<tr><td>Garantie</td><td>exacte</td><td>dépend de l’heuristique</td></tr></tbody></table>
+<div class="retain"><b>À retenir.</b> Savoir dérouler ces algorithmes sur de petits exemples et en expliquer les principes et les limites.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Classe, étiquette</dt><dd>Catégorie à laquelle appartient une donnée.</dd>
+<dt>Classification</dt><dd>Prédire la classe d’une nouvelle donnée.</dd>
+<dt>Apprentissage supervisé</dt><dd>Apprentissage à partir de données dont les classes sont connues.</dd>
+<dt>Apprentissage non supervisé</dt><dd>Recherche de groupes dans des données sans classes connues.</dd>
+<dt>Jeu d’apprentissage, jeu de test</dt><dd>Données utilisées pour apprendre, données réservées à l’évaluation.</dd>
+<dt>Distance euclidienne</dt><dd>Longueur du segment qui relie deux points.</dd>
+<dt>Matrice de confusion</dt><dd>Tableau des effectifs classe réelle × classe prédite.</dd>
+<dt>Surapprentissage</dt><dd>Bonne performance sur l’apprentissage mais mauvaise sur de nouvelles données.</dd>
+<dt>Centre, barycentre</dt><dd>Moyenne des points d’un groupe.</dd>
+<dt>Inertie</dt><dd>Somme des carrés des distances des points au centre de leur groupe.</dd>
+<dt>Minimum local</dt><dd>Solution meilleure que ses voisines mais pas forcément optimale globalement.</dd>
+<dt>Jeu d’accessibilité</dt><dd>Jeu sur un graphe où J1 veut atteindre une cible.</dd>
+<dt>Stratégie gagnante</dt><dd>Stratégie qui assure la victoire quel que soit le jeu de l’adversaire.</dd>
+<dt>Attracteur</dt><dd>Ensemble des positions depuis lesquelles J1 peut forcer l’accès à la cible.</dd>
+<dt>Heuristique</dt><dd>Estimation de la valeur d’une position non finale.</dd>
+<dt>Minmax</dt><dd>Algorithme où J1 maximise et J2 minimise la valeur des positions.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 's1' };
+const AS = { key: 's1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'notions' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : IA et jeux'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur l’algorithmique pour l’intelligence artificielle et l’étude des jeux (ITC, CPGE 2e année) : k plus proches voisins, évaluation, k-moyennes, jeux et attracteurs, minmax avec heuristique.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Cliquez dans le plan (atelier 1) ou utilisez les boutons Précédent / Suivant pour dérouler un algorithme.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction ; <b>Cours</b> détaille le programme.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement. Les jeux de données sont générés à partir d’une graine fixe : ils sont identiques à chaque ouverture.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
