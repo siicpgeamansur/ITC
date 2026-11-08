@@ -62,7 +62,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | 1ère année | [Parcours de graphe et plus court chemin avec Dijkstra et A*](https://siicpgeamansur.github.io/ITC/dfs_bfs_dijkstra.html) | |
 
-| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+| 1ère année | [Dichotomie](https://siicpgeamansur.github.io/ITC/dichotomie.html) | |
 
 | 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
 
