@@ -1,0 +1,944 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Programmation dynamique</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* spécifique DP */
+.dp-table{border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px;margin:8px auto}
+.dp-table td,.dp-table th{border:1px solid var(--line);width:32px;height:28px;text-align:center;padding:0;background:#fff}
+.dp-table th{background:var(--panel2);font-weight:600;color:var(--muted)}
+.dp-table td.hl{background:rgba(46,109,164,.15)}
+.dp-table td.path{background:rgba(30,122,46,.2);font-weight:600}
+.dp-table td.val{color:var(--muted)}
+.algo-code{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:12.5px/1.55 var(--font-mono);white-space:pre;overflow-x:auto;margin:8px 0}
+.algo-code .comment{color:var(--ok);font-style:italic}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .dp-table td,.dp-table th{width:24px;height:22px;font-size:11px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="16" width="4" height="7" fill="var(--accent)"/><rect x="9" y="11" width="4" height="12" fill="var(--accent)"/><rect x="15" y="6" width="4" height="17" fill="var(--accent)"/><rect x="21" y="3" width="2" height="20" fill="var(--ok)"/><path d="M3,13 L12,8 L18,5 L23,3" fill="none" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="3 2"/></svg><span>Atelier Programmation dynamique <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-dp-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* Code Python coloré (léger) */
+function codeBlock(code, on) {
+  const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield|None)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|True|False|isinstance|TypeError|ValueError|Exception|AssertionError|float|inf)$/;
+  const lines = code.split('\n').map(line => {
+    let out = '', i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '#') { out += '<span style="color:#7a7a88;font-style:italic">' + esc(line.slice(i)) + '</span>'; break; }
+      if (ch === '"' || ch === "'") { let j = i + 1; while (j < line.length && line[j] !== ch) j++; out += '<span style="color:#1c6b40">' + esc(line.slice(i, j + 1)) + '</span>'; i = j + 1; continue; }
+      let j = i; while (j < line.length && line[j] !== '#' && line[j] !== '"' && line[j] !== "'") j++;
+      let seg = esc(line.slice(i, j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g, m => /^\d/.test(m) ? '<span style="color:#b05a00">' + m + '</span>' : KW.test(m) ? '<span style="color:#7c3aa8">' + m + '</span>' : BI.test(m) ? '<span style="color:#1f3fa0">' + m + '</span>' : m);
+      out += seg; i = j;
+    }
+    return out;
+  });
+  return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/* ================= Atelier 1 : Fibonacci & mémoïsation ================= */
+const W1 = { n: 10, mode: 'memo', steps: [], step: 0, timer: null };
+function mountW1(root) {
+  root.innerHTML = '<h2>Fibonacci et mémoïsation</h2><p>Le calcul naïf de Fibonacci recalcule les mêmes valeurs un nombre exponentiel de fois. La <b>mémoïsation</b> (avec un dictionnaire) stocke les résultats déjà calculés : chaque sous-problème n\'est résolu qu\'une fois.</p>' +
+    '<div class="opts"><label class="fld"><span>n = <b id="w1-nval"></b></span><input type="range" id="w1-n" min="1" max="30" value="10"></label><div class="fld"><span>Méthode</span><div id="w1-mode"></div></div></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w1-prev" type="button">◀ Précédent</button><button class="btn pri" id="w1-next" type="button">Suivant ▶</button><button class="btn" id="w1-play" type="button">Lecture</button><button class="btn" id="w1-reset" type="button">Départ</button></div>' +
+    '<div class="dwrap" id="w1-tree"></div>' +
+    '<div class="gstats" id="w1-stats"></div>' +
+    '<div class="verdict" id="w1-msg" aria-live="polite"></div>' +
+    '<h3>Code Python</h3><div id="w1-code"></div>' +
+    '<h3>Mémoïsation avec un dictionnaire</h3><p>On utilise un dictionnaire <code>memo</code> : les clés sont les sous-problèmes (ici <code>n</code>), les valeurs sont les résultats déjà calculés.</p>' +
+    '<pre class="code">def fib(n: int, memo: dict = {}) -> int:\n    if n in memo:\n        return memo[n]\n    if n <= 1:\n        memo[n] = n\n        return n\n    memo[n] = fib(n - 1, memo) + fib(n - 2, memo)\n    return memo[n]</pre>' +
+    '<p class="small">Les clés sont des entiers (n) : elles sont hachables, donc le dictionnaire fonctionne. Le coût passe de O(2<sup>n</sup>) à O(n), au prix d\'un espace mémoire O(n).</p>';
+  const S = W1;
+  const nEl = $('#w1-n'), nVal = $('#w1-nval');
+  $('#w1-mode').append(chipsRow([['naif', 'Naïf (arbre)'], ['memo', 'Mémoïsé (dictionnaire)'], ['bas', 'Bas en haut (boucle)']], S.mode, v => { S.mode = v; S.steps = []; S.step = 0; stop(); render(); }, 'Méthode'));
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w1-play'); if (b) b.textContent = 'Lecture'; }
+  function buildSteps() {
+    if (S.mode === 'bas') return buildBottomUp(S.n);
+    if (S.mode === 'memo') return buildMemo(S.n);
+    return buildNaive(S.n);
+  }
+  function buildNaive(n) {
+    // génère l'arbre des appels
+    const nodes = [], edges = [];
+    function fib(a, id) {
+      nodes.push({ id, a });
+      if (a <= 1) return;
+      const L = id * 2, R = id * 2 + 1;
+      edges.push([id, L]); edges.push([id, R]);
+      fib(a - 1, L); fib(a - 2, R);
+    }
+    fib(n, 0);
+    // steps : on ajoute les noeuds un par un
+    const steps = [];
+    for (let i = 0; i < nodes.length; i++) steps.push({ shown: i + 1, nodes, edges });
+    return steps;
+  }
+  function buildMemo(n) {
+    const steps = [], memo = new Map();
+    const calls = [];
+    function fib(a) {
+      calls.push(a);
+      if (memo.has(a)) { steps.push({ a, hit: true, memo: new Map(memo) }); return memo.get(a); }
+      if (a <= 1) { memo.set(a, a); steps.push({ a, hit: false, memo: new Map(memo) }); return a; }
+      steps.push({ a, hit: false, memo: new Map(memo) });
+      const v = fib(a - 1) + fib(a - 2);
+      memo.set(a, v);
+      steps.push({ a, hit: false, memo: new Map(memo), computed: v });
+      return v;
+    }
+    fib(n);
+    return steps;
+  }
+  function buildBottomUp(n) {
+    const dp = [0, 1], steps = [{ idx: 0, val: 0, dp: dp.slice() }, { idx: 1, val: 1, dp: dp.slice() }];
+    for (let i = 2; i <= n; i++) { dp[i] = dp[i - 1] + dp[i - 2]; steps.push({ idx: i, val: dp[i], dp: dp.slice() }); }
+    return steps;
+  }
+  function render() {
+    const steps = buildSteps();
+    if (S.step >= steps.length) S.step = steps.length - 1;
+    const st = steps[S.step] || steps[0];
+    if (S.mode === 'bas') {
+      let html = '<h3>Table de programmation dynamique</h3><table class="dp-table"><thead><tr><th>i</th>';
+      for (let i = 0; i <= S.n; i++) html += '<th>' + i + '</th>';
+      html += '</tr></thead><tbody><tr><td>F(i)</td>';
+      for (let i = 0; i <= S.n; i++) {
+        const val = st.dp[i];
+        html += '<td class="' + (i === st.idx ? 'path' : val !== undefined ? 'hl' : 'val') + '">' + (val !== undefined ? val : '·') + '</td>';
+      }
+      html += '</tr></tbody></table>';
+      html += '<div class="dwrap"><table class="test-table"><thead><tr><th>Indice i</th><th>F(i)</th><th>F(i-1) + F(i-2)</th></tr></thead><tbody>';
+      for (let i = 2; i <= st.idx; i++) html += '<tr><td>' + i + '</td><td class="m">' + st.dp[i] + '</td><td class="m">' + st.dp[i-1] + ' + ' + st.dp[i-2] + ' = ' + (st.dp[i-1] + st.dp[i-2]) + '</td></tr>';
+      html += '</tbody></table></div>';
+      $('#w1-tree').innerHTML = html;
+      $('#w1-msg').className = 'verdict';
+      $('#w1-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (steps.length - 1) + '.</b> On remplit F(' + st.idx + ') = ' + st.val + '. Chaque valeur ne dépend que des deux précédentes.';
+      $('#w1-stats').innerHTML = '';
+      $('#w1-stats').append(stats([['n', S.n], ['F(n)', st.dp[st.idx] !== undefined ? st.dp[st.idx] : '—'], ['Calculs', String(st.idx + 1)], ['Mémoire', 'O(n)']]));
+      $('#w1-code').innerHTML = codeBlock('def fib_bas_en_haut(n):\n    F = [0, 1]\n    for i in range(2, n + 1):\n        F.append(F[i - 1] + F[i - 2])\n    return F[n]');
+    } else if (S.mode === 'memo') {
+      let html = '<h3>Appels récursifs (mémoïsés)</h3><p>On ne recalcule jamais une valeur déjà connue : on consulte d\'abord le dictionnaire <code>memo</code>.</p>';
+      html += '<div class="dwrap"><table class="test-table"><thead><tr><th>Appel fib(k)</th><th>Présent dans memo ?</th><th>memo courant</th></tr></thead><tbody>';
+      for (let i = 0; i <= S.step; i++) {
+        const sp = steps[i];
+        html += '<tr' + (i === S.step ? ' style="background:var(--accent-soft)"' : '') + '><td>fib(' + sp.a + ')</td><td class="' + (sp.hit ? 'ok' : '') + '">' + (sp.hit ? 'oui (cache)' : 'non') + '</td><td class="m">' + Array.from(sp.memo.entries()).map(([k, v]) => k + ':' + v).join(', ') + '</td></tr>';
+      }
+      html += '</tbody></table></div>';
+      $('#w1-tree').innerHTML = html;
+      $('#w1-msg').className = 'verdict';
+      $('#w1-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (steps.length - 1) + '.</b> Appel fib(' + st.a + ') : ' + (st.hit ? 'résultat déjà dans le dictionnaire, on le renvoie.' : 'résultat absent, on le calcule.');
+      $('#w1-stats').innerHTML = '';
+      $('#w1-stats').append(stats([['n', S.n], ['Appels', String(steps.length)], ['Cache', String(st.memo.size)], ['Mémoire', 'O(n)']]));
+      $('#w1-code').innerHTML = codeBlock('def fib(n: int, memo: dict = {}) -> int:\n    if n in memo:\n        return memo[n]  # déjà calculé\n    if n <= 1:\n        memo[n] = n\n        return n\n    memo[n] = fib(n - 1, memo) + fib(n - 2, memo)\n    return memo[n]');
+    } else {
+      // naïf : arbre
+      const vis = st.nodes.slice(0, st.shown);
+      const visibleIds = new Set(vis.map(x => x.id));
+      const maxId = Math.max(...vis.map(x => x.id));
+      const depth = Math.floor(Math.log2(maxId + 1));
+      let svg = '<h3>Arbre des appels récursifs (naïf)</h3><svg viewBox="0 0 ' + Math.max(600, Math.pow(2, depth) * 40) + ' ' + (depth * 50 + 50) + '" style="width:100%;max-width:' + Math.max(600, Math.pow(2, depth) * 40) + 'px;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px;margin:8px 0">';
+      const W = Math.max(600, Math.pow(2, depth) * 40);
+      const pos = {};
+      function place(id, x, y, width) {
+        pos[id] = [x, y];
+        if (id * 2 <= maxId && visibleIds.has(id * 2)) {
+          place(id * 2, x - width / 4, y + 50, width / 2);
+          place(id * 2 + 1, x + width / 4, y + 50, width / 2);
+        }
+      }
+      place(0, W / 2, 30, W);
+      st.edges.forEach(([a, b]) => {
+        if (!visibleIds.has(a) || !visibleIds.has(b)) return;
+        const [x1, y1] = pos[a], [x2, y2] = pos[b];
+        svg += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#ccc"/>';
+      });
+      vis.forEach(nd => {
+        const [x, y] = pos[nd.id];
+        const isLeaf = nd.a <= 1;
+        svg += '<circle cx="' + x + '" cy="' + y + '" r="14" fill="' + (isLeaf ? 'rgba(30,122,46,.2)' : 'rgba(46,109,164,.15)') + '" stroke="' + (isLeaf ? 'var(--ok)' : 'var(--accent)') + '" stroke-width="2"/>';
+        svg += '<text x="' + x + '" y="' + (y + 4) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#222">' + nd.a + '</text>';
+      });
+      svg += '</svg>';
+      $('#w1-tree').innerHTML = svg;
+      const total = st.nodes.length;
+      $('#w1-msg').className = 'verdict warn';
+      $('#w1-msg').innerHTML = '<b>Étape ' + st.shown + ' / ' + total + '.</b> L\'arbre des appels recalcule plusieurs fois les mêmes valeurs (fib(2), fib(3)…). Complexité exponentielle O(2<sup>n</sup>).';
+      $('#w1-stats').innerHTML = '';
+      $('#w1-stats').append(stats([['n', S.n], ['Appels', String(total)], ['Complexité', 'O(2ⁿ)'], ['Mémoire', 'O(n) (pile)']]));
+      $('#w1-code').innerHTML = codeBlock('def fib(n: int) -> int:\n    if n <= 1:\n        return n\n    return fib(n - 1) + fib(n - 2)');
+    }
+    $('#w1-prev').disabled = S.step === 0;
+    $('#w1-next').disabled = S.step >= steps.length - 1;
+    $('#w1-play').textContent = S.timer ? 'Pause' : 'Lecture';
+  }
+  nEl.oninput = () => { S.n = parseInt(nEl.value, 10); nVal.textContent = S.n; S.step = 0; stop(); render(); };
+  $('#w1-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w1-next').onclick = () => { stop(); if (S.step < buildSteps().length - 1) { S.step++; render(); } };
+  $('#w1-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w1-play').onclick = () => {
+    if (S.timer) { stop(); render(); return; }
+    const max = buildSteps().length - 1;
+    if (S.step >= max) S.step = 0;
+    S.timer = setInterval(() => { if (S.step >= max) { stop(); render(); return; } S.step++; render(); }, 400);
+    render();
+  };
+  S.n = 10; nVal.textContent = S.n;
+  render();
+}
+WORKSHOPS.push({ id: 'w1', title: 'Mémoïsation', hint: 'Comparez le calcul naïf (arbre exponentiel) et la mémoïsation avec dictionnaire : complexité O(n), mémoire O(n).',
+  mount: mountW1, reset: () => { Object.assign(W1, { n: 10, mode: 'memo', steps: [], step: 0 }); if (W1.timer) { clearInterval(W1.timer); W1.timer = null; } } });
+
+/* ================= Atelier 2 : Rendu de monnaie ================= */
+const W2 = { coins: [1, 2, 5, 10], amount: 11, mode: 'dp' };
+function mountW2(root) {
+  root.innerHTML = '<h2>Rendu de monnaie</h2><p>On veut rendre une somme avec le minimum de pièces. Ce problème a une <b>sous-structure optimale</b> : la solution optimale pour S utilise une solution optimale pour S − pièce. On peut le résoudre par programmation dynamique.</p>' +
+    '<div class="opts"><label class="fld"><span>Pièces (séparées par des virgules)</span><input type="text" id="w2-coins" class="mono" value="1, 2, 5, 10"></label><label class="fld"><span>Somme S</span><input type="number" id="w2-amount" value="11" style="width:80px"></label><div class="fld"><span>Méthode</span><div id="w2-mode"></div></div></div>' +
+    '<div id="w2-out"></div>';
+  const S = W2;
+  $('#w2-mode').append(chipsRow([['dp', 'Dynamique'], ['glouton', 'Glouton (pièces triées)']], S.mode, v => { S.mode = v; render(); }, 'Méthode'));
+  function render() {
+    const coins = $('#w2-coins').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x) && x > 0);
+    const amount = parseInt($('#w2-amount').value, 10);
+    if (!coins.length || !isFinite(amount) || amount < 0) { $('#w2-out').innerHTML = '<p class="verdict no">Entrée invalide.</p>'; return; }
+    if (S.mode === 'dp') {
+      // DP
+      const dp = new Array(amount + 1).fill(Infinity); dp[0] = 0;
+      const choice = new Array(amount + 1).fill(-1);
+      for (let s = 1; s <= amount; s++) {
+        for (const c of coins) {
+          if (c <= s && dp[s - c] + 1 < dp[s]) { dp[s] = dp[s - c] + 1; choice[s] = c; }
+        }
+      }
+      let html = '<h3>Table de programmation dynamique</h3><table class="dp-table"><thead><tr><th>S</th>';
+      for (let s = 0; s <= amount; s++) html += '<th>' + s + '</th>';
+      html += '</tr></thead><tbody><tr><td>dp[S]</td>';
+      for (let s = 0; s <= amount; s++) html += '<td class="' + (dp[s] === Infinity ? 'val' : 'hl') + '">' + (dp[s] === Infinity ? '∞' : dp[s]) + '</td>';
+      html += '</tr></tbody></table>';
+      // reconstruction
+      let r = amount, used = [];
+      while (r > 0 && choice[r] > 0) { used.push(choice[r]); r -= choice[r]; }
+      html += '<h3>Solution optimale</h3>';
+      if (dp[amount] === Infinity) html += '<p class="verdict no">Impossible de rendre ' + amount + ' avec ces pièces.</p>';
+      else html += '<p class="verdict yes">Somme ' + amount + ' → <b>' + dp[amount] + ' pièces</b> : ' + used.join(' + ') + ' = ' + amount + '.</p>';
+      html += '<p class="small">La reconstruction se fait en remontant les choix : pour chaque S, <code>choice[S]</code> est la pièce utilisée.</p>';
+      html += '<pre class="code">def rendu(coins, S):\n    dp = [float("inf")] * (S + 1)\n    dp[0] = 0\n    choix = [-1] * (S + 1)\n    for s in range(1, S + 1):\n        for c in coins:\n            if c <= s and dp[s - c] + 1 < dp[s]:\n                dp[s] = dp[s - c] + 1\n                choix[s] = c\n    # reconstruction\n    res = []\n    s = S\n    while s > 0 and choix[s] > 0:\n        res.append(choix[s])\n        s -= choix[s]\n    return dp[S], res</pre>';
+      $('#w2-out').innerHTML = html;
+    } else {
+      // glouton
+      const sorted = coins.slice().sort((a, b) => b - a);
+      let r = amount, used = [];
+      for (const c of sorted) { while (r >= c) { used.push(c); r -= c; } }
+      let html = '<h3>Algorithme glouton</h3><p>On prend toujours la plus grande pièce possible. Correct pour le système {1, 2, 5, 10}, mais pas en général.</p><div class="verdict ' + (r === 0 ? 'yes' : 'no') + '">';
+      if (r === 0) html += 'Somme ' + amount + ' → <b>' + used.length + ' pièces</b> : ' + used.join(' + ') + ' = ' + amount + '.';
+      else html += 'Échec : il reste ' + r + ' impossible à rendre avec ces pièces.';
+      html += '</div>';
+      html += '<p class="small">Contre-exemple classique : pièces {1, 3, 4}, somme 6. Le glouton prend 4 puis 1 + 1 (3 pièces) alors que la solution optimale est 3 + 3 (2 pièces). La programmation dynamique trouve toujours l\'optimum.</p>';
+      html += '<pre class="code">def rendu_glouton(coins, S):\n    coins = sorted(coins, reverse=True)\n    res = []\n    for c in coins:\n        while S >= c:\n            res.append(c)\n            S -= c\n    return res  # optimal seulement pour certains systèmes</pre>';
+      $('#w2-out').innerHTML = html;
+    }
+  }
+  $('#w2-coins').oninput = render;
+  $('#w2-amount').oninput = render;
+  render();
+}
+WORKSHOPS.push({ id: 'w2', title: 'Rendu de monnaie', hint: 'Comparez l\'algorithme glouton (rapide mais faux en général) et la programmation dynamique (toujours optimale).',
+  mount: mountW2, reset: () => { Object.assign(W2, { coins: [1, 2, 5, 10], amount: 11, mode: 'dp' }); } });
+
+/* ================= Atelier 3 : LCS ================= */
+const W3 = { A: 'ABCBDAB', B: 'BDCABA' };
+function mountW3(root) {
+  root.innerHTML = '<h2>Plus longue sous-suite commune (LCS)</h2><p>La LCS de deux chaînes est la plus longue suite de caractères apparaissant dans le même ordre dans les deux chaînes (pas nécessairement contigus). La programmation dynamique la calcule en O(n × m).</p>' +
+    '<div class="opts"><label class="fld"><span>Chaîne A</span><input type="text" id="w3-A" class="mono" value="ABCBDAB" style="width:120px" maxlength="10"></label><label class="fld"><span>Chaîne B</span><input type="text" id="w3-B" class="mono" value="BDCABA" style="width:120px" maxlength="10"></label></div>' +
+    '<div id="w3-out"></div>';
+  function render() {
+    const A = $('#w3-A').value.toUpperCase().slice(0, 10);
+    const B = $('#w3-B').value.toUpperCase().slice(0, 10);
+    const n = A.length, m = B.length;
+    const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        if (A[i - 1] === B[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
+        else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+    // reconstruction
+    let i = n, j = m, path = [];
+    while (i > 0 && j > 0) {
+      if (A[i - 1] === B[j - 1]) { path.push({ i, j, c: A[i - 1] }); i--; j--; }
+      else if (dp[i - 1][j] >= dp[i][j - 1]) i--;
+      else j--;
+    }
+    path.reverse();
+    const pathSet = new Set(path.map(p => p.i + ',' + p.j));
+    let html = '<h3>Table de programmation dynamique</h3><p class="small">Ligne = préfixe de A, colonne = préfixe de B. La case (i, j) donne la longueur de la LCS de A[0:i] et B[0:j].</p>';
+    html += '<table class="dp-table"><thead><tr><th></th><th>∅</th>';
+    for (let j = 0; j < m; j++) html += '<th>' + B[j] + '</th>';
+    html += '</tr></thead><tbody>';
+    for (let i = 0; i <= n; i++) {
+      html += '<tr><th>' + (i === 0 ? '∅' : A[i - 1]) + '</th>';
+      for (let j = 0; j <= m; j++) {
+        const isPath = pathSet.has(i + ',' + j);
+        html += '<td class="' + (isPath ? 'path' : dp[i][j] > 0 ? 'hl' : 'val') + '">' + dp[i][j] + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    html += '<h3>Résultat</h3><p class="verdict yes">LCS = <b>' + path.map(p => p.c).join('') + '</b>, longueur <b>' + dp[n][m] + '</b>. Les cases vertes forment le chemin de reconstruction.</p>';
+    html += '<h3>Code Python</h3><pre class="code">def lcs(A: str, B: str) -> str:\n    n, m = len(A), len(B)\n    dp = [[0] * (m + 1) for _ in range(n + 1)]\n    for i in range(1, n + 1):\n        for j in range(1, m + 1):\n            if A[i - 1] == B[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1] + 1\n            else:\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n    # reconstruction\n    i, j = n, m\n    res = []\n    while i > 0 and j > 0:\n        if A[i - 1] == B[j - 1]:\n            res.append(A[i - 1]); i -= 1; j -= 1\n        elif dp[i - 1][j] >= dp[i][j - 1]:\n            i -= 1\n        else:\n            j -= 1\n    return "".join(reversed(res))</pre>';
+    $('#w3-out').innerHTML = html;
+  }
+  $('#w3-A').oninput = render;
+  $('#w3-B').oninput = render;
+  render();
+}
+WORKSHOPS.push({ id: 'w3', title: 'Plus longue sous-suite commune', hint: 'Calculez la LCS de deux chaînes par programmation dynamique : table O(n × m), reconstruction du chemin.',
+  mount: mountW3, reset: () => { Object.assign(W3, { A: 'ABCBDAB', B: 'BDCABA' }); } });
+
+/* ================= Atelier 4 : Levenshtein ================= */
+const W4 = { A: 'chat', B: 'chien' };
+function mountW4(root) {
+  root.innerHTML = '<h2>Distance d\'édition (Levenshtein)</h2><p>La distance d\'édition entre deux chaînes est le nombre minimal d\'opérations (insertion, suppression, substitution) pour transformer l\'une en l\'autre. La programmation dynamique la calcule en O(n × m).</p>' +
+    '<div class="opts"><label class="fld"><span>Chaîne A</span><input type="text" id="w4-A" class="mono" value="chat" style="width:120px" maxlength="10"></label><label class="fld"><span>Chaîne B</span><input type="text" id="w4-B" class="mono" value="chien" style="width:120px" maxlength="10"></label></div>' +
+    '<div id="w4-out"></div>';
+  function render() {
+    const A = $('#w4-A').value.slice(0, 10);
+    const B = $('#w4-B').value.slice(0, 10);
+    const n = A.length, m = B.length;
+    const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = 0; i <= n; i++) dp[i][0] = i;
+    for (let j = 0; j <= m; j++) dp[0][j] = j;
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        const cost = A[i - 1] === B[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      }
+    }
+    // reconstruction des opérations
+    let i = n, j = m, ops = [], pathSet = new Set();
+    while (i > 0 || j > 0) {
+      pathSet.add(i + ',' + j);
+      if (i > 0 && j > 0 && A[i - 1] === B[j - 1]) { i--; j--; }
+      else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) { ops.push('remplacer ' + A[i - 1] + ' par ' + B[j - 1]); i--; j--; }
+      else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) { ops.push('supprimer ' + A[i - 1]); i--; }
+      else { ops.push('insérer ' + B[j - 1]); j--; }
+    }
+    pathSet.add(0 + ',' + 0);
+    let html = '<h3>Matrice de programmation dynamique</h3><p class="small">Case (i, j) = distance entre A[0:i] et B[0:j]. Les flèches indiquent le choix de reconstruction.</p>';
+    html += '<table class="dp-table"><thead><tr><th></th><th>∅</th>';
+    for (let j = 0; j < m; j++) html += '<th>' + esc(B[j]) + '</th>';
+    html += '</tr></thead><tbody>';
+    for (let i = 0; i <= n; i++) {
+      html += '<tr><th>' + (i === 0 ? '∅' : esc(A[i - 1])) + '</th>';
+      for (let j = 0; j <= m; j++) {
+        const isPath = pathSet.has(i + ',' + j);
+        html += '<td class="' + (isPath ? 'path' : dp[i][j] > 0 ? 'hl' : 'val') + '">' + dp[i][j] + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    html += '<h3>Résultat</h3><p class="verdict yes">Distance = <b>' + dp[n][m] + '</b> opérations.</p>';
+    if (ops.length) html += '<h4 style="margin-top:12px">Une séquence optimale</h4><ol style="padding-left:22px;font-size:13.5px;line-height:1.7">' + ops.reverse().map(o => '<li>' + esc(o) + '</li>').join('') + '</ol>';
+    html += '<h3>Code Python</h3><pre class="code">def levenshtein(A: str, B: str) -> int:\n    n, m = len(A), len(B)\n    dp = [[0] * (m + 1) for _ in range(n + 1)]\n    for i in range(n + 1):\n        dp[i][0] = i\n    for j in range(m + 1):\n        dp[0][j] = j\n    for i in range(1, n + 1):\n        for j in range(1, m + 1):\n            cout = 0 if A[i - 1] == B[j - 1] else 1\n            dp[i][j] = min(\n                dp[i - 1][j] + 1,       # suppression\n                dp[i][j - 1] + 1,       # insertion\n                dp[i - 1][j - 1] + cout # substitution\n            )\n    return dp[n][m]</pre>';
+    $('#w4-out').innerHTML = html;
+  }
+  $('#w4-A').oninput = render;
+  $('#w4-B').oninput = render;
+  render();
+}
+WORKSHOPS.push({ id: 'w4', title: 'Distance d\'édition', hint: 'Calculez la distance de Levenshtein entre deux chaînes et reconstruisez une séquence d\'opérations optimale.',
+  mount: mountW4, reset: () => { Object.assign(W4, { A: 'chat', B: 'chien' }); } });
+
+/* ================= Atelier 5 : Partition équilibrée ================= */
+const W5 = { arr: [3, 1, 4, 2, 2, 1] };
+function mountW5(root) {
+  root.innerHTML = '<h2>Partition équilibrée d\'un tableau</h2><p>Étant donné un tableau d\'entiers positifs, on veut le partitionner en deux sous-ensembles de somme aussi proche que possible. C\'est un problème de sac à dos (0/1) résolu par programmation dynamique.</p>' +
+    '<div class="opts"><label class="fld"><span>Tableau (nombres séparés par des virgules)</span><input type="text" id="w5-arr" class="mono" value="3, 1, 4, 2, 2, 1" style="width:260px"></label></div>' +
+    '<div id="w5-out"></div>';
+  function render() {
+    const arr = $('#w5-arr').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x) && x > 0);
+    if (!arr.length) { $('#w5-out').innerHTML = '<p class="verdict no">Entrée invalide.</p>'; return; }
+    const total = arr.reduce((a, b) => a + b, 0);
+    const target = Math.floor(total / 2);
+    const n = arr.length;
+    // dp[i][s] : possible d'atteindre la somme s avec les i premiers éléments
+    const dp = Array.from({ length: n + 1 }, () => new Array(target + 1).fill(false));
+    for (let i = 0; i <= n; i++) dp[i][0] = true;
+    for (let i = 1; i <= n; i++) {
+      for (let s = 1; s <= target; s++) {
+        dp[i][s] = dp[i - 1][s];
+        if (arr[i - 1] <= s && dp[i - 1][s - arr[i - 1]]) dp[i][s] = true;
+      }
+    }
+    // meilleure somme atteignable
+    let best = target;
+    while (best > 0 && !dp[n][best]) best--;
+    // reconstruction
+    let s = best, i = n, set1 = [], set2 = [];
+    while (i > 0) {
+      if (s >= 0 && dp[i][s] && (s < arr[i - 1] || !dp[i - 1][s])) { set1.push(arr[i - 1]); s -= arr[i - 1]; }
+      else set2.push(arr[i - 1]);
+      i--;
+    }
+    const sum1 = set1.reduce((a, b) => a + b, 0);
+    const sum2 = set2.reduce((a, b) => a + b, 0);
+    let html = '<h3>Table de programmation dynamique</h3><p class="small">Ligne = éléments pris en compte, colonne = somme cible (0 à ' + target + '). Une case vraie signifie qu\'on peut atteindre cette somme avec un sous-ensemble des éléments lus.</p>';
+    html += '<div class="dwrap" style="overflow-x:auto"><table class="dp-table"><thead><tr><th></th>';
+    for (let t = 0; t <= target; t++) html += '<th>' + t + '</th>';
+    html += '</tr></thead><tbody>';
+    for (let k = 0; k <= n; k++) {
+      html += '<tr><th>' + (k === 0 ? '∅' : arr[k - 1]) + '</th>';
+      for (let t = 0; t <= target; t++) html += '<td class="' + (dp[k][t] ? 'hl' : 'val') + '">' + (dp[k][t] ? 'T' : '·') + '</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+    html += '<h3>Résultat</h3>';
+    html += '<p>Tableau : ' + arr.join(', ') + ' (somme totale = ' + total + '). Cible : ' + target + '.</p>';
+    html += '<p class="verdict yes">Meilleure partition :<br><b>{ ' + set1.join(', ') + ' }</b> → somme ' + sum1 + '<br><b>{ ' + set2.join(', ') + ' }</b> → somme ' + sum2 + '<br>Écart = <b>' + (sum2 - sum1) + '</b>.</p>';
+    html += '<h3>Code Python</h3><pre class="code">def partition(arr: list) -> tuple:\n    total = sum(arr)\n    cible = total // 2\n    n = len(arr)\n    dp = [[False] * (cible + 1) for _ in range(n + 1)]\n    for i in range(n + 1):\n        dp[i][0] = True\n    for i in range(1, n + 1):\n        for s in range(1, cible + 1):\n            dp[i][s] = dp[i - 1][s]\n            if arr[i - 1] <= s and dp[i - 1][s - arr[i - 1]]:\n                dp[i][s] = True\n    # meilleure somme atteignable\n    best = cible\n    while best > 0 and not dp[n][best]:\n        best -= 1\n    # reconstruction\n    s = best\n    set1, set2 = [], []\n    for i in range(n, 0, -1):\n        if dp[i][s] and (s < arr[i - 1] or not dp[i - 1][s]):\n            set1.append(arr[i - 1])\n            s -= arr[i - 1]\n        else:\n            set2.append(arr[i - 1])\n    return set1, set2</pre>';
+    $('#w5-out').innerHTML = html;
+  }
+  $('#w5-arr').oninput = render;
+  render();
+}
+WORKSHOPS.push({ id: 'w5', title: 'Partition équilibrée', hint: 'Partitionnez un tableau d\'entiers en deux sous-ensembles de somme aussi proche que possible, par programmation dynamique.',
+  mount: mountW5, reset: () => { Object.assign(W5, { arr: [3, 1, 4, 2, 2, 1] }); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  w1: {
+    title: 'Mémoïsation', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'memoisation',
+    goal: 'Comprendre le chevauchement des sous-problèmes et l\'intérêt de la mémoïsation avec un dictionnaire.',
+    steps: [
+      'Lancez le calcul naïf de Fibonacci pour n = 10. Combien de nœuds compte l\'arbre ?',
+      'Passez à la version mémoïsée. Combien d\'appels au total ? Pourquoi si peu ?',
+      'Pour n = 20, comparez le nombre d\'appels dans les deux méthodes.',
+      'Passez à la version bas en haut. Quelle est la complexité mémoire ?',
+      'Quels types de clés peut-on utiliser dans le dictionnaire <code>memo</code> ?'
+    ],
+    defi: { q: 'Pourquoi la mémoïsation est-elle nécessaire pour Fibonacci, et pas pour le calcul de n! ?',
+      a: 'Le calcul récursif de n! appelle <code>factorielle(n − 1)</code> une seule fois : chaque sous-problème est unique, il n\'y a pas de chevauchement. Fibonacci appelle deux fois fib(n − 1) et fib(n − 2) de manière croisée : les mêmes valeurs sont recalculées de nombreuses fois, d\'où la mémoïsation.' },
+    qcm: [
+      { q: 'La propriété de chevauchement des sous-problèmes signifie que :', o: ['les mêmes sous-problèmes sont résolus plusieurs fois', 'les sous-problèmes sont indépendants', 'il n\'y a qu\'un seul sous-problème', 'les sous-problèmes sont dans un ordre quelconque'], a: 0, w: 'C\'est la situation où la récursion naïve est exponentielle : la mémoïsation la ramène à un coût polynomial.' },
+      { q: 'La mémoïsation consiste à :', o: ['stocker les résultats des sous-problèmes déjà calculés', 'calculer les sous-problèmes en ordre croissant', 'utiliser une file de priorité', 'trier les sous-problèmes'], a: 0, w: 'On consulte d\'abord le cache : si le sous-problème y est, on renvoie sa valeur sans le recalculer.' },
+      { q: 'Avec la mémoïsation, la complexité temporelle de Fibonacci passe de O(2ⁿ) à :', o: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], a: 2, w: 'Chaque valeur F(k) est calculée une seule fois, pour k de 1 à n.' },
+      { q: 'La version « bas en haut » de Fibonacci utilise :', o: ['un dictionnaire de mémoïsation', 'un tableau de taille n + 1', 'une pile de récursion', 'une file de priorité'], a: 1, w: 'On itère de 2 à n en remplissant un tableau F[0..n] : plus de récursion, mémoire O(n).' },
+      { q: 'La mémoïsation est utile quand :', o: ['les sous-problèmes se chevauchent', 'les sous-problèmes sont indépendants', 'il n\'y a pas de sous-problème', 'le problème est linéaire'], a: 0, w: 'Si chaque sous-problème est unique, la mémoïsation ne sert à rien : c\'est le cas du calcul de n!.' }
+    ]
+  },
+  w2: {
+    title: 'Rendu de monnaie', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'rendu',
+    goal: 'Comparer la programmation dynamique (toujours optimale) et l\'algorithme glouton (rapide mais faux en général).',
+    steps: [
+      'Avec les pièces {1, 2, 5, 10} et la somme 11, que propose le glouton ? La DP ?',
+      'Modifiez les pièces pour {1, 3, 4} et la somme 6. Le glouton est-il optimal ?',
+      'Regardez la table DP : pourquoi la sous-structure optimale est-elle vérifiée ?',
+      'Reconstruisez la solution optimale en remontant le tableau <code>choix</code>.',
+      'Dans quels systèmes de pièces le glouton est-il optimal ?'
+    ],
+    defi: { q: 'Donnez un exemple de système de pièces et de somme où le glouton échoue.',
+      a: 'Pièces {1, 3, 4}, somme 6. Le glouton prend 4, puis il ne reste que 2 → 1 + 1, soit 3 pièces. La solution optimale est 3 + 3 (2 pièces). Le glouton échoue car il ne remet pas en cause ses choix passés.' },
+    qcm: [
+      { q: 'La programmation dynamique pour le rendu de monnaie a une complexité :', o: ['O(S)', 'O(S × k) où k est le nombre de pièces', 'O(S²)', 'O(2^S)'], a: 1, w: 'On remplit une table de taille S, et pour chaque s on essaie les k pièces.' },
+      { q: 'La sous-structure optimale signifie que :', o: ['la solution optimale du problème se compose de solutions optimales de sous-problèmes', 'le problème est linéaire', 'il n\'y a pas de sous-problème', 'la solution est unique'], a: 0, w: 'Si la solution optimale pour S utilise une pièce c, alors la partie restante S − c doit être optimale.' },
+      { q: 'L\'algorithme glouton pour le rendu de monnaie est :', o: ['toujours optimal', 'optimal seulement pour certains systèmes de pièces', 'toujours faux', 'optimal seulement pour les pièces paires'], a: 1, w: 'Il est optimal pour le système euro mais pas pour {1, 3, 4}.' },
+      { q: 'Pour reconstruire la solution optimale, on stocke :', o: ['le choix de pièce fait à chaque étape', 'la somme totale', 'le nombre de pièces', 'rien de plus'], a: 0, w: 'Un tableau <code>choix[s]</code> permet de remonter la solution à partir de S.' },
+      { q: 'Quand la programmation dynamique est-elle préférable au glouton ?', o: ['Quand le problème a une sous-structure optimale et des sous-problèmes chevauchants', 'Toujours', 'Jamais', 'Quand le problème est linéaire'], a: 0, w: 'C\'est la situation typique de la DP : on combine les solutions optimales des sous-problèmes.' }
+    ]
+  },
+  w3: {
+    title: 'Plus longue sous-suite commune', level: 'Niveau 3 · Construire', time: '30 min', course: 'lcs',
+    goal: 'Calculer la LCS de deux chaînes par programmation dynamique et reconstruire une solution optimale.',
+    steps: [
+      'Avec A = "ABCBDAB" et B = "BDCABA", quelle est la longueur de la LCS ?',
+      'Lisez la table : comment est remplie la case (i, j) ?',
+      'Reconstruisez une LCS à partir des cases vertes.',
+      'Modifiez A ou B pour voir l\'influence sur le résultat.',
+      'Quelle est la complexité temporelle et spatiale de l\'algorithme ?'
+    ],
+    defi: { q: 'Quelle est la LCS de "ABCBDAB" et "BDCABA" ? Peut-elle être de longueur 5 ?',
+      a: 'La longueur est <b>4</b> (par exemple "BCBA" ou "BDAB"). Il n\'existe pas de sous-suite commune de longueur 5 : les caractères de A ne se retrouvent pas tous dans le même ordre dans B.' },
+    qcm: [
+      { q: 'La LCS de deux chaînes de longueurs n et m se calcule en :', o: ['O(n + m)', 'O(n × m)', 'O(2ⁿ)', 'O(n²) seulement si n = m'], a: 1, w: 'On remplit une table (n + 1) × (m + 1) en temps O(n × m).' },
+      { q: 'Si les derniers caractères de A et B sont égaux, alors :', o: ['LCS(A, B) = 1 + LCS(A[:-1], B[:-1])', 'LCS(A, B) = LCS(A[:-1], B)', 'LCS(A, B) = LCS(A, B[:-1])', 'LCS(A, B) = 0'], a: 0, w: 'C\'est la relation de récurrence fondamentale de la LCS.' },
+      { q: 'La complexité spatiale de la LCS est :', o: ['O(n + m)', 'O(n × m)', 'O(1)', 'O(2ⁿ)'], a: 1, w: 'On stocke la table complète, ce qui est nécessaire pour reconstruire la solution.' },
+      { q: 'La reconstruction d\'une LCS se fait :', o: ['en partant du coin supérieur gauche', 'en partant du coin inférieur droit et en remontant', 'en triant la table', 'par un parcours en largeur'], a: 1, w: 'On part de (n, m) et on remonte selon les égalités et les max.' },
+      { q: 'La LCS est utilisée en :', o: ['bio-informatique (alignement de séquences)', 'tri de nombres', 'recherche dans un graphe', 'compression d\'images'], a: 0, w: 'Elle sert notamment à comparer des séquences d\'ADN ou de protéines.' }
+    ]
+  },
+  w4: {
+    title: 'Distance d\'édition', level: 'Niveau 3 · Construire', time: '25 min', course: 'levenshtein',
+    goal: 'Calculer la distance de Levenshtein entre deux chaînes et reconstruire une séquence d\'opérations optimale.',
+    steps: [
+      'Calculez la distance entre "chat" et "chien". Quelles opérations ?',
+      'Modifiez les chaînes et observez la matrice.',
+      'Identifiez les trois opérations possibles : insertion, suppression, substitution.',
+      'Reconstruisez une séquence optimale d\'opérations.',
+      'Quelle est la complexité temporelle et spatiale ?'
+    ],
+    defi: { q: 'Quelle est la distance d\'édition entre "chat" et "chien" ?',
+      a: 'La distance est <b>3</b>. Une séquence optimale : remplacer <code>a</code> par <code>i</code>, insérer <code>e</code>, remplacer <code>t</code> par <code>n</code> (ou d\'autres variantes équivalentes).' },
+    qcm: [
+      { q: 'Les opérations autorisées dans Levenshtein sont :', o: ['insertion, suppression, substitution', 'insertion seulement', 'substitution seulement', 'déplacement'], a: 0, w: 'Chaque opération coûte 1 ; on cherche la somme minimale.' },
+      { q: 'La complexité temporelle de Levenshtein est :', o: ['O(n + m)', 'O(n × m)', 'O(2ⁿ)', 'O(n)'], a: 1, w: 'On remplit une matrice (n + 1) × (m + 1).' },
+      { q: 'Si les caractères A[i] et B[j] sont égaux, le coût de substitution est :', o: ['0', '1', '2', '∞'], a: 0, w: 'Aucune substitution n\'est nécessaire : le coût est nul.' },
+      { q: 'La distance de Levenshtein sert à :', o: ['corriger des fautes de frappe, comparer des séquences', 'trier des nombres', 'calculer une moyenne', 'tracer un graphe'], a: 0, w: 'C\'est une mesure classique en traitement automatique du langage et en bio-informatique.' },
+      { q: 'La reconstruction des opérations se fait :', o: ['en partant de (n, m) et en remontant', 'en triant la matrice', 'en parcourant la matrice en largeur', 'en partant de (0, 0)'], a: 0, w: 'On part de la fin et on choisit l\'opération qui a donné la valeur courante.' }
+    ]
+  },
+  w5: {
+    title: 'Partition équilibrée', level: 'Niveau 3 · Construire', time: '30 min', course: 'partition',
+    goal: 'Partitionner un tableau d\'entiers en deux sous-ensembles de somme aussi proche que possible.',
+    steps: [
+      'Avec le tableau [3, 1, 4, 2, 2, 1], quelle est la somme totale ? la cible ?',
+      'Lisez la table DP : à quoi correspond une case True ?',
+      'Quelle est la meilleure partition trouvée ? Quel est l\'écart ?',
+      'Essayez avec des tableaux plus grands.',
+      'Quelle est la complexité temporelle et spatiale de l\'algorithme ?'
+    ],
+    defi: { q: 'Le tableau [3, 1, 4, 2, 2, 1] a une somme totale de 13. Peut-on obtenir deux sous-ensembles de somme exactement 6,5 ?',
+      a: 'Non, car les sommes sont entières : on ne peut pas atteindre 6,5. La meilleure partition atteint 6 et 7 (écart 1), par exemple {3, 2, 1} = 6 et {4, 2, 1} = 7.' },
+    qcm: [
+      { q: 'La partition équilibrée se ramène à :', o: ['un problème de sac à dos (0/1)', 'un tri', 'une recherche dichotomique', 'une récursion sans mémoïsation'], a: 0, w: 'On cherche un sous-ensemble de somme au plus proche de total/2.' },
+      { q: 'La complexité temporelle de l\'algorithme DP est :', o: ['O(n)', 'O(n × total)', 'O(2ⁿ)', 'O(n log n)'], a: 1, w: 'On remplit une table n × total, où total est la somme des éléments.' },
+      { q: 'La complexité spatiale est :', o: ['O(n)', 'O(n × total)', 'O(1)', 'O(total)'], a: 1, w: 'On stocke la table complète, ou au moins deux lignes si on n\'a pas besoin de reconstruire.' },
+      { q: 'Une case True dans la table signifie :', o: ['on peut atteindre cette somme avec les éléments lus', 'l\'élément est présent', 'la somme totale est atteinte', 'le tableau est trié'], a: 0, w: 'C\'est le principe du sac à dos : on explore les combinaisons de sommes.' },
+      { q: 'Ce problème est :', o: ['NP-complet (pas de solution polynomiale connue en n)', 'linéaire', 'quadratique en n', 'facile à résoudre par glouton'], a: 0, w: 'La DP est pseudo-polynomiale : son coût dépend de la valeur de la somme, pas seulement du nombre d\'éléments.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'memoisation', t: 'Mémoïsation et dictionnaires', h: `
+<p>La <b>programmation dynamique</b> résout des problèmes qui présentent deux propriétés :</p>
+<ul><li><b>Sous-structure optimale</b> : la solution optimale du problème se compose de solutions optimales de sous-problèmes.</li><li><b>Chevauchement des sous-problèmes</b> : les mêmes sous-problèmes reviennent plusieurs fois dans la récursion naïve.</li></ul>
+<h3>Mémoïsation</h3>
+<p>On stocke les résultats des sous-problèmes déjà résolus dans une structure de données, souvent un <b>dictionnaire</b> :</p>
+<pre class="code">def fib(n: int, memo: dict = {}) -> int:
+    if n in memo:
+        return memo[n]        # déjà calculé
+    if n <= 1:
+        memo[n] = n
+        return n
+    memo[n] = fib(n - 1, memo) + fib(n - 2, memo)
+    return memo[n]</pre>
+<p>La complexité passe de O(2ⁿ) à O(n), au prix d'un espace O(n).</p>
+<h3>Bas en haut</h3>
+<p>Au lieu de récursion, on peut remplir un tableau itérativement :</p>
+<pre class="code">def fib_bas_en_haut(n: int) -> int:
+    F = [0, 1]
+    for i in range(2, n + 1):
+        F.append(F[i - 1] + F[i - 2])
+    return F[n]</pre>
+<h3>Dictionnaires et limites</h3>
+<p>On ne peut utiliser comme clés que des objets <b>hachables</b> (immuables) : entiers, chaînes, tuples. Une liste ou un dictionnaire ne peut pas être une clé.</p>
+<div class="retain"><b>À retenir.</b> Mémoïsation = dictionnaire des sous-problèmes déjà résolus. Sous-structure optimale + chevauchement = programmation dynamique.</div>` });
+
+COURSE.push({ id: 'rendu', t: 'Rendu de monnaie', h: `
+<p>On veut rendre une somme S avec le minimum de pièces d'un ensemble donné.</p>
+<h3>Glouton</h3>
+<p>Prendre toujours la plus grande pièce possible. Rapide mais <b>faux en général</b> :</p>
+<pre class="code">Pièces {1, 3, 4}, S = 6
+Glouton : 4 + 1 + 1 = 3 pièces
+Optimal : 3 + 3 = 2 pièces</pre>
+<h3>Programmation dynamique</h3>
+<p>On définit <code>dp[s]</code> = nombre minimal de pièces pour rendre s.</p>
+<pre class="code">def rendu(coins, S):
+    dp = [float("inf")] * (S + 1)
+    dp[0] = 0
+    choix = [-1] * (S + 1)
+    for s in range(1, S + 1):
+        for c in coins:
+            if c <= s and dp[s - c] + 1 < dp[s]:
+                dp[s] = dp[s - c] + 1
+                choix[s] = c
+    return dp[S]</pre>
+<p>Complexité : O(S × k), où k est le nombre de pièces. Reconstruction : on remonte <code>choix[S]</code>, puis <code>choix[S − choix[S]]</code>, etc.</p>
+<div class="retain"><b>À retenir.</b> Le glouton n'est pas toujours optimal. La DP l'est, avec un coût O(S × k).</div>` });
+
+COURSE.push({ id: 'lcs', t: 'Plus longue sous-suite commune', h: `
+<p>La LCS de deux chaînes est la plus longue suite de caractères qui apparaît dans les deux chaînes, dans le même ordre mais pas nécessairement de façon contiguë.</p>
+<h3>Récurrence</h3>
+<p>Soit <code>dp[i][j]</code> la longueur de la LCS de A[0:i] et B[0:j].</p>
+<ul><li>Si A[i − 1] = B[j − 1] : <code>dp[i][j] = dp[i − 1][j − 1] + 1</code>.</li><li>Sinon : <code>dp[i][j] = max(dp[i − 1][j], dp[i][j − 1])</code>.</li></ul>
+<h3>Code</h3>
+<pre class="code">def lcs(A, B):
+    n, m = len(A), len(B)
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            if A[i - 1] == B[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+    # reconstruction
+    i, j = n, m
+    res = []
+    while i > 0 and j > 0:
+        if A[i - 1] == B[j - 1]:
+            res.append(A[i - 1]); i -= 1; j -= 1
+        elif dp[i - 1][j] >= dp[i][j - 1]:
+            i -= 1
+        else:
+            j -= 1
+    return "".join(reversed(res))</pre>
+<p>Complexité temporelle : O(n × m). Complexité spatiale : O(n × m).</p>
+<div class="retain"><b>À retenir.</b> La LCS est un exemple classique de DP en O(n × m), avec reconstruction de solution.</div>` });
+
+COURSE.push({ id: 'levenshtein', t: 'Distance d\'édition', h: `
+<p>La distance de Levenshtein entre A et B est le nombre minimal d'opérations (insertion, suppression, substitution) pour transformer A en B.</p>
+<h3>Récurrence</h3>
+<p><code>dp[i][j]</code> = distance entre A[0:i] et B[0:j].</p>
+<pre class="code">dp[i][j] = min(
+    dp[i - 1][j] + 1,       # suppression
+    dp[i][j - 1] + 1,       # insertion
+    dp[i - 1][j - 1] + cout # substitution (cout = 0 si égaux)
+)</pre>
+<h3>Code</h3>
+<pre class="code">def levenshtein(A, B):
+    n, m = len(A), len(B)
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        dp[i][0] = i
+    for j in range(m + 1):
+        dp[0][j] = j
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            cout = 0 if A[i - 1] == B[j - 1] else 1
+            dp[i][j] = min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cout)
+    return dp[n][m]</pre>
+<p>Complexité : O(n × m) en temps et en espace.</p>
+<div class="retain"><b>À retenir.</b> La distance d'édition est utilisée en correction orthographique, en bio-informatique, en traitement du langage.</div>` });
+
+COURSE.push({ id: 'partition', t: 'Partition équilibrée', h: `
+<p>Étant donné un tableau d'entiers positifs, on veut le partitionner en deux sous-ensembles de somme aussi proche que possible.</p>
+<h3>Réduction au sac à dos</h3>
+<p>Soit <code>total</code> la somme des éléments. On cherche un sous-ensemble de somme aussi proche que possible de <code>total // 2</code>.</p>
+<p>On définit <code>dp[i][s]</code> = vrai si on peut atteindre la somme s avec les i premiers éléments.</p>
+<pre class="code">def partition(arr):
+    total = sum(arr)
+    cible = total // 2
+    n = len(arr)
+    dp = [[False] * (cible + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        dp[i][0] = True
+    for i in range(1, n + 1):
+        for s in range(1, cible + 1):
+            dp[i][s] = dp[i - 1][s]
+            if arr[i - 1] <= s and dp[i - 1][s - arr[i - 1]]:
+                dp[i][s] = True
+    # meilleure somme atteignable
+    best = cible
+    while best > 0 and not dp[n][best]:
+        best -= 1
+    # reconstruction
+    s = best
+    set1, set2 = [], []
+    for i in range(n, 0, -1):
+        if dp[i][s] and (s < arr[i - 1] or not dp[i - 1][s]):
+            set1.append(arr[i - 1])
+            s -= arr[i - 1]
+        else:
+            set2.append(arr[i - 1])
+    return set1, set2</pre>
+<p>Complexité : O(n × total) en temps et en espace. Le problème est NP-complet en n, la DP est pseudo-polynomiale (dépend de la valeur de la somme).</p>
+<div class="retain"><b>À retenir.</b> La partition équilibrée est un cas particulier du sac à dos, résolu par DP en O(n × total).</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Programmation dynamique</dt><dd>Méthode de résolution de problèmes par combinaison de solutions de sous-problèmes.</dd>
+<dt>Sous-structure optimale</dt><dd>La solution optimale du problème se compose de solutions optimales de sous-problèmes.</dd>
+<dt>Chevauchement des sous-problèmes</dt><dd>Les mêmes sous-problèmes reviennent plusieurs fois dans la récursion naïve.</dd>
+<dt>Mémoïsation</dt><dd>Stockage des résultats des sous-problèmes dans un dictionnaire (ou un tableau).</dd>
+<dt>Bas en haut (bottom-up)</dt><dd>Calcul itératif des sous-problèmes du plus petit au plus grand, sans récursion.</dd>
+<dt>Reconstruction</dt><dd>Remonter les choix faits dans la table pour retrouver une solution optimale.</dd>
+<dt>Complexité temporelle</dt><dd>Nombre d'opérations en fonction de la taille de l'entrée.</dd>
+<dt>Complexité spatiale</dt><dd>Mémoire utilisée en fonction de la taille de l'entrée.</dd>
+<dt>Glouton</dt><dd>Algorithme qui fait le meilleur choix local à chaque étape, sans revenir en arrière.</dd>
+<dt>Sac à dos</dt><dd>Problème de sélection d'objets de poids et valeur donnés, sous contrainte de capacité.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'w1' };
+const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'memoisation' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : programmation dynamique'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur la programmation dynamique (ITC, CPGE 1re année) : mémoïsation, rendu de monnaie, plus longue sous-suite commune, distance d\'édition, partition équilibrée.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut, puis manipulez les champs et les boutons.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
