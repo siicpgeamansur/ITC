@@ -711,9 +711,16 @@ function mountW3(root) {
   $('#w3-x').value = S.x;
   const updLoc = () => { const xv = $('#w3-x').value.trim() || 'None'; $('#w3-loc').innerHTML = '<b>locals()</b> dans f : <code>{\'x\': ' + esc(xv) + ', \'y\': 2}</code><br><b>globals()</b> : <code>{\'a\': 10, \'f\': &lt;function f&gt;, …}</code><br>Une variable locale n\'existe que dans le bloc de la fonction.'; };
   $('#w3-x').addEventListener('input', updLoc); updLoc();
-  const sg = $('#w3-pre');
-  sg.append(chipsRow([['simple', 'Graphe du cours'], ['pond', 'Graphe pondéré']], S.mode, k => { S.mode = k; $('#w3-text').value = PRESETS[k === 'pond' ? 'graphe_pond' : 'graphe'].text; render(); }, 'Graphe'));
+
   function render() {
+    $('#w3-pre').innerHTML = '';
+    $('#w3-pre').append(chipsRow([['simple', 'Graphe du cours'], ['pond', 'Graphe pondéré']], S.mode, k => {
+      S.mode = k;
+      S.text = PRESETS[k === 'pond' ? 'graphe_pond' : 'graphe'].text;
+      $('#w3-text').value = S.text;
+      render();
+    }, 'Graphe'));
+
     const r = parseGraph($('#w3-text').value);
     const nodes = Array.from(r.g.keys());
     for (const nb of r.g.values()) for (const k of nb.keys()) if (!r.g.has(k) && !nodes.includes(k)) nodes.push(k);
@@ -1068,8 +1075,9 @@ function mountW6(root) {
   root.innerHTML = '<h2>La fonction hash</h2><p>Sur un ordinateur 64 bits, <code>hash()</code> renvoie un entier de [−2⁶³ , 2⁶³ − 1], soit 2⁶⁴ ≈ 1,8 × 10¹⁹ valeurs : environ 18 milliards de milliards. Pourquoi si grand ? Pour éviter le <b>paradoxe des anniversaires</b>.</p>' +
     '<div id="w6-seg"></div><div id="w6-body"></div>';
   const S = W6;
-  $('#w6-seg').append(chipsRow([['anniv', 'Anniversaires'], ['mers', 'Mersenne'], ['inv', 'Float'], ['str', 'Chaînes']], S.sv, v => { S.sv = v; render(); }, 'Thème'));
   function render() {
+    $('#w6-seg').innerHTML = '';
+    $('#w6-seg').append(chipsRow([['anniv', 'Anniversaires'], ['mers', 'Mersenne'], ['inv', 'Float'], ['str', 'Chaînes']], S.sv, v => { S.sv = v; render(); }, 'Thème'));
     const B = $('#w6-body');
     if (S.sv === 'anniv') {
       B.innerHTML = '<h3>Paradoxe des anniversaires</h3><p>Avec n personnes (les clés) et N jours (les cases), la probabilité d\'avoir au moins deux anniversaires identiques est :</p><div class="formula">P = 1 − (N/N) × ((N−1)/N) × … × ((N−n+1)/N)</div>' +
@@ -1240,8 +1248,9 @@ function mountW7(root) {
   root.innerHTML = '<h2>Bonne fonction de hachage</h2><p>Les collisions sont inévitables. L\'objectif est de <b>mélanger pour espacer</b> : chaque case a la même probabilité d\'être choisie, et une infime variation de la clé envoie le hash à l\'autre bout du tableau.</p>' +
     '<div id="w7-seg"></div><div id="w7-body"></div>';
   const S = W7;
-  $('#w7-seg').append(chipsRow([['pois', 'Remplissage'], ['prime', 'N premier']], S.sv, v => { S.sv = v; render(); }, 'Thème'));
   function render() {
+    $('#w7-seg').innerHTML = '';
+    $('#w7-seg').append(chipsRow([['pois', 'Remplissage'], ['prime', 'N premier']], S.sv, v => { S.sv = v; render(); }, 'Thème'));
     const B = $('#w7-body');
     if (S.sv === 'pois') {
       B.innerHTML = '<h3>Le problème du remplissage</h3><p>N tiroirs, M fiches. Soit X<sub>i</sub> le nombre de fiches du tiroir i. Comme ΣX<sub>i</sub> = M, la linéarité de l\'espérance donne <code>E[X<sub>i</sub>] = M / N = α</code>.</p>' +
