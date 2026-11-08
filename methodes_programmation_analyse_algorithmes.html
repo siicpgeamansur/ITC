@@ -1,0 +1,1004 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Méthodes et analyse d'algorithmes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* visuels spécifiques */
+.algo-code{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:12.5px/1.55 var(--font-mono);white-space:pre;overflow-x:auto;margin:8px 0}
+.algo-code .comment{color:var(--ok);font-style:italic}
+.algo-code .assert{color:var(--bad);font-weight:600}
+.algo-code .hl{background:rgba(46,109,164,.15);display:block;border-left:3px solid var(--accent);padding-left:6px;margin-left:-3px}
+.test-table{width:100%;border-collapse:collapse;font-size:13px}
+.test-table th,.test-table td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+.test-table th{background:var(--panel2)}
+.test-table td.ok{color:var(--ok);font-weight:600}
+.test-table td.ko{color:var(--bad);font-weight:600}
+.chart{width:100%;height:auto;max-width:640px;background:#fff;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0}
+.bar .lab{width:100px;color:var(--muted);font-size:12.5px}
+.bar .track{flex:1;background:var(--panel2);border-radius:4px;height:14px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent)}
+.bar .fill.ok{background:var(--ok)}.bar .fill.bad{background:var(--bad)}
+.bar .val{width:70px;text-align:right;font-family:var(--font-mono);font-size:12.5px}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .bar .lab{width:70px}.bar .val{width:50px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M4,18 h4 v4 h-4 z M11,12 h4 v10 h-4 z M18,6 h4 v16 h-4 z" fill="var(--accent)"/><path d="M3,24 h20" stroke="var(--fg)" stroke-width="1.5"/><path d="M5,8 l4,-3 l4,4 l4,-5" fill="none" stroke="var(--ok)" stroke-width="2"/></svg><span>Atelier Méthodes et analyse d'algorithmes <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-methodes-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* Code Python coloré (léger) */
+function codeBlock(code, on) {
+  const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|None|True|False|isinstance|TypeError|ValueError|Exception|AssertionError)$/;
+  const lines = code.split('\n').map(line => {
+    let out = '', i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '#') { out += '<span style="color:#7a7a88;font-style:italic">' + esc(line.slice(i)) + '</span>'; break; }
+      if (ch === '"' || ch === "'") { let j = i + 1; while (j < line.length && line[j] !== ch) j++; out += '<span style="color:#1c6b40">' + esc(line.slice(i, j + 1)) + '</span>'; i = j + 1; continue; }
+      let j = i; while (j < line.length && line[j] !== '#' && line[j] !== '"' && line[j] !== "'") j++;
+      let seg = esc(line.slice(i, j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g, m => /^\d/.test(m) ? '<span style="color:#b05a00">' + m + '</span>' : KW.test(m) ? '<span style="color:#7c3aa8">' + m + '</span>' : BI.test(m) ? '<span style="color:#1f3fa0">' + m + '</span>' : m);
+      out += seg; i = j;
+    }
+    return out;
+  });
+  return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/* ================= Atelier 1 : Spécification & Assertions ================= */
+const W1 = { func: 'moyenne', input: '', active: false };
+const FUNCS = {
+  moyenne: {
+    label: 'moyenne(L)',
+    sig: 'def moyenne(L: list) -> float:',
+    desc: 'Calcule la moyenne des éléments de la liste L.',
+    pre: 'L est une liste non vide de nombres (int ou float).',
+    post: 'renvoie la somme des éléments de L divisée par len(L).',
+    code: [
+      'def moyenne(L: list) -> float:',
+      '    """Calcule la moyenne de L. Précondition : len(L) > 0."""',
+      '    assert len(L) > 0, "L ne doit pas être vide"',
+      '    total = 0',
+      '    for x in L:',
+      '        total += x',
+      '    return total / len(L)'
+    ],
+    tests: {
+      '[]': { ok: false, msg: 'AssertionError : L ne doit pas être vide', type: 'err' },
+      '[3]': { ok: true, val: '3.0' },
+      '[1, 2, 3]': { ok: true, val: '2.0' },
+      '[10, 20, 30, 40]': { ok: true, val: '25.0' }
+    }
+  },
+  division: {
+    label: 'division(a, b)',
+    sig: 'def division(a: int, b: int) -> float:',
+    desc: 'Renvoie le quotient de a par b.',
+    pre: 'a et b sont des entiers, b ≠ 0.',
+    post: 'renvoie a / b (flottant).',
+    code: [
+      'def division(a: int, b: int) -> float:',
+      '    """Quotient de a par b. Précondition : b != 0."""',
+      '    assert isinstance(a, int) and isinstance(b, int), "a et b doivent être des entiers"',
+      '    assert b != 0, "division par zéro"',
+      '    return a / b'
+    ],
+    tests: {
+      '3, 2': { ok: true, val: '1.5' },
+      '6, 3': { ok: true, val: '2.0' },
+      '1, 0': { ok: false, msg: 'AssertionError : division par zéro', type: 'err' },
+      '1.5, 2': { ok: false, msg: 'AssertionError : a et b doivent être des entiers', type: 'err' }
+    }
+  }
+};
+function mountW1(root) {
+  root.innerHTML = '<h2>Spécification et assertions</h2><p>Une fonction doit être <b>documentée</b> : on précise sa <b>signature</b>, sa <b>précondition</b> (ce qui doit être vrai à l\'entrée) et sa <b>postcondition</b> (ce qui doit être vrai à la sortie). Les <b>assertions</b> vérifient la précondition : si elle est fausse, le programme s\'arrête.</p>' +
+    '<div class="opts"><div class="fld"><span>Fonction</span><div id="w1-func"></div></div></div>' +
+    '<div class="dwrap"><table class="dt"><thead><tr><th>Élément</th><th>Contenu</th></tr></thead><tbody id="w1-spec"></tbody></table></div>' +
+    '<div id="w1-code"></div>' +
+    '<h3>Tester la fonction</h3><p>Entrez les arguments et vérifiez le comportement.</p>' +
+    '<div class="opts"><label class="fld"><span>Arguments</span><input type="text" id="w1-input" class="mono" placeholder="ex : [1, 2, 3] ou 3, 2" autocomplete="off"></label><button class="btn pri" id="w1-go" type="button">Exécuter</button></div>' +
+    '<div class="verdict" id="w1-out" aria-live="polite"></div>' +
+    '<h3>Cas de test prédéfinis</h3><div id="w1-tests"></div>' +
+    '<p class="small">Les assertions servent à détecter les erreurs de programmation. Elles ne remplacent pas les exceptions (ValueError, TypeError) qui, elles, peuvent être rattrapées. Le programme de première année demande de savoir utiliser <code>assert</code> pour valider les entrées.</p>';
+  const S = W1;
+  $('#w1-func').append(chipsRow(Object.keys(FUNCS).map(k => [k, FUNCS[k].label]), S.func, v => { S.func = v; S.input = ''; render(); }, 'Fonction'));
+  function render() {
+    const f = FUNCS[S.func];
+    $('#w1-spec').innerHTML = '<tr><td>Signature</td><td class="m">' + esc(f.sig) + '</td></tr><tr><td>Rôle</td><td>' + esc(f.desc) + '</td></tr><tr><td>Précondition</td><td>' + esc(f.pre) + '</td></tr><tr><td>Postcondition</td><td>' + esc(f.post) + '</td></tr>';
+    $('#w1-code').innerHTML = codeBlock(f.code.join('\n'));
+    const inp = $('#w1-input'); inp.value = S.input; inp.placeholder = S.func === 'moyenne' ? 'ex : [1, 2, 3]' : 'ex : 3, 2';
+    $('#w1-go').onclick = () => {
+      S.input = inp.value.trim();
+      const out = $('#w1-out');
+      if (!S.input) { out.className = 'verdict warn'; out.textContent = 'Saisissez des arguments.'; return; }
+      let res;
+      if (S.func === 'moyenne') {
+        let arr;
+        try { arr = JSON.parse(S.input.replace(/'/g, '"')); } catch (e) { arr = null; }
+        if (!Array.isArray(arr) || arr.some(x => typeof x !== 'number')) { out.className = 'verdict no'; out.innerHTML = '<b>TypeError</b> : attendu une liste de nombres.'; return; }
+        if (arr.length === 0) { out.className = 'verdict no'; out.innerHTML = '<b>AssertionError</b> : L ne doit pas être vide.'; return; }
+        res = arr.reduce((a, b) => a + b, 0) / arr.length;
+        out.className = 'verdict yes'; out.innerHTML = 'moyenne(' + esc(S.input) + ') = <b>' + res + '</b> (précondition vérifiée).';
+      } else {
+        const parts = S.input.split(',').map(s => s.trim());
+        if (parts.length !== 2) { out.className = 'verdict no'; out.textContent = 'Attendu deux arguments : a, b.'; return; }
+        const isInt = s => /^-?\d+$/.test(s);
+        if (!isInt(parts[0]) || !isInt(parts[1])) { out.className = 'verdict no'; out.innerHTML = '<b>AssertionError</b> : a et b doivent être des entiers.'; return; }
+        const a = parseInt(parts[0], 10), b = parseInt(parts[1], 10);
+        if (b === 0) { out.className = 'verdict no'; out.innerHTML = '<b>AssertionError</b> : division par zéro.'; return; }
+        out.className = 'verdict yes'; out.innerHTML = 'division(' + a + ', ' + b + ') = <b>' + (a / b) + '</b> (précondition vérifiée).';
+      }
+    };
+    // table de tests
+    let html = '<div class="dwrap"><table class="test-table"><thead><tr><th>Arguments</th><th>Résultat attendu</th><th>Statut</th></tr></thead><tbody>';
+    for (const [args, t] of Object.entries(f.tests)) {
+      html += '<tr><td class="m">' + esc(args) + '</td><td class="m">' + (t.ok ? esc(t.val) : esc(t.msg)) + '</td><td class="' + (t.ok ? 'ok' : 'ko') + '">' + (t.ok ? '✓ valide' : '✗ assertion') + '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+    $('#w1-tests').innerHTML = html;
+  }
+  render();
+}
+WORKSHOPS.push({ id: 'w1', title: 'Spécification et assertions', hint: 'Écrire la signature, la précondition et la postcondition d\'une fonction, puis vérifier les entrées avec assert.',
+  mount: mountW1, reset: () => { Object.assign(W1, { func: 'moyenne', input: '' }); } });
+
+/* ================= Atelier 2 : Invariant et variant ================= */
+const W2 = { algo: 'somme', n: 5, step: 0, frames: null, timer: null };
+const ALGOS = {
+  somme: {
+    label: 'Somme des n premiers entiers',
+    code: ['def somme(n: int) -> int:', '    """Renvoie 0 + 1 + ... + n. Précondition : n >= 0."""', '    assert n >= 0, "n doit être positif ou nul"', '    s = 0', '    i = 0', '    while i < n:', '        i = i + 1', '        s = s + i', '    return s'],
+    invariant: 's = 0 + 1 + … + i',
+    variant: 'n − i',
+    init: { s: 0, i: 0, n: 5 },
+    stepFn: st => st.i < st.n ? { s: st.s + st.i + 1, i: st.i + 1 } : null,
+    checkInv: st => st.s === st.i * (st.i + 1) / 2,
+    checkVar: st => st.n - st.i
+  },
+  factorielle: {
+    label: 'Factorielle itérative',
+    code: ['def factorielle(n: int) -> int:', '    """Renvoie n! . Précondition : n >= 0."""', '    assert n >= 0, "n doit être positif ou nul"', '    f = 1', '    i = 1', '    while i <= n:', '        f = f * i', '        i = i + 1', '    return f'],
+    invariant: 'f = (i − 1)!',
+    variant: 'n + 1 − i',
+    init: { f: 1, i: 1, n: 5 },
+    stepFn: st => st.i <= st.n ? { f: st.f * st.i, i: st.i + 1 } : null,
+    checkInv: st => { let fact = 1; for (let k = 2; k < st.i; k++) fact *= k; return st.f === fact; },
+    checkVar: st => st.n + 1 - st.i
+  },
+  pgcd: {
+    label: 'PGCD par soustractions',
+    code: ['def pgcd(a: int, b: int) -> int:', '    """PGCD de a et b. Précondition : a > 0, b > 0."""', '    assert a > 0 and b > 0, "a et b doivent être strictement positifs"', '    while a != b:', '        if a > b:', '            a = a - b', '        else:', '            b = b - a', '    return a'],
+    invariant: 'pgcd(a, b) = pgcd(a₀, b₀)',
+    variant: 'a + b',
+    init: { a: 12, b: 18 },
+    stepFn: st => st.a !== st.b ? (st.a > st.b ? { a: st.a - st.b, b: st.b } : { a: st.a, b: st.b - st.a }) : null,
+    checkInv: st => gcd(st.a, st.b) === gcd(12, 18),
+    checkVar: st => st.a + st.b
+  }
+};
+const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+function mountW2(root) {
+  root.innerHTML = '<h2>Invariant et variant</h2><p>Pour prouver un algorithme itératif, on énonce un <b>invariant</b> (propriété vraie avant et après chaque tour de boucle) et un <b>variant</b> (quantité entière positive qui décroît à chaque tour, ce qui prouve la terminaison).</p>' +
+    '<div class="opts"><div class="fld"><span>Algorithme</span><div id="w2-algo"></div></div><label class="fld"><span>Paramètre n (ou a, b)</span><input type="text" id="w2-n" class="mono" style="width:100px"></label></div>' +
+    '<div class="dwrap"><table class="dt"><thead><tr><th>Invariant</th><th>Variant</th></tr></thead><tbody id="w2-props"></tbody></table></div>' +
+    '<div id="w2-code"></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w2-prev" type="button">◀ Précédent</button><button class="btn pri" id="w2-next" type="button">Suivant ▶</button><button class="btn" id="w2-play" type="button">Lecture</button><button class="btn" id="w2-reset" type="button">Départ</button></div>' +
+    '<div class="dwrap" id="w2-table"></div>' +
+    '<div class="verdict" id="w2-msg" aria-live="polite"></div>' +
+    '<h3>Preuve de terminaison</h3><p class="small">Le variant est un entier positif (ou nul) qui diminue strictement à chaque tour de boucle : il ne peut pas diminuer indéfiniment, donc la boucle s\'arrête.</p>' +
+    '<h3>Preuve de correction partielle</h3><p class="small">Si la boucle s\'arrête, l\'invariant est encore vrai et la condition d\'arrêt permet de conclure que le résultat est correct.</p>';
+  const S = W2;
+  $('#w2-algo').append(chipsRow(Object.keys(ALGOS).map(k => [k, ALGOS[k].label]), S.algo, v => { S.algo = v; S.n = 5; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w2-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const A = ALGOS[S.algo];
+    const frames = [];
+    let st;
+    if (S.algo === 'somme') st = { s: 0, i: 0, n: S.n };
+    else if (S.algo === 'factorielle') st = { f: 1, i: 1, n: S.n };
+    else st = { a: S.n, b: S.n + 6 };
+    frames.push({ st: { ...st }, phase: 'init', msg: 'Initialisation. L\'invariant doit déjà être vrai.' });
+    let guard = 0;
+    while (guard++ < 200) {
+      const nxt = A.stepFn(st);
+      if (!nxt) break;
+      st = nxt;
+      frames.push({ st: { ...st }, phase: 'step', msg: 'Tour de boucle. Vérifions que l\'invariant est toujours vrai et que le variant a diminué.' });
+    }
+    frames.push({ st: { ...st }, phase: 'end', msg: 'La condition d\'arrêt est vraie. L\'invariant donne le résultat, la boucle s\'est arrêtée car le variant a atteint sa borne.' });
+    return frames;
+  }
+  function render() {
+    const A = ALGOS[S.algo];
+    $('#w2-props').innerHTML = '<tr><td><b>Invariant :</b> ' + esc(A.invariant) + '</td><td><b>Variant :</b> ' + esc(A.variant) + '</td></tr>';
+    $('#w2-code').innerHTML = codeBlock(A.code.join('\n'), S.frames && S.frames[S.step] && S.frames[S.step].phase === 'step' ? null : null);
+    if (!S.frames) S.frames = buildFrames();
+    const f = S.frames[S.step];
+    // table
+    let html = '<table class="test-table"><thead><tr><th>Étape</th>';
+    const keys = Object.keys(f.st);
+    keys.forEach(k => html += '<th>' + k + '</th>');
+    html += '<th>Invariant</th><th>Variant</th></tr></thead><tbody>';
+    S.frames.slice(0, S.step + 1).forEach((fr, idx) => {
+      html += '<tr' + (idx === S.step ? ' style="background:var(--accent-soft)"' : '') + '><td>' + idx + '</td>';
+      keys.forEach(k => html += '<td class="m">' + fr.st[k] + '</td>');
+      const inv = A.checkInv(fr.st), va = A.checkVar(fr.st);
+      html += '<td class="' + (inv ? 'ok' : 'ko') + '">' + (inv ? '✓' : '✗') + '</td><td class="m">' + (typeof va === 'number' ? va : '—') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    $('#w2-table').innerHTML = html;
+    const last = S.step === S.frames.length - 1;
+    $('#w2-msg').className = 'verdict' + (last ? ' yes' : '');
+    $('#w2-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
+    $('#w2-prev').disabled = S.step === 0;
+    $('#w2-next').disabled = last;
+    const nInp = $('#w2-n');
+    nInp.value = S.n;
+    nInp.oninput = () => {
+      const v = parseInt(nInp.value, 10);
+      if (isFinite(v) && v >= 0) { S.n = v; S.step = 0; S.frames = null; stop(); render(); }
+    };
+  }
+  $('#w2-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
+  $('#w2-next').onclick = () => { stop(); if (S.step < S.frames.length - 1) { S.step++; render(); } };
+  $('#w2-reset').onclick = () => { stop(); S.step = 0; render(); };
+  $('#w2-play').onclick = () => {
+    if (S.timer) { stop(); return; }
+    if (S.step >= S.frames.length - 1) S.step = 0;
+    $('#w2-play').textContent = 'Pause';
+    S.timer = setInterval(() => { if (S.step >= S.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 800);
+    render();
+  };
+  render();
+}
+WORKSHOPS.push({ id: 'w2', title: 'Invariant et variant', hint: 'Démontrez la terminaison avec un variant et la correction partielle avec un invariant.',
+  mount: mountW2, reset: () => { Object.assign(W2, { algo: 'somme', n: 5, step: 0, frames: null }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
+
+/* ================= Atelier 3 : Jeu de tests ================= */
+const W3 = { func: 'signe', tests: {} };
+const TEST_FUNCS = {
+  signe: {
+    label: 'signe(x)',
+    sig: 'def signe(x: int) -> int:',
+    desc: 'Renvoie −1 si x < 0, 0 si x = 0, 1 si x > 0.',
+    domains: ['x < 0', 'x = 0', 'x > 0'],
+    limits: ['x = −1', 'x = 0', 'x = 1'],
+    run: x => x < 0 ? -1 : x > 0 ? 1 : 0
+  },
+  division: {
+    label: 'division(a, b)',
+    sig: 'def division(a: int, b: int) -> float:',
+    desc: 'Renvoie a / b (b ≠ 0).',
+    domains: ['b > 0', 'b < 0', 'b = 0'],
+    limits: ['a = 0', 'b = 1', 'b = −1'],
+    run: (a, b) => b === 0 ? null : a / b
+  },
+  note: {
+    label: 'mention(note)',
+    sig: 'def mention(note: float) -> str:',
+    desc: 'Renvoie la mention correspondant à une note entre 0 et 20.',
+    domains: ['note < 10', '10 ≤ note < 12', '12 ≤ note < 14', '14 ≤ note < 16', 'note ≥ 16'],
+    limits: ['note = 0', 'note = 10', 'note = 20'],
+    run: n => n < 10 ? 'Ajourné' : n < 12 ? 'Passable' : n < 14 ? 'Assez bien' : n < 16 ? 'Bien' : 'Très bien'
+  }
+};
+function mountW3(root) {
+  root.innerHTML = '<h2>Jeu de tests</h2><p>Un <b>jeu de tests</b> associe à des entrées données les sorties attendues. Pour être efficace, il couvre les <b>partitions</b> du domaine (cas normal, cas limite, cas d\'erreur) et les <b>limites</b>.</p>' +
+    '<div class="opts"><div class="fld"><span>Fonction</span><div id="w3-func"></div></div></div>' +
+    '<div class="dwrap" id="w3-spec"></div>' +
+    '<h3>Entrées à tester</h3><div class="opts"><label class="fld"><span>Entrées (séparées par des virgules)</span><input type="text" id="w3-input" class="mono" placeholder="ex : 5, -3, 0, 10" autocomplete="off"></label><button class="btn" id="w3-run" type="button">Exécuter</button></div>' +
+    '<div class="verdict" id="w3-out"></div>' +
+    '<div id="w3-domains"></div>' +
+    '<h3>Table de tests</h3><div class="dwrap" id="w3-table"></div>' +
+    '<p class="small">Le programme officiel demande de savoir écrire un jeu de tests à la main, en couvrant les partitions et les valeurs limites. La génération automatique n\'est pas au programme.</p>';
+  const S = W3;
+  $('#w3-func').append(chipsRow(Object.keys(TEST_FUNCS).map(k => [k, TEST_FUNCS[k].label]), S.func, v => { S.func = v; S.tests = {}; render(); }, 'Fonction'));
+  function render() {
+    const f = TEST_FUNCS[S.func];
+    $('#w3-spec').innerHTML = '<table class="dt"><thead><tr><th>Élément</th><th>Contenu</th></tr></thead><tbody><tr><td>Signature</td><td class="m">' + esc(f.sig) + '</td></tr><tr><td>Rôle</td><td>' + esc(f.desc) + '</td></tr></tbody></table>';
+    $('#w3-domains').innerHTML = '<h3>Partitions du domaine</h3><p>Choisir une entrée dans chaque partition évite les redondances :</p><ul><li>' + f.domains.map(d => esc(d)).join('</li><li>') + '</li></ul><p><b>Valeurs limites :</b> ' + f.limits.map(esc).join(', ') + '.</p>';
+    const inp = $('#w3-input');
+    $('#w3-run').onclick = () => {
+      const txt = inp.value.trim();
+      if (!txt) { $('#w3-out').className = 'verdict warn'; $('#w3-out').textContent = 'Saisissez des entrées.'; return; }
+      const entries = txt.split(',').map(s => s.trim()).filter(Boolean);
+      const rows = entries.map(e => {
+        let res, expected, ok;
+        if (S.func === 'signe') {
+          const x = parseInt(e, 10);
+          res = isFinite(x) ? f.run(x) : null;
+          expected = x < 0 ? -1 : x > 0 ? 1 : 0;
+          ok = res === expected;
+        } else if (S.func === 'division') {
+          const parts = e.split('/').map(s => s.trim());
+          if (parts.length !== 2) { res = null; expected = null; ok = false; }
+          else {
+            const a = parseInt(parts[0], 10), b = parseInt(parts[1], 10);
+            res = f.run(a, b); expected = b === 0 ? null : a / b;
+            ok = res === expected;
+          }
+        } else {
+          const x = parseFloat(e);
+          res = isFinite(x) ? f.run(x) : null;
+          expected = x < 10 ? 'Ajourné' : x < 12 ? 'Passable' : x < 14 ? 'Assez bien' : x < 16 ? 'Bien' : 'Très bien';
+          ok = res === expected;
+        }
+        return { e, res, expected, ok };
+      });
+      let html = '<div class="dwrap"><table class="test-table"><thead><tr><th>Entrée</th><th>Sortie obtenue</th><th>Sortie attendue</th><th>Statut</th></tr></thead><tbody>';
+      rows.forEach(r => {
+        html += '<tr><td class="m">' + esc(r.e) + '</td><td class="m">' + (r.res === null ? '—' : esc(r.res)) + '</td><td class="m">' + (r.expected === null ? '—' : esc(r.expected)) + '</td><td class="' + (r.ok ? 'ok' : 'ko') + '">' + (r.ok ? '✓' : '✗') + '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+      $('#w3-table').innerHTML = html;
+      const nbOk = rows.filter(r => r.ok).length;
+      $('#w3-out').className = 'verdict ' + (nbOk === rows.length ? 'yes' : 'warn');
+      $('#w3-out').innerHTML = 'Tests réussis : <b>' + nbOk + ' / ' + rows.length + '</b>.' + (nbOk === rows.length ? ' Le jeu de tests couvre bien les cas.' : ' Certains cas ne correspondent pas à la spécification.');
+    };
+    $('#w3-table').innerHTML = '<p class="small">Saisissez des entrées puis cliquez sur « Exécuter ».</p>';
+  }
+  render();
+}
+WORKSHOPS.push({ id: 'w3', title: 'Jeu de tests', hint: 'Écrire des tests à la main en couvrant les partitions du domaine et les valeurs limites.',
+  mount: mountW3, reset: () => { Object.assign(W3, { func: 'signe', tests: {} }); } });
+
+/* ================= Atelier 4 : Complexité ================= */
+const W4 = { func: 'recherche', n: 10, runs: [], anim: false };
+function mountW4(root) {
+  root.innerHTML = '<h2>Complexité</h2><p>La <b>complexité temporelle</b> d\'un algorithme est le nombre d\'opérations élémentaires en fonction de la taille n de l\'entrée, dans le <b>pire cas</b>. On la donne en <b>ordre de grandeur</b> : O(1), O(log n), O(n), O(n log n), O(n²), etc.</p>' +
+    '<div class="opts"><div class="fld"><span>Algorithme</span><div id="w4-func"></div></div><label class="fld"><span>n = <b id="w4-nval"></b></span><input type="range" id="w4-n" min="1" max="20" value="10"></label></div>' +
+    '<div class="dwrap"><table class="dt"><thead><tr><th>Fonction</th><th>Opérations</th><th>Ordre de grandeur</th></tr></thead><tbody id="w4-table"></tbody></table></div>' +
+    '<h3>Mesure expérimentale</h3><p class="small">À chaque clic sur « Mesurer », on exécute l\'algorithme avec la taille indiquée et on relève le nombre d\'opérations élémentaires (comparaisons ou itérations).</p>' +
+    '<div class="files" style="margin:8px 0"><button class="btn pri" id="w4-run" type="button">Mesurer</button><button class="btn" id="w4-clear" type="button">Effacer</button></div>' +
+    '<svg id="w4-chart" class="chart" viewBox="0 0 640 320"></svg>' +
+    '<div id="w4-stats"></div>';
+  const S = W4;
+  const FUNCS = {
+    recherche: { label: 'Recherche séquentielle', ops: n => n, ordre: 'O(n)', desc: 'Parcourt la liste jusqu\'à trouver (pire cas).' },
+    dichotomie: { label: 'Recherche dichotomique', ops: n => Math.ceil(Math.log2(n)) + 1, ordre: 'O(log n)', desc: 'Divise la zone de recherche par 2 à chaque étape.' },
+    bulles: { label: 'Tri à bulles (boucles imbriquées)', ops: n => n * (n - 1) / 2, ordre: 'O(n²)', desc: 'Boucles imbriquées sur les n éléments.' },
+    rapide: { label: 'Tri rapide (cas moyen)', ops: n => Math.round(n * Math.log2(n)), ordre: 'O(n log n)', desc: 'Diviser pour régner : n log n comparaisons en moyenne.' }
+  };
+  const nEl = $('#w4-n'), nVal = $('#w4-nval');
+  const funcs = $('#w4-func');
+  funcs.append(chipsRow(Object.keys(FUNCS).map(k => [k, FUNCS[k].label]), S.func, v => { S.func = v; S.runs = []; draw(); }, 'Algorithme'));
+  nEl.oninput = () => { S.n = parseInt(nEl.value, 10); nVal.textContent = S.n; draw(); };
+  $('#w4-run').onclick = () => { S.runs.push({ f: S.func, n: S.n, ops: FUNCS[S.func].ops(S.n) }); draw(); };
+  $('#w4-clear').onclick = () => { S.runs = []; draw(); };
+  function draw() {
+    const f = FUNCS[S.func];
+    $('#w4-table').innerHTML = '<tr><td>' + esc(f.label) + '</td><td class="m">' + f.ops(S.n) + '</td><td><b>' + f.ordre + '</b></td></tr>';
+    $('#w4-n').value = S.n; nVal.textContent = S.n;
+    // graphique : comparer les 4 fonctions pour n = 1..20
+    const W = 640, H = 320, L = 50, R = 20, T = 20, B = 40;
+    const maxN = 20, xs = []; for (let n = 1; n <= maxN; n++) xs.push(n);
+    const series = Object.keys(FUNCS).map(k => ({ k, label: FUNCS[k].label, color: { recherche: '#2e6da4', dichotomie: '#1e7a2e', bulles: '#c0281f', rapide: '#7b4fc2' }[k], pts: xs.map(n => [n, FUNCS[k].ops(n)]) }));
+    const ymax = Math.max(...series.flatMap(s => s.pts.map(p => p[1]))) * 1.1;
+    const X = x => L + (x - 1) / (maxN - 1) * (W - L - R);
+    const Y = y => H - B - y / ymax * (H - B - T);
+    let svg = '';
+    for (let i = 0; i <= 4; i++) { const y = Y(ymax * i / 4); svg += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#eee"/><text x="' + (L - 5) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="11" fill="#666">' + Math.round(ymax * i / 4) + '</text>'; }
+    for (let n = 1; n <= maxN; n += 2) svg += '<text x="' + X(n) + '" y="' + (H - B + 15) + '" text-anchor="middle" font-size="11" fill="#666">' + n + '</text>';
+    svg += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="#555"/><line x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '" stroke="#555"/>';
+    series.forEach(s => {
+      svg += '<polyline fill="none" stroke="' + s.color + '" stroke-width="2" points="' + s.pts.map(p => X(p[0]) + ',' + Y(p[1])).join(' ') + '"/>';
+    });
+    // points des mesures
+    S.runs.forEach(r => {
+      const s = series.find(x => x.k === r.f); if (!s) return;
+      svg += '<circle cx="' + X(r.n) + '" cy="' + Y(r.ops) + '" r="4" fill="' + s.color + '" stroke="#fff"/>';
+    });
+    // légende
+    series.forEach((s, i) => {
+      const y = T + 10 + i * 16;
+      svg += '<line x1="' + (L + 10) + '" y1="' + y + '" x2="' + (L + 26) + '" y2="' + y + '" stroke="' + s.color + '" stroke-width="2"/><text x="' + (L + 32) + '" y="' + (y + 4) + '" font-size="11" fill="#222">' + s.label + '</text>';
+    });
+    $('#w4-chart').innerHTML = svg;
+    // stats
+    const cur = S.runs.filter(r => r.f === S.func);
+    if (cur.length) {
+      const last = cur[cur.length - 1];
+      $('#w4-stats').innerHTML = '<div class="verdict yes">Dernière mesure : <b>' + FUNCS[S.func].label + '</b> pour n = ' + last.n + ' → <b>' + last.ops + '</b> opérations. Ordre de grandeur : <b>' + FUNCS[S.func].ordre + '</b>.</div>';
+    } else {
+      $('#w4-stats').innerHTML = '<div class="verdict">Aucune mesure pour l\'instant. Cliquez sur « Mesurer ».</div>';
+    }
+  }
+  draw();
+}
+WORKSHOPS.push({ id: 'w4', title: 'Complexité', hint: 'Mesurez le nombre d\'opérations en fonction de n et identifiez l\'ordre de grandeur (O(1), O(log n), O(n), O(n log n), O(n²)).',
+  mount: mountW4, reset: () => { Object.assign(W4, { func: 'recherche', n: 10, runs: [], anim: false }); } });
+
+/* ================= Atelier 5 : Choix de conception ================= */
+const W5 = { case: 'mots', option: 'dict' };
+const CASES = {
+  mots: {
+    label: 'Compter les occurrences',
+    context: 'On lit un texte de n mots et on veut compter combien de fois apparaît chaque mot.',
+    options: {
+      dict: { label: 'Dictionnaire {mot: compte}', desc: 'Chaque mot est une clé, le compte est la valeur.', complexity: 'O(n) en temps, O(k) en espace (k mots distincts)', verdict: 'yes', why: 'C\'est la structure adaptée : accès en O(1) par mot. Une liste triée serait en O(n log n) à chaque recherche.' },
+      list: { label: 'Liste de couples (mot, compte)', desc: 'On parcourt la liste à chaque mot pour trouver le couple.', complexity: 'O(n × k) en temps, O(k) en espace', verdict: 'warn', why: 'Chaque recherche linéaire coûte O(k) : le coût total devient quadratique. Correct mais inefficace.' },
+      sort: { label: 'Trier le texte puis compter', desc: 'On trie la liste de mots, puis on compte les voisins égaux.', complexity: 'O(n log n) en temps, O(n) en espace', verdict: 'ok', why: 'Efficace mais on perd l\'ordre d\'apparition et on utilise plus de mémoire.' }
+    }
+  },
+  notes: {
+    label: 'Calculer une moyenne pondérée',
+    context: 'On a n notes, chacune avec un coefficient. On veut la moyenne pondérée.',
+    options: {
+      list: { label: 'Deux listes : notes et coefficients', desc: 'On parcourt les deux listes en parallèle.', complexity: 'O(n) en temps, O(n) en espace', verdict: 'ok', why: 'Simple et efficace : un seul parcours.' },
+      dict: { label: 'Un dictionnaire {matière: (note, coef)}', desc: 'On parcourt les valeurs du dictionnaire.', complexity: 'O(n) en temps, O(n) en espace', verdict: 'ok', why: 'Plus expressif si chaque note est associée à une matière, mais pas plus rapide.' },
+      loop: { label: 'Une boucle imbriquée sur les notes', desc: 'Pour chaque note, on cherche son coefficient en parcourant la liste.', complexity: 'O(n²) en temps, O(n) en espace', verdict: 'no', why: 'Coût quadratique inutile : les deux listes sont indexées de la même façon.' }
+    }
+  },
+  cache: {
+    label: 'Mémoriser des résultats (cache)',
+    context: 'Une fonction coûteuse f(x) est appelée souvent avec les mêmes arguments. On veut mémoriser les résultats.',
+    options: {
+      dict: { label: 'Dictionnaire {argument: résultat}', desc: 'On vérifie si l\'argument est déjà une clé, sinon on calcule.', complexity: 'O(1) par appel (après calcul), O(k) en espace', verdict: 'yes', why: 'C\'est le principe du cache : accès en O(1) à un résultat déjà calculé.' },
+      list: { label: 'Liste des arguments déjà vus', desc: 'On parcourt la liste pour voir si l\'argument y est.', complexity: 'O(k) par appel, O(k) en espace', verdict: 'warn', why: 'La recherche linéaire annule le gain du cache.' },
+      set: { label: 'Ensemble des arguments déjà vus', desc: 'On stocke seulement les arguments, pas les résultats.', complexity: 'O(1) par appel, O(k) en espace', verdict: 'no', why: 'Un ensemble ne stocke pas la valeur associée : on ne peut pas retrouver le résultat.' }
+    }
+  }
+};
+function mountW5(root) {
+  root.innerHTML = '<h2>Choix de conception et de programmation</h2><p>Un programme doit être <b>justifié</b> : le choix d\'un algorithme ou d\'une structure de données doit être expliqué (par sa complexité, sa lisibilité, sa robustesse).</p>' +
+    '<div class="opts"><div class="fld"><span>Contexte</span><div id="w5-case"></div></div></div>' +
+    '<div class="verdict goal" id="w5-context"></div>' +
+    '<div class="opts"><div class="fld"><span>Choix de structure</span><div id="w5-option"></div></div></div>' +
+    '<div class="dwrap" id="w5-detail"></div>' +
+    '<div class="verdict" id="w5-verdict"></div>' +
+    '<h3>À justifier dans un commentaire</h3><ul style="padding-left:22px;line-height:1.7"><li>Pourquoi cette structure (liste, dictionnaire, ensemble) ?</li><li>Quel est l\'ordre de grandeur du coût en temps et en espace ?</li><li>Quelle hypothèse fait-on sur les entrées (précondition) ?</li></ul>' +
+    '<p class="small">Le programme insiste sur l\'explication des choix : un commentaire qui paraphrase le code est inutile ; un commentaire qui justifie une structure ou un algorithme est attendu.</p>';
+  const S = W5;
+  $('#w5-case').append(chipsRow(Object.keys(CASES).map(k => [k, CASES[k].label]), S.case, v => { S.case = v; S.option = Object.keys(CASES[v].options)[0]; render(); }, 'Contexte'));
+  function render() {
+    const c = CASES[S.case];
+    $('#w5-context').textContent = c.context;
+    $('#w5-option').innerHTML = '';
+    $('#w5-option').append(chipsRow(Object.keys(c.options).map(k => [k, c.options[k].label]), S.option, v => { S.option = v; render(); }, 'Structure'));
+    const o = c.options[S.option];
+    $('#w5-detail').innerHTML = '<table class="dt"><thead><tr><th>Caractéristique</th><th>Valeur</th></tr></thead><tbody><tr><td>Structure</td><td>' + esc(o.label) + '</td></tr><tr><td>Description</td><td>' + esc(o.desc) + '</td></tr><tr><td>Complexité</td><td><b>' + esc(o.complexity) + '</b></td></tr></tbody></table>';
+    const v = $('#w5-verdict');
+    v.className = 'verdict ' + ({ yes: 'yes', ok: '', warn: 'warn', no: 'no' }[o.verdict]);
+    v.innerHTML = '<b>' + ({ yes: 'Excellent choix', ok: 'Choix valable', warn: 'Choix sous-optimal', no: 'Choix inadapté' }[o.verdict]) + '.</b> ' + esc(o.why);
+  }
+  render();
+}
+WORKSHOPS.push({ id: 'w5', title: 'Choix de conception', hint: 'Justifiez le choix d\'une structure de données ou d\'un algorithme par sa complexité, sa lisibilité et sa robustesse.',
+  mount: mountW5, reset: () => { Object.assign(W5, { case: 'mots', option: 'dict' }); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  w1: {
+    title: 'Spécification et assertions', level: 'Niveau 1 · Découvrir', time: '20 min', course: 'specification',
+    goal: 'Écrire la signature, la précondition et la postcondition d\'une fonction ; utiliser assert pour valider les entrées.',
+    steps: [
+      'Lisez la spécification de moyenne(L). Quelle est sa précondition ?',
+      'Testez moyenne([1, 2, 3]) : le résultat est-il conforme à la postcondition ?',
+      'Testez moyenne([]) : que se passe-t-il ? Pourquoi l\'assertion arrête-t-elle le programme ?',
+      'Passez à division(a, b). Testez 3, 2 puis 1, 0.',
+      'Pourquoi le programme demande-t-il une précondition sur les types (a et b entiers) ?'
+    ],
+    defi: { q: 'Écrire la spécification de la fonction <code>max_liste(L)</code> qui renvoie le maximum d\'une liste non vide L d\'entiers.',
+      a: '<b>Signature :</b> <code>def max_liste(L: list) -> int</code>. <b>Précondition :</b> L est une liste non vide d\'entiers. <b>Postcondition :</b> le résultat est un élément de L et est supérieur ou égal à tous les éléments de L.' },
+    qcm: [
+      { q: 'La précondition d\'une fonction est :', o: ['ce qui doit être vrai à l\'entrée', 'ce qui doit être vrai à la sortie', 'le résultat de la fonction', 'le nom de la fonction'], a: 0, w: 'C\'est une hypothèse sur les arguments, que le programmeur peut vérifier avec assert.' },
+      { q: 'Que fait l\'instruction <code>assert cond, "message"</code> ?', o: ['Lève une AssertionError si cond est faux', 'Affiche un message', 'Rattrape une exception', 'Arrête le programme même si cond est vrai'], a: 0, w: 'assert arrête le programme en levant une AssertionError si la condition est fausse.' },
+      { q: 'La postcondition d\'une fonction est :', o: ['ce qui doit être vrai à l\'entrée', 'ce qui doit être vrai à la sortie si la précondition est vérifiée', 'la valeur de retour', 'le type de retour'], a: 1, w: 'C\'est la propriété que garantit la fonction quand elle reçoit des arguments valides.' },
+      { q: 'Où placer les assertions de précondition ?', o: ['Au début de la fonction', 'À la fin', 'Dans la boucle', 'Dans le appelant'], a: 0, w: 'On vérifie les arguments dès l\'entrée dans la fonction.' },
+      { q: 'Un commentaire qui paraphrase le code est :', o: ['utile', 'inutile, à éviter', 'obligatoire', 'interdit par la PEP 8'], a: 1, w: 'Les commentaires doivent expliquer le pourquoi, pas le comment ligne à ligne.' }
+    ]
+  },
+  w2: {
+    title: 'Invariant et variant', level: 'Niveau 2 · Comprendre', time: '30 min', course: 'invariant',
+    goal: 'Énoncer un invariant de boucle et un variant ; démontrer la correction partielle et la terminaison.',
+    steps: [
+      'Lancez l\'algorithme somme(5). Vérifiez à chaque étape que l\'invariant s = 0 + … + i est vrai.',
+      'Observez le variant n − i : décroît-il strictement à chaque tour ?',
+      'À la fin, quel est le résultat ? La condition d\'arrêt permet-elle de conclure ?',
+      'Passez à factorielle(5). Vérifiez l\'invariant f = (i − 1)!.',
+      'Passez à pgcd(12, 18). Vérifiez que l\'invariant pgcd(a, b) = pgcd(12, 18) est conservé.',
+      'Pour chaque algorithme, écrivez en français le variant et montrez qu\'il est positif.'
+    ],
+    defi: { q: 'Pour la boucle <code>while i &lt; n: i = i + 1</code>, quel est l\'invariant ? le variant ?',
+      a: 'Invariant : <code>i</code> est compris entre 0 et n (au début de chaque tour, i ≤ n). Variant : <code>n − i</code>, qui diminue de 1 à chaque tour et reste ≥ 0. Quand i = n, la boucle s\'arrête.' },
+    qcm: [
+      { q: 'Un invariant de boucle est une propriété :', o: ['vraie avant et après chaque tour de boucle', 'vraie seulement au début', 'vraie seulement à la fin', 'toujours fausse'], a: 0, w: 'C\'est une propriété stable : elle est initialisée, conservée et fournit la correction à la sortie.' },
+      { q: 'Un variant de boucle sert à prouver :', o: ['la correction', 'la terminaison', 'la complexité', 'la lisibilité'], a: 1, w: 'C\'est un entier positif qui décroît strictement à chaque tour : la boucle ne peut pas être infinie.' },
+      { q: 'Dans la boucle <code>while i &lt; n: i = i + 1</code>, le variant est :', o: ['i', 'n', 'n − i', 'i − n'], a: 2, w: 'n − i est positif ou nul, et diminue de 1 à chaque tour.' },
+      { q: 'La correction partielle affirme que :', o: ['le programme termine toujours', 'si le programme termine, le résultat est correct', 'le programme est rapide', 'le programme ne boucle jamais'], a: 1, w: 'La correction totale combine correction partielle et terminaison.' },
+      { q: 'La correction totale affirme que :', o: ['le programme termine et donne un résultat correct', 'le programme est rapide', 'le programme n\'a pas de bug', 'le programme est lisible'], a: 0, w: 'C\'est la conjunction de la correction partielle et de la terminaison.' }
+    ]
+  },
+  w3: {
+    title: 'Jeu de tests', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'tests',
+    goal: 'Construire un jeu de tests couvrant les partitions du domaine et les valeurs limites ; écrire la table des tests.',
+    steps: [
+      'Choisissez signe(x). Quelles sont les partitions du domaine ?',
+      'Saisissez 5, −3, 0 : quels sont les résultats attendus ?',
+      'Ajoutez les valeurs limites −1 et 1. Sont-elles couvertes ?',
+      'Passez à division(a, b). Testez b = 0 : que se passe-t-il ?',
+      'Passez à mention(note). Couvrez toutes les partitions et les limites 0, 10, 20.',
+      'Concluez : un bon jeu de tests est-il exhaustif ?'
+    ],
+    defi: { q: 'Pour une fonction qui calcule une remise (0 % si montant < 50, 5 % si 50 ≤ montant < 200, 10 % au-delà), quelles valeurs limites tester en priorité ?',
+      a: 'Les bornes des intervalles : 0, 49, 50, 199, 200, et des valeurs normales comme 100 ou 300. On teste aussi des valeurs négatives si le domaine le permet.' },
+    qcm: [
+      { q: 'Un bon jeu de tests :', o: ['est exhaustif', 'couvre les partitions et les limites', 'teste une seule valeur', 'ne teste que le cas normal'], a: 1, w: 'On ne peut pas tout tester : on choisit des valeurs représentatives et les bornes.' },
+      { q: 'Tester les valeurs limites sert à :', o: ['vérifier les bornes des intervalles', 'tester la vitesse', 'tester la mémoire', 'vérifier la syntaxe'], a: 0, w: 'Les erreurs se cachent souvent aux frontières : x = 0, x = 10, x = −1…' },
+      { q: 'Le partitionnement du domaine consiste à :', o: ['découper les entrées en classes équivalentes', 'trier les entrées', 'hacher les entrées', 'écrire toutes les entrées'], a: 0, w: 'On regroupe les entrées qui doivent produire le même comportement.' },
+      { q: 'Un test doit vérifier :', o: ['la sortie obtenue par rapport à la sortie attendue', 'la longueur du code', 'la beauté du code', 'le nombre de commentaires'], a: 0, w: 'Un test est un triplet (entrée, sortie attendue, comparaison).' },
+      { q: 'La génération automatique de tests est :', o: ['au programme', 'hors programme', 'obligatoire', 'interdite'], a: 1, w: 'Le programme demande seulement de savoir écrire des tests à la main.' }
+    ]
+  },
+  w4: {
+    title: 'Complexité', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'complexite',
+    goal: 'Mesurer le nombre d\'opérations en fonction de n ; reconnaître un ordre de grandeur (O(1), O(log n), O(n), O(n log n), O(n²)).',
+    steps: [
+      'Choisissez la recherche séquentielle. Mesurez pour n = 5, 10, 20. Que constatez-vous ?',
+      'Passez à la recherche dichotomique. Comparez les courbes : pourquoi est-elle si basse ?',
+      'Passez au tri à bulles. Pour n = 20, combien d\'opérations ?',
+      'Passez au tri rapide. Comparez avec le tri à bulles.',
+      'Regardez les courbes : quelle est la plus pentue ? Laquelle croît le plus vite ?',
+      'Quel est l\'ordre de grandeur de la dichotomie ? Et du tri à bulles ?'
+    ],
+    defi: { q: 'Un algorithme fait n²/2 + 3n opérations pour une entrée de taille n. Quel est son ordre de grandeur ? Que devient le terme 3n quand n grandit ?',
+      a: 'L\'ordre de grandeur est <b>O(n²)</b> : quand n grandit, n²/2 domine 3n, et les constantes (1/2) disparaissent dans la notation O. Le terme 3n devient négligeable.' },
+    qcm: [
+      { q: 'La complexité dans le pire cas mesure :', o: ['le nombre d\'opérations maximal', 'le nombre d\'opérations minimal', 'le nombre d\'opérations moyen', 'la mémoire utilisée'], a: 0, w: 'On considère l\'entrée la plus défavorable pour l\'algorithme.' },
+      { q: 'La recherche dichotomique est en :', o: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], a: 1, w: 'Chaque étape divise l\'intervalle par 2 : environ log₂ n étapes.' },
+      { q: 'Le tri à bulles est en :', o: ['O(n)', 'O(n log n)', 'O(n²)', 'O(log n)'], a: 2, w: 'Deux boucles imbriquées : n(n − 1)/2 comparaisons, soit O(n²).' },
+      { q: 'Un algorithme en O(n log n) est :', o: ['plus rapide qu\'un algorithme en O(n²) pour n grand', 'plus lent que O(n²)', 'constant', 'linéaire'], a: 0, w: 'Pour n grand, n log n croît beaucoup moins vite que n².' },
+      { q: 'La notation O(·) désigne :', o: ['un ordre de grandeur asymptotique', 'une égalité exacte', 'une constante', 'un type de données'], a: 0, w: 'On s\'intéresse au comportement quand n tend vers l\'infini, en ignorant les constantes.' }
+    ]
+  },
+  w5: {
+    title: 'Choix de conception', level: 'Niveau 3 · Choisir', time: '20 min', course: 'conception',
+    goal: 'Justifier le choix d\'une structure de données par sa complexité, sa lisibilité et sa robustesse.',
+    steps: [
+      'Contexte « Compter les occurrences » : lisez les trois options.',
+      'Pourquoi le dictionnaire est-il le meilleur choix ?',
+      'Que se passe-t-il si on utilise une liste de couples ?',
+      'Passez au contexte « Moyenne pondérée » : quelle option est la plus simple ?',
+      'Passez au contexte « Cache » : pourquoi un ensemble ne suffit-il pas ?',
+      'Rédigez un commentaire qui justifie votre choix.'
+    ],
+    defi: { q: 'On doit compter le nombre d\'occurrences de chaque mot dans un texte de 1 000 000 de mots. Quelle structure choisir et pourquoi ?',
+      a: 'Un <b>dictionnaire</b> {mot: compte}. Chaque mot est une clé, la mise à jour est en O(1), et le parcours total est en O(n). Une liste imposerait une recherche en O(k) par mot, soit O(n × k), très lent.' },
+    qcm: [
+      { q: 'Quelle structure est la plus adaptée pour compter des occurrences ?', o: ['Une liste', 'Un dictionnaire', 'Un ensemble', 'Un tuple'], a: 1, w: 'Clé = mot, valeur = compte : mise à jour en O(1).' },
+      { q: 'Quel est l\'ordre de grandeur du comptage avec un dictionnaire ?', o: ['O(1)', 'O(n)', 'O(n log n)', 'O(n²)'], a: 1, w: 'Un parcours du texte, avec une mise à jour O(1) par mot.' },
+      { q: 'Un ensemble (<code>set</code>) stocke :', o: ['des clés sans valeur associée', 'des couples clé-valeur', 'des listes', 'des tuples'], a: 0, w: 'Un ensemble ne stocke que des éléments distincts, pas de valeur associée.' },
+      { q: 'Justifier un choix de structure dans un commentaire :', o: ['est inutile', 'est attendu par le programme', 'est interdit', 'ralentit le programme'], a: 1, w: 'Le programme demande d\'expliciter les choix de conception et de programmation.' },
+      { q: 'Un commentaire qui paraphrase le code est :', o: ['utile', 'à éviter', 'obligatoire', 'interdit par la PEP 8'], a: 1, w: 'Il faut expliquer le pourquoi, pas répéter ce que fait le code.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'specification', t: 'Spécification et assertions', h: `
+<p>Une fonction doit être <b>documentée</b> : on précise sa <b>signature</b> (nom, paramètres, type de retour), sa <b>précondition</b> (ce qui doit être vrai à l'entrée) et sa <b>postcondition</b> (ce qui doit être vrai à la sortie).</p>
+<h3>Signature</h3>
+<pre class="code">def moyenne(L: list) -> float:
+    """Calcule la moyenne de L.
+    Précondition : L est une liste non vide de nombres.
+    Postcondition : renvoie la somme des éléments de L divisée par len(L).
+    """</pre>
+<h3>Assertions</h3>
+<p>Une <b>assertion</b> vérifie la précondition. Si la condition est fausse, Python lève une <code>AssertionError</code> et le programme s'arrête.</p>
+<pre class="code">def moyenne(L: list) -> float:
+    assert len(L) > 0, "L ne doit pas être vide"
+    total = 0
+    for x in L:
+        total += x
+    return total / len(L)</pre>
+<p>Les assertions sont un outil de <b>débogage</b> et de <b>documentation exécutable</b> : elles ne remplacent pas les exceptions de gestion d'erreur (ValueError, TypeError).</p>
+<h3>Annotations par commentaires</h3>
+<p>On peut annoter un bloc d'instructions par une précondition, une postcondition, une propriété invariante, sous forme de commentaires :</p>
+<pre class="code"># Précondition : n >= 0
+def factorielle(n: int) -> int:
+    f = 1
+    i = 1
+    # Invariant : f = (i - 1)!
+    while i <= n:
+        f = f * i
+        i = i + 1
+    # Postcondition : f = n!
+    return f</pre>
+<div class="retain"><b>À retenir.</b> Signature, précondition, postcondition : la spécification d'une fonction. assert vérifie la précondition.</div>` });
+
+COURSE.push({ id: 'invariant', t: 'Invariant, variant, correction', h: `
+<h3>Invariant de boucle</h3>
+<p>Un <b>invariant</b> est une propriété vraie avant et après chaque tour de boucle. Il sert à prouver la <b>correction partielle</b> : si la boucle s'arrête, l'invariant et la condition d'arrêt donnent le résultat.</p>
+<pre class="code">def somme(n: int) -> int:
+    s = 0
+    i = 0
+    # Invariant : s = 0 + 1 + ... + i
+    while i < n:
+        i = i + 1
+        s = s + i
+    return s</pre>
+<h3>Variant de boucle</h3>
+<p>Un <b>variant</b> est une quantité entière positive qui décroît strictement à chaque tour. Comme elle ne peut pas décroître indéfiniment, la boucle s'arrête : c'est la <b>terminaison</b>.</p>
+<pre class="code"># Variant : n - i
+while i < n:
+    i = i + 1</pre>
+<h3>Correction totale</h3>
+<ul><li><b>Correction partielle</b> : si la boucle s'arrête, le résultat est correct (preuve par invariant).</li><li><b>Terminaison</b> : la boucle s'arrête toujours (preuve par variant).</li><li><b>Correction totale</b> = correction partielle + terminaison.</li></ul>
+<div class="retain"><b>À retenir.</b> Invariant = correction partielle ; variant = terminaison ; les deux = correction totale.</div>` });
+
+COURSE.push({ id: 'tests', t: 'Jeu de tests', h: `
+<h3>Écrire un jeu de tests</h3>
+<p>Un <b>jeu de tests</b> associe à chaque entrée la sortie attendue. Le programme officiel demande de savoir écrire ces tests à la main (la génération automatique n'est pas au programme).</p>
+<h3>Partitions du domaine</h3>
+<p>On découpe les entrées en classes équivalentes (cas normal, cas limite, cas d'erreur) et on choisit une entrée dans chaque classe.</p>
+<pre class="code">def signe(x: int) -> int:
+    if x < 0:
+        return -1
+    elif x > 0:
+        return 1
+    else:
+        return 0
+
+# Partitions : x < 0, x = 0, x > 0
+# Tests :
+assert signe(-3) == -1
+assert signe(0) == 0
+assert signe(5) == 1</pre>
+<h3>Valeurs limites</h3>
+<p>Les erreurs se cachent souvent aux bornes : x = 0, x = 1, x = −1, x = 20, x = 21… On teste toujours les valeurs qui déclenchent un changement de comportement.</p>
+<h3>Table de tests</h3>
+<table class="ctable"><thead><tr><th>Entrée</th><th>Sortie attendue</th><th>Partition</th></tr></thead><tbody>
+<tr><td>−3</td><td>−1</td><td>x &lt; 0</td></tr>
+<tr><td>0</td><td>0</td><td>x = 0 (limite)</td></tr>
+<tr><td>5</td><td>1</td><td>x &gt; 0</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> Un bon jeu de tests couvre les partitions et les limites. On l'écrit à la main.</div>` });
+
+COURSE.push({ id: 'complexite', t: 'Complexité', h: `
+<h3>Complexité temporelle</h3>
+<p>La <b>complexité temporelle</b> compte le nombre d'opérations élémentaires en fonction de la taille n de l'entrée, dans le <b>pire cas</b>. On la donne en ordre de grandeur.</p>
+<table class="ctable"><thead><tr><th>Notation</th><th>Signification</th><th>Exemple</th></tr></thead><tbody>
+<tr><td>O(1)</td><td>constant</td><td>accès à un indice de tableau</td></tr>
+<tr><td>O(log n)</td><td>logarithmique</td><td>recherche dichotomique</td></tr>
+<tr><td>O(n)</td><td>linéaire</td><td>recherche séquentielle</td></tr>
+<tr><td>O(n log n)</td><td>quasi-linéaire</td><td>tri fusion, tri rapide (moyenne)</td></tr>
+<tr><td>O(n²)</td><td>quadratique</td><td>tri à bulles, tri par sélection</td></tr>
+</tbody></table>
+<h3>Pire cas</h3>
+<p>On étudie le nombre d'opérations dans le pire cas : c'est une garantie de temps d'exécution, indépendante des données.</p>
+<h3>Complexité en espace</h3>
+<p>On peut aussi s'intéresser à la mémoire utilisée : un tri en place a une complexité spatiale O(1) (ou O(log n) pour la pile de récursion), un tri fusion a besoin de O(n) mémoire supplémentaire.</p>
+<div class="retain"><b>À retenir.</b> Un algorithme en O(n log n) est plus rapide qu'un algorithme en O(n²) pour n grand. La notation O ignore les constantes.</div>` });
+
+COURSE.push({ id: 'conception', t: 'Choix de conception', h: `
+<h3>Justifier ses choix</h3>
+<p>Un programme n'est pas seulement correct : il doit être <b>justifié</b>. Le programme officiel demande d'expliquer les choix de conception (algorithme, structure de données) en commentaire.</p>
+<h3>Choisir une structure</h3>
+<table class="ctable"><thead><tr><th>Besoin</th><th>Structure adaptée</th></tr></thead><tbody>
+<tr><td>Accès par clé</td><td>dictionnaire</td></tr>
+<tr><td>Éléments uniques</td><td>ensemble</td></tr>
+<tr><td>Ordre d'insertion</td><td>liste</td></tr>
+<tr><td>File (FIFO)</td><td>collections.deque</td></tr>
+<tr><td>Pile (LIFO)</td><td>list</td></tr>
+</tbody></table>
+<h3>Commenter le code</h3>
+<p>Un commentaire utile explique <b>pourquoi</b> on fait un choix, pas ce que fait le code ligne à ligne. Par exemple :</p>
+<pre class="code"># On utilise un dictionnaire car on doit compter les occurrences
+# de chaque mot : l'accès par mot est en O(1), le parcours en O(n).
+occurrences = {}
+for mot in texte:
+    occurrences[mot] = occurrences.get(mot, 0) + 1</pre>
+<h3>Effet de bord</h3>
+<p>En Python, l'affectation est une <b>instruction</b> (et non une expression, contrairement au C). C'est un choix des concepteurs du langage : une affectation ne renvoie pas de valeur.</p>
+<pre class="code"># En C :
+# x = (y = 3) + 1  // y vaut 3, x vaut 4
+
+# En Python :
+# x = (y = 3) + 1  # SyntaxError
+y = 3
+x = y + 1</pre>
+<div class="retain"><b>À retenir.</b> Choisir une structure, la justifier en commentaire, expliquer les effets de bord : c'est la démarche attendue.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Signature</dt><dd>Nom, paramètres et type de retour d'une fonction.</dd>
+<dt>Précondition</dt><dd>Ce qui doit être vrai à l'entrée d'une fonction.</dd>
+<dt>Postcondition</dt><dd>Ce qui doit être vrai à la sortie, si la précondition est vérifiée.</dd>
+<dt>Assertion</dt><dd>Instruction assert qui vérifie une condition et lève une AssertionError si elle est fausse.</dd>
+<dt>Invariant de boucle</dt><dd>Propriété vraie avant et après chaque tour de boucle ; prouve la correction partielle.</dd>
+<dt>Variant de boucle</dt><dd>Entier positif qui décroît strictement à chaque tour ; prouve la terminaison.</dd>
+<dt>Correction partielle</dt><dd>Si la boucle s'arrête, le résultat est correct.</dd>
+<dt>Correction totale</dt><dd>Correction partielle + terminaison.</dd>
+<dt>Jeu de tests</dt><dd>Ensemble de tests associant entrées et sorties attendues.</dd>
+<dt>Partition du domaine</dt><dd>Découpage des entrées en classes équivalentes.</dd>
+<dt>Valeur limite</dt><dd>Valeur aux bornes d'un intervalle (0, 1, −1…), souvent source d'erreurs.</dd>
+<dt>Complexité temporelle</dt><dd>Nombre d'opérations en fonction de la taille de l'entrée, dans le pire cas.</dd>
+<dt>Complexité spatiale</dt><dd>Mémoire utilisée en fonction de la taille de l'entrée.</dd>
+<dt>Ordre de grandeur</dt><dd>Notation O(·) qui ignore les constantes et les termes négligeables.</dd>
+<dt>Effet de bord</dt><dd>Modification d'un état extérieur à une fonction (variable globale, argument mutable).</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'w1' };
+const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'specification' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : méthodes et analyse d\'algorithmes'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur les méthodes de programmation et l\'analyse d\'algorithmes (ITC, CPGE 1re année) : spécification et assertions, invariant et variant, jeu de tests, complexité, choix de conception.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut, puis manipulez les champs et les boutons.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
