@@ -66,7 +66,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | 1ère année | [Modules et bibliothèques](https://siicpgeamansur.github.io/ITC/modules_bibliotheques.html) | |
 
-| 1ère année | [Recherche séquentielle et boucles imbriquées](https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.hml) | |
+| 1ère année | [Matrices de pixels et images](https://siicpgeamansur.github.io/ITC/matrices_de_pixels_images.hml) | |
 
 
 ---
