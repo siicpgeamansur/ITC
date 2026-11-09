@@ -184,6 +184,30 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+/* --- FONCTIONS MANQUANTES AJOUTÉES --- */
+function chipsRow(items, cur, onPick, ariaLabel) {
+  const wrap = h('div', { class: 'chips', role: 'radiogroup' });
+  if (ariaLabel) wrap.setAttribute('aria-label', ariaLabel);
+  items.forEach(([val, label]) => {
+    const b = h('button', {
+      type: 'button',
+      class: 'chip' + (val === cur ? ' on' : ''),
+      role: 'radio',
+      'aria-checked': val === cur ? 'true' : 'false',
+      onclick: () => onPick(val)
+    }, label);
+    wrap.append(b);
+  });
+  return wrap;
+}
+function stats(items) {
+  const frag = document.createDocumentFragment();
+  items.forEach(([label, value]) => {
+    frag.append(h('div', { class: 'stat' }, h('span', null, label), h('b', null, value)));
+  });
+  return frag;
+}
+
 /* Code Python coloré (léger) */
 function codeBlock(code, on) {
   const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield|None)$/;
@@ -204,7 +228,7 @@ function codeBlock(code, on) {
 }
 
 /* ================= Atelier 1 : Recherche dichotomique ================= */
-const W1 = { arr: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91], target: 23, step: 0, frames: null, timer: null, mode: 'dicho' };
+const W1 = { arr: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91], target: 23, step: 0, frames: null, timer: null, mode: 'dicho', size: '10' };
 function mountW1(root) {
   root.innerHTML = '<h2>Recherche dichotomique</h2><p>Dans un tableau <b>trié</b>, on peut chercher un élément en divisant la zone de recherche par deux à chaque étape. C\'est la recherche <b>dichotomique</b>, de complexité O(log n), bien plus rapide que la recherche linéaire O(n).</p>' +
     '<div class="opts"><label class="fld"><span>Élément recherché</span><input type="number" id="w1-target" value="23" style="width:80px"></label><div class="fld"><span>Méthode</span><div id="w1-mode"></div></div><div class="fld"><span>Tableau</span><div id="w1-size"></div></div></div>' +
@@ -214,15 +238,6 @@ function mountW1(root) {
     '<div class="verdict" id="w1-msg" aria-live="polite"></div>' +
     '<h3>Code Python</h3><div id="w1-code"></div>';
   const S = W1;
-  $('#w1-mode').append(chipsRow([['dicho', 'Dichotomique O(log n)'], ['lin', 'Linéaire O(n)']], S.mode, v => { S.mode = v; S.frames = null; S.step = 0; stop(); render(); }, 'Méthode'));
-  $('#w1-size').append(chipsRow([['10', '10 élts'], ['20', '20 élts'], ['50', '50 élts']], '10', v => {
-    const n = parseInt(v, 10);
-    S.arr = Array.from({ length: n }, (_, i) => Math.floor(i * 10 + Math.random() * 5 + 1)).sort((a, b) => a - b);
-    S.arr = Array.from(new Set(S.arr));
-    S.target = S.arr[Math.floor(Math.random() * S.arr.length)];
-    $('#w1-target').value = S.target;
-    S.frames = null; S.step = 0; stop(); render();
-  }, 'Taille'));
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w1-play'); if (b) b.textContent = 'Lecture'; }
   function buildFrames() {
     const arr = S.arr, target = S.target, frames = [];
@@ -247,6 +262,22 @@ function mountW1(root) {
     return frames;
   }
   function render() {
+    // Reconstruit les puces (correctif : l'état visuel suit l'état logique)
+    const modeBox = $('#w1-mode');
+    modeBox.innerHTML = '';
+    modeBox.append(chipsRow([['dicho', 'Dichotomique O(log n)'], ['lin', 'Linéaire O(n)']], S.mode, v => { S.mode = v; S.frames = null; S.step = 0; stop(); render(); }, 'Méthode'));
+    const sizeBox = $('#w1-size');
+    sizeBox.innerHTML = '';
+    sizeBox.append(chipsRow([['10', '10 élts'], ['20', '20 élts'], ['50', '50 élts']], S.size, v => {
+      S.size = v;
+      const n = parseInt(v, 10);
+      S.arr = Array.from({ length: n }, (_, i) => Math.floor(i * 10 + Math.random() * 5 + 1)).sort((a, b) => a - b);
+      S.arr = Array.from(new Set(S.arr));
+      S.target = S.arr[Math.floor(Math.random() * S.arr.length)];
+      $('#w1-target').value = S.target;
+      S.frames = null; S.step = 0; stop(); render();
+    }, 'Taille'));
+
     if (!S.frames) S.frames = buildFrames();
     if (S.step >= S.frames.length) S.step = S.frames.length - 1;
     const f = S.frames[S.step];
@@ -298,7 +329,7 @@ function mountW1(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w1', title: 'Recherche dichotomique', hint: 'Comparer la recherche dichotomique O(log n) et la recherche linéaire O(n) sur un tableau trié.',
-  mount: mountW1, reset: () => { Object.assign(W1, { arr: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91], target: 23, step: 0, frames: null }); if (W1.timer) { clearInterval(W1.timer); W1.timer = null; } } });
+  mount: mountW1, reset: () => { Object.assign(W1, { arr: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91], target: 23, step: 0, frames: null, size: '10' }); if (W1.timer) { clearInterval(W1.timer); W1.timer = null; } } });
 
 /* ================= Atelier 2 : Exponentiation rapide ================= */
 const W2 = { base: 3, exp: 13, step: 0, frames: null, timer: null };
@@ -339,7 +370,7 @@ function mountW2(root) {
     $('#w2-msg').className = 'verdict ' + (S.step === S.frames.length - 1 ? 'yes' : '');
     $('#w2-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.length - 1) + '.</b> ' + f.msg;
     const n = S.exp;
-    const logn = Math.ceil(Math.log2(n + 1)) * 2; // environ 2 multiplications par bit
+    const logn = Math.ceil(Math.log2(n + 1)) * 2;
     $('#w2-comp').innerHTML = '<div class="dwrap"><table class="dt"><thead><tr><th>Méthode</th><th>Multiplications</th><th>Complexité</th></tr></thead><tbody>' +
       '<tr><td>Naïve (a × a × … × a)</td><td class="m">' + (n - 1) + '</td><td>O(n)</td></tr>' +
       '<tr><td>Exponentiation rapide</td><td class="m">≤ ' + logn + '</td><td>O(log n)</td></tr>' +
