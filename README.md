@@ -23,7 +23,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | Année | Outil | Description |
 | :---: | --- | --- |
-| 2ème année | [Tables de hachage](https://siicpgeamansur.github.io/ITC/Tables_de_hachage.html) | Page illustrant le fonctionnement des tables de hachage. |
+| 2ème année | [Tables de hachage](https://siicpgeamansur.github.io/ITC/tables_de_hachage.html) | Page illustrant le fonctionnement des tables de hachage. |
 
 ## Algorithmique
 
