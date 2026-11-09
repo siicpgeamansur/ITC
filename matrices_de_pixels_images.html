@@ -134,6 +134,14 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .kernel-display-table td { padding: 4px 8px; font-family: var(--font-mono); font-size: 12.5px; text-align: center; border: 1px solid var(--line); min-width: 30px; }
 .kernel-display-table td.neg { color: var(--bad); font-weight: 600; }
 .kernel-display-table td.pos { color: var(--ok); font-weight: 600; }
+/* cartes de préréglages (atelier convolution) */
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:8px 0 16px}
+.preset-card{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel);cursor:pointer;text-align:center;transition:border-color .12s,background .12s}
+.preset-card:hover{border-color:var(--accent)}
+.preset-card.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
+.preset-card .p-name{font-weight:600;font-size:13px;margin-bottom:6px;color:var(--fg)}
+.preset-card .kernel-display-table{margin:0 auto;font-size:11px}
+.preset-card .kernel-display-table td{padding:3px 6px;font-size:11px;min-width:24px}
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
 .zoom{display:flex;gap:4px;align-items:center;font-size:12.5px;color:var(--muted)}
 .code-tabs{display:flex;gap:0;margin-bottom:-1px;position:relative;z-index:1}
@@ -210,6 +218,15 @@ function codeBlock(code, on) {
     return out;
   });
   return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/* Rendu des statistiques (cartes label/valeur) */
+function stats(pairs) {
+  const frag = document.createDocumentFragment();
+  for (const [k, v] of pairs) {
+    frag.append(h('div', { class: 'stat' }, h('span', null, k), h('b', null, String(v))));
+  }
+  return frag;
 }
 
 /* ---------- Gestion des images ---------- */
@@ -432,7 +449,9 @@ WORKSHOPS.push({ id: 'w2', title: 'Réduction et agrandissement', hint: 'Réduir
 const W3 = { origMat: makeGameboyMushroom(), resMat: null, codeTab: 'list', mode: 'flou', kernel: [[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]] };
 function mountW3(root) {
   root.innerHTML = '<h2>Convolution</h2><p>La <b>convolution</b> consiste à calculer, pour chaque pixel, une combinaison linéaire de ses voisins pondérés par un <b>noyau</b> (une petite matrice). C\'est la base du flou, du contour, du renforcement, etc.</p>' +
-    '<div class="controls"><div class="zoom"><span>Préréglage</span><div id="w3-preset" style="display:flex;gap:4px"></div></div><button class="btn" id="w3-apply" type="button">Appliquer</button><button class="btn" id="w3-reset" type="button">Réinitialiser l\'image</button></div>' +
+    '<div class="controls"><button class="btn" id="w3-apply" type="button">Appliquer</button><button class="btn" id="w3-reset" type="button">Réinitialiser l\'image</button></div>' +
+    '<h3>Préréglages — cliquez pour choisir un noyau</h3>' +
+    '<div class="preset-grid" id="w3-presets-display"></div>' +
     '<div class="img-wrap"><div class="img-panel"><div class="img-title">Image d\'origine</div><canvas id="w3-canvas-orig"></canvas></div><div class="img-panel"><div class="img-title">Image convoluée</div><canvas id="w3-canvas-res"></canvas></div></div>' +
     '<h3>Noyau de convolution (3 × 3)</h3>' +
     '<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;margin-bottom:12px">' +
@@ -462,20 +481,46 @@ function mountW3(root) {
   });
 
   const PRESETS = {
-    flou: { label: 'Flou', k: [[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]] },
-    contour: { label: 'Contour', k: [[-1,-1,-1],[-1,8,-1],[-1,-1,-1]] },
+    flou:     { label: 'Flou',     k: [[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]] },
+    contour:  { label: 'Contour',  k: [[-1,-1,-1],[-1,8,-1],[-1,-1,-1]] },
     renforce: { label: 'Renforce', k: [[0,-1,0],[-1,5,-1],[0,-1,0]] },
     identite: { label: 'Identité', k: [[0,0,0],[0,1,0],[0,0,0]] }
   };
-  const modeEl = $('#w3-preset');
-  modeEl.innerHTML = Object.keys(PRESETS).map(k => '<button type="button" class="chip' + (S.mode === k ? ' on' : '') + '" data-k="' + k + '">' + PRESETS[k].label + '</button>').join('');
-  modeEl.querySelectorAll('button').forEach(b => b.onclick = () => {
-    S.mode = b.dataset.k;
-    S.kernel = PRESETS[S.mode].k.map(r => r.slice());
-    modeEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.k === S.mode));
+
+  function selectPreset(k) {
+    S.mode = k;
+    S.kernel = PRESETS[k].k.map(r => r.slice());
     render();
-  });
-  
+  }
+
+  function renderPresetsDisplay() {
+    const box = $('#w3-presets-display');
+    if (!box) return;
+    box.innerHTML = '';
+    Object.keys(PRESETS).forEach(k => {
+      const p = PRESETS[k];
+      const card = h('div', {
+        class: 'preset-card' + (S.mode === k ? ' active' : ''),
+        role: 'button',
+        tabindex: '0',
+        'aria-pressed': S.mode === k ? 'true' : 'false',
+        onclick: () => selectPreset(k),
+        onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectPreset(k); } }
+      },
+        h('div', { class: 'p-name' }, p.label),
+        h('table', { class: 'kernel-display-table' },
+          h('tbody', null, ...p.k.map(row =>
+            h('tr', null, ...row.map(v => {
+              const cls = v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+              return h('td', { class: cls }, Number(v.toFixed(2)));
+            }))
+          ))
+        )
+      );
+      box.append(card);
+    });
+  }
+
   function renderKernel() {
     const kg = $('#w3-kernel');
     kg.innerHTML = '';
@@ -498,8 +543,7 @@ function mountW3(root) {
       html += '<tr>';
       row.forEach(v => {
         const cls = v > 0 ? 'pos' : v < 0 ? 'neg' : '';
-        const disp = Number(v.toFixed(2));
-        html += `<td class="${cls}">${disp}</td>`;
+        html += `<td class="${cls}">${Number(v.toFixed(2))}</td>`;
       });
       html += '</tr>';
     });
@@ -521,6 +565,7 @@ function mountW3(root) {
     $('#w3-stats').append(stats([['Taille', n + ' × ' + n], ['Somme du noyau', sum.toFixed(2)], ['Noyau', S.mode], ['Remarque', desc]]));
     renderCode();
     renderKernel();
+    renderPresetsDisplay();
   }
   $('#w3-apply').onclick = () => {
     const res = convolve(S.resMat, S.kernel);
