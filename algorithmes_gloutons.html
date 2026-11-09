@@ -107,6 +107,7 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
 .opts input[type=range]{width:200px;max-width:100%}
 .opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
 .chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
@@ -121,6 +122,10 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .dt thead th{background:var(--panel2);font-weight:600}
 .dt td.m{font-family:var(--font-mono);font-size:12.5px}
 .dt tr:last-child td{border-bottom:0}
+/* Carte « principe » */
+.principe{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;margin:0 0 14px}
+.principe b{color:var(--accent-ink)}
+.principe p{margin:6px 0;font-size:13.5px;line-height:1.55}
 /* Visuels spécifiques */
 .timeline{display:flex;flex-direction:column;gap:4px;margin:8px 0}
 .tl-row{display:flex;align-items:center;gap:8px;font-size:13px}
@@ -210,6 +215,15 @@ function codeBlock(code, on) {
   return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
 }
 
+/* --- Carte « principe » affichée en tête de chaque atelier --- */
+function renderPrincipe() {
+  return h('div', { class: 'principe' },
+    h('b', null, 'Principe du glouton'),
+    h('p', { html: 'Un algorithme <b>glouton</b> fait à chaque étape le choix qui paraît <b>localement le meilleur</b>, sans jamais revenir en arrière. Il est <b>rapide</b> (souvent O(n log n)) mais <b>pas toujours optimal</b> : il faut soit le <b>démontrer</b> (argument d\'échange), soit exhiber un <b>contre-exemple</b>.' }),
+    h('p', { html: '<b>Trois conditions :</b> un critère glouton bien choisi · une sous-structure optimale (le reste du problème est du même type) · un argument d\'échange (un choix glouton peut remplacer un choix optimal).' })
+  );
+}
+
 /* ================= Atelier 1 : Rendu de monnaie ================= */
 const W1 = { coins: [1, 2, 5, 10], amount: 11 };
 function mountW1(root) {
@@ -221,12 +235,10 @@ function mountW1(root) {
     const coins = $('#w1-coins').value.split(',').map(s => parseInt(s.trim(), 10)).filter(x => isFinite(x) && x > 0);
     const amount = parseInt($('#w1-amount').value, 10);
     if (!coins.length || !isFinite(amount) || amount < 0) { $('#w1-out').innerHTML = '<p class="verdict no">Entrée invalide.</p>'; return; }
-    // Glouton
     const sorted = coins.slice().sort((a, b) => b - a);
     let r = amount, used = [];
     for (const c of sorted) { while (r >= c) { used.push(c); r -= c; } }
     const gOk = r === 0;
-    // DP pour l'optimal
     const dp = new Array(amount + 1).fill(Infinity); dp[0] = 0;
     const choice = new Array(amount + 1).fill(-1);
     for (let s = 1; s <= amount; s++) {
@@ -274,23 +286,23 @@ const W2 = { acts: [
 ]};
 function mountW2(root) {
   root.innerHTML = '<h2>Sélection d\'activités</h2><p>On a un ensemble d\'activités, chacune avec un début et une fin. On veut en choisir un <b>nombre maximal</b> qui ne se chevauchent pas. L\'algorithme glouton qui trie par <b>date de fin croissante</b> est optimal.</p>' +
-    '<div class="controls"><button class="btn" id="w2-glouton" type="button">Résoudre (glouton)</button><button class="btn" id="w2-reset" type="button">Réinitialiser</button></div>' +
+    '<div class="controls"><button class="btn pri" id="w2-glouton" type="button">Résoudre (glouton)</button><button class="btn" id="w2-reset" type="button">Réinitialiser</button></div>' +
     '<div id="w2-out"></div>' +
     '<h3>Code Python</h3><pre class="code">def selection(activites):\n    # tri par date de fin croissante\n    activites = sorted(activites, key=lambda a: a[1])\n    choisies = []\n    fin_courante = -1\n    for debut, fin in activites:\n        if debut >= fin_courante:\n            choisies.append((debut, fin))\n            fin_courante = fin\n    return choisies</pre>';
   function render(selected) {
     const acts = W2.acts;
     const maxT = Math.max(...acts.map(a => a.end));
-    // timeline
-    let html = '<h3>Activités</h3><div class="timeline">';
+    let html = '<h3>Activités</h3>';
+    html += '<p class="small"><b>Légende :</b> <span style="display:inline-block;width:12px;height:12px;background:var(--accent);border-radius:2px;vertical-align:middle;margin-right:4px"></span>activité disponible · <span style="display:inline-block;width:12px;height:12px;background:var(--ok);border-radius:2px;vertical-align:middle;margin-right:4px"></span>activité choisie par le glouton</p>';
+    html += '<div class="timeline">';
     acts.forEach(a => {
       const left = (a.start / maxT * 100).toFixed(1) + '%';
       const width = ((a.end - a.start) / maxT * 100).toFixed(1) + '%';
       const sel = selected && selected.includes(a.id);
-      const bg = sel ? 'var(--ok)' : (a.end - a.start > 5 ? 'var(--bad)' : 'var(--accent)');
+      const bg = sel ? 'var(--ok)' : 'var(--accent)';
       html += '<div class="tl-row"><div class="tl-label">' + a.id + ' [' + a.start + '–' + a.end + ']</div><div class="tl-track"><div class="tl-block" style="left:' + left + ';width:' + width + ';background:' + bg + '">' + (sel ? '✓' : '') + '</div></div></div>';
     });
     html += '</div>';
-    html += '<p class="small">En vert : activités sélectionnées. La longueur de chaque bloc est proportionnelle à sa durée.</p>';
     if (selected) {
       html += '<h3>Résultat</h3><p class="verdict yes">Le glouton choisit <b>' + selected.length + ' activités</b> : ' + selected.join(', ') + '.</p>';
       html += '<p class="small">Cet ensemble est de taille maximale : aucun autre ensemble d\'activités compatibles n\'en contient davantage.</p>';
@@ -298,6 +310,7 @@ function mountW2(root) {
       html += '<p class="verdict">Cliquez sur « Résoudre » pour exécuter l\'algorithme glouton.</p>';
     }
     html += '<h3>Pourquoi trier par date de fin ?</h3><p class="small">Trier par date de début ou par durée ne garantit pas l\'optimum. Trier par date de fin laisse toujours le plus de place possible pour les activités suivantes : c\'est l\'argument d\'échange qui prouve l\'optimalité.</p>';
+    html += '<h3>Sélection d\'activités vs allocation de salles</h3><p class="small">Ici, on veut <b>un ensemble maximal d\'activités toutes compatibles entre elles</b> (une seule ressource). On trie par <b>date de fin croissante</b>. Dans l\'atelier suivant (<b>Allocation de salles</b>), on veut <b>répartir tous les cours sur un nombre minimal de salles</b> (plusieurs ressources en parallèle) : on trie par <b>heure de début</b>. Même structure de données (des intervalles), objectifs et algorithmes différents.</p>';
     $('#w2-out').innerHTML = html;
   }
   $('#w2-glouton').onclick = () => {
@@ -327,7 +340,7 @@ function mountW3(root) {
   root.innerHTML = '<h2>Allocation de salles</h2><p>On a des cours avec des horaires fixes. On veut utiliser le <b>minimum de salles</b> pour tous les accueillir. C\'est un problème de coloration d\'intervalles. L\'algorithme glouton qui trie par <b>heure de début</b> (et alloue la première salle libre) est optimal.</p>' +
     '<div class="controls"><button class="btn pri" id="w3-run" type="button">Allouer les salles</button><button class="btn" id="w3-reset" type="button">Réinitialiser</button></div>' +
     '<div id="w3-out"></div>' +
-    '<h3>Code Python</h3><pre class="code">def allouer_salles(cours):\n    # tri par heure de début\n    cours = sorted(cours, key=lambda c: c[0])\n    salles = []  # liste des heures de fin de chaque salle\n    affectation = {}\n    for debut, fin in cours:\n        # chercher une salle libre\n        placee = False\n        for i in range(len(salles)):\n            if salles[i] <= debut:\n                salles[i] = fin\n                affectation[(debut, fin)] = i\n                placee = True\n                break\n        if not placee:\n            salles.append(fin)\n            affectation[(debut, fin)] = len(salles) - 1\n    return len(salles), affectation</pre>';
+    '<h3>Code Python</h3><pre class="code">def allouer_salles(cours):\n    # tri par heure de début\n    cours = sorted(cours, key=lambda c: c[0])\n    salles = []  # liste des heures de fin de chaque salle\n    affectation = {}\n    for debut, fin in cours:\n        placee = False\n        for i in range(len(salles)):\n            if salles[i] <= debut:\n                salles[i] = fin\n                affectation[(debut, fin)] = i\n                placee = True\n                break\n        if not placee:\n            salles.append(fin)\n            affectation[(debut, fin)] = len(salles) - 1\n    return len(salles), affectation</pre>';
   function render(result) {
     const courses = W3.courses;
     const minT = Math.min(...courses.map(c => c.start));
@@ -348,6 +361,7 @@ function mountW3(root) {
       const byRoom = {};
       courses.forEach(c => { const r = result.aff[c.id]; if (!byRoom[r]) byRoom[r] = []; byRoom[r].push(c); });
       const rooms = Object.keys(byRoom).sort((a, b) => a - b);
+      html += '<p class="small"><b>Légende :</b> chaque ligne est une salle ; les blocs colorés sont les cours qui y sont affectés. Une même salle accueille plusieurs cours successifs (non chevauchants).</p>';
       html += '<div class="timeline">';
       rooms.forEach(r => {
         html += '<div class="tl-row"><div class="tl-label" style="font-weight:600">Salle ' + (parseInt(r) + 1) + '</div><div class="tl-track">';
@@ -365,6 +379,7 @@ function mountW3(root) {
       courses.forEach(c => { html += '<tr><td>' + c.id + '</td><td class="m">' + c.start + ' h</td><td class="m">' + c.end + ' h</td><td>Salle ' + (result.aff[c.id] + 1) + '</td></tr>'; });
       html += '</tbody></table></div>';
     }
+    html += '<h3>Allocation de salles vs sélection d\'activités</h3><p class="small">Ici, on veut <b>répartir tous les cours sur un nombre minimal de salles</b> (plusieurs ressources en parallèle). On trie par <b>heure de début croissante</b>. Dans l\'atelier précédent (<b>Sélection d\'activités</b>), on voulait <b>un ensemble maximal d\'activités toutes compatibles entre elles</b> (une seule ressource) : on triait par <b>date de fin</b>. Les données sont les mêmes (des intervalles), mais les objectifs et les algorithmes diffèrent.</p>';
     $('#w3-out').innerHTML = html;
   }
   $('#w3-run').onclick = () => {
@@ -437,7 +452,6 @@ function mountW4(root) {
       for (const o of sorted) {
         if (cap >= o.w) { val += o.v; taken.push(o.name); cap -= o.w; }
       }
-      // DP pour l'optimal
       const n = ITEMS.length;
       const dp = Array.from({ length: n + 1 }, () => new Array(CAP + 1).fill(0));
       for (let i = 1; i <= n; i++) {
@@ -542,6 +556,39 @@ const ACT = {
 
 /* ---------- cours ---------- */
 const COURSE = [];
+COURSE.push({ id: 'principe', t: 'Principe du glouton', h: `
+<h3>Définition</h3>
+<p>Un <b>algorithme glouton</b> construit une solution <b>pas à pas</b> : à chaque étape, il fait le choix qui paraît <b>localement le meilleur</b>, sans jamais revenir en arrière. C'est un algorithme <b>rapide</b> (souvent O(n log n) après un tri, ou O(n)), mais qui n'est <b>pas toujours optimal</b>.</p>
+<h3>Trois conditions à vérifier</h3>
+<ol>
+<li><b>Critère glouton</b> : on doit pouvoir décider localement quel est le meilleur choix. Par exemple : « prendre la plus grande pièce », « prendre l'activité qui finit le plus tôt », « prendre l'objet de plus grand ratio valeur/poids ».</li>
+<li><b>Sous-structure optimale</b> : une solution optimale du problème contient une solution optimale du sous-problème restant. C'est ce qui rend la démonstration possible.</li>
+<li><b>Argument d'échange</b> : on peut toujours remplacer un choix d'une solution optimale par le choix glouton, sans dégrader la solution. C'est la preuve d'optimalité.</li>
+</ol>
+<h3>Quand le glouton échoue</h3>
+<p>Si l'on ne peut pas prouver l'optimalité, il faut chercher un <b>contre-exemple</b>. Exemple : rendu de monnaie avec les pièces {1, 3, 4} et la somme 6.</p>
+<ul>
+<li>Glouton : 4 + 1 + 1 = 6 (3 pièces).</li>
+<li>Optimal : 3 + 3 = 6 (2 pièces).</li>
+</ul>
+<p>Le glouton ne peut pas revenir sur son choix initial.</p>
+<h3>Glouton vs autres approches</h3>
+<table class="ctable"><thead><tr><th>Approche</th><th>Principe</th><th>Complexité</th><th>Optimalité</th></tr></thead><tbody>
+<tr><td>Glouton</td><td>Choix local optimal</td><td>Rapide (O(n log n))</td><td>Pas toujours</td></tr>
+<tr><td>Diviser pour régner</td><td>Décomposer en sous-problèmes</td><td>Souvent O(n log n)</td><td>Souvent (avec preuve)</td></tr>
+<tr><td>Programmation dynamique</td><td>Résoudre tous les sous-problèmes</td><td>Plus lent (O(n²), O(nW)…)</td><td>Toujours (par construction)</td></tr>
+<tr><td>Recherche exhaustive</td><td>Essayer toutes les solutions</td><td>Très lent (exponentiel)</td><td>Toujours</td></tr>
+</tbody></table>
+<h3>Comment choisir le critère glouton ?</h3>
+<p>Il n'y a pas de recette universelle : il faut <b>comprendre la structure du problème</b> pour trouver le critère qui rend le choix local compatible avec un optimum global. Les quatre ateliers de cette page illustrent quatre critères différents :</p>
+<ul>
+<li><b>Rendu de monnaie</b> : plus grande pièce possible.</li>
+<li><b>Sélection d'activités</b> : activité qui finit le plus tôt.</li>
+<li><b>Allocation de salles</b> : heure de début croissante.</li>
+<li><b>Sac à dos</b> : plus grand ratio valeur/poids.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Le glouton est rapide mais son optimalité doit être <b>démontrée</b> (argument d'échange) ou <b>réfutée</b> (contre-exemple).</div>` });
+
 COURSE.push({ id: 'rendu', t: 'Rendu de monnaie', h: `
 <h3>Principe</h3>
 <p>Pour rendre une somme S avec le minimum de pièces, le glouton choisit toujours la <b>plus grande pièce possible</b>.</p>
@@ -562,8 +609,8 @@ COURSE.push({ id: 'rendu', t: 'Rendu de monnaie', h: `
 </ul>
 <p>Le glouton ne peut pas revenir sur son choix initial.</p>
 <h3>Coût</h3>
-<p>O(S) dans le pire cas, ou O(k × S) si on utilise une boucle sur les pièces. Une solution optimale existe par programmation dynamique en O(k × S), mais elle n\'est pas gloutonne.</p>
-<div class="retain"><b>À retenir.</b> Le glouton est rapide mais pas toujours optimal. Il faut prouver l\'optimalité (ou exhiber un contre-exemple).</div>` });
+<p>O(S) dans le pire cas, ou O(k × S) si on utilise une boucle sur les pièces. Une solution optimale existe par programmation dynamique en O(k × S), mais elle n'est pas gloutonne.</p>
+<div class="retain"><b>À retenir.</b> Le glouton est rapide mais pas toujours optimal. Il faut prouver l'optimalité (ou exhiber un contre-exemple).</div>` });
 
 COURSE.push({ id: 'selection', t: 'Sélection d\'activités', h: `
 <h3>Principe</h3>
@@ -579,9 +626,16 @@ COURSE.push({ id: 'selection', t: 'Sélection d\'activités', h: `
             fin_courante = fin
     return choisies</pre>
 <h3>Optimalité</h3>
-<p>Argument d\'échange : soit G l\'ensemble choisi par le glouton. L\'activité qui finit le plus tôt peut toujours remplacer la première activité d\'une solution optimale (elle ne bloque rien de plus). Par récurrence, on construit une solution optimale identique à G.</p>
+<p>Argument d'échange : soit G l'ensemble choisi par le glouton. L'activité qui finit le plus tôt peut toujours remplacer la première activité d'une solution optimale (elle ne bloque rien de plus). Par récurrence, on construit une solution optimale identique à G.</p>
 <h3>Coût</h3>
 <p>Tri : O(n log n). Parcours : O(n). Total : O(n log n).</p>
+<h3>Sélection d'activités vs allocation de salles</h3>
+<p>Ne pas confondre avec le problème de l'<b>allocation de salles</b> :</p>
+<table class="ctable"><thead><tr><th>Problème</th><th>Objectif</th><th>Tri</th><th>Ressources</th></tr></thead><tbody>
+<tr><td>Sélection d'activités</td><td>Maximiser le <b>nombre</b> d'activités choisies</td><td>Date de <b>fin</b></td><td><b>Une seule</b> ressource</td></tr>
+<tr><td>Allocation de salles</td><td>Minimiser le <b>nombre</b> de salles utilisées</td><td>Heure de <b>début</b></td><td><b>Plusieurs</b> ressources en parallèle</td></tr>
+</tbody></table>
+<p>Dans les deux cas, les données sont des intervalles, mais l'objectif et l'algorithme diffèrent.</p>
 <div class="retain"><b>À retenir.</b> Trier par date de fin. Le glouton est prouvé optimal par échange.</div>` });
 
 COURSE.push({ id: 'salles', t: 'Allocation de salles', h: `
@@ -605,9 +659,15 @@ COURSE.push({ id: 'salles', t: 'Allocation de salles', h: `
             affectation[(debut, fin)] = len(salles) - 1
     return len(salles), affectation</pre>
 <h3>Optimalité</h3>
-<p>À l\'instant t où le plus de cours sont simultanés, il faut au moins k salles. Le glouton atteint exactement k. C\'est une borne inférieure qu\'il réalise : il est optimal.</p>
+<p>À l'instant t où le plus de cours sont simultanés, il faut au moins k salles. Le glouton atteint exactement k. C'est une borne inférieure qu'il réalise : il est optimal.</p>
 <h3>Coût</h3>
 <p>Tri : O(n log n). Allocation : O(n × salles) dans le pire cas, avec salles ≤ n. On peut améliorer avec un tas (O(n log n)).</p>
+<h3>Allocation de salles vs sélection d'activités</h3>
+<table class="ctable"><thead><tr><th>Problème</th><th>Objectif</th><th>Tri</th><th>Ressources</th></tr></thead><tbody>
+<tr><td>Sélection d'activités</td><td>Maximiser le <b>nombre</b> d'activités choisies</td><td>Date de <b>fin</b></td><td><b>Une seule</b> ressource</td></tr>
+<tr><td>Allocation de salles</td><td>Minimiser le <b>nombre</b> de salles utilisées</td><td>Heure de <b>début</b></td><td><b>Plusieurs</b> ressources en parallèle</td></tr>
+</tbody></table>
+<p>Dans les deux cas, les données sont des intervalles, mais l'objectif et l'algorithme diffèrent.</p>
 <div class="retain"><b>À retenir.</b> Trier par heure de début. Le nombre de salles est le nombre maximal de cours simultanés.</div>` });
 
 COURSE.push({ id: 'sacados', t: 'Sac à dos', h: `
@@ -628,7 +688,7 @@ COURSE.push({ id: 'sacados', t: 'Sac à dos', h: `
     return valeur</pre>
 <p>Le glouton est <b>optimal</b> : on peut toujours remplir exactement le sac, et le choix local ne bloque pas de meilleur choix global.</p>
 <h3>Sac 0/1</h3>
-<p>Les objets sont indivisibles. Le glouton (valeur/poids) n\'est <b>pas optimal</b> :</p>
+<p>Les objets sont indivisibles. Le glouton (valeur/poids) n'est <b>pas optimal</b> :</p>
 <ul>
 <li>A : poids 10, valeur 60 (ratio 6)</li>
 <li>B : poids 20, valeur 100 (ratio 5)</li>
@@ -642,18 +702,18 @@ COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
 <dl class="gloss">
 <dt>Algorithme glouton</dt><dd>Algorithme qui fait le meilleur choix local à chaque étape, sans revenir en arrière.</dd>
 <dt>Choix local</dt><dd>Décision prise à une étape, sans vision globale du problème.</dd>
-<dt>Optimalité</dt><dd>Propriété d\'un algorithme qui trouve toujours la meilleure solution.</dd>
-<dt>Argument d\'échange</dt><dd>Preuve d\'optimalité : on montre qu\'un choix glouton peut toujours remplacer un choix d\'une solution optimale.</dd>
-<dt>Contre-exemple</dt><dd>Cas où le glouton ne trouve pas l\'optimum.</dd>
-<dt>Sac à dos fractionnaire</dt><dd>Sac à dos où l\'on peut prendre une fraction d\'objet.</dd>
+<dt>Optimalité</dt><dd>Propriété d'un algorithme qui trouve toujours la meilleure solution.</dd>
+<dt>Argument d'échange</dt><dd>Preuve d'optimalité : on montre qu'un choix glouton peut toujours remplacer un choix d'une solution optimale.</dd>
+<dt>Contre-exemple</dt><dd>Cas où le glouton ne trouve pas l'optimum.</dd>
+<dt>Sac à dos fractionnaire</dt><dd>Sac à dos où l'on peut prendre une fraction d'objet.</dd>
 <dt>Sac à dos 0/1</dt><dd>Sac à dos où chaque objet est pris en entier ou pas du tout.</dd>
-<dt>Graphe d\'intervalles</dt><dd>Graphe où les sommets sont des intervalles, deux sommets étant reliés s\'ils se chevauchent.</dd>
+<dt>Graphe d'intervalles</dt><dd>Graphe où les sommets sont des intervalles, deux sommets étant reliés s'ils se chevauchent.</dd>
 </dl>` });
 
 /* ---------- interface ---------- */
 const UI = { cur: 'w1' };
 const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
-const CS = { open: false, id: 'rendu' };
+const CS = { open: false, id: 'principe' };
 function actSave() { lsSet(KEYS.act, AS.st); }
 function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
 function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
@@ -666,6 +726,8 @@ function mountWs() {
   const w = wsById(UI.cur), root = $('#ws');
   $('#hint').textContent = w.hint; root.innerHTML = '';
   w.mount(root);
+  // Ajout de la carte « principe » en tête de chaque atelier
+  root.insertBefore(renderPrincipe(), root.firstChild);
   const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
 }
 function gotoWs(id) {
@@ -759,7 +821,7 @@ function openDlg(title, body) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
 $('#bHelp').addEventListener('click', () => {
   openDlg('Aide', h('div', { html: '<p>Quatre ateliers sur les algorithmes gloutons (ITC, CPGE 1re année) : rendu de monnaie, sélection d\'activités, allocation de salles, sac à dos.</p>' +
-    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie ; la première section présente le <b>principe du glouton</b>.</li></ul>' +
     '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
 });
 (function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
