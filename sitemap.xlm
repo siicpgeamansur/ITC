@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Page d'accueil -->
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Structures de données -->
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/tables_de_hachage.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Algorithmique -->
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/recherche_sequentielle_boucles_imbriquees.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/methodes_analyse_algorithmes.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/dichotomie.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/algorithmes_gloutons.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/recursivite.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/dfs_bfs_dijkstra.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/Parcours_de_graphes_animation.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/algorithmes_tri.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/programmation_dynamique.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/theorie_des_jeux.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Programmation Python -->
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/modules_bibliotheques.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/matrices_de_pixels_images.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Architecture et Représentation -->
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/representation_entiers_flottants.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Intelligence artificielle -->
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/ia.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Bases de données -->
+  <url>
+    <loc>https://siicpgeamansur.github.io/ITC/sql.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>
