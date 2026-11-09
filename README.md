@@ -57,13 +57,13 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | Année | Outil | Description |
 | :---: | --- | --- |
-| 2ème année | [IA](https://siicpgeamansur.github.io/ITC/ia.html) | Atelier complet sur l'intelligence artificielle et l'apprentissage automatique : données, attributs et étiquettes, k plus proches voisins sur un jeu de données réglable (taille et équilibre), k-moyennes non supervisées, régression linéaire et descente de gradient avec courbe du coût et rôle du taux d'apprentissage $\alpha$, arbres de décision et entropie, évaluation des modèles (matrice de confusion, précision, rappel, surapprentissage), perceptron et portes logiques (ET, OU, XOR), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
+| 2ème année | [IA](https://siicpgeamansur.github.io/ITC/ia.html) | Apprentissage automatique : données, attributs et étiquettes, k plus proches voisins sur un jeu de données réglable (taille et équilibre), k-moyennes non supervisées, régression linéaire et descente de gradient avec courbe du coût et rôle du taux d'apprentissage $\alpha$, arbres de décision et entropie, évaluation des modèles (matrice de confusion, précision, rappel, surapprentissage), perceptron et portes logiques (ET, OU, XOR). |
 
 ## Bases de données
 
 | Année | Outil | Description |
 | :---: | --- | --- |
-| 2ème année | [SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Atelier complet sur SQL et les bases de données relationnelles : modèle relationnel et algèbre ($\pi$, $\sigma$, $\bowtie$), console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3), exercices guidés avec vérification automatique, QCM et cours avec sommaire. |
+| 2ème année | [SQL](https://siicpgeamansur.github.io/ITC/sql.html) | Bases de données relationnelles : console SQL avec moteur embarqué, jointures, agrégats et HAVING, SQL en Python (sqlite3). |
 
 ---
 
