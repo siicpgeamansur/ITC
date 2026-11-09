@@ -1,0 +1,1142 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Programmation dynamique</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* barres de tri */
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px;background:#fff;margin:8px 0}
+.rowname{font-size:12px;color:var(--muted);margin:4px 2px 0}
+.bars{display:flex;align-items:flex-end;gap:4px;height:176px;padding-top:4px}
+.bars.short{height:120px}
+.bcol{flex:1 1 0;max-width:54px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bcol .v{font:600 12px var(--font-mono);margin-bottom:2px}
+.bcol .b{width:100%;border-radius:5px 5px 0 0;background:#9fb4ca;border:1px solid #6f8aa6;min-height:3px}
+.bcol .i{font:11px var(--font-mono);color:var(--muted);margin-top:3px}
+.bcol.sorted .b{background:rgba(30,122,46,.75);border-color:var(--ok)}
+.bcol.scan .b{background:var(--accent);border-color:var(--accent-ink)}
+.bcol.key .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.swap .b{background:#e8a33a;border-color:var(--warn)}
+.bcol.min .b{background:var(--violet);border-color:#52308f}
+.bcol.pivot .b{background:var(--bad);border-color:#8e1d15}
+.bcol.left .b{background:#b9d3ee;border-color:var(--accent)}
+.bcol.right .b{background:#f3d6a6;border-color:var(--warn)}
+.bcol.dim{opacity:.32}
+.bcol.empty .b{background:transparent;border:1px dashed var(--line)}
+.leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid #6f8aa6;background:#9fb4ca}
+.leg i.s{background:rgba(30,122,46,.75);border-color:var(--ok)}.leg i.c{background:var(--accent);border-color:var(--accent-ink)}.leg i.k{background:#e8a33a;border-color:var(--warn)}.leg i.m{background:var(--violet);border-color:#52308f}.leg i.p{background:var(--bad);border-color:#8e1d15}
+/* cellules (comptage) */
+.cells{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px}
+.cell{width:40px;text-align:center}
+.cell .v{border:1px solid var(--line);border-radius:6px;padding:6px 0;font:600 14px var(--font-mono);background:#fff;min-height:33px}
+.cell .i{font:11px var(--font-mono);color:var(--muted);margin-top:2px}
+.cell.scan .v{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cell.key .v{background:#e8a33a;border-color:var(--warn)}
+.cell.sorted .v{background:rgba(30,122,46,.2);border-color:var(--ok)}
+.cell.zero .v{color:#9aa3ad}
+/* comparaison */
+.cmpr{display:grid;grid-template-columns:120px 1fr 80px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.cmpr i{display:block;height:12px;background:var(--accent);border-radius:3px;min-width:2px}
+.cmpr em{font-style:normal;font-family:var(--font-mono);text-align:right}
+.seqr{display:flex;gap:4px;flex-wrap:wrap}
+.card{border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:600 12.5px var(--font-mono);background:#fff}
+.card.t1{border-color:#2e6da4;color:#1b4a76}.card.t2{border-color:#9a5b00;color:#7a4700}.card.t3{border-color:#7b4fc2;color:#52308f}.card.t4{border-color:#1e7a2e;color:#1e7a2e}.card.t5{border-color:#c0281f;color:#8e1d15}.card.t6{border-color:#33475b;color:#33475b}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:30px}.cell .v{font-size:12px}
+  .cmpr{grid-template-columns:90px 1fr 70px}
+  .bcol .v{font-size:11px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}.bcol .b{transition:height .15s}}
+.twocol{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.twocol>*{min-width:0}.plotcol2{flex:1 1 320px;max-width:440px}.infocol{flex:1 1 280px}
+.dt th.num{text-align:right}.dt td.num{text-align:right}.dt th.rl{background:var(--panel2);font-weight:600;white-space:nowrap}
+.dt tr.hl td{background:rgba(46,109,164,.14)}
+.gt{width:auto;min-width:0}.gt th,.gt td{text-align:center;padding:4px 7px}
+.gc{min-width:62px}.gc b{display:block;font-family:var(--font-mono);font-size:13px}.gc small{display:block;font-size:11px;color:var(--muted)}
+.pc{min-width:30px;font-family:var(--font-mono);font-size:13px;color:var(--muted)}
+.pc.yes{color:var(--fg);background:rgba(46,109,164,.12)}.pc.dep{background:rgba(154,91,0,.2);color:var(--fg)}
+.pc.cur{background:rgba(154,91,0,.38);color:var(--fg);font-weight:700}.pc.path{outline:2px solid var(--ok);outline-offset:-2px;font-weight:700}
+.pc.diagc{color:var(--muted)}
+.bktab{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin:8px 0}
+.bkt{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--panel);min-height:36px;min-width:0}
+.bkt.col{border-color:var(--warn);background:rgba(154,91,0,.1)}.bkt.hot{outline:2px solid var(--accent)}
+.bi{flex:none;width:22px;height:22px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);text-align:center;line-height:20px;font:600 12px var(--font-mono)}
+.chain{display:flex;flex-wrap:wrap;gap:3px 4px;align-items:center;min-width:0}
+.ent{font:12.5px var(--font-mono);background:var(--accent-soft);color:var(--accent-ink);border-radius:5px;padding:1px 6px;overflow-wrap:anywhere}
+.ent.fnd{background:var(--ok);color:#fff}.arr{color:var(--muted)}.emp{color:var(--muted);font-size:12px}
+.tsvg{width:100%;min-width:480px;height:auto;display:block}.gscroll{overflow-x:auto}
+.gsvg2{width:100%;max-width:440px;height:auto;display:block}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="3" width="6" height="6" fill="var(--accent)"/><rect x="10" y="3" width="6" height="6" fill="var(--accent)" opacity=".6"/><rect x="3" y="10" width="6" height="6" fill="var(--accent)" opacity=".6"/><rect x="10" y="10" width="6" height="6" fill="var(--ok)"/><rect x="17" y="10" width="6" height="6" fill="var(--warn)" opacity=".7"/><rect x="10" y="17" width="6" height="6" fill="var(--ok)" opacity=".7"/><rect x="17" y="17" width="6" height="6" fill="var(--warn)"/></svg><span>Atelier Programmation dynamique <small>ITC · CPGE 2<sup>e</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-pd-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+function rng(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const clampv = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+/* ---- hachage (fonction pédagogique : somme des codes des caractères) ---- */
+function hcode(k) { if (typeof k === 'number') return k; let s = 0; for (const ch of String(k)) s += ch.codePointAt(0); return s; }
+const hslot = (k, m) => hcode(k) % m;
+function buildTable(entries, m) { const T = Array.from({ length: m }, () => []); for (const [k, v] of entries) { const b = T[hslot(k, m)], e = b.find(x => x[0] === k); if (e) e[1] = v; else b.push([k, v]); } return T; }
+function tableStats(T) { const n = T.reduce((s, b) => s + b.length, 0), lens = T.map(b => b.length); return { n, m: T.length, load: n / T.length, maxChain: Math.max(...lens), collisions: lens.filter(l => l > 1).length, empty: lens.filter(l => l === 0).length }; }
+function searchTable(T, k) { const i = hslot(k, T.length), b = T[i]; let cmp = 0, found = null; for (const e of b) { cmp++; if (e[0] === k) { found = e; break; } } return { slot: i, code: hcode(k), cmp, found, chain: b.length }; }
+const KEYTYPES = [
+  { lab: '42', type: 'int', ok: true, why: 'Un entier est immuable : sa valeur de hachage ne change jamais.' },
+  { lab: "'abc'", type: 'str', ok: true, why: 'Une chaîne est immuable : on peut la hacher.' },
+  { lab: '(1, 2)', type: 'tuple', ok: true, why: 'Un tuple dont tous les éléments sont hachables est hachable.' },
+  { lab: '3.5', type: 'float', ok: true, why: 'Un flottant est immuable ; attention toutefois aux erreurs d’arrondi quand on compare des flottants.' },
+  { lab: 'True', type: 'bool', ok: true, why: 'Un booléen est un entier particulier (True vaut 1).' },
+  { lab: '[1, 2]', type: 'list', ok: false, why: 'Une liste est modifiable : si on la modifiait après insertion, sa valeur de hachage changerait et on ne retrouverait plus la clé.' },
+  { lab: '(1, [2])', type: 'list', ok: false, why: 'Un tuple n’est hachable que si tous ses éléments le sont : ici il contient une liste.' },
+  { lab: '{1, 2}', type: 'set', ok: false, why: 'Un ensemble est modifiable, donc non hachable (le type frozenset, immuable, l’est).' },
+  { lab: "{'a': 1}", type: 'dict', ok: false, why: 'Un dictionnaire est modifiable, donc non hachable.' }
+];
+/* ---- chemins dans une grille : chevauchement des sous-problèmes ---- */
+function binom(n, k) { let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return Math.round(r); }
+function gridInfo(n, m) {
+  const val = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(1));
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) val[i][j] = val[i - 1][j] + val[i][j - 1];
+  const calls = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0)); calls[n][m] = 1;
+  for (let i = n; i >= 0; i--) for (let j = m; j >= 0; j--) if (i > 0 && j > 0) { calls[i - 1][j] += calls[i][j]; calls[i][j - 1] += calls[i][j]; }
+  let total = 0; for (let i = 0; i <= n; i++) for (let j = 0; j <= m; j++) total += calls[i][j];
+  const order = []; // ordre de première évaluation (mémoïsation, appels dans l'ordre P(i-1,j) puis P(i,j-1)), numéro de fin de calcul
+  const seen = {}; const post = [];
+  (function rec(i, j) { const key = i + ',' + j; if (seen[key]) return; seen[key] = true; if (i > 0 && j > 0) { rec(i - 1, j); rec(i, j - 1); } post.push([i, j]); })(n, m);
+  const rank = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0)); post.forEach((c, t) => { rank[c[0]][c[1]] = t + 1; });
+  return { val, calls, total, answer: val[n][m], memoRank: rank, memoCalls: 2 * (n * m) + 1 };
+}
+function fibCalls(n) { const c = [1, 1]; for (let i = 2; i <= n; i++) c[i] = 1 + c[i - 1] + c[i - 2]; return c[n]; }
+function fibMemoCalls(n) { const memo = {}; let calls = 0; (function f(k) { calls++; if (k <= 1) return k; if (k in memo) return memo[k]; return memo[k] = f(k - 1) + f(k - 2); })(n); return calls; }
+/* ---- partition équilibrée ---- */
+function partition(t) {
+  const S = t.reduce((a, b) => a + b, 0), H = Math.floor(S / 2), n = t.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(H + 1).fill(false)); dp[0][0] = true;
+  for (let i = 1; i <= n; i++) for (let s = 0; s <= H; s++) dp[i][s] = dp[i - 1][s] || (s >= t[i - 1] && dp[i - 1][s - t[i - 1]]);
+  let best = H; while (!dp[n][best]) best--;
+  const take = []; let s = best;
+  for (let i = n; i >= 1; i--) { if (dp[i - 1][s]) continue; take.push(i - 1); s -= t[i - 1]; }
+  take.reverse();
+  return { S, H, dp, best, diff: S - 2 * best, take, rest: t.map((_, i) => i).filter(i => !take.includes(i)) };
+}
+/* ---- ordonnancement de tâches pondérées ---- */
+function schedule(tasks) {
+  const T = tasks.map((x, i) => ({ s: x[0], e: x[1], w: x[2], id: i })).sort((a, b) => a.e - b.e || a.s - b.s || a.id - b.id), n = T.length;
+  const p = T.map((t, i) => { let q = 0; for (let j = i - 1; j >= 0; j--) if (T[j].e <= t.s) { q = j + 1; break; } return q; });
+  const opt = new Array(n + 1).fill(0);
+  for (let i = 1; i <= n; i++) opt[i] = Math.max(opt[i - 1], T[i - 1].w + opt[p[i - 1]]);
+  const chosen = []; let i = n;
+  while (i > 0) { if (T[i - 1].w + opt[p[i - 1]] > opt[i - 1]) { chosen.push(i - 1); i = p[i - 1]; } else i--; }
+  chosen.reverse();
+  return { T, p, opt, chosen, total: opt[n] };
+}
+function greedySchedule(tasks, mode) {
+  const idx = tasks.map((_, i) => i).sort((a, b) => mode === 'poids' ? (tasks[b][2] - tasks[a][2] || tasks[a][1] - tasks[b][1] || a - b) : (tasks[a][1] - tasks[b][1] || tasks[b][2] - tasks[a][2] || a - b));
+  const ch = [];
+  for (const i of idx) if (ch.every(j => tasks[i][1] <= tasks[j][0] || tasks[j][1] <= tasks[i][0])) ch.push(i);
+  return { chosen: ch.sort((a, b) => a - b), total: ch.reduce((s, i) => s + tasks[i][2], 0) };
+}
+const TASK_SETS = {
+  a: [[5, 7, 5], [10, 16, 1], [11, 17, 9], [7, 9, 8], [6, 11, 9], [7, 13, 8]],
+  b: [[12, 17, 3], [10, 14, 9], [8, 12, 5], [12, 18, 8], [8, 13, 7], [10, 15, 3]],
+  c: [[0, 4, 3], [1, 3, 2], [3, 6, 4], [5, 9, 5], [6, 8, 3], [8, 11, 4]]
+};
+function randomTasks(seed) { const r = rng(seed * 2654435761 + 11), n = 7, out = []; for (let i = 0; i < n; i++) { const s = Math.floor(r() * 13), l = 2 + Math.floor(r() * 5); out.push([s, s + l, 1 + Math.floor(r() * 9)]); } return out; }
+/* ---- PLSC et distance d'édition ---- */
+function lcsTable(a, b) {
+  const m = a.length, n = b.length, t = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) t[i][j] = a[i - 1] === b[j - 1] ? t[i - 1][j - 1] + 1 : Math.max(t[i - 1][j], t[i][j - 1]);
+  return t;
+}
+function lcsPath(a, b, t) {
+  let i = a.length, j = b.length; const path = [[i, j]]; let s = '';
+  while (i > 0 && j > 0) {
+    if (a[i - 1] === b[j - 1]) { s = a[i - 1] + s; i--; j--; }
+    else if (t[i - 1][j] >= t[i][j - 1]) i--; else j--;
+    path.push([i, j]);
+  }
+  return { s, path };
+}
+function levTable(a, b) {
+  const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i; for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d;
+}
+function levPath(a, b, d) {
+  let i = a.length, j = b.length; const path = [[i, j]], ops = [];
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && d[i][j] === d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)) { ops.unshift(a[i - 1] === b[j - 1] ? 'garder ' + a[i - 1] : 'remplacer ' + a[i - 1] + ' par ' + b[j - 1]); i--; j--; }
+    else if (i > 0 && d[i][j] === d[i - 1][j] + 1) { ops.unshift('supprimer ' + a[i - 1]); i--; }
+    else { ops.unshift('insérer ' + b[j - 1]); j--; }
+    path.push([i, j]);
+  }
+  return { ops, path };
+}
+/* ---- Floyd-Warshall ---- */
+const INF = Infinity;
+function floyd(W) {
+  const n = W.length, steps = [], nxt = W.map((r, i) => r.map((w, j) => (i !== j && w < INF) ? j : null));
+  let D = W.map((r, i) => r.map((w, j) => i === j ? 0 : w)); steps.push({ D: D.map(r => r.slice()), changed: [] });
+  for (let k = 0; k < n; k++) {
+    const E = D.map(r => r.slice()), ch = [];
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (D[i][k] + D[k][j] < E[i][j]) { E[i][j] = D[i][k] + D[k][j]; nxt[i][j] = nxt[i][k]; ch.push([i, j]); }
+    D = E; steps.push({ D: D.map(r => r.slice()), changed: ch });
+  }
+  return { steps, nxt, D };
+}
+function floydPath(nxt, i, j) { if (i === j) return [i]; if (nxt[i][j] === null) return null; const p = [i]; let c = i, g = 0; while (c !== j && g++ < 50) { c = nxt[c][j]; p.push(c); } return p; }
+const GRAPHS = {
+  g1: { n: 5, names: ['A', 'B', 'C', 'D', 'E'], pos: [[60, 140], [190, 40], [190, 240], [350, 40], [350, 240]], edges: [[0, 1, 3], [0, 2, 8], [1, 2, 2], [1, 3, 5], [2, 4, 1], [3, 4, 2], [4, 1, 6], [3, 0, 4]] },
+  g2: { n: 4, names: ['A', 'B', 'C', 'D'], pos: [[70, 60], [330, 60], [330, 220], [70, 220]], edges: [[0, 1, 9], [0, 3, 2], [3, 2, 3], [2, 1, 1], [1, 3, 4], [2, 0, 7]] }
+};
+function graphMatrix(g) { const W = Array.from({ length: g.n }, () => new Array(g.n).fill(INF)); g.edges.forEach(e => { W[e[0]][e[1]] = e[2]; }); return W; }
+
+/*LOGIC-END*/
+
+/* ---------- aides d'interface ---------- */
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', null, k[0]), h('b', null, k[1])))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
+}
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; m.textContent = text; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+const SVGNS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, ...kids) {
+  const e = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) { if (v == null || v === false) continue; e.setAttribute(k, v); }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c));
+  return e;
+}
+function sliderField(id, label, min, max, val, cb) {
+  const out = h('b', null, String(val)), inp = h('input', { type: 'range', id, min, max, step: 1, value: val, 'aria-label': label });
+  inp.addEventListener('input', () => { out.textContent = inp.value; cb(+inp.value); });
+  return h('label', { class: 'fld' }, h('span', null, label + ' = ', out), inp);
+}
+function stepBar(id) {
+  return '<div class="files" style="margin:6px 0"><button class="btn" id="' + id + '-prev" type="button">◀ Précédent</button><button class="btn pri" id="' + id + '-next" type="button">Suivant ▶</button><button class="btn" id="' + id + '-all" type="button">Tout calculer</button><button class="btn" id="' + id + '-reset" type="button">Départ</button></div>';
+}
+function wireSteps(id, st, max, redraw) {
+  $('#' + id + '-prev').addEventListener('click', () => { if (st.k > 0) { st.k--; redraw(); } });
+  $('#' + id + '-next').addEventListener('click', () => { if (st.k < max()) { st.k++; redraw(); } });
+  $('#' + id + '-all').addEventListener('click', () => { st.k = max(); redraw(); });
+  $('#' + id + '-reset').addEventListener('click', () => { st.k = 0; redraw(); });
+}
+function updSteps(id, k, mx) { const p = $('#' + id + '-prev'), n = $('#' + id + '-next'); if (p) p.disabled = k <= 0; if (n) n.disabled = k >= mx; }
+const reprK = k => typeof k === 'number' ? String(k) : "'" + k + "'";
+const parseTok = s => /^-?\d+$/.test(s.trim()) ? parseInt(s.trim(), 10) : s.trim();
+
+/* ================= Atelier 1 : dictionnaires et hachage ================= */
+const H1 = { entries: [['lundi', 1], ['mardi', 2], ['mercredi', 3], ['jeudi', 4], ['vendredi', 5]], m: 7, key: '', val: '', res: null, kt: 5 };
+function mountHash(root) {
+  root.innerHTML = '<h2>Dictionnaires et hachage</h2>' +
+    '<p>Un <b>dictionnaire</b> associe des <b>valeurs</b> à des <b>clés</b>. Pour retrouver une clé presque instantanément, Python utilise une <b>table de hachage</b> : une fonction de hachage transforme la clé en un numéro d’alvéole, sans parcourir tous les éléments. Ici, la fonction est simplifiée : <b>somme des codes des caractères, modulo la taille m</b> de la table (un entier est pris tel quel).</p>' +
+    '<h3>1. Une table de hachage</h3>' +
+    '<div class="opts"><div class="fld"><span>Jeux d’exemples</span><div id="h1-pre"></div></div><div id="h1-m"></div></div>' +
+    '<div class="opts"><label class="fld"><span>Clé</span><input type="text" id="h1-k" autocomplete="off" style="width:150px" aria-label="Clé"></label><label class="fld"><span>Valeur</span><input type="text" id="h1-v" autocomplete="off" style="width:110px" aria-label="Valeur"></label>' +
+    '<button class="btn pri" id="h1-ins" type="button" style="margin-bottom:9px">Insérer</button><button class="btn" id="h1-find" type="button" style="margin-bottom:9px">Chercher</button></div>' +
+    '<div class="verdict" id="h1-msg" aria-live="polite"></div><div id="h1-tab" class="bktab"></div><div id="h1-st"></div>' +
+    '<h3>2. Quelles clés ?</h3><p class="small">Choisissez une clé et essayez de l’utiliser dans <code>d[clé] = 1</code>.</p><div id="h1-kt"></div><div id="h1-ktv"></div>' +
+    '<h3>3. En Python</h3><div id="h1-py"></div>';
+  $('#h1-k').addEventListener('keydown', e => { if (e.key === 'Enter') $('#h1-ins').click(); });
+  $('#h1-ins').addEventListener('click', () => {
+    const k = parseTok($('#h1-k').value); if (k === '') { setMsg('#h1-msg', 'Saisissez une clé.', 'warn'); return; }
+    const v = $('#h1-v').value.trim() === '' ? H1.entries.length + 1 : parseTok($('#h1-v').value);
+    const T = buildTable(H1.entries, H1.m), i = hslot(k, H1.m), ex = T[i].find(e => e[0] === k), coll = T[i].length > 0 && !ex;
+    if (ex) ex[1] = v; else H1.entries.push([k, v]);
+    for (const e of H1.entries) if (e[0] === k) e[1] = v;
+    H1.res = { kind: 'ins', k, slot: i, code: hcode(k), coll, upd: !!ex, before: T[i].map(e => e[0]) };
+    $('#h1-k').value = ''; $('#h1-v').value = ''; drawHash();
+  });
+  $('#h1-find').addEventListener('click', () => { const k = parseTok($('#h1-k').value); if (k === '') return; H1.res = Object.assign({ kind: 'find', k }, searchTable(buildTable(H1.entries, H1.m), k)); drawHash(); });
+  const py = $('#h1-py');
+  py.append(h('pre', { class: 'code' }, ">>> d = {'lundi': 1, 'mardi': 2}\n>>> d['lundi']\n1\n>>> d['mercredi'] = 3          # ajout (ou modification)\n>>> 'mardi' in d\nTrue\n>>> d.get('dimanche', 0)       # valeur par défaut si la clé est absente\n0\n>>> d['jeudi']\nKeyError: 'jeudi'"),
+    h('pre', { class: 'code' }, ">>> for cle in d: print(cle)\nlundi\nmardi\nmercredi\n>>> list(d.items())\n[('lundi', 1), ('mardi', 2), ('mercredi', 3)]\n>>> c = {}\n>>> for ch in 'abracadabra':\n...     c[ch] = c.get(ch, 0) + 1   # compter les occurrences\n>>> c\n{'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1}"));
+  drawHash(true);
+}
+function drawHash(full) {
+  if (full) {
+    const p = $('#h1-pre'); p.innerHTML = '';
+    p.append(chipsRow([['j', 'Jours de la semaine'], ['c', 'Collisions'], ['v', 'Vider']], '', k => {
+      H1.res = null;
+      if (k === 'j') { H1.entries = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map((j, i) => [j, i + 1]); H1.m = 7; }
+      else if (k === 'c') { H1.entries = [['abc', 1], ['cba', 2], ['bca', 3], ['xyz', 4], ['zyx', 5]]; H1.m = 11; }
+      else H1.entries = [];
+      drawHash(true);
+    }, 'Exemples'));
+    const mb = $('#h1-m'); mb.innerHTML = ''; mb.append(sliderField('h1-ms', 'Taille m de la table', 3, 13, H1.m, v => { H1.m = v; H1.res = { kind: 'resize' }; drawHash(false); }));
+    const kt = $('#h1-kt'); kt.innerHTML = ''; kt.append(chipsRow(KEYTYPES.map((k, i) => [i, k.lab]), H1.kt, i => { H1.kt = i; drawKt(); }, 'Type de clé'));
+    drawKt();
+  }
+  const T = buildTable(H1.entries, H1.m), st = tableStats(T), r = H1.res, tab = $('#h1-tab'); tab.innerHTML = '';
+  T.forEach((b, i) => {
+    const hot = r && r.slot === i;
+    tab.append(h('div', { class: 'bkt' + (b.length > 1 ? ' col' : '') + (hot ? ' hot' : '') }, h('span', { class: 'bi' }, String(i)), h('div', { class: 'chain' }, b.length ? b.map((e, j) => [j ? h('span', { class: 'arr' }, '→') : null, h('span', { class: 'ent' + (r && r.found && r.found[0] === e[0] ? ' fnd' : '') }, reprK(e[0]) + ' : ' + reprK(e[1]))]).flat() : h('span', { class: 'emp' }, 'vide'))));
+  });
+  const sb = $('#h1-st'); sb.innerHTML = ''; sb.append(stats([['Éléments n', String(st.n)], ['Alvéoles m', String(st.m)], ['Facteur de charge n/m', (Math.round(st.load * 100) / 100).toString().replace('.', ',')], ['Alvéoles en collision', String(st.collisions)], ['Plus longue chaîne', String(st.maxChain)]]));
+  if (!r) setMsg('#h1-msg', 'Tapez une clé (un mot ou un entier) puis insérez-la ou cherchez-la : regardez dans quelle alvéole elle tombe.', '');
+  else if (r.kind === 'resize') setMsg('#h1-msg', 'La taille de la table change : chaque clé est replacée dans l’alvéole (code mod ' + H1.m + '). Les collisions dépendent de m.', '');
+  else if (r.kind === 'ins') setMsg('#h1-msg', 'Clé ' + reprK(r.k) + ' : code = ' + r.code + ', ' + r.code + ' mod ' + H1.m + ' = ' + r.slot + '. ' + (r.upd ? 'La clé existait déjà : sa valeur est modifiée.' : r.coll ? 'Collision : l’alvéole ' + r.slot + ' contenait déjà ' + r.before.map(reprK).join(', ') + ' ; la clé est ajoutée à la chaîne.' : 'L’alvéole était vide.'), r.coll ? 'warn' : 'yes');
+  else setMsg('#h1-msg', 'Recherche de ' + reprK(r.k) + ' : code = ' + r.code + ', ' + r.code + ' mod ' + H1.m + ' = ' + r.slot + '. L’alvéole ' + r.slot + ' contient ' + r.chain + ' clé' + (r.chain > 1 ? 's' : '') + ' : ' + r.cmp + ' comparaison' + (r.cmp > 1 ? 's' : '') + '. ' + (r.found ? 'Trouvée, valeur ' + reprK(r.found[1]) + '.' : 'Clé absente du dictionnaire.'), r.found ? 'yes' : 'warn');
+}
+function drawKt() {
+  const k = KEYTYPES[H1.kt], b = $('#h1-ktv'); b.innerHTML = '';
+  b.append(h('pre', { class: 'code' }, k.ok ? '>>> d = {}\n>>> d[' + k.lab + '] = 1\n>>> d\n{' + k.lab + ': 1}' : '>>> d = {}\n>>> d[' + k.lab + '] = 1\nTypeError: unhashable type: \'' + k.type + '\''), h('div', { class: 'verdict ' + (k.ok ? 'yes' : 'no') }, (k.ok ? 'Clé acceptée. ' : 'Clé refusée. ') + k.why));
+}
+WORKSHOPS.push({ id: 's1', title: 'Dictionnaires et hachage', hint: 'Insérez des clés dans une table de hachage, observez les collisions et les limites sur les clés utilisables.', mount: mountHash, reset: () => { Object.assign(H1, { entries: [['lundi', 1], ['mardi', 2], ['mercredi', 3], ['jeudi', 4], ['vendredi', 5]], m: 7, res: null, kt: 5 }); } });
+
+/* ================= Atelier 2 : mémoïsation ================= */
+const M2 = { n: 4, m: 4, mode: 'naif' };
+const M2CODE = {
+  naif: 'def chemins(i, j):\n    if i == 0 or j == 0:\n        return 1\n    return chemins(i - 1, j) + chemins(i, j - 1)',
+  memo: 'def chemins(i, j, memo={}):\n    if i == 0 or j == 0:\n        return 1\n    if (i, j) not in memo:\n        memo[(i, j)] = chemins(i - 1, j, memo) + chemins(i, j - 1, memo)\n    return memo[(i, j)]',
+  bas: 'def chemins(n, m):\n    t = [[1] * (m + 1) for _ in range(n + 1)]\n    for i in range(1, n + 1):\n        for j in range(1, m + 1):\n            t[i][j] = t[i - 1][j] + t[i][j - 1]\n    return t[n][m]'
+};
+function mountMemo(root) {
+  root.innerHTML = '<h2>Sous-problèmes qui se chevauchent</h2>' +
+    '<p>On compte les chemins d’un coin à l’autre d’une grille en avançant d’une case vers la gauche ou vers le haut : <code>chemins(i, j) = chemins(i − 1, j) + chemins(i, j − 1)</code>. Le même sous-problème est rencontré par de nombreux appels : c’est le <b>chevauchement de sous-problèmes</b>. La <b>mémoïsation</b> (dictionnaire) ou le calcul <b>de bas en haut</b> (tableau) évite de les recalculer.</p>' +
+    '<div class="opts"><div id="m2-n"></div><div id="m2-m"></div><div class="fld"><span>Méthode</span><div id="m2-mode"></div></div></div>' +
+    '<pre class="code" id="m2-code"></pre><div class="verdict" id="m2-msg" aria-live="polite"></div><div id="m2-grid" class="dwrap"></div><div id="m2-st"></div>' +
+    '<h3>Même phénomène avec Fibonacci</h3><div id="m2-fib"></div>';
+  const n = $('#m2-n'), m = $('#m2-m'); n.append(sliderField('m2-ns', 'Lignes i (0 à n), n', 1, 10, M2.n, v => { M2.n = v; drawMemo(); })); m.append(sliderField('m2-ms', 'Colonnes j (0 à m), m', 1, 10, M2.m, v => { M2.m = v; drawMemo(); }));
+  const tb = h('tbody'); [10, 20, 30, 40].forEach(k => tb.append(h('tr', null, h('td', { class: 'm num' }, String(k)), h('td', { class: 'm num' }, fmtN(fibCalls(k))), h('td', { class: 'm num' }, String(fibMemoCalls(k))))));
+  $('#m2-fib').append(h('div', { class: 'dwrap' }, h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['n', 'Appels de fib(n) sans mémoire', 'Appels avec dictionnaire'].map(t => h('th', null, t)))), tb)));
+  drawMemo(true);
+}
+function drawMemo(full) {
+  const { n, m, mode } = M2, g = gridInfo(n, m);
+  if (full || true) { const mb = $('#m2-mode'); mb.innerHTML = ''; mb.append(chipsRow([['naif', 'Récursif naïf'], ['memo', 'Mémoïsation'], ['bas', 'De bas en haut']], mode, k => { M2.mode = k; drawMemo(); }, 'Méthode')); }
+  $('#m2-code').textContent = M2CODE[mode];
+  const tb = h('tbody'); let maxc = 1; g.calls.forEach(r => r.forEach(v => { maxc = Math.max(maxc, v); }));
+  for (let i = n; i >= 0; i--) {
+    const tr = h('tr', null, h('th', { class: 'rl' }, 'i = ' + i));
+    for (let j = 0; j <= m; j++) {
+      const c = g.calls[i][j], heat = mode === 'naif' ? Math.min(0.55, Math.log(c + 1) / Math.log(maxc + 1) * 0.55) : 0.12;
+      const sub = mode === 'naif' ? '×' + fmtN(c) : mode === 'memo' ? (g.memoRank[i][j] ? '#' + g.memoRank[i][j] : 'jamais appelée') : '#' + (i * (m + 1) + j + 1);
+      tr.append(h('td', { class: 'gc', style: 'background:rgba(224,138,30,' + heat + ')' }, h('b', null, fmtN(g.val[i][j])), h('small', null, sub)));
+    }
+    tb.append(tr);
+  }
+  const head = h('tr', null, h('th', null, ''), Array.from({ length: m + 1 }, (_, j) => h('th', { class: 'num' }, 'j = ' + j)));
+  const box = $('#m2-grid'); box.innerHTML = ''; box.append(h('table', { class: 'dt gt' }, h('thead', null, head), tb));
+  const cells = (n + 1) * (m + 1), called = cells - 1;
+  setMsg('#m2-msg', mode === 'naif' ? 'Chaque case porte sa valeur et le nombre de fois où elle est calculée (×) : le coin d’arrivée est atteint 1 fois, les cases proches du départ des milliers de fois. Total : ' + fmtN(g.total) + ' appels pour ' + called + ' sous-problèmes distincts (la case (0, 0) n’est jamais appelée).' : mode === 'memo' ? 'Chaque sous-problème n’est calculé qu’une fois (numéro d’ordre de fin de calcul, #) ; les autres appels lisent le dictionnaire. Appels totaux : ' + (g.memoCalls) + ' pour ' + called + ' sous-problèmes.' : 'On remplit le tableau ligne par ligne : chaque case ne dépend que de cases déjà remplies (numéro d’ordre #). ' + cells + ' calculs, sans récursivité.', 'yes');
+  const sb = $('#m2-st'); sb.innerHTML = '';
+  sb.append(stats([['Résultat', fmtN(g.answer)], ['Sous-problèmes distincts', mode === 'bas' ? String(cells) : String(called)], ['Appels', mode === 'naif' ? fmtN(g.total) : mode === 'memo' ? String(g.memoCalls) : String(cells)], ['Mémoire', mode === 'naif' ? 'pile : profondeur ' + (n + m) : mode === 'memo' ? 'dictionnaire : ' + called + ' entrées' : 'tableau : ' + cells + ' cases (deux lignes suffiraient : ' + 2 * (m + 1) + ')']]));
+}
+WORKSHOPS.push({ id: 's2', title: 'Mémoïsation', hint: 'Comparez le calcul récursif naïf, la mémoïsation par dictionnaire et le calcul de bas en haut.', mount: mountMemo, reset: () => { Object.assign(M2, { n: 4, m: 4, mode: 'naif' }); } });
+
+/* ================= Atelier 3 : partition équilibrée ================= */
+const P3 = { txt: '3, 1, 4, 2, 2', k: 0, rec: false };
+function p3Arr() { const a = P3.txt.split(/[,\s;]+/).filter(s => /^\d{1,2}$/.test(s)).map(Number).filter(v => v > 0).slice(0, 8); return a; }
+function mountPart(root) {
+  root.innerHTML = '<h2>Partition équilibrée</h2>' +
+    '<p>On veut répartir un tableau d’entiers positifs en deux groupes dont les sommes sont <b>aussi proches que possible</b>. Pour une somme totale S, il suffit de savoir quelles sommes s ≤ S/2 peuvent être formées avec un sous-ensemble des éléments. Sous-problème : <code>possible(i, s)</code> = « avec les i premiers éléments, on peut former la somme s ».</p>' +
+    '<div class="formula">possible(i, s) = possible(i − 1, s) <b>ou</b> (s ≥ t[i−1] <b>et</b> possible(i − 1, s − t[i−1]))</div>' +
+    '<div class="opts"><div class="fld"><span>Tableau</span><div id="p3-pre"></div></div><label class="fld"><span>Entiers positifs (2 à 8 valeurs, de 1 à 99)</span><input type="text" id="p3-t" autocomplete="off" aria-label="Tableau d’entiers"></label></div>' +
+    stepBar('p3') + '<div class="verdict" id="p3-msg" aria-live="polite"></div><div id="p3-grid" class="dwrap"></div><div id="p3-st"></div><div id="p3-res"></div>' +
+    '<h3>Code</h3><pre class="code">def partition(t):\n    S = sum(t)\n    possible = {0}                 # sommes atteignables (stockées dans un ensemble)\n    for x in t:\n        possible |= {s + x for s in possible if s + x &lt;= S // 2}\n    meilleure = max(possible)\n    return S - 2 * meilleure        # écart minimal entre les deux groupes</pre>';
+  $('#p3-t').value = P3.txt;
+  $('#p3-t').addEventListener('input', e => { P3.txt = e.target.value; P3.k = 0; P3.rec = false; drawPart(); });
+  wireSteps('p3', P3, () => p3Arr().length + 1, () => { drawPart(); });
+  const pr = $('#p3-pre'); pr.append(chipsRow([['3, 1, 4, 2, 2', '3, 1, 4, 2, 2'], ['8, 6, 5, 3', '8, 6, 5, 3'], ['7, 3, 2, 5, 8', '7, 3, 2, 5, 8'], ['9, 7, 5, 3, 1', '9, 7, 5, 3, 1']], '', v => { P3.txt = v; P3.k = 0; P3.rec = false; $('#p3-t').value = v; drawPart(); }, 'Exemples'));
+  drawPart();
+}
+function drawPart() {
+  const t = p3Arr(), box = $('#p3-grid'); box.innerHTML = '';
+  if (t.length < 2 || t.reduce((a, b) => a + b, 0) > 400) { setMsg('#p3-msg', 'Saisissez entre 2 et 8 entiers positifs.', 'warn'); $('#p3-st').innerHTML = ''; $('#p3-res').innerHTML = ''; return; }
+  const r = partition(t), n = t.length, k = Math.min(P3.k, n + 1); P3.k = k;
+  const rows = Math.min(k, n); // lignes calculées : 0..rows
+  // chemin de reconstruction
+  const pathCells = {}; if (k === n + 1) { let s = r.best; for (let i = n; i >= 1; i--) { pathCells[i + ',' + s] = true; if (r.dp[i - 1][s]) continue; s -= t[i - 1]; } pathCells['0,' + s] = true; }
+  const tb = h('tbody');
+  for (let i = 0; i <= rows; i++) {
+    const tr = h('tr', null, h('th', { class: 'rl' }, i === 0 ? 'aucun élément' : 't[' + (i - 1) + '] = ' + t[i - 1]));
+    for (let s = 0; s <= r.H; s++) { const ok = r.dp[i][s]; tr.append(h('td', { class: 'pc' + (ok ? ' yes' : '') + (pathCells[i + ',' + s] ? ' path' : '') + (i === rows && k <= n ? ' cur' : '') }, ok ? '✓' : '·')); }
+    tb.append(tr);
+  }
+  box.append(h('table', { class: 'dt gt' }, h('thead', null, h('tr', null, h('th', null, 'i \\ s'), Array.from({ length: r.H + 1 }, (_, s) => h('th', { class: 'num' }, String(s))))), tb));
+  let msg;
+  if (k === 0) msg = 'Ligne 0 : sans aucun élément, seule la somme 0 est atteignable. S = ' + r.S + ', on cherche une somme s ≤ S/2 = ' + r.H + '.';
+  else if (k <= n) { const added = []; for (let s = 0; s <= r.H; s++) if (r.dp[k][s] && !r.dp[k - 1][s]) added.push(s); msg = 'Ligne ' + k + ' (élément ' + t[k - 1] + ') : on garde les sommes de la ligne précédente et on ajoute celles obtenues en y ajoutant ' + t[k - 1] + (added.length ? ' : nouvelles sommes ' + added.join(', ') + '.' : ' : aucune nouvelle somme.'); }
+  else msg = 'Reconstruction : on part de la plus grande somme atteignable s = ' + r.best + ' ≤ ' + r.H + ' sur la dernière ligne et on remonte ; si la case du dessus est vraie, l’élément n’est pas utilisé, sinon on le prend et on retranche sa valeur.';
+  setMsg('#p3-msg', msg, k === n + 1 ? 'yes' : '');
+  const st = $('#p3-st'); st.innerHTML = ''; st.append(stats([['Somme totale S', String(r.S)], ['S / 2', String(r.H)], ['Cases calculées', String((rows + 1) * (r.H + 1)) + ' / ' + (n + 1) * (r.H + 1)]]));
+  const rs = $('#p3-res'); rs.innerHTML = '';
+  if (k === n + 1) rs.append(h('div', { class: 'verdict' }, 'Meilleure somme atteignable : ' + r.best + '. Groupe 1 : {' + r.take.map(i => t[i]).join(', ') + '} (somme ' + r.best + '), groupe 2 : {' + r.rest.map(i => t[i]).join(', ') + '} (somme ' + (r.S - r.best) + '). Écart minimal : ' + r.diff + '.'));
+  updSteps('p3', k, n + 1);
+}
+WORKSHOPS.push({ id: 's3', title: 'Partition équilibrée', hint: 'Remplissez le tableau des sommes atteignables ligne par ligne puis reconstruisez la partition.', mount: mountPart, reset: () => { Object.assign(P3, { txt: '3, 1, 4, 2, 2', k: 0, rec: false }); } });
+
+/* ================= Atelier 4 : tâches pondérées ================= */
+const S4 = { set: 'a', seed: 1, view: 'opt', k: 0 };
+function s4Tasks() { return S4.set === 'alea' ? randomTasks(S4.seed) : TASK_SETS[S4.set]; }
+function mountSched(root) {
+  root.innerHTML = '<h2>Ordonnancement de tâches pondérées</h2>' +
+    '<p>Chaque tâche a un début, une fin et un <b>poids</b> (un gain). Deux tâches qui se chevauchent ne peuvent pas être choisies ensemble. On cherche l’ensemble de tâches compatibles de <b>poids total maximal</b>. Après tri par heure de fin, <code>opt(i)</code> désigne le meilleur poids avec les i premières tâches, et <code>p(i)</code> la dernière tâche compatible avec la tâche i :</p>' +
+    '<div class="formula">opt(i) = max( opt(i − 1) , poids(i) + opt(p(i)) )</div>' +
+    '<div class="opts"><div class="fld"><span>Instance</span><div id="s4-set"></div></div><div class="fld"><span>Voir la solution</span><div id="s4-view"></div></div></div>' +
+    stepBar('s4') + '<div class="stagebox gscroll" id="s4-svg"></div><div class="verdict" id="s4-msg" aria-live="polite"></div><div id="s4-st"></div><div id="s4-tab" class="dwrap"></div><div id="s4-cmp"></div>' +
+    '<h3>Code</h3><pre class="code">def ordonnancement(taches):            # taches : liste de (debut, fin, poids)\n    T = sorted(taches, key=lambda t: t[1])   # tri par heure de fin\n    n = len(T)\n    opt = [0] * (n + 1)\n    for i in range(1, n + 1):\n        d, f, w = T[i - 1]\n        p = max([j + 1 for j in range(i - 1) if T[j][1] &lt;= d], default=0)\n        opt[i] = max(opt[i - 1], w + opt[p])\n    return opt[n]</pre>';
+  wireSteps('s4', S4, () => schedule(s4Tasks()).T.length, () => drawSched());
+  drawSched(true);
+}
+function drawSched(full) {
+  if (full) {
+    const sb = $('#s4-set'); sb.innerHTML = ''; sb.append(chipsRow([['a', 'Instance A'], ['b', 'Instance B'], ['c', 'Instance C'], ['alea', 'Aléatoire']], S4.set, k => { if (k === 'alea' && S4.set === 'alea') S4.seed++; S4.set = k; S4.k = 0; drawSched(true); }, 'Instance'));
+    const vb = $('#s4-view'); vb.innerHTML = ''; vb.append(chipsRow([['opt', 'Optimum (programmation dynamique)'], ['poids', 'Glouton : plus gros poids'], ['fin', 'Glouton : fin la plus tôt']], S4.view, k => { S4.view = k; drawSched(); }, 'Vue'));
+  }
+  const tasks = s4Tasks(), r = schedule(tasks), n = r.T.length, k = Math.min(S4.k, n); S4.k = k;
+  const gp = greedySchedule(tasks, 'poids'), gf = greedySchedule(tasks, 'fin');
+  const idOf = {}; r.T.forEach((t, i) => { idOf[t.id] = i; });
+  let sel = r.chosen.map(i => r.T[i].id); if (S4.view === 'poids') sel = gp.chosen; if (S4.view === 'fin') sel = gf.chosen;
+  const maxE = Math.max(...tasks.map(t => t[1])), W = 560, X = e => 40 + e * (W - 60) / maxE, rowH = 26, H = 30 + n * rowH;
+  const svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'tsvg', role: 'img', 'aria-label': 'Tâches sur une ligne de temps' });
+  for (let e = 0; e <= maxE; e += 2) { svg.append(sv('line', { x1: X(e), y1: 8, x2: X(e), y2: H - 14, stroke: '#e3e7ec' }), sv('text', { x: X(e), y: H - 3, 'text-anchor': 'middle', 'font-size': 10, fill: '#6b7280' }, e)); }
+  r.T.forEach((t, i) => {
+    const y = 12 + i * rowH, on = sel.includes(t.id);
+    svg.append(sv('text', { x: 4, y: y + 14, 'font-size': 11, fill: '#6b7280' }, 'T' + (i + 1)), sv('rect', { x: X(t.s), y, width: Math.max(4, X(t.e) - X(t.s)), height: 20, rx: 4, fill: on ? '#2e8b3a' : '#dcebf8', stroke: on ? '#1e7a2e' : '#6f8aa6', 'stroke-width': 1.5 }),
+      sv('text', { x: X(t.s) + 6, y: y + 14, 'font-size': 11, 'font-weight': 600, fill: on ? '#fff' : '#1b4a76' }, 'poids ' + t.w));
+  });
+  const sbox = $('#s4-svg'); sbox.innerHTML = ''; sbox.append(svg);
+  const tb = h('tbody');
+  for (let i = 0; i <= n; i++) {
+    const shown = i <= k, t = r.T[i - 1];
+    tb.append(h('tr', { class: i === k && k > 0 ? 'hl' : '' }, h('td', { class: 'm num' }, i === 0 ? '0' : 'T' + i), h('td', { class: 'm num' }, i ? String(t.s) : '—'), h('td', { class: 'm num' }, i ? String(t.e) : '—'), h('td', { class: 'm num' }, i ? String(t.w) : '—'), h('td', { class: 'm num' }, i ? 'T' + r.p[i - 1] : '—'), h('td', { class: 'm num' }, shown ? String(r.opt[i]) : '?')));
+  }
+  const tab = $('#s4-tab'); tab.innerHTML = ''; tab.append(h('table', { class: 'dt' }, h('thead', null, h('tr', null, ['Tâche', 'Début', 'Fin', 'Poids', 'p(i)', 'opt(i)'].map(x => h('th', null, x)))), tb));
+  let msg;
+  if (k === 0) msg = 'opt(0) = 0 : sans tâche, le gain est nul. Avancez pour calculer opt(i) ; p(i) vaut 0 s’il n’y a aucune tâche compatible avant.';
+  else { const t = r.T[k - 1], a = r.opt[k - 1], b = t.w + r.opt[r.p[k - 1]]; msg = 'Tâche T' + k + ' : sans elle, opt(' + (k - 1) + ') = ' + a + ' ; avec elle, ' + t.w + ' + opt(' + r.p[k - 1] + ') = ' + b + '. opt(' + k + ') = max(' + a + ', ' + b + ') = ' + r.opt[k] + '.'; }
+  setMsg('#s4-msg', msg, k === n ? 'yes' : '');
+  const st = $('#s4-st'); st.innerHTML = ''; st.append(stats([['Optimum (prog. dynamique)', String(r.total)], ['Glouton : plus gros poids', String(gp.total)], ['Glouton : fin la plus tôt', String(gf.total)]]));
+  const cm = $('#s4-cmp'); cm.innerHTML = '';
+  const worst = r.total - Math.max(gp.total, gf.total);
+  cm.append(h('div', { class: 'verdict' + (worst > 0 ? ' warn' : '') }, worst > 0 ? 'Ici aucune des deux stratégies gloutonnes n’est optimale : elles font des choix irrévocables sans comparer toutes les possibilités. La programmation dynamique, elle, compare à chaque étape « prendre la tâche » et « ne pas la prendre ».' : 'Sur cette instance, une stratégie gloutonne atteint l’optimum, mais ce n’est pas garanti en général : essayez les instances A et B.'));
+  updSteps('s4', k, n);
+}
+WORKSHOPS.push({ id: 's4', title: 'Tâches pondérées', hint: 'Calculez opt(i) tâche par tâche, puis comparez avec deux stratégies gloutonnes.', mount: mountSched, reset: () => { Object.assign(S4, { set: 'a', seed: 1, view: 'opt', k: 0 }); } });
+
+/* ================= Atelier 5 : PLSC et distance d'édition ================= */
+const W5 = { algo: 'lcs', a: 'ABCBDAB', b: 'BDCABA', k: 0 };
+const W5PRE = { lcs: [['ABCBDAB', 'BDCABA'], ['ALGORITHME', 'LOGARITHME'], ['AGGTAB', 'GXTXAYB']], lev: [['KITTEN', 'SITTING'], ['CHIEN', 'CHAT'], ['SUITE', 'SUITES']] };
+function mountWords(root) {
+  root.innerHTML = '<h2>Plus longue sous-suite commune et distance d’édition</h2>' +
+    '<p>Deux problèmes sur deux mots a et b, résolus par le même type de tableau T[i][j], qui traite les i premières lettres de a et les j premières de b. La <b>plus longue sous-suite commune</b> (PLSC) cherche la plus longue suite de lettres apparaissant dans le même ordre (pas forcément consécutives) dans les deux mots. La <b>distance d’édition</b> (Levenshtein) est le nombre minimal d’insertions, suppressions et remplacements d’une lettre pour passer de a à b.</p>' +
+    '<div class="opts"><div class="fld"><span>Problème</span><div id="w5-algo"></div></div><div class="fld"><span>Exemples</span><div id="w5-pre"></div></div></div>' +
+    '<div class="opts"><label class="fld"><span>Mot a (10 lettres au plus)</span><input type="text" id="w5-a" autocomplete="off" style="width:150px" aria-label="Mot a"></label><label class="fld"><span>Mot b</span><input type="text" id="w5-b" autocomplete="off" style="width:150px" aria-label="Mot b"></label></div>' +
+    '<div class="formula" id="w5-rec"></div>' + stepBar('w5') + '<div class="verdict" id="w5-msg" aria-live="polite"></div><div id="w5-grid" class="dwrap"></div><div id="w5-st"></div><div id="w5-res"></div>' +
+    '<h3>Code</h3><pre class="code" id="w5-code"></pre>';
+  const clean = s => s.toUpperCase().replace(/[^A-ZÀ-ÖØ-Þ]/g, '').slice(0, 10);
+  $('#w5-a').addEventListener('input', e => { W5.a = clean(e.target.value); W5.k = 0; drawWords(); });
+  $('#w5-b').addEventListener('input', e => { W5.b = clean(e.target.value); W5.k = 0; drawWords(); });
+  wireSteps('w5', W5, () => W5.a.length * W5.b.length + 1, () => drawWords());
+  drawWords(true);
+}
+function drawWords(full) {
+  if (full) {
+    const ab = $('#w5-algo'); ab.innerHTML = ''; ab.append(chipsRow([['lcs', 'PLSC'], ['lev', 'Distance d’édition']], W5.algo, k => { W5.algo = k; const p = W5PRE[k][0]; W5.a = p[0]; W5.b = p[1]; W5.k = 0; drawWords(true); }, 'Problème'));
+    const pb = $('#w5-pre'); pb.innerHTML = ''; pb.append(chipsRow(W5PRE[W5.algo].map((p, i) => [i, p[0] + ' / ' + p[1]]), -1, i => { W5.a = W5PRE[W5.algo][i][0]; W5.b = W5PRE[W5.algo][i][1]; W5.k = 0; drawWords(true); }, 'Exemples'));
+    $('#w5-a').value = W5.a; $('#w5-b').value = W5.b;
+    $('#w5-rec').innerHTML = W5.algo === 'lcs' ? 'T[i][j] = T[i−1][j−1] + 1 si a[i−1] = b[j−1] ; sinon max( T[i−1][j] , T[i][j−1] )' : 'T[i][j] = min( T[i−1][j] + 1 , T[i][j−1] + 1 , T[i−1][j−1] + (0 si a[i−1] = b[j−1], sinon 1) )';
+    $('#w5-code').textContent = W5.algo === 'lcs' ? 'def plsc(a, b):\n    T = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            if a[i - 1] == b[j - 1]:\n                T[i][j] = T[i - 1][j - 1] + 1\n            else:\n                T[i][j] = max(T[i - 1][j], T[i][j - 1])\n    return T[len(a)][len(b)]' : 'def levenshtein(a, b):\n    T = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(len(a) + 1):\n        T[i][0] = i                      # supprimer i lettres\n    for j in range(len(b) + 1):\n        T[0][j] = j                      # insérer j lettres\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            cout = 0 if a[i - 1] == b[j - 1] else 1\n            T[i][j] = min(T[i - 1][j] + 1, T[i][j - 1] + 1, T[i - 1][j - 1] + cout)\n    return T[len(a)][len(b)]';
+  }
+  const a = W5.a, b = W5.b, m = a.length, n = b.length, box = $('#w5-grid'); box.innerHTML = '';
+  if (!m || !n) { setMsg('#w5-msg', 'Saisissez deux mots non vides.', 'warn'); $('#w5-st').innerHTML = ''; $('#w5-res').innerHTML = ''; return; }
+  const lcs = W5.algo === 'lcs', T = lcs ? lcsTable(a, b) : levTable(a, b), total = m * n, k = Math.min(W5.k, total + 1); W5.k = k;
+  const filled = Math.min(k, total), cur = filled > 0 ? [Math.floor((filled - 1) / n) + 1, (filled - 1) % n + 1] : null;
+  const rec = k === total + 1, path = rec ? (lcs ? lcsPath(a, b, T) : levPath(a, b, T)) : null, onPath = {}; if (path) path.path.forEach(c => { onPath[c[0] + ',' + c[1]] = true; });
+  const isFilled = (i, j) => { if (lcs) return i === 0 || j === 0 || (i - 1) * n + j <= filled; return i === 0 || j === 0 || (i - 1) * n + j <= filled; };
+  const tb = h('tbody');
+  for (let i = 0; i <= m; i++) {
+    const tr = h('tr', null, h('th', { class: 'rl' }, i === 0 ? '∅' : a[i - 1]));
+    for (let j = 0; j <= n; j++) {
+      const fl = isFilled(i, j) && (lcs ? true : true), isCur = cur && cur[0] === i && cur[1] === j, dep = cur && ((cur[0] - 1 === i && cur[1] - 1 === j) || (cur[0] - 1 === i && cur[1] === j) || (cur[0] === i && cur[1] - 1 === j));
+      tr.append(h('td', { class: 'pc' + (fl ? ' yes' : '') + (isCur ? ' cur' : '') + (dep && !isCur ? ' dep' : '') + (onPath[i + ',' + j] ? ' path' : '') }, fl ? String(T[i][j]) : ''));
+    }
+    tb.append(tr);
+  }
+  box.append(h('table', { class: 'dt gt' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', { class: 'num' }, '∅'), Array.from(b).map(c => h('th', { class: 'num' }, c)))), tb));
+  let msg;
+  if (k === 0) msg = lcs ? 'Première ligne et première colonne : un mot vide n’a aucune sous-suite commune, donc 0.' : 'Première ligne et première colonne : passer d’un mot vide à j lettres coûte j insertions, et de i lettres à un mot vide i suppressions.';
+  else if (!rec) {
+    const i = cur[0], j = cur[1], eq = a[i - 1] === b[j - 1];
+    msg = 'Case (' + i + ', ' + j + ') : a[' + (i - 1) + '] = ' + a[i - 1] + ', b[' + (j - 1) + '] = ' + b[j - 1] + '. ' + (lcs ? (eq ? 'Lettres égales : 1 + T[' + (i - 1) + '][' + (j - 1) + '] = ' + T[i][j] + '.' : 'Lettres différentes : max(' + T[i - 1][j] + ', ' + T[i][j - 1] + ') = ' + T[i][j] + '.') : 'min(suppression ' + (T[i - 1][j] + 1) + ', insertion ' + (T[i][j - 1] + 1) + ', ' + (eq ? 'lettres égales ' : 'remplacement ') + (T[i - 1][j - 1] + (eq ? 0 : 1)) + ') = ' + T[i][j] + '.');
+  } else msg = lcs ? 'Reconstruction : en partant de la dernière case, on remonte : lettres égales → on garde la lettre et on va en diagonale ; sinon on va vers la plus grande des deux cases voisines.' : 'Reconstruction : en partant de la dernière case, on remonte vers une case voisine qui explique la valeur (diagonale : garder ou remplacer, haut : supprimer, gauche : insérer).';
+  setMsg('#w5-msg', msg, rec ? 'yes' : '');
+  const st = $('#w5-st'); st.innerHTML = ''; st.append(stats([['Cases calculées', filled + ' / ' + total], [lcs ? 'Longueur PLSC' : 'Distance d’édition', filled === total || rec ? String(T[m][n]) : '?']]));
+  const rs = $('#w5-res'); rs.innerHTML = '';
+  if (rec) rs.append(lcs ? h('div', { class: 'verdict' }, 'Plus longue sous-suite commune : « ' + path.s + ' » (longueur ' + path.s.length + ').') : h('div', { class: 'verdict' }, [h('b', null, 'Transformation en ' + T[m][n] + ' opération' + (T[m][n] > 1 ? 's' : '') + ' : '), path.ops.filter(o => !o.startsWith('garder')).join(' ; ') || 'aucune (mots égaux)', '.']));
+  updSteps('w5', k, total + 1);
+}
+WORKSHOPS.push({ id: 's5', title: 'PLSC et distance d’édition', hint: 'Remplissez le tableau case par case puis reconstruisez la sous-suite ou la suite d’opérations.', mount: mountWords, reset: () => { Object.assign(W5, { algo: 'lcs', a: 'ABCBDAB', b: 'BDCABA', k: 0 }); } });
+
+/* ================= Atelier 6 : Floyd-Warshall ================= */
+const F6 = { g: 'g1', k: 0, src: 0, dst: 4 };
+function mountFloyd(root) {
+  root.innerHTML = '<h2>Distances dans un graphe : Floyd-Warshall</h2>' +
+    '<p>On veut la plus courte distance entre <b>toutes</b> les paires de sommets d’un graphe orienté pondéré. Au pas k, on autorise les k premiers sommets comme <b>intermédiaires</b> : <code>D_k[i][j] = min( D_{k−1}[i][j] , D_{k−1}[i][s] + D_{k−1}[s][j] )</code>, où s est le k-ième sommet. Le sous-problème est « distance de i à j en n’utilisant que les k premiers sommets comme intermédiaires ».</p>' +
+    '<div class="opts"><div class="fld"><span>Graphe</span><div id="f6-g"></div></div></div>' + stepBar('f6') +
+    '<div class="twocol"><div class="plotcol2"><div class="stagebox" id="f6-svg"></div></div><div class="infocol"><div class="verdict" id="f6-msg" aria-live="polite"></div><div id="f6-mat" class="dwrap"></div></div></div>' +
+    '<h3>Reconstruire un chemin</h3><div class="opts"><div class="fld"><span>De</span><div id="f6-s"></div></div><div class="fld"><span>À</span><div id="f6-d"></div></div></div><div id="f6-path"></div>' +
+    '<h3>Code</h3><pre class="code">def floyd_warshall(D):               # D[i][j] : poids de l\'arc i -> j, inf si absent, D[i][i] = 0\n    n = len(D)\n    for k in range(n):\n        for i in range(n):\n            for j in range(n):\n                if D[i][k] + D[k][j] &lt; D[i][j]:\n                    D[i][j] = D[i][k] + D[k][j]\n    return D</pre>';
+  wireSteps('f6', F6, () => GRAPHS[F6.g].n, () => drawFloyd());
+  drawFloyd(true);
+}
+function drawFloyd(full) {
+  const g = GRAPHS[F6.g], n = g.n, W = graphMatrix(g), res = floyd(W), k = Math.min(F6.k, n); F6.k = k;
+  if (full) {
+    const gb = $('#f6-g'); gb.innerHTML = ''; gb.append(chipsRow([['g1', 'Graphe à 5 sommets'], ['g2', 'Graphe à 4 sommets']], F6.g, x => { F6.g = x; F6.k = 0; F6.src = 0; F6.dst = GRAPHS[x].n - 1; drawFloyd(true); }, 'Graphe'));
+    const sb = $('#f6-s'); sb.innerHTML = ''; sb.append(chipsRow(g.names.map((x, i) => [i, x]), F6.src, i => { F6.src = i; drawFloyd(); }, 'Départ'));
+    const db = $('#f6-d'); db.innerHTML = ''; db.append(chipsRow(g.names.map((x, i) => [i, x]), F6.dst, i => { F6.dst = i; drawFloyd(); }, 'Arrivée'));
+  }
+  const step = res.steps[k], prev = k > 0 ? res.steps[k - 1] : null, pth = k === n ? floydPath(res.nxt, F6.src, F6.dst) : null, pe = {}; if (pth) for (let i = 0; i + 1 < pth.length; i++) pe[pth[i] + '>' + pth[i + 1]] = true;
+  const svg = sv('svg', { viewBox: '0 0 420 280', class: 'gsvg2', role: 'img', 'aria-label': 'Graphe pondéré' }); svg.append(sv('defs', null, sv('marker', { id: 'fa', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto' }, sv('path', { d: 'M0 0L10 5L0 10z', fill: '#6b7280' })), sv('marker', { id: 'fb', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto' }, sv('path', { d: 'M0 0L10 5L0 10z', fill: '#1e7a2e' }))));
+  const R = 17, both = {}; g.edges.forEach(e => { both[e[0] + '>' + e[1]] = true; });
+  g.edges.forEach(([u, v, w]) => {
+    const a = g.pos[u], b = g.pos[v]; let dx = b[0] - a[0], dy = b[1] - a[1]; const L = Math.hypot(dx, dy); dx /= L; dy /= L;
+    const off = both[v + '>' + u] ? 9 : 0, nx = -dy * off, ny = dx * off, on = pe[u + '>' + v];
+    const x1 = a[0] + dx * R + nx, y1 = a[1] + dy * R + ny, x2 = b[0] - dx * (R + 4) + nx, y2 = b[1] - dy * (R + 4) + ny;
+    svg.append(sv('line', { x1, y1, x2, y2, stroke: on ? '#1e7a2e' : '#9aa3ad', 'stroke-width': on ? 3.2 : 1.5, 'marker-end': on ? 'url(#fb)' : 'url(#fa)' }), sv('text', { x: (x1 + x2) / 2 + nx * 0.9, y: (y1 + y2) / 2 + ny * 0.9 - 3, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, fill: '#33475b', stroke: '#fff', 'stroke-width': 3, 'paint-order': 'stroke' }, w));
+  });
+  g.pos.forEach((p, i) => { const inter = i < k; svg.append(sv('circle', { cx: p[0], cy: p[1], r: R, fill: inter ? '#dcebf8' : '#fff', stroke: i === F6.src ? '#c0281f' : i === F6.dst ? '#1e7a2e' : '#33475b', 'stroke-width': i === F6.src || i === F6.dst ? 3 : 2 }), sv('text', { x: p[0], y: p[1] + 4, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: '#111' }, g.names[i])); });
+  const sb = $('#f6-svg'); sb.innerHTML = ''; sb.append(svg);
+  const chg = {}; step.changed.forEach(c => { chg[c[0] + ',' + c[1]] = prev.D[c[0]][c[1]]; });
+  const tb = h('tbody');
+  for (let i = 0; i < n; i++) { const tr = h('tr', null, h('th', { class: 'rl' }, g.names[i])); for (let j = 0; j < n; j++) { const v = step.D[i][j], c = chg[i + ',' + j] !== undefined; tr.append(h('td', { class: 'pc' + (v < Infinity ? ' yes' : '') + (c ? ' cur' : '') + (i === j ? ' diagc' : '') }, v === Infinity ? '∞' : String(v))); } tb.append(tr); }
+  const mt = $('#f6-mat'); mt.innerHTML = ''; mt.append(h('table', { class: 'dt gt' }, h('thead', null, h('tr', null, h('th', null, ''), g.names.map(x => h('th', { class: 'num' }, x)))), tb));
+  let msg;
+  if (k === 0) msg = 'D₀ : les poids des arcs directs (∞ s’il n’y a pas d’arc), 0 sur la diagonale. Aucun sommet intermédiaire n’est encore autorisé.';
+  else msg = 'D' + k + ' : on autorise ' + g.names.slice(0, k).join(', ') + ' comme intermédiaires (le sommet ' + g.names[k - 1] + ' vient d’être ajouté). ' + (step.changed.length ? step.changed.length + ' distance' + (step.changed.length > 1 ? 's' : '') + ' améliorée' + (step.changed.length > 1 ? 's' : '') + ' (cases orange) : ' + step.changed.map(c => g.names[c[0]] + '→' + g.names[c[1]] + ' ' + (prev.D[c[0]][c[1]] === Infinity ? '∞' : prev.D[c[0]][c[1]]) + ' → ' + step.D[c[0]][c[1]]).join(', ') + '.' : 'Aucune distance ne s’améliore.');
+  setMsg('#f6-msg', msg, k === n ? 'yes' : '');
+  const pb = $('#f6-path'); pb.innerHTML = '';
+  const dist = res.D[F6.src][F6.dst];
+  pb.append(h('div', { class: 'verdict' + (pth || k < n ? '' : ' warn') }, k < n ? 'Terminez le calcul (« Tout calculer ») pour reconstruire un chemin à partir des informations calculées.' : pth ? 'Plus court chemin de ' + g.names[F6.src] + ' à ' + g.names[F6.dst] + ' : ' + pth.map(i => g.names[i]).join(' → ') + ', de longueur ' + dist + '. (Le chemin est reconstruit à partir de l’information calculée : pour chaque paire, le premier sommet à suivre. Il est tracé en vert dans le graphe.)' : 'Aucun chemin de ' + g.names[F6.src] + ' à ' + g.names[F6.dst] + '.'));
+  updSteps('f6', k, n);
+}
+WORKSHOPS.push({ id: 's6', title: 'Floyd-Warshall', hint: 'Autorisez les sommets un par un comme intermédiaires et suivez l’évolution de la matrice des distances.', mount: mountFloyd, reset: () => { Object.assign(F6, { g: 'g1', k: 0, src: 0, dst: 4 }); } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  s1: {
+    title: 'Dictionnaires et hachage', level: 'Niveau 1 · Découvrir', time: '30 min', course: 'hachage',
+    goal: 'Comprendre comment une table de hachage retrouve une clé sans tout parcourir, ce qu’est une collision et pourquoi certaines clés sont interdites.',
+    steps: [
+      'Chargez « Jours de la semaine » avec m = 7. Cherchez « mercredi » : notez le code, l’alvéole et le nombre de comparaisons.',
+      'Ajoutez la clé « samedi » : y a-t-il une collision ? Avec quelle clé ?',
+      'Faites varier m avec le curseur : comment évoluent le facteur de charge et la plus longue chaîne ?',
+      'Chargez « Collisions » : pourquoi « abc » et « cba » tombent-ils toujours dans la même alvéole, quel que soit m ?',
+      'Dans la partie « Quelles clés ? », testez les neuf types de clés. Quelles sont les clés refusées et pourquoi ?'
+    ],
+    defi: { q: 'Avec la fonction de hachage de l’atelier (somme des codes des caractères) et m = 11, dans quelle alvéole tombe la clé « abc » ? Et « cba » ? Qu’en déduire pour la recherche de « cba » si « abc » est déjà présente ?',
+      a: 'Les codes sont 97 + 98 + 99 = <b>294</b> pour « abc » comme pour « cba » (l’ordre des lettres ne compte pas). 294 mod 11 = <b>8</b> dans les deux cas : c’est une <b>collision</b>. « cba » est rangée dans la même chaîne que « abc » ; pour la chercher, on compare d’abord avec « abc » puis avec « cba » : <b>2 comparaisons</b> au lieu d’une.' },
+    qcm: [
+      { q: 'À quoi sert une fonction de hachage dans un dictionnaire ?', o: ['À trier les clés par ordre alphabétique', 'À transformer une clé en numéro d’alvéole', 'À chiffrer les valeurs', 'À compter les clés'], a: 1, w: 'La fonction de hachage calcule, à partir de la clé, l’emplacement où chercher ou ranger la valeur, sans parcourir tout le dictionnaire.' },
+      { q: 'Qu’est-ce qu’une collision ?', o: ['Deux clés égales dans un dictionnaire', 'Deux clés différentes qui ont la même alvéole', 'Une clé absente du dictionnaire', 'Une erreur de syntaxe'], a: 1, w: 'Deux clés distinctes peuvent avoir le même numéro d’alvéole. Avec le chaînage, elles sont rangées dans une même liste.' },
+      { q: 'Laquelle de ces valeurs est refusée comme clé d’un dictionnaire Python ?', o: ['(1, 2)', '\'abc\'', '[1, 2]', '3.5'], a: 2, w: 'Une liste est modifiable : sa valeur de hachage changerait avec son contenu. Python lève « TypeError: unhashable type: \'list\' ».' },
+      { q: 'Que renvoie d.get(\'dimanche\', 0) si la clé \'dimanche\' est absente de d ?', o: ['Une erreur KeyError', 'None', '0', 'False'], a: 2, w: 'get renvoie la valeur par défaut donnée en second argument ; d[\'dimanche\'] lèverait au contraire KeyError.' },
+      { q: 'Dans le cas favorable, quel est le coût moyen d’une recherche dans une table de hachage ?', o: ['Proportionnel à n', 'Proportionnel à log n', 'Constant', 'Proportionnel à n²'], a: 2, w: 'Si les clés sont bien réparties, les chaînes sont courtes : le coût moyen est constant. Dans le pire cas (toutes les clés dans la même alvéole), il est proportionnel à n.' }
+    ]
+  },
+  s2: {
+    title: 'Mémoïsation', level: 'Niveau 1 · Découvrir', time: '35 min', course: 'memo',
+    goal: 'Constater le chevauchement des sous-problèmes, puis le supprimer par mémoïsation ou par un calcul de bas en haut, en mesurant le gain et l’espace utilisé.',
+    steps: [
+      'Avec n = m = 4 et « Récursif naïf », repérez les cases les plus sollicitées (×). Où sont-elles ?',
+      'Passez à n = m = 10 : combien d’appels pour combien de sous-problèmes distincts ?',
+      'Choisissez « Mémoïsation » : comparez le nombre d’appels et lisez le code (dictionnaire memo).',
+      'Choisissez « De bas en haut » : dans quel ordre les cases sont-elles remplies ? Pourquoi est-il valide ?',
+      'Regardez la ligne « Mémoire » : combien de cases suffiraient pour un calcul de bas en haut ligne par ligne ?'
+    ],
+    defi: { q: 'Pour n = m = 3, combien y a-t-il de chemins ? Combien d’appels fait la version naïve ? Et la version avec dictionnaire ? Combien de sous-problèmes distincts ?',
+      a: 'Il y a <b>20</b> chemins. La version naïve fait <b>39</b> appels ; la version mémoïsée en fait <b>19</b> (2·n·m + 1) ; il y a <b>15</b> sous-problèmes distincts appelés (le tableau a 4 × 4 = 16 cases, mais la case (0, 0) n’est jamais appelée). Pour n = m = 10, l’écart devient énorme : 369 511 appels contre 201.' },
+    qcm: [
+      { q: 'Qu’appelle-t-on « chevauchement de sous-problèmes » ?', o: ['Des sous-problèmes indépendants', 'Un même sous-problème rencontré par plusieurs appels récursifs', 'Un dépassement de la pile de récursion', 'Un problème sans solution'], a: 1, w: 'Les sous-problèmes se chevauchent quand le calcul récursif retombe plusieurs fois sur les mêmes. C’est ce qui rend la mémoïsation utile.' },
+      { q: 'Que stocke le dictionnaire memo dans une version mémoïsée ?', o: ['Les appels en cours', 'Les résultats déjà calculés, indexés par les paramètres', 'Les erreurs rencontrées', 'La pile d’appels'], a: 1, w: 'On y range le résultat de chaque sous-problème, avec les paramètres comme clé ; un tuple convient car il est hachable.' },
+      { q: 'Quel est l’avantage du calcul de bas en haut sur la mémoïsation ?', o: ['Il calcule plus de sous-problèmes', 'Il évite la récursivité et son coût en pile, et permet parfois de réduire la mémoire', 'Il n’a pas besoin de tableau', 'Il fonctionne sans sous-structure optimale'], a: 1, w: 'Le calcul de bas en haut remplit un tableau dans l’ordre des dépendances, sans récursion ; on peut parfois ne conserver que quelques lignes.' },
+      { q: 'La suite de Fibonacci calculée par la récursion naïve fait un nombre d’appels…', o: ['Linéaire en n', 'Quadratique en n', 'Exponentiel en n', 'Constant'], a: 2, w: 'fib(n) rappelle fib(n−1) et fib(n−2) : le nombre d’appels croît comme la suite elle-même. Avec mémoïsation, il devient linéaire.' },
+      { q: 'Pourquoi parle-t-on d’« enjeu de complexité en mémoire » ?', o: ['Le dictionnaire de mémoïsation peut contenir un très grand nombre de résultats', 'La mémoïsation ralentit toujours le programme', 'Un dictionnaire ne peut pas contenir de tuples', 'La mémoire n’est jamais utilisée sans mémoïsation'], a: 0, w: 'On échange du temps contre de la mémoire : chaque sous-problème distinct occupe une entrée.' }
+    ]
+  },
+  s3: {
+    title: 'Partition équilibrée', level: 'Niveau 2 · Approfondir', time: '35 min', course: 'partition',
+    goal: 'Construire le tableau des sommes atteignables et reconstruire une solution optimale à partir de l’information calculée.',
+    steps: [
+      'Avec [3, 1, 4, 2, 2], avancez ligne par ligne. Quelles sommes apparaissent quand on ajoute 3 ? puis 1 ?',
+      'Lisez la dernière ligne : quelle est la plus grande somme s ≤ S/2 atteignable ?',
+      'Passez à la reconstruction : comment sait-on, case par case, si un élément est pris ?',
+      'Essayez [9, 7, 5, 3, 1] : l’écart minimal est-il nul ? Pourquoi ?',
+      'Entrez vos propres valeurs et vérifiez à la main que les deux groupes ont bien les sommes annoncées.'
+    ],
+    defi: { q: 'Pour le tableau [7, 3, 2, 5, 8], quelle est la somme totale, la meilleure somme atteignable ≤ S/2, l’écart minimal et un exemple de partition ?',
+      a: 'S = <b>25</b>, donc S/2 = 12. La meilleure somme atteignable est <b>12</b> (7 + 3 + 2). L’écart minimal vaut 25 − 2 × 12 = <b>1</b>. Partition : {7, 3, 2} (somme 12) et {5, 8} (somme 13).' },
+    qcm: [
+      { q: 'Pour la partition équilibrée, quelle somme cherche-t-on à atteindre ?', o: ['La plus petite somme possible', 'La plus grande somme atteignable ne dépassant pas S/2', 'Exactement S', 'La somme du plus grand élément'], a: 1, w: 'Si un groupe a pour somme s ≤ S/2, l’autre a S − s : l’écart S − 2s est minimal quand s est la plus grande possible.' },
+      { q: 'Que signifie possible(i, s) ?', o: ['Il existe un sous-ensemble des i premiers éléments de somme s', 'Le i-ième élément vaut s', 'La somme des i premiers éléments est s', 'i est inférieur à s'], a: 0, w: 'C’est le sous-problème : une valeur booléenne par couple (i, s).' },
+      { q: 'Quelle est la relation de récurrence de possible(i, s) ?', o: ['possible(i−1, s) ou possible(i−1, s − t[i−1])', 'possible(i−1, s) et possible(i−1, s − t[i−1])', 'possible(i, s − 1)', 'possible(i+1, s)'], a: 0, w: 'Soit on n’utilise pas l’élément i (même somme), soit on l’utilise (somme diminuée de sa valeur), à condition que s ≥ t[i−1].' },
+      { q: 'Quelle est la taille du tableau avec n éléments et une somme totale S ?', o: ['Environ n × S/2', 'Environ 2ⁿ', 'Environ S²', 'Environ n'], a: 0, w: 'Une ligne par élément et une colonne par somme de 0 à S/2 : la complexité est en O(n·S), pseudo-polynomiale.' },
+      { q: 'Comment reconstruit-on les deux groupes ?', o: ['On trie le tableau', 'On remonte depuis la meilleure somme : si la case du dessus est vraie, l’élément n’est pas pris, sinon il est pris', 'On relance l’algorithme', 'On prend les plus grands éléments d’abord'], a: 1, w: 'La table contient l’information nécessaire : on remonte ligne par ligne en retranchant les éléments pris.' }
+    ]
+  },
+  s4: {
+    title: 'Tâches pondérées', level: 'Niveau 2 · Approfondir', time: '40 min', course: 'taches',
+    goal: 'Appliquer la programmation dynamique à un problème d’optimisation et la comparer à des stratégies gloutonnes.',
+    steps: [
+      'Instance A, vue « Optimum » : avancez tâche par tâche et notez comment opt(i) est obtenu à partir de p(i).',
+      'Affichez « Glouton : plus gros poids » : quelle valeur obtient-on ? Est-ce optimal ?',
+      'Affichez « Glouton : fin la plus tôt » : même question. Vérifiez sur les instances B et C.',
+      'Sur quelles instances une stratégie gloutonne atteint-elle l’optimum ? Les deux ?',
+      'Générez des instances aléatoires : peut-on trouver une instance où les deux gloutons échouent ?'
+    ],
+    defi: { q: 'Sur l’instance A, quelle est la valeur optimale ? Quelle valeur donne la stratégie « plus gros poids d’abord » ? Et « fin la plus tôt » ?',
+      a: 'L’optimum vaut <b>22</b> (tâches T1, T2 et T6 dans l’ordre des fins : poids 5 + 8 + 9). Le glouton par poids décroissant donne <b>18</b> et le glouton par fin la plus tôt donne <b>14</b> : aucun des deux n’est optimal ici.' },
+    qcm: [
+      { q: 'Dans l’ordonnancement pondéré, que représente opt(i) ?', o: ['Le poids de la tâche i', 'Le poids maximal obtenu avec les i premières tâches (triées par fin)', 'Le nombre de tâches compatibles', 'La durée de la tâche i'], a: 1, w: 'opt(i) est la valeur optimale du sous-problème restreint aux i premières tâches.' },
+      { q: 'Que vaut opt(i) ?', o: ['opt(i−1) + poids(i)', 'max(opt(i−1), poids(i) + opt(p(i)))', 'min(opt(i−1), opt(p(i)))', 'poids(i) seulement'], a: 1, w: 'Soit on n’utilise pas la tâche i, soit on l’utilise et on ajoute le meilleur résultat parmi les tâches compatibles avec elle.' },
+      { q: 'Pourquoi la stratégie gloutonne « plus gros poids d’abord » peut-elle échouer ?', o: ['Elle est trop lente', 'Un choix irrévocable peut bloquer plusieurs tâches de poids total supérieur', 'Elle ne choisit jamais de tâche', 'Elle ne gère pas les poids'], a: 1, w: 'Une tâche lourde peut empêcher deux ou trois tâches plus légères dont la somme serait meilleure.' },
+      { q: 'Que dit la propriété de sous-structure optimale ?', o: ['Une solution optimale contient des solutions optimales de sous-problèmes', 'Tous les sous-problèmes sont indépendants', 'Il y a un seul sous-problème', 'La solution est unique'], a: 0, w: 'Si la tâche i est choisie, le reste de la solution est optimal pour les tâches compatibles : sinon on pourrait l’améliorer.' },
+      { q: 'Quelle différence entre programmation dynamique et stratégie gloutonne ?', o: ['La programmation dynamique compare plusieurs choix à chaque étape ; le glouton fait un choix local définitif', 'Le glouton est toujours optimal', 'La programmation dynamique ne fait aucun choix', 'Il n’y en a pas'], a: 0, w: 'Les deux utilisent une sous-structure optimale, mais le glouton doit en plus justifier qu’un choix local est sûr, ce qui n’est pas toujours vrai.' }
+    ]
+  },
+  s5: {
+    title: 'PLSC et distance d’édition', level: 'Niveau 2 · Approfondir', time: '40 min', course: 'mots',
+    goal: 'Remplir un tableau à deux indices et reconstruire une sous-suite commune ou une suite d’opérations d’édition.',
+    steps: [
+      'PLSC avec ABCBDAB / BDCABA : remplissez la table case par case en regardant les trois voisines.',
+      'Comparez : quand deux lettres sont égales, quelle case est utilisée ? Sinon ?',
+      'Lancez la reconstruction : quelle sous-suite commune obtient-on ? Est-elle unique ?',
+      'Passez à la distance d’édition : KITTEN / SITTING. Quelles opérations la reconstruction affiche-t-elle ?',
+      'Saisissez deux mots de votre choix. La distance d’édition est-elle toujours symétrique ?'
+    ],
+    defi: { q: 'Quelle est la distance d’édition entre CHIEN et CHAT ? Entre KITTEN et SITTING ? Quelle est la longueur de la PLSC de AGGTAB et GXTXAYB ?',
+      a: 'CHIEN → CHAT : <b>3</b> (remplacer I par A, remplacer E par T, supprimer N). KITTEN → SITTING : <b>3</b>. La PLSC de AGGTAB et GXTXAYB est « GTAB » : longueur <b>4</b>.' },
+    qcm: [
+      { q: 'Une sous-suite d’un mot est…', o: ['Une suite de lettres consécutives', 'Une suite de lettres prises dans l’ordre, pas forcément consécutives', 'Une permutation des lettres', 'Le mot lu à l’envers'], a: 1, w: 'Par exemple « ACE » est une sous-suite de « ABCDE », mais pas un facteur.' },
+      { q: 'Si a[i−1] = b[j−1], que vaut T[i][j] pour la PLSC ?', o: ['T[i−1][j−1] + 1', 'max(T[i−1][j], T[i][j−1])', '0', 'T[i][j−1]'], a: 0, w: 'Les lettres égales prolongent d’un caractère la meilleure sous-suite commune des préfixes précédents.' },
+      { q: 'Quelles opérations autorise la distance de Levenshtein ?', o: ['Insertion, suppression, remplacement', 'Seulement le remplacement', 'Permutation de deux lettres', 'Copie de mot'], a: 0, w: 'Chaque opération coûte 1.' },
+      { q: 'Quelle est la complexité en temps pour deux mots de longueurs m et n ?', o: ['O(m + n)', 'O(m × n)', 'O(2^(m+n))', 'O(log m)'], a: 1, w: 'Le tableau a (m + 1)(n + 1) cases, chacune calculée en temps constant.' },
+      { q: 'Comment retrouve-t-on la suite d’opérations optimale ?', o: ['On relance le calcul', 'On remonte depuis la dernière case en suivant la voisine qui explique la valeur', 'On trie les lettres', 'On ne peut pas la retrouver'], a: 1, w: 'On remonte dans le tableau en identifiant quelle case voisine a donné la valeur de la case courante.' }
+    ]
+  },
+  s6: {
+    title: 'Floyd-Warshall', level: 'Niveau 3 · Maîtriser', time: '40 min', course: 'floyd',
+    goal: 'Suivre l’évolution de la matrice des distances quand on autorise les sommets comme intermédiaires, puis reconstruire un chemin.',
+    steps: [
+      'Sur le graphe à 5 sommets, observez D₀ : à quoi correspondent les ∞ ?',
+      'Avancez jusqu’à D₁ puis D₂ : quelles distances s’améliorent (cases orange) ?',
+      'Achevez le calcul : quelle est la distance de A à E ? par quels sommets passe le chemin ?',
+      'Choisissez d’autres départ et arrivée : certains couples sont-ils inaccessibles ?',
+      'Passez au graphe à 4 sommets : comparez le nombre d’améliorations à chaque pas.'
+    ],
+    defi: { q: 'Sur le graphe à 5 sommets, quelle est la plus courte distance de A à E et quel chemin la réalise ? Quelle est la distance de D à C ?',
+      a: 'De A à E : <b>6</b>, par le chemin <b>A → B → C → E</b> (3 + 2 + 1). De D à C : <b>9</b>, par D → A → B → C (4 + 3 + 2).' },
+    qcm: [
+      { q: 'Que calcule l’algorithme de Floyd-Warshall ?', o: ['La distance d’un sommet à tous les autres', 'Les plus courtes distances entre toutes les paires de sommets', 'Un arbre couvrant minimal', 'Le nombre de composantes connexes'], a: 1, w: 'Il remplit une matrice des plus courtes distances pour tous les couples (i, j).' },
+      { q: 'À l’étape k, quels sommets autorise-t-on comme intermédiaires ?', o: ['Seulement le sommet k', 'Les k premiers sommets', 'Tous les sommets', 'Aucun'], a: 1, w: 'Au pas k, D_k[i][j] est la plus courte distance en n’utilisant que les k premiers sommets comme intermédiaires.' },
+      { q: 'Quelle est la relation de récurrence de Floyd-Warshall ?', o: ['D_k[i][j] = min(D_{k−1}[i][j], D_{k−1}[i][k] + D_{k−1}[k][j])', 'D_k[i][j] = D_{k−1}[i][j] + 1', 'D_k[i][j] = max(…)', 'D_k[i][j] = D_{k−1}[j][i]'], a: 0, w: 'Soit le chemin n’utilise pas le sommet k, soit il passe par k.' },
+      { q: 'Quelle est la complexité en temps pour n sommets ?', o: ['O(n)', 'O(n²)', 'O(n³)', 'O(2ⁿ)'], a: 2, w: 'Trois boucles imbriquées sur n valeurs.' },
+      { q: 'Comment reconstruit-on un chemin ?', o: ['En conservant, pour chaque paire, l’information du premier sommet à suivre (ou d’un intermédiaire)', 'On ne peut que calculer les distances', 'En relançant Dijkstra', 'En triant les arcs'], a: 0, w: 'On mémorise, à chaque amélioration, de quoi reconstruire le chemin : par exemple le successeur à emprunter.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'cadre', t: 'Cadre du cours', h: `
+<p>Ce cours suit la partie <b>« Dictionnaires et programmation dynamique »</b> du programme d’informatique de tronc commun de deuxième année. Les dictionnaires, utilisés comme boîte noire dès la première année, voient leurs principes de fonctionnement présentés ; ils servent notamment à mémoïser des résultats intermédiaires.</p>
+<h3>Au programme</h3>
+<table class="ctable"><thead><tr><th>Notion</th><th>Précisions</th></tr></thead><tbody>
+<tr><td>Dictionnaires, clés et valeurs</td><td>Principes du hachage et limitations sur le domaine des clés utilisables.</td></tr>
+<tr><td>Usage des dictionnaires en Python</td><td>Syntaxe d’écriture, parcours d’un dictionnaire.</td></tr>
+<tr><td>Programmation dynamique</td><td>Propriété de sous-structure optimale, chevauchement de sous-problèmes, calcul de bas en haut ou par mémoïsation, reconstruction d’une solution optimale à partir de l’information calculée.</td></tr>
+<tr><td>Mémoïsation</td><td>Implémentable avec un dictionnaire ; on souligne les enjeux de complexité en mémoire.</td></tr>
+<tr><td>Exemples</td><td>Partition équilibrée d’un tableau d’entiers positifs, ordonnancement de tâches pondérées, plus longue sous-suite commune, distance d’édition (Levenshtein), distances dans un graphe (Floyd-Warshall).</td></tr></tbody></table>
+<h3>Remarques du programme</h3>
+<ul><li>Cette liste d’exemples n’est ni limitative ni impérative ; les cas les plus complexes sont guidés.</li><li>On met en rapport le statut de la propriété de sous-structure optimale en programmation dynamique avec sa situation en stratégie gloutonne, vue en première année.</li></ul>
+<p class="small">Ce récapitulatif est établi à partir d’extraits cités du programme officiel ; le texte complet fait foi.</p>
+<div class="retain"><b>À retenir.</b> Dictionnaires et hachage d’abord, puis la méthode de programmation dynamique appliquée à cinq exemples.</div>` });
+
+COURSE.push({ id: 'dico', t: 'Dictionnaires en Python', h: `
+<p>Un <b>dictionnaire</b> associe à des <b>clés</b> des <b>valeurs</b>. Les clés sont toutes distinctes ; la valeur associée à une clé se retrouve très vite.</p>
+<h3>Syntaxe</h3>
+<pre class="code">&gt;&gt;&gt; d = {'lundi': 1, 'mardi': 2}
+&gt;&gt;&gt; d['lundi']
+1
+&gt;&gt;&gt; d['mercredi'] = 3        # ajout ou modification
+&gt;&gt;&gt; 'mardi' in d             # test d'appartenance (sur les clés)
+True
+&gt;&gt;&gt; d.get('dimanche', 0)     # valeur par défaut
+0
+&gt;&gt;&gt; d['jeudi']
+KeyError: 'jeudi'
+&gt;&gt;&gt; del d['lundi']</pre>
+<h3>Parcours</h3>
+<pre class="code">for cle in d:                    # parcours des clés
+    print(cle, d[cle])
+for cle, val in d.items():       # parcours des couples (clé, valeur)
+    print(cle, val)
+list(d.values())                 # les valeurs</pre>
+<h3>Exemple : compter des occurrences</h3>
+<pre class="code">def compter(mot):
+    c = {}
+    for ch in mot:
+        c[ch] = c.get(ch, 0) + 1
+    return c
+
+compter('abracadabra')   # {'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1}</pre>
+<p>Depuis Python 3.7, un dictionnaire conserve l’ordre d’insertion de ses clés.</p>
+<div class="retain"><b>À retenir.</b> d[c] lit, d[c] = v écrit, c in d teste la présence d’une clé, d.get(c, defaut) évite l’erreur, for c in d parcourt les clés, d.items() les couples.</div>` });
+
+COURSE.push({ id: 'hachage', t: 'Principes du hachage', h: `
+<p>Pour retrouver une clé sans parcourir tout le dictionnaire, on la range dans un tableau de <b>m alvéoles</b> à l’aide d’une <b>fonction de hachage</b> qui calcule le numéro d’alvéole à partir de la clé. L’accès devient direct : on calcule le numéro, puis on regarde l’alvéole.</p>
+<h3>Collisions</h3>
+<p>Deux clés différentes peuvent avoir le même numéro d’alvéole : c’est une <b>collision</b>. Une solution est le <b>chaînage</b> : chaque alvéole contient la liste des couples (clé, valeur) qui y sont tombés. Pour chercher, on calcule l’alvéole puis on compare avec les clés de la liste.</p>
+<pre class="code">def hacher(cle, m):             # fonction pédagogique
+    return sum(ord(c) for c in cle) % m
+
+def chercher(table, cle):
+    for (k, v) in table[hacher(cle, len(table))]:
+        if k == cle:
+            return v
+    return None</pre>
+<h3>Coût</h3>
+<ul>
+<li>Le <b>facteur de charge</b> n/m (éléments par alvéole) mesure le remplissage ; s’il devient grand, on agrandit la table et on replace les éléments.</li>
+<li>Si les clés sont bien réparties, les chaînes sont courtes : accès, ajout et suppression en temps constant <b>en moyenne</b>.</li>
+<li>Dans le pire cas (toutes les clés dans la même alvéole), l’accès est en O(n).</li>
+</ul>
+<h3>Quelles clés utiliser ?</h3>
+<p>Une clé doit avoir une valeur de hachage qui <b>ne change pas</b> : une clé doit être <b>immuable</b> (au sens du hachage). Sont acceptés : entiers, flottants, booléens, chaînes, tuples dont tous les éléments sont hachables. Sont refusés : listes, ensembles, dictionnaires.</p>
+<pre class="code">&gt;&gt;&gt; d = {}
+&gt;&gt;&gt; d[(1, 2)] = 'ok'
+&gt;&gt;&gt; d[[1, 2]] = 'non'
+TypeError: unhashable type: 'list'</pre>
+<div class="retain"><b>À retenir.</b> Hachage : clé → numéro d’alvéole. Collisions résolues par chaînage. Accès en temps constant en moyenne. Les clés doivent être hachables (immuables) : un tuple oui, une liste non.</div>` });
+
+COURSE.push({ id: 'principe', t: 'Principe de la programmation dynamique', h: `
+<p>La <b>programmation dynamique</b> résout un problème en le ramenant à des sous-problèmes de même nature, dont on mémorise les résultats. Elle s’applique quand deux propriétés sont réunies.</p>
+<h3>Sous-structure optimale</h3>
+<p>Une solution optimale du problème s’obtient à partir de solutions <b>optimales</b> de sous-problèmes : on peut écrire une relation de récurrence entre la valeur optimale d’un problème et celles de problèmes plus petits.</p>
+<h3>Chevauchement de sous-problèmes</h3>
+<p>Le même sous-problème est rencontré plusieurs fois par la récursion naïve : en le résolvant une seule fois, on passe d’un temps exponentiel à un temps polynomial.</p>
+<h3>Méthode</h3>
+<ol><li>Définir les sous-problèmes (quels paramètres ?).</li><li>Écrire la relation de récurrence et les cas de base.</li><li>Choisir l’ordre de calcul : de bas en haut, ou récursif avec mémoïsation.</li><li>Reconstruire une solution (et pas seulement sa valeur) à partir de l’information calculée.</li><li>Évaluer le temps (nombre de sous-problèmes × coût par sous-problème) et la mémoire.</li></ol>
+<h3>Comparaison avec d’autres paradigmes</h3>
+<table class="ctable"><thead><tr><th></th><th>Diviser pour régner</th><th>Glouton</th><th>Programmation dynamique</th></tr></thead><tbody>
+<tr><td>Sous-problèmes</td><td>Indépendants</td><td>Un seul, après un choix</td><td>Qui se chevauchent</td></tr>
+<tr><td>Choix</td><td>Aucun</td><td>Local et irrévocable</td><td>Comparaison de plusieurs choix</td></tr>
+<tr><td>Garantie d’optimalité</td><td>—</td><td>À justifier</td><td>Par la sous-structure optimale</td></tr></tbody></table>
+<p>La sous-structure optimale est donc commune à la programmation dynamique et aux algorithmes gloutons vus en première année ; mais le glouton doit prouver qu’un choix local est sûr, ce qui est faux pour l’ordonnancement pondéré.</p>
+<div class="retain"><b>À retenir.</b> Sous-structure optimale + chevauchement de sous-problèmes = programmation dynamique. On mémorise pour ne résoudre chaque sous-problème qu’une fois.</div>` });
+
+COURSE.push({ id: 'memo', t: 'Mémoïsation ou bas en haut', h: `
+<p>Deux façons de ne calculer chaque sous-problème qu’une fois.</p>
+<h3>Mémoïsation (de haut en bas)</h3>
+<p>On garde la fonction récursive, mais on stocke chaque résultat dans un <b>dictionnaire</b> dont les clés sont les paramètres (un tuple s’ils sont plusieurs).</p>
+<pre class="code">def fib(n, memo={}):
+    if n &lt; 2:
+        return n
+    if n not in memo:
+        memo[n] = fib(n - 1, memo) + fib(n - 2, memo)
+    return memo[n]</pre>
+<h3>De bas en haut</h3>
+<p>On remplit un tableau dans un ordre tel que chaque case ne dépende que de cases déjà calculées.</p>
+<pre class="code">def chemins(n, m):
+    t = [[1] * (m + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            t[i][j] = t[i - 1][j] + t[i][j - 1]
+    return t[n][m]</pre>
+<h3>Comparaison</h3>
+<table class="ctable"><thead><tr><th></th><th>Mémoïsation</th><th>De bas en haut</th></tr></thead><tbody>
+<tr><td>Sous-problèmes calculés</td><td>Seulement ceux nécessaires</td><td>Tous</td></tr>
+<tr><td>Récursion</td><td>Oui (profondeur de pile)</td><td>Non</td></tr>
+<tr><td>Structure</td><td>Dictionnaire</td><td>Tableau</td></tr>
+<tr><td>Mémoire</td><td>Une entrée par sous-problème calculé</td><td>Parfois réductible (quelques lignes)</td></tr></tbody></table>
+<h3>Enjeux de complexité en mémoire</h3>
+<p>On échange du temps contre de l’espace : le tableau de la grille a (n + 1)(m + 1) cases, mais pour le seul calcul de la valeur, deux lignes suffisent. En revanche, pour <b>reconstruire</b> une solution, on a souvent besoin de conserver tout le tableau.</p>
+<div class="retain"><b>À retenir.</b> Mémoïsation : récursif + dictionnaire. Bas en haut : tableau rempli dans l’ordre des dépendances. Complexité = nombre de sous-problèmes × coût de chacun ; attention à la mémoire.</div>` });
+
+COURSE.push({ id: 'partition', t: 'Partition équilibrée', h: `
+<p><b>Problème.</b> Étant donné un tableau t d’entiers positifs de somme S, le partager en deux groupes dont les sommes diffèrent le moins possible.</p>
+<p><b>Sous-problème.</b> possible(i, s) : « avec les i premiers éléments, on peut former la somme s ».</p>
+<div class="formula">possible(0, 0) = vrai ; possible(0, s) = faux si s &gt; 0<br>possible(i, s) = possible(i − 1, s) ou (s ≥ t[i−1] et possible(i − 1, s − t[i−1]))</div>
+<p>On cherche la plus grande somme s ≤ S/2 telle que possible(n, s) ; l’écart minimal est S − 2s.</p>
+<pre class="code">def partition(t):
+    S = sum(t)
+    H = S // 2
+    n = len(t)
+    possible = [[False] * (H + 1) for _ in range(n + 1)]
+    possible[0][0] = True
+    for i in range(1, n + 1):
+        for s in range(H + 1):
+            possible[i][s] = possible[i - 1][s] or (s &gt;= t[i - 1] and possible[i - 1][s - t[i - 1]])
+    best = H
+    while not possible[n][best]:
+        best -= 1
+    return S - 2 * best</pre>
+<h3>Reconstruction</h3>
+<p>En partant de s = best et de i = n : si possible[i−1][s] est vrai, l’élément n’est pas pris ; sinon il est pris et on retranche sa valeur de s.</p>
+<p><b>Complexité.</b> O(n·S) en temps et en mémoire : polynomiale en n et en S, mais pas en la taille de l’écriture de S (<i>pseudo-polynomiale</i>), contre 2ⁿ sous-ensembles pour l’énumération.</p>
+<div class="retain"><b>À retenir.</b> Tableau booléen possible[i][s]. On garde la dernière ligne pour la valeur, tout le tableau pour la reconstruction. Coût O(n·S).</div>` });
+
+COURSE.push({ id: 'taches', t: 'Tâches pondérées', h: `
+<p><b>Problème.</b> n tâches, chacune avec un début, une fin et un poids. Deux tâches qui se chevauchent sont incompatibles. Trouver un ensemble de tâches compatibles de poids total maximal.</p>
+<p>On trie les tâches par heure de fin. Soit p(i) l’indice de la dernière tâche compatible avec la tâche i (0 s’il n’y en a pas).</p>
+<div class="formula">opt(0) = 0 ; opt(i) = max( opt(i − 1) , poids(i) + opt(p(i)) )</div>
+<pre class="code">def ordonnancement(taches):
+    T = sorted(taches, key=lambda t: t[1])
+    n = len(T)
+    opt = [0] * (n + 1)
+    for i in range(1, n + 1):
+        d, f, w = T[i - 1]
+        p = max([j + 1 for j in range(i - 1) if T[j][1] &lt;= d], default=0)
+        opt[i] = max(opt[i - 1], w + opt[p])
+    return opt[n]</pre>
+<h3>Reconstruction</h3>
+<p>En partant de i = n : si poids(i) + opt(p(i)) &gt; opt(i − 1), la tâche i est choisie et on continue en p(i) ; sinon on continue en i − 1.</p>
+<h3>Lien avec les stratégies gloutonnes</h3>
+<p>Quand les poids sont tous égaux, le problème se résout par un glouton (choisir la tâche qui finit le plus tôt). Avec des poids, ce glouton et le glouton « plus gros poids d’abord » peuvent échouer : un choix local irrévocable n’est plus sûr, la sous-structure optimale seule ne suffit pas. La programmation dynamique, qui compare « prendre » et « ne pas prendre » à chaque étape, reste correcte.</p>
+<div class="retain"><b>À retenir.</b> Tri par fin, p(i), opt(i) = max(opt(i−1), poids(i) + opt(p(i))). Le glouton n’est pas toujours optimal quand il y a des poids.</div>` });
+
+COURSE.push({ id: 'mots', t: 'PLSC et distance d’édition', h: `
+<h3>Plus longue sous-suite commune (PLSC)</h3>
+<p>Une <b>sous-suite</b> d’un mot s’obtient en effaçant des lettres sans changer l’ordre des autres. T[i][j] désigne la longueur d’une PLSC des préfixes a[0:i] et b[0:j].</p>
+<div class="formula">T[i][0] = T[0][j] = 0<br>T[i][j] = T[i−1][j−1] + 1 si a[i−1] = b[j−1] ; sinon max( T[i−1][j] , T[i][j−1] )</div>
+<pre class="code">def plsc(a, b):
+    T = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            if a[i - 1] == b[j - 1]:
+                T[i][j] = T[i - 1][j - 1] + 1
+            else:
+                T[i][j] = max(T[i - 1][j], T[i][j - 1])
+    return T[len(a)][len(b)]</pre>
+<p><b>Reconstruction.</b> On part de la case (len(a), len(b)) : si les lettres sont égales, on les ajoute (en tête) et on passe en diagonale ; sinon on va vers la plus grande des cases voisines (haut ou gauche).</p>
+<h3>Distance d’édition (Levenshtein)</h3>
+<p>C’est le nombre minimal d’opérations (insertion, suppression, remplacement d’une lettre) pour transformer a en b.</p>
+<div class="formula">T[i][0] = i ; T[0][j] = j<br>T[i][j] = min( T[i−1][j] + 1 , T[i][j−1] + 1 , T[i−1][j−1] + (0 si a[i−1] = b[j−1], sinon 1) )</div>
+<pre class="code">def levenshtein(a, b):
+    T = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+    for i in range(len(a) + 1):
+        T[i][0] = i
+    for j in range(len(b) + 1):
+        T[0][j] = j
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            cout = 0 if a[i - 1] == b[j - 1] else 1
+            T[i][j] = min(T[i - 1][j] + 1, T[i][j - 1] + 1, T[i - 1][j - 1] + cout)
+    return T[len(a)][len(b)]</pre>
+<p><b>Reconstruction.</b> En remontant, un déplacement en diagonale correspond à garder ou remplacer une lettre, vers le haut à supprimer, vers la gauche à insérer.</p>
+<p><b>Complexité.</b> O(m·n) en temps ; en mémoire O(m·n) pour reconstruire, O(min(m, n)) si on ne veut que la valeur.</p>
+<div class="retain"><b>À retenir.</b> Tableau à deux indices (préfixes de a et de b), trois cases voisines (haut, gauche, diagonale), reconstruction en remontant.</div>` });
+
+COURSE.push({ id: 'floyd', t: 'Floyd-Warshall', h: `
+<p><b>Problème.</b> Dans un graphe orienté pondéré (sans cycle de poids négatif), calculer la plus courte distance entre <b>toutes</b> les paires de sommets. Les sommets sont numérotés de 0 à n − 1.</p>
+<p><b>Sous-problème.</b> D_k[i][j] : plus courte distance de i à j en n’utilisant comme sommets intermédiaires que les k premiers sommets.</p>
+<div class="formula">D₀[i][j] = poids de l’arc (i, j), ∞ s’il n’existe pas, 0 si i = j<br>D_k[i][j] = min( D_{k−1}[i][j] , D_{k−1}[i][k−1] + D_{k−1}[k−1][j] )</div>
+<pre class="code">def floyd_warshall(D):          # D[i][j] = poids de l'arc i -&gt; j, inf si absent, D[i][i] = 0
+    n = len(D)
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if D[i][k] + D[k][j] &lt; D[i][j]:
+                    D[i][j] = D[i][k] + D[k][j]
+    return D</pre>
+<p>Ce code travaille en place sur une seule matrice : la mise à jour de D[i][j] au pas k ne perturbe pas le calcul, car D[i][k] et D[k][j] ne changent pas pendant ce pas.</p>
+<h3>Reconstruction des chemins</h3>
+<p>On tient une matrice suivant[i][j] : le premier sommet à emprunter pour aller de i à j. Quand D[i][j] est améliorée via k, on pose suivant[i][j] = suivant[i][k]. Le chemin se lit en suivant les successeurs de i jusqu’à j.</p>
+<p><b>Complexité.</b> O(n³) en temps ; O(n²) en mémoire.</p>
+<div class="retain"><b>À retenir.</b> Trois boucles : k (intermédiaire) à l’extérieur, puis i et j. Une matrice des distances, une matrice des successeurs pour reconstruire.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Dictionnaire</dt><dd>Structure associant une valeur à chaque clé.</dd>
+<dt>Fonction de hachage</dt><dd>Fonction qui calcule le numéro d’alvéole d’une clé.</dd>
+<dt>Collision</dt><dd>Deux clés distinctes avec la même alvéole.</dd>
+<dt>Chaînage</dt><dd>Résolution des collisions par une liste dans chaque alvéole.</dd>
+<dt>Facteur de charge</dt><dd>Nombre d’éléments divisé par le nombre d’alvéoles.</dd>
+<dt>Clé hachable</dt><dd>Clé immuable dont on peut calculer la valeur de hachage.</dd>
+<dt>Sous-structure optimale</dt><dd>Une solution optimale contient des solutions optimales de sous-problèmes.</dd>
+<dt>Chevauchement de sous-problèmes</dt><dd>Un même sous-problème apparaît dans plusieurs appels.</dd>
+<dt>Mémoïsation</dt><dd>Stockage des résultats déjà calculés pour ne pas les recalculer.</dd>
+<dt>De bas en haut</dt><dd>Remplissage d’un tableau dans l’ordre des dépendances.</dd>
+<dt>Glouton</dt><dd>Algorithme qui fait des choix locaux irrévocables.</dd>
+<dt>Sous-suite</dt><dd>Lettres d’un mot prises dans l’ordre, pas forcément consécutives.</dd>
+<dt>Distance d’édition</dt><dd>Nombre minimal d’insertions, suppressions et remplacements.</dd>
+<dt>Reconstruction</dt><dd>Retrouver une solution à partir du tableau calculé.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 's1' };
+const AS = { key: 's1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'cadre' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : dictionnaires et programmation dynamique'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Six ateliers sur les dictionnaires et la programmation dynamique (ITC, CPGE 2e année) : hachage, mémoïsation, partition équilibrée, tâches pondérées, PLSC et distance d’édition, Floyd-Warshall.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans les ateliers à tableau, utilisez Précédent / Suivant pour remplir le tableau pas à pas, ou « Tout calculer » ; la dernière étape montre la reconstruction de la solution.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction ; <b>Cours</b> détaille le programme.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
