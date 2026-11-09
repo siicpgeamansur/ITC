@@ -363,7 +363,7 @@ function dijkstra(g, start) {
   for (const n of g.nodes) dist.set(n, Infinity);
   dist.set(start, 0);
   const visited = new Set();
-  while (visited.size < g.nodes.size) {
+  while (visited.size < g.nodes.length) {
     let u = null, dmin = Infinity;
     for (const n of g.nodes) if (!visited.has(n) && dist.get(n) < dmin) { dmin = dist.get(n); u = n; }
     if (u === null) break;
