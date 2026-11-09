@@ -109,6 +109,7 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
 .opts input[type=range]{width:200px;max-width:100%}
 .opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.opts input[type=text]:disabled{background:#f5f5f5;color:#888;font-style:italic;cursor:not-allowed}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
 .chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
@@ -185,13 +186,11 @@ function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
 const WORKSHOPS = [];
 
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function codeBlock(code, on) {
   const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield|None)$/;
-  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|True|False|isinstance|TypeError|ValueError|Exception|AssertionError|abs|round|open|close|read|write|readlines)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|True|False|isinstance|TypeError|ValueError|Exception|AssertionError|abs|round|close|read|write|readlines)$/;
   const lines = code.split('\n').map(line => {
     let out = '', i = 0;
     while (i < line.length) {
@@ -231,90 +230,294 @@ function stats(pairs) {
   return frag;
 }
 
-/* ================= Atelier 1 : Modules mathématiques ================= */
-const W1 = { module: 'math', func: 'sqrt', args: '16', result: null };
+/* ============================================================
+   ATELIER 1 : Modules mathématiques
+   ============================================================ */
+
+const W1 = { module: 'math', func: 'sqrt' };
+
+/* --- Helpers : extraction et validation des arguments --- */
+
+/* Extrait la partie droite d'une affectation "var = valeur" ou renvoie l'entrée brute. */
+function argAfterEq(s) {
+  s = String(s).trim();
+  const m = s.match(/^([a-zA-Z_]\w*(?:\s*,\s*[a-zA-Z_]\w*)?)\s*=\s*([\s\S]*)$/);
+  return m ? m[2].trim() : s;
+}
+
+function hasVarAssign(s) {
+  return /^[a-zA-Z_]\w*(\s*,\s*[a-zA-Z_]\w*)?\s*=/.test(String(s).trim());
+}
+
+/* Parse un nombre (accepte pi, les opérations simples, la virgule décimale). */
+function parseNum(s) {
+  let e = argAfterEq(s);
+  if (/^-?\d+,\d+$/.test(e)) e = e.replace(',', '.');
+  e = e.replace(/\bpi\b/gi, String(Math.PI));
+  if (!/^[\d\s+\-*/().]+$/.test(e)) throw new Error('Entrez un nombre (ex. : 16)');
+  let v;
+  try { v = Function('"use strict";return (' + e + ')')(); } catch (_) { throw new Error('Entrez un nombre (ex. : 16)'); }
+  if (typeof v !== 'number' || !isFinite(v)) throw new Error('Entrez un nombre (ex. : 16)');
+  return v;
+}
+
+/* Parse un couple d'entiers a, b. */
+function parsePair(s) {
+  const e = argAfterEq(s);
+  const parts = e.split(',').map(x => parseInt(x.trim(), 10));
+  if (parts.length !== 2 || !isFinite(parts[0]) || !isFinite(parts[1])) throw new Error('Entrez deux entiers a, b');
+  return parts;
+}
+
+/* Parse une liste de nombres (tolère "L = [1,2,3]", "[1,2,3]" ou "1,2,3"). */
+function parseListNum(s) {
+  let e = argAfterEq(s);
+  e = e.replace(/^\[/, '').replace(/\]$/, '');
+  const parts = e.split(/[,;]/).map(x => parseFloat(x.trim().replace(',', '.'))).filter(x => isFinite(x));
+  if (!parts.length) throw new Error('Entrez une liste de nombres (ex. : [1, 2, 3])');
+  return parts;
+}
+
+/* --- Constructeurs de code Python (respectent la présence ou non d'une variable) --- */
+
+function buildSingle(module, func, raw) {
+  raw = String(raw).trim();
+  const m = raw.match(/^([a-zA-Z_]\w*)\s*=\s*([\s\S]*)$/);
+  let lhs = '', rhs = raw;
+  if (m) { lhs = m[1]; rhs = m[2].trim(); }
+  const py = rhs.replace(/\bpi\b/gi, 'math.pi');
+  return lhs
+    ? `import ${module}\n${lhs} = ${py}\n${module}.${func}(${lhs})`
+    : `import ${module}\n${module}.${func}(${py})`;
+}
+
+function buildPair(module, func, raw) {
+  raw = String(raw).trim();
+  const m = raw.match(/^([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s*=\s*([\s\S]*)$/);
+  let v1 = 'a', v2 = 'b', rhs = raw;
+  if (m) { v1 = m[1]; v2 = m[2]; rhs = m[3].trim(); }
+  const parts = rhs.split(',').map(s => s.trim());
+  if (parts.length !== 2) return `import ${module}\n${module}.${func}(${rhs})`;
+  return m
+    ? `import ${module}\n${v1}, ${v2} = ${parts[0]}, ${parts[1]}\n${module}.${func}(${v1}, ${v2})`
+    : `import ${module}\n${module}.${func}(${parts[0]}, ${parts[1]})`;
+}
+
+function buildList(module, func, raw) {
+  raw = String(raw).trim();
+  const m = raw.match(/^([a-zA-Z_]\w*)\s*=\s*([\s\S]*)$/);
+  let lhs = '', rhs = raw;
+  if (m) { lhs = m[1]; rhs = m[2].trim(); }
+  if (!/^\[.*\]$/.test(rhs)) rhs = '[' + rhs + ']';
+  const py = rhs.replace(/\bpi\b/gi, 'math.pi');
+  return lhs
+    ? `import ${module}\n${lhs} = ${py}\n${module}.${func}(${lhs})`
+    : `import ${module}\n${module}.${func}(${py})`;
+}
+
+/* --- Configuration par fonction --- */
+
+const W1_CFG = {
+  'math.sqrt': {
+    label: 'x', input: 'x = 16',
+    parse: s => ({ x: parseNum(s) }),
+    code: s => buildSingle('math', 'sqrt', s),
+    exec: v => Math.sqrt(v.x)
+  },
+  'math.floor': {
+    label: 'x', input: 'x = 3.7',
+    parse: s => ({ x: parseNum(s) }),
+    code: s => buildSingle('math', 'floor', s),
+    exec: v => Math.floor(v.x)
+  },
+  'math.ceil': {
+    label: 'x', input: 'x = 3.2',
+    parse: s => ({ x: parseNum(s) }),
+    code: s => buildSingle('math', 'ceil', s),
+    exec: v => Math.ceil(v.x)
+  },
+  'math.sin': {
+    label: 'x (radians)', input: 'x = pi / 2',
+    parse: s => ({ x: parseNum(s) }),
+    code: s => buildSingle('math', 'sin', s),
+    exec: v => Math.sin(v.x)
+  },
+  'math.cos': {
+    label: 'x (radians)', input: 'x = 0',
+    parse: s => ({ x: parseNum(s) }),
+    code: s => buildSingle('math', 'cos', s),
+    exec: v => Math.cos(v.x)
+  },
+  'math.pi': {
+    noArgs: true, label: null, input: null,
+    parse: () => ({}),
+    code: () => 'import math\nmath.pi',
+    exec: () => Math.PI
+  },
+  'random.randint': {
+    label: 'a, b', input: 'a, b = 1, 10',
+    parse: s => { const [a, b] = parsePair(s); if (a > b) throw new Error('a doit être ≤ b'); return { a, b }; },
+    code: s => buildPair('random', 'randint', s),
+    exec: v => Math.floor(Math.random() * (v.b - v.a + 1)) + v.a
+  },
+  'random.random': {
+    noArgs: true, label: null, input: null,
+    parse: () => ({}),
+    code: () => 'import random\nrandom.random()',
+    exec: () => Math.random()
+  },
+  'random.choice': {
+    label: 'L', input: 'L = [1, 2, 3]',
+    parse: s => ({ L: parseListNum(s) }),
+    code: s => buildList('random', 'choice', s),
+    exec: v => v.L[Math.floor(Math.random() * v.L.length)]
+  },
+  'random.shuffle': {
+    label: 'L', input: 'L = [1, 2, 3]',
+    parse: s => ({ L: parseListNum(s) }),
+    code: s => buildList('random', 'shuffle', s),
+    exec: v => { const a = v.L.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  },
+  'statistics.mean': {
+    label: 'L', input: 'L = [1, 2, 3]',
+    parse: s => ({ L: parseListNum(s) }),
+    code: s => buildList('statistics', 'mean', s),
+    exec: v => v.L.reduce((a, b) => a + b, 0) / v.L.length
+  },
+  'statistics.median': {
+    label: 'L', input: 'L = [1, 2, 3]',
+    parse: s => ({ L: parseListNum(s) }),
+    code: s => buildList('statistics', 'median', s),
+    exec: v => { const s = v.L.slice().sort((a, b) => a - b); const n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; }
+  },
+  'statistics.stdev': {
+    label: 'L', input: 'L = [1, 2, 3, 4]',
+    parse: s => { const L = parseListNum(s); if (L.length < 2) throw new Error('Il faut au moins 2 éléments'); return { L }; },
+    code: s => buildList('statistics', 'stdev', s),
+    exec: v => { const mean = v.L.reduce((a, b) => a + b, 0) / v.L.length; const vv = v.L.reduce((a, b) => a + (b - mean) ** 2, 0) / (v.L.length - 1); return Math.sqrt(vv); }
+  }
+};
+
+/* --- Formatage du résultat --- */
+function fmtResult(res) {
+  if (Array.isArray(res)) return '[' + res.join(', ') + ']';
+  if (typeof res !== 'number') return String(res);
+  if (Number.isInteger(res) || Math.abs(res - Math.round(res)) < 1e-9) return String(Math.round(res));
+  return String(parseFloat(res.toFixed(4))).replace('.', ',');
+}
+
 function mountW1(root) {
-  root.innerHTML = '<h2>Modules mathématiques</h2><p>Python fournit des <b>modules</b> (bibliothèques) de fonctions prêtes à l\'emploi. On les importe avec <code>import</code> ou <code>from ... import</code>.</p>' +
-    '<div class="opts"><div class="fld"><span>Module</span><div id="w1-module"></div></div><div class="fld"><span>Fonction</span><div id="w1-func"></div></div><label class="fld"><span>Arguments</span><input type="text" id="w1-args" value="16" style="width:120px"></label><button class="btn pri" id="w1-run" type="button">Exécuter</button></div>' +
+  root.innerHTML =
+    '<h2>Modules mathématiques</h2>' +
+    '<p>Python fournit des <b>modules</b> (bibliothèques) de fonctions prêtes à l\'emploi. On les importe avec <code>import</code> ou <code>from ... import</code>.</p>' +
+    '<div class="opts">' +
+      '<div class="fld"><span>Module</span><div id="w1-module"></div></div>' +
+      '<div class="fld"><span>Fonction</span><div id="w1-func"></div></div>' +
+      '<label class="fld" id="w1-args-fld"><span id="w1-args-label">Arguments</span><input type="text" id="w1-args" autocomplete="off" spellcheck="false"></label>' +
+      '<button class="btn pri" id="w1-run" type="button">Exécuter</button>' +
+    '</div>' +
     '<div class="verdict" id="w1-out"></div>' +
     '<h3>Code Python</h3><div id="w1-code"></div>' +
-    '<h3>Différentes façons d\'importer</h3><div class="dwrap"><table class="dt"><thead><tr><th>Syntaxe</th><th>Utilisation</th></tr></thead><tbody>' +
+    '<h3>Différentes façons d\'importer</h3>' +
+    '<div class="dwrap"><table class="dt"><thead><tr><th>Syntaxe</th><th>Utilisation</th></tr></thead><tbody>' +
       '<tr><td><code>import math</code></td><td><code>math.sqrt(16)</code></td></tr>' +
       '<tr><td><code>from math import sqrt</code></td><td><code>sqrt(16)</code></td></tr>' +
       '<tr><td><code>import math as m</code></td><td><code>m.sqrt(16)</code></td></tr>' +
       '<tr><td><code>from math import *</code></td><td><code>sqrt(16)</code> (à éviter)</td></tr>' +
-      '</tbody></table></div>';
+    '</tbody></table></div>';
+
   const S = W1;
   const FUNCS = {
     math: ['sqrt', 'floor', 'ceil', 'sin', 'cos', 'pi'],
     random: ['randint', 'random', 'choice', 'shuffle'],
     statistics: ['mean', 'median', 'stdev']
   };
+  const DEFAULT_FUNC = { math: 'sqrt', random: 'randint', statistics: 'mean' };
+
+  function getCfg() { return W1_CFG[S.module + '.' + S.func]; }
+
+  function updateCode() {
+    const cfg = getCfg();
+    const codeEl = $('#w1-code');
+    if (cfg.noArgs) { codeEl.innerHTML = codeBlock(cfg.code()); return; }
+    const raw = $('#w1-args').value;
+    try {
+      cfg.parse(raw); // validation seulement
+      codeEl.innerHTML = codeBlock(cfg.code(raw));
+    } catch (e) {
+      codeEl.innerHTML = codeBlock('# Erreur : ' + e.message);
+    }
+  }
+
   function render() {
-    /* Pastilles module : recréées à chaque rendu pour refléter S.module */
-    $('#w1-module').innerHTML = '';
-    $('#w1-module').append(chipsRow(
+    const cfg = getCfg();
+    $('#w1-out').innerHTML = '';
+
+    /* Pastilles module (reconstruites pour refléter l'état) */
+    const modBox = $('#w1-module');
+    modBox.innerHTML = '';
+    modBox.append(chipsRow(
       [['math', 'math'], ['random', 'random'], ['statistics', 'statistics']],
       S.module,
-      v => { S.module = v; S.func = v === 'math' ? 'sqrt' : v === 'random' ? 'randint' : 'mean'; render(); },
+      v => {
+        if (S.module !== v) { S.module = v; S.func = DEFAULT_FUNC[v]; }
+        render();
+      },
       'Module'
     ));
+
     /* Pastilles fonction */
-    $('#w1-func').innerHTML = '';
-    $('#w1-func').append(chipsRow(FUNCS[S.module].map(f => [f, f]), S.func, v => { S.func = v; render(); }, 'Fonction'));
-    const pyCode = {
-      math: { sqrt: 'import math\nmath.sqrt(16)', floor: 'import math\nmath.floor(3.7)', ceil: 'import math\nmath.ceil(3.2)', sin: 'import math\nmath.sin(math.pi / 2)', cos: 'import math\nmath.cos(0)', pi: 'import math\nmath.pi' },
-      random: { randint: 'import random\nrandom.randint(1, 10)', random: 'import random\nrandom.random()', choice: 'import random\nrandom.choice([1, 2, 3])', shuffle: 'import random\nL = [1, 2, 3]\nrandom.shuffle(L)' },
-      statistics: { mean: 'import statistics\nstatistics.mean([1, 2, 3, 4])', median: 'import statistics\nstatistics.median([1, 2, 3, 4])', stdev: 'import statistics\nstatistics.stdev([1, 2, 3, 4])' }
-    }[S.module][S.func];
-    $('#w1-code').innerHTML = codeBlock(pyCode);
-    $('#w1-run').onclick = () => {
-      const out = $('#w1-out');
-      let res = '';
-      try {
-        if (S.module === 'math') {
-          const x = parseFloat($('#w1-args').value.replace(',', '.'));
-          if (!isFinite(x) && S.func !== 'pi') throw new Error('Argument invalide');
-          if (S.func === 'sqrt') res = Math.sqrt(x);
-          else if (S.func === 'floor') res = Math.floor(x);
-          else if (S.func === 'ceil') res = Math.ceil(x);
-          else if (S.func === 'sin') res = Math.sin(x);
-          else if (S.func === 'cos') res = Math.cos(x);
-          else if (S.func === 'pi') res = Math.PI;
-        } else if (S.module === 'random') {
-          if (S.func === 'randint') {
-            const parts = $('#w1-args').value.split(',').map(s => parseInt(s.trim(), 10));
-            if (parts.length !== 2 || !isFinite(parts[0]) || !isFinite(parts[1])) throw new Error('Entrez deux entiers a, b');
-            res = Math.floor(Math.random() * (parts[1] - parts[0] + 1)) + parts[0];
-          } else if (S.func === 'random') res = Math.random();
-          else if (S.func === 'choice') { const arr = [1, 2, 3, 4, 5]; res = arr[Math.floor(Math.random() * arr.length)]; }
-          else if (S.func === 'shuffle') res = '[' + [1, 2, 3].sort(() => Math.random() - 0.5).join(', ') + ']';
-        } else {
-          const arr = $('#w1-args').value.split(',').map(s => parseFloat(s.trim())).filter(x => isFinite(x));
-          if (!arr.length) throw new Error('Entrez une liste de nombres');
-          const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
-          if (S.func === 'mean') res = mean;
-          else if (S.func === 'median') { const s = arr.slice().sort((a, b) => a - b); const m = Math.floor(s.length / 2); res = s.length % 2 === 0 ? (s[m - 1] + s[m]) / 2 : s[m]; }
-          else if (S.func === 'stdev') {
-            if (arr.length < 2) throw new Error('Il faut au moins 2 éléments');
-            const v = arr.reduce((a, b) => a + (b - mean) ** 2, 0) / (arr.length - 1);
-            res = Math.sqrt(v);
-          }
-        }
-        out.className = 'verdict yes';
-        out.innerHTML = 'Résultat : <b>' + (typeof res === 'number' ? res.toFixed(4).replace('.', ',') : res) + '</b>';
-      } catch (e) {
-        out.className = 'verdict no';
-        out.textContent = 'Erreur : ' + e.message;
-      }
-    };
+    const fnBox = $('#w1-func');
+    fnBox.innerHTML = '';
+    fnBox.append(chipsRow(FUNCS[S.module].map(f => [f, f]), S.func, v => { S.func = v; render(); }, 'Fonction'));
+
+    /* Champ arguments */
+    const inp = $('#w1-args');
+    const lbl = $('#w1-args-label');
+    if (cfg.noArgs) {
+      inp.disabled = true;
+      inp.value = '(aucun argument)';
+      lbl.textContent = 'Arguments';
+    } else {
+      inp.disabled = false;
+      inp.value = cfg.input;
+      lbl.textContent = 'Arguments (' + cfg.label + ')';
+    }
+
+    updateCode();
   }
+
+  $('#w1-run').addEventListener('click', () => {
+    const cfg = getCfg();
+    const out = $('#w1-out');
+    try {
+      let res;
+      if (cfg.noArgs) {
+        res = cfg.exec();
+      } else {
+        const v = cfg.parse($('#w1-args').value);
+        res = cfg.exec(v);
+      }
+      out.className = 'verdict yes';
+      out.innerHTML = 'Résultat : <b>' + fmtResult(res) + '</b>';
+    } catch (e) {
+      out.className = 'verdict no';
+      out.textContent = 'Erreur : ' + e.message;
+    }
+  });
+
+  $('#w1-args').addEventListener('input', updateCode);
+
   render();
 }
-WORKSHOPS.push({ id: 'w1', title: 'Modules mathématiques', hint: 'Importer et utiliser math, random et statistics.',
-  mount: mountW1, reset: () => { Object.assign(W1, { module: 'math', func: 'sqrt', args: '16', result: null }); } });
 
-/* ================= Atelier 2 : Lecture de fichiers ================= */
+WORKSHOPS.push({ id: 'w1', title: 'Modules mathématiques', hint: 'Importer et utiliser math, random et statistics.',
+  mount: mountW1, reset: () => { W1.module = 'math'; W1.func = 'sqrt'; } });
+
+/* ============================================================
+   ATELIER 2 : Lecture de fichiers
+   ============================================================ */
+
 const W2 = { file: 'notes.txt', content: 'Alice: 15\nBruno: 12\nChloé: 18\nDavid: 9\nEmma: 14', lines: null, step: 0 };
 function mountW2(root) {
   root.innerHTML = '<h2>Lecture de fichiers</h2><p>Python permet de lire des fichiers de données avec <code>open</code>. La structure <code>with open(...) as f:</code> garantit la fermeture du fichier, même en cas d\'erreur.</p>' +
@@ -329,7 +532,6 @@ function mountW2(root) {
     'vide.txt': ''
   };
   function render() {
-    /* Pastilles fichier : recréées à chaque rendu pour refléter S.file */
     $('#w2-file').innerHTML = '';
     $('#w2-file').append(chipsRow(
       Object.keys(FILES).map(f => [f, f]),
@@ -356,7 +558,10 @@ function mountW2(root) {
 WORKSHOPS.push({ id: 'w2', title: 'Lecture de fichiers', hint: 'Lire un fichier avec with open() et parcourir ses lignes.',
   mount: mountW2, reset: () => { Object.assign(W2, { file: 'notes.txt', content: 'Alice: 15\nBruno: 12\nChloé: 18\nDavid: 9\nEmma: 14', lines: null, step: 0 }); } });
 
-/* ================= Atelier 3 : Statistiques ================= */
+/* ============================================================
+   ATELIER 3 : Statistiques
+   ============================================================ */
+
 const W3 = { data: '12, 15, 18, 9, 14, 12, 10, 18, 15, 16' };
 function mountW3(root) {
   root.innerHTML = '<h2>Calculs statistiques</h2><p>Une fois les données lues, on calcule des statistiques : moyenne, médiane, écart-type. On peut utiliser la bibliothèque <code>statistics</code> ou coder les calculs à la main.</p>' +
@@ -400,17 +605,19 @@ function mountW3(root) {
 WORKSHOPS.push({ id: 'w3', title: 'Statistiques', hint: 'Calculer moyenne, médiane et écart-type avec la bibliothèque statistics.',
   mount: mountW3, reset: () => { W3.data = '12, 15, 18, 9, 14, 12, 10, 18, 15, 16'; } });
 
-/* ================= Atelier 4 : Graphiques ================= */
+/* ============================================================
+   ATELIER 4 : Graphiques (indices 0-based)
+   ============================================================ */
+
 const W4 = { chart: 'hist', data: [5, 10, 15, 20, 15, 10, 5] };
 function mountW4(root) {
-  root.innerHTML = '<h2>Représentation graphique</h2><p>La bibliothèque <code>matplotlib</code> permet de tracer des graphiques (histogrammes, nuages de points, courbes) à partir des données.</p>' +
+  root.innerHTML = '<h2>Représentation graphique</h2><p>La bibliothèque <code>matplotlib</code> permet de tracer des graphiques (histogrammes, nuages de points, courbes) à partir des données. Les indices commencent à 0, comme en Python.</p>' +
     '<div class="opts"><div class="fld"><span>Type de graphique</span><div id="w4-type"></div></div></div>' +
     '<div class="chart-container"><svg id="w4-chart" viewBox="0 0 500 250" class="chart"></svg></div>' +
     '<div class="dwrap" id="w4-data"></div>' +
     '<h3>Code Python</h3><div id="w4-code"></div>';
   const S = W4;
   function render() {
-    /* Pastilles type : recréées à chaque rendu pour refléter S.chart */
     $('#w4-type').innerHTML = '';
     $('#w4-type').append(chipsRow(
       [['hist', 'Histogramme'], ['line', 'Courbe'], ['scatter', 'Nuage de points']],
@@ -436,7 +643,7 @@ function mountW4(root) {
         const x = L + i * scaleX + scaleX * 0.15;
         const hh = v * scaleY;
         svg += '<rect class="bar" x="' + x + '" y="' + (H - B - hh) + '" width="' + (scaleX * 0.7) + '" height="' + hh + '" rx="2"/>';
-        svg += '<text x="' + (x + scaleX * 0.35) + '" y="' + (H - B + 12) + '" text-anchor="middle">' + (i + 1) + '</text>';
+        svg += '<text x="' + (x + scaleX * 0.35) + '" y="' + (H - B + 12) + '" text-anchor="middle">' + i + '</text>';
         svg += '<text x="' + (x + scaleX * 0.35) + '" y="' + (H - B - hh - 5) + '" text-anchor="middle" font-weight="600">' + v + '</text>';
       });
     } else if (S.chart === 'line') {
@@ -444,25 +651,25 @@ function mountW4(root) {
       svg += '<polyline class="line" points="' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '"/>';
       pts.forEach((p, i) => {
         svg += '<circle class="dot" cx="' + p[0] + '" cy="' + p[1] + '" r="4"/>';
-        svg += '<text x="' + p[0] + '" y="' + (H - B + 12) + '" text-anchor="middle">' + (i + 1) + '</text>';
+        svg += '<text x="' + p[0] + '" y="' + (H - B + 12) + '" text-anchor="middle">' + i + '</text>';
       });
     } else {
       data.forEach((v, i) => {
         const x = L + (i + 0.5) * scaleX;
         const y = H - B - v * scaleY;
         svg += '<circle class="point" cx="' + x + '" cy="' + y + '" r="5"/>';
-        svg += '<text x="' + x + '" y="' + (H - B + 12) + '" text-anchor="middle">' + (i + 1) + '</text>';
+        svg += '<text x="' + x + '" y="' + (H - B + 12) + '" text-anchor="middle">' + i + '</text>';
       });
     }
     $('#w4-chart').innerHTML = svg;
     let tbl = '<table class="dt"><thead><tr><th>Indice</th><th>Valeur</th></tr></thead><tbody>';
-    data.forEach((v, i) => { tbl += '<tr><td class="m">' + (i + 1) + '</td><td class="m">' + v + '</td></tr>'; });
+    data.forEach((v, i) => { tbl += '<tr><td class="m">' + i + '</td><td class="m">' + v + '</td></tr>'; });
     tbl += '</tbody></table>';
     $('#w4-data').innerHTML = tbl;
     const codes = {
       hist: 'import matplotlib.pyplot as plt\n\ndata = [5, 10, 15, 20, 15, 10, 5]\nplt.bar(range(len(data)), data)\nplt.xlabel("Indice")\nplt.ylabel("Valeur")\nplt.show()',
       line: 'import matplotlib.pyplot as plt\n\ndata = [5, 10, 15, 20, 15, 10, 5]\nplt.plot(data, marker="o")\nplt.xlabel("Indice")\nplt.ylabel("Valeur")\nplt.show()',
-      scatter: 'import matplotlib.pyplot as plt\n\n# Nuage de points : x et y en correspondance\nx = [1, 2, 3, 4, 5, 6, 7]\ny = [5, 10, 15, 20, 15, 10, 5]\nplt.scatter(x, y)\nplt.xlabel("x")\nplt.ylabel("y")\nplt.show()'
+      scatter: 'import matplotlib.pyplot as plt\n\n# Nuage de points : x et y en correspondance\nx = [0, 1, 2, 3, 4, 5, 6]\ny = [5, 10, 15, 20, 15, 10, 5]\nplt.scatter(x, y)\nplt.xlabel("x")\nplt.ylabel("y")\nplt.show()'
     };
     $('#w4-code').innerHTML = codeBlock(codes[S.chart]);
   }
@@ -630,7 +837,7 @@ print(statistics.pstdev(L))   # écart-type de population</pre>
 
 COURSE.push({ id: 'graphiques', t: 'Représentation graphique', h: `
 <h3>Histogramme</h3>
-<p>Représente la fréquence des valeurs par catégorie ou par intervalle.</p>
+<p>Représente la fréquence des valeurs par catégorie ou par intervalle. Les indices commencent à 0.</p>
 <pre class="code">import matplotlib.pyplot as plt
 
 data = [5, 10, 15, 20, 15, 10, 5]
@@ -642,11 +849,13 @@ plt.show()</pre>
 <pre class="code">plt.plot(data, marker="o")
 plt.show()</pre>
 <h3>Nuage de points</h3>
-<pre class="code">plt.scatter(x_data, y_data)
+<pre class="code">x = [0, 1, 2, 3, 4, 5, 6]
+y = [5, 10, 15, 20, 15, 10, 5]
+plt.scatter(x, y)
 plt.show()</pre>
 <h3>Personnalisation</h3>
 <ul><li>Titre : <code>plt.title("Mon graphique")</code></li><li>Légende : <code>plt.legend()</code></li><li>Couleur : <code>color="red"</code></li><li>Grille : <code>plt.grid()</code></li></ul>
-<div class="retain"><b>À retenir.</b> <code>matplotlib.pyplot</code> fournit les fonctions de base pour tracer des graphiques.</div>` });
+<div class="retain"><b>À retenir.</b> <code>matplotlib.pyplot</code> fournit les fonctions de base pour tracer des graphiques, avec des indices 0-based.</div>` });
 
 COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
 <dl class="gloss">
