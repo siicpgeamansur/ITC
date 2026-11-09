@@ -253,7 +253,16 @@ function mountW1(root) {
       '<tr><td><code>from math import *</code></td><td><code>sqrt(16)</code> (à éviter)</td></tr>' +
       '</tbody></table></div>';
   const S = W1;
-  $('#w1-module').append(chipsRow([['math', 'math'], ['random', 'random'], ['statistics', 'statistics']], S.module, v => { S.module = v; S.func = v === 'math' ? 'sqrt' : v === 'random' ? 'randint' : 'mean'; render(); }, 'Module'));
+function render() {
+  $('#w1-module').innerHTML = '';
+  $('#w1-module').append(chipsRow(
+    [['math','math'],['random','random'],['statistics','statistics']],
+    S.module,
+    v => { S.module = v; S.func = v === 'math' ? 'sqrt' : v === 'random' ? 'randint' : 'mean'; render(); },
+    'Module'
+  ));
+  $('#w1-func').innerHTML = '';
+  $('#w1-func').append(chipsRow(FUNCS[S.module].map(f => [f, f]), S.func, v => { S.func = v; render(); }, 'Fonction'));
   const FUNCS = {
     math: ['sqrt', 'floor', 'ceil', 'sin', 'cos', 'pi'],
     random: ['randint', 'random', 'choice', 'shuffle'],
@@ -328,7 +337,15 @@ function mountW2(root) {
     'temperatures.csv': 'ville,temp\nParis,12\nLyon,15\nMarseille,22\nLille,8',
     'vide.txt': ''
   };
-  $('#w2-file').append(chipsRow(Object.keys(FILES).map(f => [f, f]), S.file, v => { S.file = v; S.content = FILES[v]; render(); }, 'Fichier'));
+function render() {
+  $('#w2-file').innerHTML = '';
+  $('#w2-file').append(chipsRow(
+    Object.keys(FILES).map(f => [f, f]),
+    S.file,
+    v => { S.file = v; S.content = FILES[v]; render(); },
+    'Fichier'
+  ));
+  $('#w2-content').innerHTML = S.content.split('\n').map(/* … */).join('');
   function render() {
     $('#w2-content').innerHTML = S.content.split('\n').map((l, i) => '<span class="line' + (S.lines && i < S.step ? ' active' : '') + '">' + (i + 1) + ': ' + esc(l) + '</span>').join('');
     $('#w2-code').innerHTML = codeBlock('with open("' + S.file + '", "r", encoding="utf-8") as f:\n    lignes = f.readlines()\n\nfor ligne in lignes:\n    print(ligne.strip())');
@@ -402,7 +419,15 @@ function mountW4(root) {
     '<div class="dwrap" id="w4-data"></div>' +
     '<h3>Code Python</h3><div id="w4-code"></div>';
   const S = W4;
-  $('#w4-type').append(chipsRow([['hist', 'Histogramme'], ['line', 'Courbe'], ['scatter', 'Nuage de points']], S.chart, v => { S.chart = v; render(); }, 'Type'));
+function render() {
+  $('#w4-type').innerHTML = '';
+  $('#w4-type').append(chipsRow(
+    [['hist','Histogramme'],['line','Courbe'],['scatter','Nuage de points']],
+    S.chart,
+    v => { S.chart = v; render(); },
+    'Type'
+  ));
+  const data = S.data;
   function render() {
     const data = S.data;
     const maxV = Math.max(...data, 1);
