@@ -192,6 +192,23 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+/* --- FONCTION MANQUANTE : crée une rangée de puces (chips) --- */
+function chipsRow(items, cur, onPick, ariaLabel) {
+  const wrap = h('div', { class: 'chips', role: 'radiogroup' });
+  if (ariaLabel) wrap.setAttribute('aria-label', ariaLabel);
+  items.forEach(([val, label]) => {
+    const b = h('button', {
+      type: 'button',
+      class: 'chip' + (val === cur ? ' on' : ''),
+      role: 'radio',
+      'aria-checked': val === cur ? 'true' : 'false',
+      onclick: () => onPick(val)
+    }, label);
+    wrap.append(b);
+  });
+  return wrap;
+}
+
 /* Code Python coloré (léger) */
 function codeBlock(code, on) {
   const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue|assert|try|except|finally|yield)$/;
@@ -268,8 +285,10 @@ function mountW1(root) {
     '<h3>Cas de test prédéfinis</h3><div id="w1-tests"></div>' +
     '<p class="small">Les assertions servent à détecter les erreurs de programmation. Elles ne remplacent pas les exceptions (ValueError, TypeError) qui, elles, peuvent être rattrapées. Le programme de première année demande de savoir utiliser <code>assert</code> pour valider les entrées.</p>';
   const S = W1;
-  $('#w1-func').append(chipsRow(Object.keys(FUNCS).map(k => [k, FUNCS[k].label]), S.func, v => { S.func = v; S.input = ''; render(); }, 'Fonction'));
   function render() {
+    // Reconstruit les puces à chaque rendu (correctif)
+    $('#w1-func').innerHTML = '';
+    $('#w1-func').append(chipsRow(Object.keys(FUNCS).map(k => [k, FUNCS[k].label]), S.func, v => { S.func = v; S.input = ''; render(); }, 'Fonction'));
     const f = FUNCS[S.func];
     $('#w1-spec').innerHTML = '<tr><td>Signature</td><td class="m">' + esc(f.sig) + '</td></tr><tr><td>Rôle</td><td>' + esc(f.desc) + '</td></tr><tr><td>Précondition</td><td>' + esc(f.pre) + '</td></tr><tr><td>Postcondition</td><td>' + esc(f.post) + '</td></tr>';
     $('#w1-code').innerHTML = codeBlock(f.code.join('\n'));
@@ -296,7 +315,6 @@ function mountW1(root) {
         out.className = 'verdict yes'; out.innerHTML = 'division(' + a + ', ' + b + ') = <b>' + (a / b) + '</b> (précondition vérifiée).';
       }
     };
-    // table de tests
     let html = '<div class="dwrap"><table class="test-table"><thead><tr><th>Arguments</th><th>Résultat attendu</th><th>Statut</th></tr></thead><tbody>';
     for (const [args, t] of Object.entries(f.tests)) {
       html += '<tr><td class="m">' + esc(args) + '</td><td class="m">' + (t.ok ? esc(t.val) : esc(t.msg)) + '</td><td class="' + (t.ok ? 'ok' : 'ko') + '">' + (t.ok ? '✓ valide' : '✗ assertion') + '</td></tr>';
@@ -310,14 +328,13 @@ WORKSHOPS.push({ id: 'w1', title: 'Spécification et assertions', hint: 'Écrire
   mount: mountW1, reset: () => { Object.assign(W1, { func: 'moyenne', input: '' }); } });
 
 /* ================= Atelier 2 : Invariant et variant ================= */
-const W2 = { algo: 'somme', n: 5, step: 0, frames: null, timer: null };
+const W2 = { algo: 'somme', n: 5, step: 0, frames: null, timer: null, init: null };
 const ALGOS = {
   somme: {
     label: 'Somme des n premiers entiers',
     code: ['def somme(n: int) -> int:', '    """Renvoie 0 + 1 + ... + n. Précondition : n >= 0."""', '    assert n >= 0, "n doit être positif ou nul"', '    s = 0', '    i = 0', '    while i < n:', '        i = i + 1', '        s = s + i', '    return s'],
     invariant: 's = 0 + 1 + … + i',
     variant: 'n − i',
-    init: { s: 0, i: 0, n: 5 },
     stepFn: st => st.i < st.n ? { s: st.s + st.i + 1, i: st.i + 1 } : null,
     checkInv: st => st.s === st.i * (st.i + 1) / 2,
     checkVar: st => st.n - st.i
@@ -327,7 +344,6 @@ const ALGOS = {
     code: ['def factorielle(n: int) -> int:', '    """Renvoie n! . Précondition : n >= 0."""', '    assert n >= 0, "n doit être positif ou nul"', '    f = 1', '    i = 1', '    while i <= n:', '        f = f * i', '        i = i + 1', '    return f'],
     invariant: 'f = (i − 1)!',
     variant: 'n + 1 − i',
-    init: { f: 1, i: 1, n: 5 },
     stepFn: st => st.i <= st.n ? { f: st.f * st.i, i: st.i + 1 } : null,
     checkInv: st => { let fact = 1; for (let k = 2; k < st.i; k++) fact *= k; return st.f === fact; },
     checkVar: st => st.n + 1 - st.i
@@ -337,9 +353,9 @@ const ALGOS = {
     code: ['def pgcd(a: int, b: int) -> int:', '    """PGCD de a et b. Précondition : a > 0, b > 0."""', '    assert a > 0 and b > 0, "a et b doivent être strictement positifs"', '    while a != b:', '        if a > b:', '            a = a - b', '        else:', '            b = b - a', '    return a'],
     invariant: 'pgcd(a, b) = pgcd(a₀, b₀)',
     variant: 'a + b',
-    init: { a: 12, b: 18 },
     stepFn: st => st.a !== st.b ? (st.a > st.b ? { a: st.a - st.b, b: st.b } : { a: st.a, b: st.b - st.a }) : null,
-    checkInv: st => gcd(st.a, st.b) === gcd(12, 18),
+    // Correctif : comparaison à la valeur initiale réelle (stockée dans W2.init)
+    checkInv: (st, init) => gcd(st.a, st.b) === gcd(init.a, init.b),
     checkVar: st => st.a + st.b
   }
 };
@@ -355,7 +371,6 @@ function mountW2(root) {
     '<h3>Preuve de terminaison</h3><p class="small">Le variant est un entier positif (ou nul) qui diminue strictement à chaque tour de boucle : il ne peut pas diminuer indéfiniment, donc la boucle s\'arrête.</p>' +
     '<h3>Preuve de correction partielle</h3><p class="small">Si la boucle s\'arrête, l\'invariant est encore vrai et la condition d\'arrêt permet de conclure que le résultat est correct.</p>';
   const S = W2;
-  $('#w2-algo').append(chipsRow(Object.keys(ALGOS).map(k => [k, ALGOS[k].label]), S.algo, v => { S.algo = v; S.n = 5; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w2-play'); if (b) b.textContent = 'Lecture'; }
   function buildFrames() {
     const A = ALGOS[S.algo];
@@ -363,7 +378,12 @@ function mountW2(root) {
     let st;
     if (S.algo === 'somme') st = { s: 0, i: 0, n: S.n };
     else if (S.algo === 'factorielle') st = { f: 1, i: 1, n: S.n };
-    else st = { a: S.n, b: S.n + 6 };
+    else {
+      // Correctif : PGCD nécessite a > 0 et b > 0
+      const a0 = Math.max(1, S.n);
+      st = { a: a0, b: a0 + 6 };
+    }
+    S.init = { ...st };
     frames.push({ st: { ...st }, phase: 'init', msg: 'Initialisation. L\'invariant doit déjà être vrai.' });
     let guard = 0;
     while (guard++ < 200) {
@@ -376,12 +396,14 @@ function mountW2(root) {
     return frames;
   }
   function render() {
+    // Reconstruit les puces (correctif)
+    $('#w2-algo').innerHTML = '';
+    $('#w2-algo').append(chipsRow(Object.keys(ALGOS).map(k => [k, ALGOS[k].label]), S.algo, v => { S.algo = v; S.n = 5; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
     const A = ALGOS[S.algo];
     $('#w2-props').innerHTML = '<tr><td><b>Invariant :</b> ' + esc(A.invariant) + '</td><td><b>Variant :</b> ' + esc(A.variant) + '</td></tr>';
-    $('#w2-code').innerHTML = codeBlock(A.code.join('\n'), S.frames && S.frames[S.step] && S.frames[S.step].phase === 'step' ? null : null);
+    $('#w2-code').innerHTML = codeBlock(A.code.join('\n'));
     if (!S.frames) S.frames = buildFrames();
     const f = S.frames[S.step];
-    // table
     let html = '<table class="test-table"><thead><tr><th>Étape</th>';
     const keys = Object.keys(f.st);
     keys.forEach(k => html += '<th>' + k + '</th>');
@@ -389,7 +411,7 @@ function mountW2(root) {
     S.frames.slice(0, S.step + 1).forEach((fr, idx) => {
       html += '<tr' + (idx === S.step ? ' style="background:var(--accent-soft)"' : '') + '><td>' + idx + '</td>';
       keys.forEach(k => html += '<td class="m">' + fr.st[k] + '</td>');
-      const inv = A.checkInv(fr.st), va = A.checkVar(fr.st);
+      const inv = A.checkInv(fr.st, S.init), va = A.checkVar(fr.st);
       html += '<td class="' + (inv ? 'ok' : 'ko') + '">' + (inv ? '✓' : '✗') + '</td><td class="m">' + (typeof va === 'number' ? va : '—') + '</td></tr>';
     });
     html += '</tbody></table>';
@@ -403,7 +425,7 @@ function mountW2(root) {
     nInp.value = S.n;
     nInp.oninput = () => {
       const v = parseInt(nInp.value, 10);
-      if (isFinite(v) && v >= 0) { S.n = v; S.step = 0; S.frames = null; stop(); render(); }
+      if (isFinite(v) && v >= 0) { S.n = v; S.step = 0; S.frames = null; S.init = null; stop(); render(); }
     };
   }
   $('#w2-prev').onclick = () => { stop(); if (S.step > 0) { S.step--; render(); } };
@@ -419,7 +441,7 @@ function mountW2(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w2', title: 'Invariant et variant', hint: 'Démontrez la terminaison avec un variant et la correction partielle avec un invariant.',
-  mount: mountW2, reset: () => { Object.assign(W2, { algo: 'somme', n: 5, step: 0, frames: null }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
+  mount: mountW2, reset: () => { Object.assign(W2, { algo: 'somme', n: 5, step: 0, frames: null, init: null }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
 
 /* ================= Atelier 3 : Jeu de tests ================= */
 const W3 = { func: 'signe', tests: {} };
@@ -459,8 +481,10 @@ function mountW3(root) {
     '<h3>Table de tests</h3><div class="dwrap" id="w3-table"></div>' +
     '<p class="small">Le programme officiel demande de savoir écrire un jeu de tests à la main, en couvrant les partitions et les valeurs limites. La génération automatique n\'est pas au programme.</p>';
   const S = W3;
-  $('#w3-func').append(chipsRow(Object.keys(TEST_FUNCS).map(k => [k, TEST_FUNCS[k].label]), S.func, v => { S.func = v; S.tests = {}; render(); }, 'Fonction'));
   function render() {
+    // Reconstruit les puces (correctif)
+    $('#w3-func').innerHTML = '';
+    $('#w3-func').append(chipsRow(Object.keys(TEST_FUNCS).map(k => [k, TEST_FUNCS[k].label]), S.func, v => { S.func = v; S.tests = {}; render(); }, 'Fonction'));
     const f = TEST_FUNCS[S.func];
     $('#w3-spec').innerHTML = '<table class="dt"><thead><tr><th>Élément</th><th>Contenu</th></tr></thead><tbody><tr><td>Signature</td><td class="m">' + esc(f.sig) + '</td></tr><tr><td>Rôle</td><td>' + esc(f.desc) + '</td></tr></tbody></table>';
     $('#w3-domains').innerHTML = '<h3>Partitions du domaine</h3><p>Choisir une entrée dans chaque partition évite les redondances :</p><ul><li>' + f.domains.map(d => esc(d)).join('</li><li>') + '</li></ul><p><b>Valeurs limites :</b> ' + f.limits.map(esc).join(', ') + '.</p>';
@@ -527,16 +551,16 @@ function mountW4(root) {
     rapide: { label: 'Tri rapide (cas moyen)', ops: n => Math.round(n * Math.log2(n)), ordre: 'O(n log n)', desc: 'Diviser pour régner : n log n comparaisons en moyenne.' }
   };
   const nEl = $('#w4-n'), nVal = $('#w4-nval');
-  const funcs = $('#w4-func');
-  funcs.append(chipsRow(Object.keys(FUNCS).map(k => [k, FUNCS[k].label]), S.func, v => { S.func = v; S.runs = []; draw(); }, 'Algorithme'));
   nEl.oninput = () => { S.n = parseInt(nEl.value, 10); nVal.textContent = S.n; draw(); };
   $('#w4-run').onclick = () => { S.runs.push({ f: S.func, n: S.n, ops: FUNCS[S.func].ops(S.n) }); draw(); };
   $('#w4-clear').onclick = () => { S.runs = []; draw(); };
   function draw() {
+    // Reconstruit les puces (correctif)
+    $('#w4-func').innerHTML = '';
+    $('#w4-func').append(chipsRow(Object.keys(FUNCS).map(k => [k, FUNCS[k].label]), S.func, v => { S.func = v; S.runs = []; draw(); }, 'Algorithme'));
     const f = FUNCS[S.func];
     $('#w4-table').innerHTML = '<tr><td>' + esc(f.label) + '</td><td class="m">' + f.ops(S.n) + '</td><td><b>' + f.ordre + '</b></td></tr>';
     $('#w4-n').value = S.n; nVal.textContent = S.n;
-    // graphique : comparer les 4 fonctions pour n = 1..20
     const W = 640, H = 320, L = 50, R = 20, T = 20, B = 40;
     const maxN = 20, xs = []; for (let n = 1; n <= maxN; n++) xs.push(n);
     const series = Object.keys(FUNCS).map(k => ({ k, label: FUNCS[k].label, color: { recherche: '#2e6da4', dichotomie: '#1e7a2e', bulles: '#c0281f', rapide: '#7b4fc2' }[k], pts: xs.map(n => [n, FUNCS[k].ops(n)]) }));
@@ -550,18 +574,15 @@ function mountW4(root) {
     series.forEach(s => {
       svg += '<polyline fill="none" stroke="' + s.color + '" stroke-width="2" points="' + s.pts.map(p => X(p[0]) + ',' + Y(p[1])).join(' ') + '"/>';
     });
-    // points des mesures
     S.runs.forEach(r => {
       const s = series.find(x => x.k === r.f); if (!s) return;
       svg += '<circle cx="' + X(r.n) + '" cy="' + Y(r.ops) + '" r="4" fill="' + s.color + '" stroke="#fff"/>';
     });
-    // légende
     series.forEach((s, i) => {
       const y = T + 10 + i * 16;
       svg += '<line x1="' + (L + 10) + '" y1="' + y + '" x2="' + (L + 26) + '" y2="' + y + '" stroke="' + s.color + '" stroke-width="2"/><text x="' + (L + 32) + '" y="' + (y + 4) + '" font-size="11" fill="#222">' + s.label + '</text>';
     });
     $('#w4-chart').innerHTML = svg;
-    // stats
     const cur = S.runs.filter(r => r.f === S.func);
     if (cur.length) {
       const last = cur[cur.length - 1];
@@ -616,10 +637,13 @@ function mountW5(root) {
     '<h3>À justifier dans un commentaire</h3><ul style="padding-left:22px;line-height:1.7"><li>Pourquoi cette structure (liste, dictionnaire, ensemble) ?</li><li>Quel est l\'ordre de grandeur du coût en temps et en espace ?</li><li>Quelle hypothèse fait-on sur les entrées (précondition) ?</li></ul>' +
     '<p class="small">Le programme insiste sur l\'explication des choix : un commentaire qui paraphrase le code est inutile ; un commentaire qui justifie une structure ou un algorithme est attendu.</p>';
   const S = W5;
-  $('#w5-case').append(chipsRow(Object.keys(CASES).map(k => [k, CASES[k].label]), S.case, v => { S.case = v; S.option = Object.keys(CASES[v].options)[0]; render(); }, 'Contexte'));
   function render() {
     const c = CASES[S.case];
+    // Reconstruit les puces « Contexte » (correctif)
+    $('#w5-case').innerHTML = '';
+    $('#w5-case').append(chipsRow(Object.keys(CASES).map(k => [k, CASES[k].label]), S.case, v => { S.case = v; S.option = Object.keys(CASES[v].options)[0]; render(); }, 'Contexte'));
     $('#w5-context').textContent = c.context;
+    // Reconstruit les puces « Structure »
     $('#w5-option').innerHTML = '';
     $('#w5-option').append(chipsRow(Object.keys(c.options).map(k => [k, c.options[k].label]), S.option, v => { S.option = v; render(); }, 'Structure'));
     const o = c.options[S.option];
@@ -1000,5 +1024,4 @@ $('#bHelp').addEventListener('click', () => {
 });
 (function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
 </script>
-
 </body></html>
