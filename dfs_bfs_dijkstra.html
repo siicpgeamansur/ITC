@@ -110,6 +110,7 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
 .chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+/* [FIX] #w4-stats et #w5-stats sont .gstats : on retire la classe de stats() pour éviter l'imbrication */
 .gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
 .stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
@@ -250,34 +251,34 @@ function generateTree(n) {
   const nodes = Array.from({ length: n }, (_, i) => String(i + 1));
   const edges = [];
   const pos = {};
-  
+
   let maxLvl = 0;
   for (let i = 0; i < n; i++) {
     const lvl = Math.floor(Math.log2(i + 1));
     if (lvl > maxLvl) maxLvl = lvl;
   }
-  
+
   const W = 640, H = 360;
   const topPad = 50, botPad = 50;
   const yStep = maxLvl > 0 ? (H - topPad - botPad) / maxLvl : 0;
-  
+
   for (let i = 0; i < n; i++) {
     const lvl = Math.floor(Math.log2(i + 1));
     const posInLvl = i - (Math.pow(2, lvl) - 1);
     const totalInLvl = Math.pow(2, lvl);
-    
+
     const spacing = W / (totalInLvl + 1);
     const x = spacing * (posInLvl + 1);
     const y = topPad + lvl * yStep;
-    
+
     pos[String(i + 1)] = [x, y];
-    
+
     if (i > 0) {
       const parent = Math.floor((i - 1) / 2);
       edges.push([String(parent + 1), String(i + 1), 1]);
     }
   }
-  
+
   return { name: 'Arbre binaire', directed: false, nodes, edges, pos };
 }
 
@@ -402,16 +403,31 @@ function astar(g, start, goal) {
   }
   return { dist, parent, steps };
 }
-/* reconstruire le chemin à partir des parents */
+/* reconstruire le chemin à partir des parents — [FIX] garde-fou contre les cycles */
 function pathTo(parent, goal) {
-  const path = []; let cur = goal;
-  while (cur !== undefined) { path.push(cur); cur = parent.get(cur); }
+  const path = []; let cur = goal; let guard = 0;
+  while (cur !== undefined && guard++ < 1000) { path.push(cur); cur = parent.get(cur); }
   return path.reverse();
+}
+/* [FIX] Calcule l'ensemble « en attente » (dans la file de priorité) pour un état Dijkstra. */
+function dijkstraFrontier(st, nodes) {
+  if (!st || !st.dist || !st.visited) return new Set();
+  const f = new Set();
+  for (const n of nodes) {
+    const d = st.dist.get(n);
+    if (d !== undefined && d !== Infinity && !st.visited.has(n)) f.add(n);
+  }
+  return f;
 }
 /*LOGIC-END*/
 
 /* ---------- aides d'interface ---------- */
-function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', null, k[0]), h('b', null, k[1])))); }
+/* [FIX] Renvoie un DocumentFragment de .stat, et non un .gstats imbriqué dans #wN-stats (qui est déjà .gstats). */
+function stats(list) {
+  const frag = document.createDocumentFragment();
+  list.forEach(([label, value]) => frag.append(h('div', { class: 'stat' }, h('span', null, label), h('b', null, value))));
+  return frag;
+}
 function chipsRow(items, cur, cb, label) {
   return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
 }
@@ -433,7 +449,7 @@ function codeBlock(code, on) {
   return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
 }
 
-/* dessin du graphe */
+/* dessin du graphe — [FIX] priorité final > current > frontier > visited */
 function drawGraph(svg, g, opts) {
   const o = opts || {};
   const pos = g.pos || {};
@@ -452,19 +468,17 @@ function drawGraph(svg, g, opts) {
   const drawn = new Set();
   g.edges.forEach(([u, v, w]) => {
     if (!pos[u] || !pos[v]) return;
-    const sym = !g.directed && adj.has(v) && adj.get(v).has(u);
     const key = g.directed ? u + '>' + v : [u, v].sort().join('|');
     if (drawn.has(key)) return; drawn.add(key);
     const [x1, y1] = pos[u], [x2, y2] = pos[v];
     const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
     const r = 20;
     const ax = x1 + ux * r, ay = y1 + uy * r, bx = x2 - ux * r, by = y2 - uy * r;
-    const k = [u, v].sort().join('|') + '|' + w;
     let cls = 'gedge';
     if (treeEdges.has(key)) cls += ' tree';
     if (pathEdges.has(key)) cls += ' path';
     if (relaxEdge && ((relaxEdge[0] === u && relaxEdge[1] === v) || (!g.directed && relaxEdge[0] === v && relaxEdge[1] === u))) cls += ' relax';
-    const marker = cls.includes('tree') ? 'url(#arrT)' : cls.includes('path') ? 'url(#arrP)' : 'url(#arr)';
+    const marker = cls.includes('path') ? 'url(#arrP)' : cls.includes('tree') ? 'url(#arrT)' : 'url(#arr)';
     s += '<line class="' + cls + '" x1="' + ax + '" y1="' + ay + '" x2="' + bx + '" y2="' + by + '"' + (g.directed ? ' marker-end="' + marker + '"' : '') + '/>';
     if (showWeights) {
       const mx = (x1 + x2) / 2 - uy * 10, my = (y1 + y2) / 2 + ux * 10;
@@ -474,16 +488,17 @@ function drawGraph(svg, g, opts) {
   nodes.forEach(n => {
     const [x, y] = pos[n];
     let cls = 'gnode';
-    if (current === n) cls += ' current';
-    else if (final.has(n)) cls += ' final';
+    /* [FIX] Priorité : final (chemin trouvé) > current (extrait) > frontier (en attente) > visited (fermé) */
+    if (final.has(n)) cls += ' final';
+    else if (current === n) cls += ' current';
     else if (frontier.has(n)) cls += ' frontier';
     else if (visited.has(n)) cls += ' visited';
-    
+
     let style = '';
     if (o.nodeColor) style += 'fill:' + o.nodeColor(n) + ';';
     if (o.nodeStroke) style += 'stroke:' + o.nodeStroke(n) + ';';
     if (o.nodeStrokeWidth) style += 'stroke-width:' + o.nodeStrokeWidth(n) + ';';
-    
+
     s += '<circle class="' + cls + '" cx="' + x + '" cy="' + y + '" r="20"' + (style ? ' style="' + style + '"' : '') + '/>';
     s += '<text class="glabel" x="' + x + '" y="' + y + '">' + esc(n) + '</text>';
     if (dist && dist.get(n) !== undefined && dist.get(n) !== Infinity) {
@@ -494,7 +509,7 @@ function drawGraph(svg, g, opts) {
 }
 
 /* ================= Atelier 1 : vocabulaire et représentations ================= */
-const W1 = { graph: 'simple', repr: 'adj', highlight: null, orient: false };
+const W1 = { graph: 'simple', repr: 'adj', highlight: null };
 function mountW1(root) {
   root.innerHTML = '<h2>Vocabulaire et représentations</h2><p>Un graphe <b>G = (S, A)</b> est la donnée d\'un ensemble de <b>sommets</b> S et d\'un ensemble d\'<b>arêtes</b> (ou <b>arcs</b>) A. Chaque arête relie deux sommets, éventuellement avec un <b>poids</b> ou une étiquette.</p>' +
     '<div class="opts"><div class="fld"><span>Graphe</span><div id="w1-g"></div></div><div class="fld"><span>Représentation</span><div id="w1-r"></div></div></div>' +
@@ -506,14 +521,11 @@ function mountW1(root) {
   const S = W1;
   function render() {
     const g = GRAPHS[S.graph];
-    
     $('#w1-g').innerHTML = '';
     $('#w1-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['pondere', 'Pondéré'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.highlight = null; render(); }, 'Graphe'));
     $('#w1-r').innerHTML = '';
     $('#w1-r').append(chipsRow([['adj', 'Listes d\'adjacence'], ['mat', 'Matrice d\'adjacence']], S.repr, v => { S.repr = v; render(); }, 'Représentation'));
-    
     drawGraph($('#w1-svg'), g, { current: S.highlight });
-    // stats
     const adj = buildAdj(g);
     const n = g.nodes.length;
     let m = 0, sumDeg = 0, sumOut = 0, sumIn = 0;
@@ -529,7 +541,6 @@ function mountW1(root) {
       ['Cycles', cyc ? 'oui' : 'non'],
       ['Connexe', comps.length === 1 ? 'oui' : 'non']
     ]));
-    // table de degrés
     let degTbl = '<h3>Degrés</h3><div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>' + (g.directed ? 'd₋ (entrant)' : 'd (degré)') + '</th>' + (g.directed ? '<th>d₊ (sortant)</th>' : '') + '</tr></thead><tbody>';
     g.nodes.forEach(n2 => {
       let din = 0, dout = 0;
@@ -538,13 +549,12 @@ function mountW1(root) {
       degTbl += '<tr><td><b>' + esc(n2) + '</b></td><td class="m">' + (g.directed ? din : dout) + '</td>' + (g.directed ? '<td class="m">' + dout + '</td>' : '') + '</tr>';
     });
     degTbl += '</tbody></table></div>';
-    // représentation
     let reprHtml = '';
     if (S.repr === 'adj') {
       reprHtml = '<h3>Listes d\'adjacence</h3><pre class="code">G = {';
       const keys = Array.from(adj.keys());
       keys.forEach((k, i) => {
-        const nbs = Array.from(adj.get(k).entries()).map(([v, w]) => g.directed || g.edges.some(e => e[2] !== 1) ? (g.edges.some(e => e[2] !== 1) ? v + ': ' + w : v) : v);
+        const nbs = Array.from(adj.get(k).entries()).map(([v, w]) => g.edges.some(e => e[2] !== 1) ? v + ': ' + w : v);
         reprHtml += (i ? ',' : '') + '\n    \'' + k + '\': ' + (g.edges.some(e => e[2] !== 1) ? '{' + nbs.join(', ') + '}' : '[' + nbs.join(', ') + ']');
       });
       reprHtml += '\n}</pre><p class="small">Accès aux voisins d\'un sommet : O(degré(u)). Espace mémoire : O(|S| + |A|). C\'est la représentation recommandée pour les grands graphes creux (réseaux sociaux, web).</p>';
@@ -559,7 +569,6 @@ function mountW1(root) {
       });
       reprHtml += '</tbody></table></div><p class="small">Accès à une arête : O(1). Espace mémoire : O(|S|²) même si le graphe a peu d\'arêtes. Adaptée aux graphes denses ou aux calculs matriciels.</p>';
     }
-    // navigation sur les sommets
     reprHtml += '<p class="small">Cliquez sur un sommet dans la liste pour le mettre en évidence :</p><div id="w1-nav"></div>';
     reprHtml += degTbl;
     $('#w1-repr').innerHTML = reprHtml;
@@ -584,16 +593,13 @@ function mountW2(root) {
     '<div id="w2-queue"></div>' +
     '<h3>Code Python</h3><div id="w2-code"></div>';
   const S = W2;
-  
   $('#w2-tree-n').addEventListener('input', (e) => {
     S.treeN = parseInt(e.target.value, 10);
     $('#w2-tree-nval').textContent = S.treeN;
     S.start = '1';
     S.step = 0; S.frames = null; stop(); render();
   });
-
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w2-play'); if (b) b.textContent = 'Lecture'; }
-  
   function buildFrames() {
     const g = S.graph === 'tree' ? generateTree(S.treeN) : GRAPHS[S.graph];
     const adj = buildAdj(g);
@@ -629,34 +635,22 @@ function mountW2(root) {
       return { frames, parent: new Map(), dist: null, order };
     }
   }
-  
   function render() {
     $('#w2-g').innerHTML = '';
-    $('#w2-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['cycle', 'Avec cycles'], ['tree', 'Arbre']], S.graph, v => { 
-      S.graph = v; 
-      S.start = v === 'tree' ? '1' : GRAPHS[v].nodes[0]; 
-      S.step = 0; S.frames = null; stop(); render(); 
-    }, 'Graphe'));
-    
+    $('#w2-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['cycle', 'Avec cycles'], ['tree', 'Arbre']], S.graph, v => { S.graph = v; S.start = v === 'tree' ? '1' : GRAPHS[v].nodes[0]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
     const treeCtrl = $('#w2-tree-ctrl');
     if (S.graph === 'tree') treeCtrl.style.display = 'flex';
     else treeCtrl.style.display = 'none';
-
     const g = S.graph === 'tree' ? generateTree(S.treeN) : GRAPHS[S.graph];
     if (!g.nodes.includes(S.start)) S.start = g.nodes[0];
-
     $('#w2-s').innerHTML = '';
     $('#w2-s').append(chipsRow(g.nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Départ'));
-    
     $('#w2-m').innerHTML = '';
     $('#w2-m').append(chipsRow([['bfs', 'Largeur (BFS)'], ['dfs', 'Profondeur (DFS)']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
-
     if (!S.frames) S.frames = buildFrames();
     const f = S.frames.frames[S.step];
     const frontier = new Set(f.queue || f.stack || []);
-    
     drawGraph($('#w2-svg'), g, { visited: f.visited, frontier, current: f.current, treeEdges: f.treeEdges, dist: f.dist });
-    
     const last = S.step === S.frames.frames.length - 1;
     $('#w2-msg').className = 'verdict' + (last ? ' yes' : '');
     $('#w2-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.frames.length - 1) + '.</b> ' + f.msg;
@@ -689,7 +683,8 @@ function mountW2(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w2', title: 'Parcours BFS et DFS', hint: 'Comparez parcours en largeur (file) et en profondeur (pile) : ordre de visite, arbre couvrant, distance en nombre d\'arêtes.',
-  mount: mountW2, reset: () => { Object.assign(W2, { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null, treeN: 15 }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
+  mount: mountW2, reset: () => { Object.assign(W2, { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null, treeN: 15 }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } },
+  leave: () => { if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
 
 /* ================= Atelier 3 : connexité et cycles ================= */
 const W3 = { graph: 'cycle', start: '1' };
@@ -704,19 +699,16 @@ function mountW3(root) {
   function render() {
     $('#w3-g').innerHTML = '';
     $('#w3-g').append(chipsRow([['simple', 'Non orienté'], ['cycle', 'Deux triangles'], ['oriente', 'Orienté']], S.graph, v => { S.graph = v; render(); }, 'Graphe'));
-
     const g = GRAPHS[S.graph];
     const comps = components(g), adj = buildAdj(g);
     const colors = ['#2e6da4', '#1e7a2e', '#9a5b00', '#7b4fc2', '#c0281f'];
     const compOf = new Map();
     comps.forEach((c, i) => c.forEach(n => compOf.set(n, i)));
-    
     drawGraph($('#w3-svg'), g, {
       nodeColor: n => colors[(compOf.get(n) || 0) % colors.length] + '22',
       nodeStroke: n => colors[(compOf.get(n) || 0) % colors.length],
       nodeStrokeWidth: () => 2.5
     });
-
     const cyc = hasCycle(g);
     $('#w3-stats').innerHTML = '';
     $('#w3-stats').append(stats([
@@ -729,7 +721,7 @@ function mountW3(root) {
     comps.forEach((c, i) => { html += '<p><b style="color:' + colors[i % colors.length] + '">Composante ' + (i + 1) + '</b> : ' + c.join(', ') + ' (' + c.length + ' sommet' + (c.length > 1 ? 's' : '') + ').</p>'; });
     html += '<h3>Détection de cycle</h3><p>Un parcours en profondeur détecte un cycle quand il rencontre un voisin déjà visité qui n\'est pas le parent du sommet courant.</p>';
     if (cyc) {
-      const seen = new Set(), parent = new Map(), stack = [g.nodes[0]];
+      const seen = new Set(), parent = new Map();
       let cycleFound = null;
       const dfsCycle = (u, p) => {
         seen.add(u); parent.set(u, p);
@@ -762,7 +754,7 @@ function mountW4(root) {
     '<div class="opts"><div class="fld"><span>Graphe</span><div id="w4-g"></div></div><div class="fld"><span>Source</span><div id="w4-s"></div></div><div class="fld"><span>Destination</span><div id="w4-t"></div></div></div>' +
     '<div class="files" style="margin:8px 0"><button class="btn" id="w4-prev" type="button">◀ Précédent</button><button class="btn pri" id="w4-next" type="button">Suivant ▶</button><button class="btn" id="w4-play" type="button">Lecture</button><button class="btn" id="w4-reset" type="button">Départ</button></div>' +
     '<div class="gwrap"><svg id="w4-svg" viewBox="0 0 720 380"></svg></div>' +
-    '<div class="legend"><span><i></i>non visité</span><span><i class="v"></i>distance définitive</span><span><i class="c"></i>extrait</span><span><i class="r"></i>relâchement</span><span><i class="p"></i>plus court chemin</span></div>' +
+    '<div class="legend"><span><i></i>non atteint</span><span><i class="f"></i>en attente (file de priorité)</span><span><i class="v"></i>distance définitive</span><span><i class="c"></i>extrait</span><span><i class="r"></i>relâchement</span><span><i class="p"></i>plus court chemin</span></div>' +
     '<div class="verdict" id="w4-msg" aria-live="polite"></div>' +
     '<div class="gstats" id="w4-stats"></div>' +
     '<h3>File de priorité naïve</h3><p class="small">On peut se contenter d\'un parcours linéaire pour extraire le minimum : le coût est alors O(|S|²). Une vraie file de priorité (tas binaire) ramène à O((|S| + |A|) log |S|).</p>' +
@@ -777,15 +769,17 @@ function mountW4(root) {
     $('#w4-s').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Source'));
     $('#w4-t').innerHTML = '';
     $('#w4-t').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.target, v => { S.target = v; S.step = 0; S.frames = null; stop(); render(); }, 'Destination'));
-
     const g = GRAPHS[S.graph];
     if (!S.frames) S.frames = dijkstra(g, S.start);
     const steps = S.frames.steps;
-    const st = steps[S.step] || steps[steps.length - 1];
+    /* [FIX] On borne S.step pour éviter un affichage « étape 20 / 15 » */
+    const idx = Math.min(S.step, steps.length - 1);
+    const st = steps[idx];
     const visited = st.visited, current = st.u, dist = st.dist;
-    
+    /* [FIX] Frontière calculée pour la visualization : sommets atteints mais pas encore extraits */
+    const frontier = dijkstraFrontier(st, g.nodes);
     let pathEdges = new Set(), final = new Set();
-    const lastStep = S.step >= steps.length - 1;
+    const lastStep = idx >= steps.length - 1;
     if (lastStep && S.target) {
       const p = pathTo(S.frames.parent, S.target);
       final = new Set(p);
@@ -793,26 +787,30 @@ function mountW4(root) {
     }
     const treeEdges = new Set();
     for (const [v, u] of st.parent) treeEdges.add([u, v].sort().join('|'));
-    
-    drawGraph($('#w4-svg'), g, { visited, current, dist, treeEdges, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
+    drawGraph($('#w4-svg'), g, { visited, frontier, current, dist, treeEdges, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
     const msg = st.phase === 'extract'
       ? 'On extrait <b>' + current + '</b> (distance provisoire ' + dist.get(current) + '). Sa distance devient définitive : c\'est le plus proche sommet non visité.'
       : 'Relâchement de l\'arête ' + st.u + ' → ' + st.v + ' (poids ' + st.w + ') : nouvelle distance de ' + st.v + ' = ' + dist.get(st.v) + '.';
     $('#w4-msg').className = 'verdict' + (lastStep ? ' yes' : '');
-    $('#w4-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (steps.length - 1) + '.</b> ' + msg;
+    $('#w4-msg').innerHTML = '<b>Étape ' + idx + ' / ' + (steps.length - 1) + '.</b> ' + msg;
     $('#w4-stats').innerHTML = '';
     $('#w4-stats').append(stats([
       ['Visités', String(visited.size) + ' / ' + g.nodes.length],
+      ['En attente', String(frontier.size)],
       ['Distance de ' + S.target, dist.get(S.target) === Infinity ? '∞' : String(dist.get(S.target))],
-      ['Sommet courant', current || '—'],
-      ['Phase', st.phase === 'extract' ? 'extraction du minimum' : 'relâchement']
+      ['Sommet courant', current || '—']
     ]));
     let tbl = '<div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>Distance</th><th>Parent</th><th>État</th></tr></thead><tbody>';
     g.nodes.forEach(n => {
       const d = dist.get(n);
       const parent = st.parent.get(n);
-      const state = visited.has(n) ? 'définitif' : (d !== undefined && d !== Infinity ? 'provisoire' : '∞');
-      tbl += '<tr' + (n === current ? ' style="background:var(--accent-soft)"' : '') + '><td><b>' + esc(n) + '</b></td><td class="m">' + (d === Infinity ? '∞' : d) + '</td><td class="m">' + (parent || '—') + '</td><td>' + state + '</td></tr>';
+      let state;
+      if (final.has(n)) state = 'chemin final';
+      else if (n === current) state = 'extrait';
+      else if (visited.has(n)) state = 'définitif';
+      else if (frontier.has(n)) state = 'en attente';
+      else state = (d === Infinity || d === undefined) ? '∞' : 'non atteint';
+      tbl += '<tr' + (n === current ? ' style="background:var(--accent-soft)"' : '') + '><td><b>' + esc(n) + '</b></td><td class="m">' + (d === Infinity || d === undefined ? '∞' : d) + '</td><td class="m">' + (parent || '—') + '</td><td>' + state + '</td></tr>';
     });
     tbl += '</tbody></table></div>';
     if (lastStep) {
@@ -821,8 +819,8 @@ function mountW4(root) {
     }
     $('#w4-table').innerHTML = tbl;
     $('#w4-code').innerHTML = codeBlock('def dijkstra(G, s):\n    dist = {u: float("inf") for u in G}\n    dist[s] = 0\n    parent = {}\n    vus = set()\n    while len(vus) < len(G):\n        # extraire le sommet non visité de distance minimale\n        u = min((x for x in G if x not in vus), key=dist.get, default=None)\n        if u is None or dist[u] == float("inf"):\n            break\n        vus.add(u)\n        for v, w in G[u].items():\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n                parent[v] = u\n    return dist, parent');
-    $('#w4-prev').disabled = S.step === 0;
-    $('#w4-next').disabled = S.step >= steps.length - 1;
+    $('#w4-prev').disabled = idx === 0;
+    $('#w4-next').disabled = lastStep;
   }
   $('#w4-prev').addEventListener('click', () => { stop(); if (S.step > 0) { S.step--; render(); } });
   $('#w4-next').addEventListener('click', () => { stop(); if (S.step < S.frames.steps.length - 1) { S.step++; render(); } });
@@ -837,7 +835,8 @@ function mountW4(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w4', title: 'Plus courts chemins : Dijkstra', hint: 'Suivez l\'algorithme de Dijkstra pas à pas : extraction du minimum, relâchement des arêtes, arbre des plus courts chemins.',
-  mount: mountW4, reset: () => { Object.assign(W4, { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } } });
+  mount: mountW4, reset: () => { Object.assign(W4, { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } },
+  leave: () => { if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } } });
 
 /* ================= Atelier 5 : Dijkstra vs A* ================= */
 const W5 = { start: 'S', target: 'T', step: 0, frames: null, timer: null, mode: 'dijkstra' };
@@ -856,25 +855,32 @@ function mountW5(root) {
   function render() {
     $('#w5-m').innerHTML = '';
     $('#w5-m').append(chipsRow([['dijkstra', 'Dijkstra'], ['astar', 'A*']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
-
     const g = GRAPHS.heuristique;
     if (!S.frames) S.frames = S.mode === 'astar' ? astar(g, S.start, S.target) : dijkstra(g, S.start);
     const steps = S.frames.steps;
-    const st = steps[S.step] || steps[steps.length - 1];
+    const idx = Math.min(S.step, steps.length - 1);
+    const st = steps[idx];
     const dist = st.dist;
-    const open = st.open || new Set();
-    const closed = st.closed || st.visited || new Set();
+    /* [FIX] Récupère les ensembles open/closed/frontier pour les deux modes */
+    let open, closed, frontier;
+    if (st.open) {
+      open = st.open;
+      closed = st.closed;
+      frontier = open;
+    } else {
+      closed = st.visited || new Set();
+      frontier = dijkstraFrontier(st, g.nodes);
+      open = frontier;
+    }
     const current = st.u;
-    const lastStep = S.step >= steps.length - 1;
-    
+    const lastStep = idx >= steps.length - 1;
     let pathEdges = new Set(), final = new Set();
     if (lastStep) {
       const p = pathTo(S.frames.parent, S.target);
       final = new Set(p);
       for (let i = 0; i < p.length - 1; i++) pathEdges.add([p[i], p[i + 1]].sort().join('|'));
     }
-    drawGraph($('#w5-svg'), g, { visited: closed, frontier: open, current, dist, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
-    
+    drawGraph($('#w5-svg'), g, { visited: closed, frontier, current, dist, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
     const hval = n => g.heur ? (g.heur[n] || 0) : 0;
     let msg;
     if (st.phase === 'goal') {
@@ -888,9 +894,8 @@ function mountW5(root) {
     } else {
       msg = 'Relâchement ' + st.u + ' → ' + st.v + ' (poids ' + st.w + ') : distance de ' + st.v + ' = ' + dist.get(st.v) + '.';
     }
-    
     $('#w5-msg').className = 'verdict' + (lastStep ? ' yes' : '');
-    $('#w5-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (steps.length - 1) + '.</b> ' + msg;
+    $('#w5-msg').innerHTML = '<b>Étape ' + idx + ' / ' + (steps.length - 1) + '.</b> ' + msg;
     $('#w5-stats').innerHTML = '';
     $('#w5-stats').append(stats([
       ['Algorithme', S.mode === 'astar' ? 'A* (g + h)' : 'Dijkstra (g)'],
@@ -898,11 +903,25 @@ function mountW5(root) {
       ['Fermés', String(closed.size)],
       ['Distance de ' + S.target, dist.get(S.target) === Infinity ? '∞' : String(dist.get(S.target))]
     ]));
-    let tbl = '<div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>g</th><th>h</th><th>f = g+h</th><th>État</th></tr></thead><tbody>';
+    /* [FIX] En mode Dijkstra, on masque les colonnes h et f qui ne sont pas utilisées. */
+    const showHF = S.mode === 'astar';
+    let tbl = '<div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>g</th>' + (showHF ? '<th>h</th><th>f = g+h</th>' : '') + '<th>État</th></tr></thead><tbody>';
     g.nodes.forEach(n => {
-      const d = dist.get(n), hv = hval(n), f = d === Infinity ? Infinity : d + hv;
-      const state = closed.has(n) ? 'fermé' : open.has(n) ? 'dans la file' : 'inconnu';
-      tbl += '<tr' + (n === current ? ' style="background:var(--accent-soft)"' : '') + '><td><b>' + esc(n) + '</b></td><td class="m">' + (d === Infinity ? '∞' : d) + '</td><td class="m">' + hv + '</td><td class="m">' + (f === Infinity ? '∞' : f) + '</td><td>' + state + '</td></tr>';
+      const d = dist.get(n);
+      let state;
+      if (final.has(n)) state = 'chemin final';
+      else if (n === current) state = 'extrait';
+      else if (closed.has(n)) state = 'fermé';
+      else if (open.has(n)) state = 'dans la file';
+      else state = (d === Infinity || d === undefined) ? '∞' : 'non atteint';
+      let row = '<tr' + (n === current ? ' style="background:var(--accent-soft)"' : '') + '><td><b>' + esc(n) + '</b></td><td class="m">' + (d === Infinity || d === undefined ? '∞' : d) + '</td>';
+      if (showHF) {
+        const hv = hval(n);
+        const f = (d === Infinity || d === undefined) ? Infinity : d + hv;
+        row += '<td class="m">' + hv + '</td><td class="m">' + (f === Infinity ? '∞' : f) + '</td>';
+      }
+      row += '<td>' + state + '</td></tr>';
+      tbl += row;
     });
     tbl += '</tbody></table></div>';
     if (lastStep) {
@@ -913,7 +932,7 @@ function mountW5(root) {
     const codeDij = 'def dijkstra(G, s):\n    dist = {u: float("inf") for u in G}\n    dist[s] = 0\n    parent = {}\n    vus = set()\n    while len(vus) < len(G):\n        u = min((x for x in G if x not in vus), key=dist.get, default=None)\n        if u is None or dist[u] == float("inf"):\n            break\n        vus.add(u)\n        for v, w in G[u].items():\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n                parent[v] = u\n    return dist, parent';
     const codeAst = 'def astar(G, s, t, h):\n    dist = {u: float("inf") for u in G}\n    dist[s] = 0\n    parent = {}\n    ouvert = {s}\n    ferme = set()\n    while ouvert:\n        u = min(ouvert, key=lambda x: dist[x] + h[x])\n        if u == t:\n            break\n        ouvert.remove(u)\n        ferme.add(u)\n        for v, w in G[u].items():\n            if v in ferme:\n                continue\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n                parent[v] = u\n                ouvert.add(v)\n    return dist, parent';
     $('#w5-code').innerHTML = S.mode === 'astar' ? codeBlock(codeAst) : codeBlock(codeDij);
-    $('#w5-prev').disabled = S.step === 0;
+    $('#w5-prev').disabled = idx === 0;
     $('#w5-next').disabled = lastStep;
   }
   $('#w5-prev').addEventListener('click', () => { stop(); if (S.step > 0) { S.step--; render(); } });
@@ -929,7 +948,8 @@ function mountW5(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w5', title: 'Dijkstra et A*', hint: 'Comparez Dijkstra et A* sur un même graphe : nombre de sommets fermés, rôle de l\'heuristique h.',
-  mount: mountW5, reset: () => { Object.assign(W5, { start: 'S', target: 'T', step: 0, frames: null }); if (W5.timer) { clearInterval(W5.timer); W5.timer = null; } } });
+  mount: mountW5, reset: () => { Object.assign(W5, { start: 'S', target: 'T', step: 0, frames: null }); if (W5.timer) { clearInterval(W5.timer); W5.timer = null; } },
+  leave: () => { if (W5.timer) { clearInterval(W5.timer); W5.timer = null; } } });
 
 /* ---------- activités ---------- */
 const ACT = {
@@ -945,7 +965,7 @@ const ACT = {
       'Cliquez sur un sommet dans la liste : voyez les cases de la matrice et la couleur des arêtes.'
     ],
     defi: { q: 'Un graphe non orienté a 5 sommets et 4 arêtes. Combien de composantes connexes au minimum ? au maximum ? Quelle est la somme des degrés ?',
-      a: 'Au minimum <b>1</b> composante (arbre à 5 sommets : 4 arêtes suffisent), au maximum <b>5</b> (aucune arête, mais alors 0 arête). Avec 4 arêtes, on a au moins un sommet relié, donc au plus 1 composante de taille 2 et 3 sommets isolés, soit 4 composantes. La somme des degrés vaut 2|A| = <b>8</b>.' },
+      a: 'Au minimum <b>1</b> composante (arbre à 5 sommets : 4 arêtes suffisent), au maximum <b>5</b> (aucune arête, mais alors 0 arête). Avec 4 arêtes, on a au moins un sommet relié, donc au plus 4 composantes (1 paire + 3 isolés). La somme des degrés vaut 2|A| = <b>8</b>.' },
     qcm: [
       { q: 'Un graphe orienté est un graphe où :', o: ['les arêtes ont un sens', 'les sommets sont numérotés', 'il n\'y a pas de cycles', 'les poids sont positifs'], a: 0, w: 'Les arêtes sont alors appelées des arcs : l\'arc u → v va de u vers v.' },
       { q: 'Que vaut la somme des degrés d\'un graphe non orienté ?', o: ['|S|', '|A|', '2|A|', '|S| × |A|'], a: 2, w: 'Chaque arête contribue 1 au degré de chacune de ses deux extrémités.' },
