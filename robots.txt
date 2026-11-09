@@ -1,0 +1,7 @@
+# robots.txt pour le site ITC
+# https://siicpgeamansur.github.io/ITC/
+
+User-agent: *
+Allow: /
+
+Sitemap: https://siicpgeamansur.github.io/ITC/sitemap.xml
