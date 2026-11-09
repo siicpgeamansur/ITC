@@ -714,7 +714,7 @@ function mountW3(root) {
 
   function render() {
     $('#w3-pre').innerHTML = '';
-    $('#w3-pre').append(chipsRow([['simple', 'Graphe du cours'], ['pond', 'Graphe pondéré']], S.mode, k => {
+    $('#w3-pre').append(chipsRow([['simple', 'Graphe non pondéré'], ['pond', 'Graphe pondéré']], S.mode, k => {
       S.mode = k;
       S.text = PRESETS[k === 'pond' ? 'graphe_pond' : 'graphe'].text;
       $('#w3-text').value = S.text;
