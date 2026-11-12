@@ -230,6 +230,18 @@ const GRAPHS = {
     edges: [['S', 'A', 3], ['S', 'B', 5], ['A', 'B', 1], ['A', 'C', 7], ['B', 'C', 2], ['B', 'D', 4], ['C', 'D', 1], ['C', 'T', 6], ['D', 'T', 2]],
     pos: { S: [60, 170], A: [200, 70], B: [200, 270], C: [370, 170], D: [370, 300], T: [530, 230] }
   },
+  imageGraph: {
+    name: 'Graphe de l\'image',
+    directed: true,
+    nodes: ['A', 'B', 'C', 'D', 'E'],
+    edges: [
+      ['A', 'B', 10], ['A', 'E', 5], 
+      ['B', 'C', 1], ['B', 'E', 2], 
+      ['E', 'B', 3], ['E', 'C', 4], ['E', 'D', 7], 
+      ['C', 'E', 9], ['C', 'D', 6]
+    ],
+    pos: { A: [60, 180], B: [200, 80], C: [380, 80], D: [540, 180], E: [300, 280] }
+  },
   cycle: {
     name: 'Graphe avec cycle',
     directed: false,
@@ -421,7 +433,7 @@ function dijkstraFrontier(st, nodes) {
   return f;
 }
 
-/* Nouveau : génère le tableau d'évolution des distances (comme sur l'image) */
+/* Génère le tableau d'évolution des distances (comme sur l'image) */
 function buildHistoryTable(steps, g, start, finalDist, finalParent, currentIdx) {
   let historyHtml = '<div class="dwrap"><table class="dt"><thead><tr><th>E</th>';
   g.nodes.forEach(n => historyHtml += '<th>' + esc(n) + '</th>');
@@ -434,7 +446,7 @@ function buildHistoryTable(steps, g, start, finalDist, finalParent, currentIdx) 
   });
   historyHtml += '</tr>';
 
-  // On ne garde que les étapes "extract" et "goal" (fin d'algorithme)
+  // On ne garde que les étapes "extract" et "goal"
   const finalSteps = [];
   for (let i = 0; i < steps.length; i++) {
     if (steps[i].phase === 'extract' || steps[i].phase === 'goal') {
@@ -444,9 +456,12 @@ function buildHistoryTable(steps, g, start, finalDist, finalParent, currentIdx) 
 
   for (let i = 0; i < finalSteps.length; i++) {
     const stepIdx = finalSteps[i];
+    
+    // LE FIX EST ICI : on arrête la construction du tableau si on a dépassé l'étape courante
+    if (stepIdx > currentIdx) break; 
+
     const step = steps[stepIdx];
     const u = step.u;
-    // Dans Dijkstra on a "visited", dans A* on a "closed"
     const visited = new Set(step.visited || step.closed || []);
     visited.add(u); // Le sommet extrait est définitif
 
@@ -491,7 +506,6 @@ function buildHistoryTable(steps, g, start, finalDist, finalParent, currentIdx) 
 /*LOGIC-END*/
 
 /* ---------- aides d'interface ---------- */
-/* [FIX] Renvoie un DocumentFragment de .stat, et non un .gstats imbriqué dans #wN-stats (qui est déjà .gstats). */
 function stats(list) {
   const frag = document.createDocumentFragment();
   list.forEach(([label, value]) => frag.append(h('div', { class: 'stat' }, h('span', null, label), h('b', null, value))));
@@ -518,7 +532,6 @@ function codeBlock(code, on) {
   return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
 }
 
-/* dessin du graphe — [FIX] priorité final > current > frontier > visited */
 function drawGraph(svg, g, opts) {
   const o = opts || {};
   const pos = g.pos || {};
@@ -557,7 +570,6 @@ function drawGraph(svg, g, opts) {
   nodes.forEach(n => {
     const [x, y] = pos[n];
     let cls = 'gnode';
-    /* [FIX] Priorité : final (chemin trouvé) > current (extrait) > frontier (en attente) > visited (fermé) */
     if (final.has(n)) cls += ' final';
     else if (current === n) cls += ' current';
     else if (frontier.has(n)) cls += ' frontier';
@@ -817,7 +829,7 @@ WORKSHOPS.push({ id: 'w3', title: 'Connexité et cycles', hint: 'Détectez les c
   mount: mountW3, reset: () => { Object.assign(W3, { graph: 'cycle', start: '1' }); } });
 
 /* ================= Atelier 4 : Dijkstra ================= */
-const W4 = { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null, timer: null };
+const W4 = { graph: 'imageGraph', start: 'A', target: 'D', step: 0, frames: null, timer: null };
 function mountW4(root) {
   root.innerHTML = '<h2>Plus courts chemins : Dijkstra</h2><p>L\'algorithme de <b>Dijkstra</b> calcule les plus courts chemins depuis une source dans un graphe pondéré à poids <b>positifs</b>. Il maintient pour chaque sommet une distance provisoire et extrait à chaque étape le sommet non visité de distance minimale.</p>' +
     '<div class="opts"><div class="fld"><span>Graphe</span><div id="w4-g"></div></div><div class="fld"><span>Source</span><div id="w4-s"></div></div><div class="fld"><span>Destination</span><div id="w4-t"></div></div></div>' +
@@ -833,7 +845,7 @@ function mountW4(root) {
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w4-play'); if (b) b.textContent = 'Lecture'; }
   function render() {
     $('#w4-g').innerHTML = '';
-    $('#w4-g').append(chipsRow([['pondere', 'Pondéré'], ['oriente', 'Orienté'], ['heuristique', 'Pour A*']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.target = GRAPHS[v].nodes[GRAPHS[v].nodes.length - 1]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
+    $('#w4-g').append(chipsRow([['imageGraph', 'Graphe de l\'image'], ['pondere', 'Pondéré'], ['oriente', 'Orienté'], ['heuristique', 'Pour A*']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.target = GRAPHS[v].nodes[GRAPHS[v].nodes.length - 1]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
     $('#w4-s').innerHTML = '';
     $('#w4-s').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Source'));
     $('#w4-t').innerHTML = '';
@@ -841,11 +853,9 @@ function mountW4(root) {
     const g = GRAPHS[S.graph];
     if (!S.frames) S.frames = dijkstra(g, S.start);
     const steps = S.frames.steps;
-    /* [FIX] On borne S.step pour éviter un affichage « étape 20 / 15 » */
     const idx = Math.min(S.step, steps.length - 1);
     const st = steps[idx];
     const visited = st.visited, current = st.u, dist = st.dist;
-    /* [FIX] Frontière calculée pour la visualization : sommets atteints mais pas encore extraits */
     const frontier = dijkstraFrontier(st, g.nodes);
     let pathEdges = new Set(), final = new Set();
     const lastStep = idx >= steps.length - 1;
@@ -909,7 +919,7 @@ function mountW4(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w4', title: 'Plus courts chemins : Dijkstra', hint: 'Suivez l\'algorithme de Dijkstra pas à pas : extraction du minimum, relâchement des arêtes, arbre des plus courts chemins.',
-  mount: mountW4, reset: () => { Object.assign(W4, { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } },
+  mount: mountW4, reset: () => { Object.assign(W4, { graph: 'imageGraph', start: 'A', target: 'D', step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } },
   leave: () => { if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } } });
 
 /* ================= Atelier 5 : Dijkstra vs A* ================= */
@@ -935,7 +945,6 @@ function mountW5(root) {
     const idx = Math.min(S.step, steps.length - 1);
     const st = steps[idx];
     const dist = st.dist;
-    /* [FIX] Récupère les ensembles open/closed/frontier pour les deux modes */
     let open, closed, frontier;
     if (st.open) {
       open = st.open;
@@ -977,7 +986,6 @@ function mountW5(root) {
       ['Fermés', String(closed.size)],
       ['Distance de ' + S.target, dist.get(S.target) === Infinity ? '∞' : String(dist.get(S.target))]
     ]));
-    /* [FIX] En mode Dijkstra, on masque les colonnes h et f qui ne sont pas utilisées. */
     const showHF = S.mode === 'astar';
     let tbl = '<h3>État courant</h3><div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>g</th>' + (showHF ? '<th>h</th><th>f = g+h</th>' : '') + '<th>État</th></tr></thead><tbody>';
     g.nodes.forEach(n => {
@@ -999,7 +1007,7 @@ function mountW5(root) {
     });
     tbl += '</tbody></table></div>';
     
-    // Tableau d'évolution (distance g)
+    // Tableau d'évolution
     tbl += '<h3>Tableau des distances (g)</h3>';
     tbl += buildHistoryTable(steps, g, S.start, S.frames.dist, S.frames.parent, idx);
 
