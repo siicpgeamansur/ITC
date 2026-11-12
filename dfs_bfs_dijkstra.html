@@ -230,18 +230,6 @@ const GRAPHS = {
     edges: [['S', 'A', 3], ['S', 'B', 5], ['A', 'B', 1], ['A', 'C', 7], ['B', 'C', 2], ['B', 'D', 4], ['C', 'D', 1], ['C', 'T', 6], ['D', 'T', 2]],
     pos: { S: [60, 170], A: [200, 70], B: [200, 270], C: [370, 170], D: [370, 300], T: [530, 230] }
   },
-  imageGraph: {
-    name: 'Graphe de l\'image',
-    directed: true,
-    nodes: ['A', 'B', 'C', 'D', 'E'],
-    edges: [
-      ['A', 'B', 10], ['A', 'E', 5], 
-      ['B', 'C', 1], ['B', 'E', 2], 
-      ['E', 'B', 3], ['E', 'C', 4], ['E', 'D', 7], 
-      ['C', 'E', 9], ['C', 'D', 6]
-    ],
-    pos: { A: [60, 180], B: [200, 80], C: [380, 80], D: [540, 180], E: [300, 280] }
-  },
   cycle: {
     name: 'Graphe avec cycle',
     directed: false,
@@ -829,7 +817,7 @@ WORKSHOPS.push({ id: 'w3', title: 'Connexité et cycles', hint: 'Détectez les c
   mount: mountW3, reset: () => { Object.assign(W3, { graph: 'cycle', start: '1' }); } });
 
 /* ================= Atelier 4 : Dijkstra ================= */
-const W4 = { graph: 'imageGraph', start: 'A', target: 'D', step: 0, frames: null, timer: null };
+const W4 = { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null, timer: null };
 function mountW4(root) {
   root.innerHTML = '<h2>Plus courts chemins : Dijkstra</h2><p>L\'algorithme de <b>Dijkstra</b> calcule les plus courts chemins depuis une source dans un graphe pondéré à poids <b>positifs</b>. Il maintient pour chaque sommet une distance provisoire et extrait à chaque étape le sommet non visité de distance minimale.</p>' +
     '<div class="opts"><div class="fld"><span>Graphe</span><div id="w4-g"></div></div><div class="fld"><span>Source</span><div id="w4-s"></div></div><div class="fld"><span>Destination</span><div id="w4-t"></div></div></div>' +
@@ -845,7 +833,7 @@ function mountW4(root) {
   function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w4-play'); if (b) b.textContent = 'Lecture'; }
   function render() {
     $('#w4-g').innerHTML = '';
-    $('#w4-g').append(chipsRow([['imageGraph', 'Graphe de l\'image'], ['pondere', 'Pondéré'], ['oriente', 'Orienté'], ['heuristique', 'Pour A*']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.target = GRAPHS[v].nodes[GRAPHS[v].nodes.length - 1]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
+    $('#w4-g').append(chipsRow([['pondere', 'Pondéré'], ['oriente', 'Orienté'], ['heuristique', 'Pour A*']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.target = GRAPHS[v].nodes[GRAPHS[v].nodes.length - 1]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
     $('#w4-s').innerHTML = '';
     $('#w4-s').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Source'));
     $('#w4-t').innerHTML = '';
@@ -919,7 +907,7 @@ function mountW4(root) {
   render();
 }
 WORKSHOPS.push({ id: 'w4', title: 'Plus courts chemins : Dijkstra', hint: 'Suivez l\'algorithme de Dijkstra pas à pas : extraction du minimum, relâchement des arêtes, arbre des plus courts chemins.',
-  mount: mountW4, reset: () => { Object.assign(W4, { graph: 'imageGraph', start: 'A', target: 'D', step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } },
+  mount: mountW4, reset: () => { Object.assign(W4, { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } },
   leave: () => { if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } } });
 
 /* ================= Atelier 5 : Dijkstra vs A* ================= */
