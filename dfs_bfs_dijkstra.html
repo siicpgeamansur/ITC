@@ -1,0 +1,1442 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Graphes et plus courts chemins</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+/* [FIX] #w4-stats et #w5-stats sont .gstats : on retire la classe de stats() pour éviter l'imbrication */
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt td.m sub { font-size: 0.75em; vertical-align: sub; line-height: 0; }
+.dt tr:last-child td{border-bottom:0}
+/* graphe */
+.gwrap{border:1px solid var(--line);border-radius:10px;background:#fff;padding:6px;margin:8px 0}
+.gwrap svg{display:block;width:100%;max-width:640px;height:auto;margin:0 auto}
+.gnode{fill:#e6effc;stroke:#8fa8d8;stroke-width:2}
+.gnode.visited{fill:var(--accent-soft);stroke:var(--accent)}
+.gnode.frontier{fill:rgba(154,91,0,.18);stroke:var(--warn);stroke-width:2.5}
+.gnode.current{fill:rgba(192,40,31,.18);stroke:var(--bad);stroke-width:2.5}
+.gnode.final{fill:rgba(30,122,46,.2);stroke:var(--ok);stroke-width:2.5}
+.gedge{stroke:#8a94a0;stroke-width:1.8;fill:none}
+.gedge.tree{stroke:var(--accent);stroke-width:3}
+.gedge.path{stroke:var(--ok);stroke-width:4}
+.gedge.relax{stroke:var(--warn);stroke-width:3;stroke-dasharray:5 3}
+.glabel{font:600 14px var(--font-ui);fill:#1f1f28;text-anchor:middle;dominant-baseline:central}
+.gweight{font:600 12px var(--font-mono);fill:#1b4a76;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#fff;stroke-width:4}
+.gdist{font:600 11px var(--font-mono);fill:var(--bad);text-anchor:middle}
+table.adj{border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+table.adj th,table.adj td{border:1px solid var(--line);padding:3px 7px;text-align:center}
+table.adj th{background:var(--panel2)}
+table.adj td.on{background:var(--accent-soft);font-weight:600}
+table.adj td.cur{background:rgba(154,91,0,.2);font-weight:600}
+.legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px;border:1.5px solid #8fa8d8;background:#e6effc}
+.legend i.v{background:var(--accent-soft);border-color:var(--accent)}
+.legend i.f{background:rgba(154,91,0,.18);border-color:var(--warn)}
+.legend i.c{background:rgba(192,40,31,.18);border-color:var(--bad)}
+.legend i.ok{background:rgba(30,122,46,.2);border-color:var(--ok)}
+.legend i.e{background:#8a94a0;border-color:#8a94a0;border-radius:2px;height:3px}
+.legend i.t{background:var(--accent);border-color:var(--accent);border-radius:2px;height:3px}
+.legend i.p{background:var(--ok);border-color:var(--ok);border-radius:2px;height:3px}
+.legend i.r{background:var(--warn);border-color:var(--warn);border-radius:2px;height:3px}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .legend{font-size:11.5px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}.gnode{transition:fill .15s,stroke .15s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="6" cy="6" r="3" fill="var(--accent)"/><circle cx="20" cy="8" r="3" fill="var(--ok)"/><circle cx="8" cy="20" r="3" fill="var(--warn)"/><circle cx="19" cy="19" r="3" fill="var(--bad)"/><line x1="6" y1="6" x2="20" y2="8" stroke="#55555f" stroke-width="1.6"/><line x1="6" y1="6" x2="8" y2="20" stroke="#55555f" stroke-width="1.6"/><line x1="20" y1="8" x2="19" y2="19" stroke="#55555f" stroke-width="1.6"/><line x1="8" y1="20" x2="19" y2="19" stroke="#55555f" stroke-width="1.6"/></svg><span>Atelier Graphes et plus courts chemins <small>ITC · CPGE 1<sup>re</sup> année</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-graphes-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/*LOGIC-START*/
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtN = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* Graphes de démonstration */
+const GRAPHS = {
+  simple: {
+    name: 'Graphe non orienté',
+    directed: false,
+    nodes: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+    edges: [['A', 'B', 1], ['A', 'C', 1], ['B', 'D', 1], ['C', 'D', 1], ['D', 'E', 1], ['E', 'F', 1], ['F', 'G', 1], ['B', 'G', 1]],
+    pos: { A: [120, 70], B: [260, 60], C: [260, 180], D: [390, 120], E: [480, 220], F: [380, 300], G: [200, 300] }
+  },
+  pondere: {
+    name: 'Graphe pondéré',
+    directed: false,
+    nodes: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+    edges: [['A', 'B', 4], ['A', 'C', 2], ['B', 'C', 5], ['B', 'D', 10], ['C', 'E', 3], ['E', 'D', 4], ['D', 'F', 11], ['E', 'F', 8], ['F', 'G', 2], ['E', 'G', 6], ['D', 'G', 5], ['G', 'H', 1], ['F', 'H', 7]],
+    pos: { A: [70, 160], B: [200, 60], C: [200, 250], D: [390, 70], E: [340, 200], F: [480, 200], G: [520, 320], H: [620, 280] }
+  },
+  oriente: {
+    name: 'Graphe orienté',
+    directed: true,
+    nodes: ['S', 'A', 'B', 'C', 'D', 'T'],
+    edges: [['S', 'A', 3], ['S', 'B', 5], ['A', 'B', 1], ['A', 'C', 7], ['B', 'C', 2], ['B', 'D', 4], ['C', 'D', 1], ['C', 'T', 6], ['D', 'T', 2]],
+    pos: { S: [60, 170], A: [200, 70], B: [200, 270], C: [370, 170], D: [370, 300], T: [530, 230] }
+  },
+  cycle: {
+    name: 'Graphe avec cycle',
+    directed: false,
+    nodes: ['1', '2', '3', '4', '5', '6'],
+    edges: [['1', '2', 1], ['2', '3', 1], ['3', '1', 1], ['4', '5', 1], ['5', '6', 1], ['6', '4', 1]],
+    pos: { 1: [100, 90], 2: [220, 130], 3: [160, 240], 4: [400, 90], 5: [520, 130], 6: [460, 240] }
+  },
+  heuristique: {
+    name: 'Graphe pour A* (heuristique vers T)',
+    directed: false,
+    nodes: ['S', 'A', 'B', 'C', 'D', 'E', 'T'],
+    edges: [['S', 'A', 2], ['S', 'B', 4], ['A', 'B', 1], ['A', 'C', 5], ['B', 'C', 2], ['C', 'D', 2], ['C', 'E', 3], ['D', 'E', 2], ['D', 'T', 5], ['E', 'T', 3]],
+    pos: { S: [60, 170], A: [180, 80], B: [180, 260], C: [320, 170], D: [450, 100], E: [450, 240], T: [580, 170] },
+    heur: { S: 9, A: 7, B: 6, C: 4, D: 2, E: 3, T: 0 }
+  }
+};
+
+/* Génère un arbre binaire complet selon le nombre de sommets souhaité */
+function generateTree(n) {
+  const nodes = Array.from({ length: n }, (_, i) => String(i + 1));
+  const edges = [];
+  const pos = {};
+
+  let maxLvl = 0;
+  for (let i = 0; i < n; i++) {
+    const lvl = Math.floor(Math.log2(i + 1));
+    if (lvl > maxLvl) maxLvl = lvl;
+  }
+
+  const W = 640, H = 360;
+  const topPad = 50, botPad = 50;
+  const yStep = maxLvl > 0 ? (H - topPad - botPad) / maxLvl : 0;
+
+  for (let i = 0; i < n; i++) {
+    const lvl = Math.floor(Math.log2(i + 1));
+    const posInLvl = i - (Math.pow(2, lvl) - 1);
+    const totalInLvl = Math.pow(2, lvl);
+
+    const spacing = W / (totalInLvl + 1);
+    const x = spacing * (posInLvl + 1);
+    const y = topPad + lvl * yStep;
+
+    pos[String(i + 1)] = [x, y];
+
+    if (i > 0) {
+      const parent = Math.floor((i - 1) / 2);
+      edges.push([String(parent + 1), String(i + 1), 1]);
+    }
+  }
+
+  return { name: 'Arbre binaire', directed: false, nodes, edges, pos };
+}
+
+/* Construction de la liste d'adjacence */
+function buildAdj(g) {
+  const adj = new Map();
+  for (const n of g.nodes) adj.set(n, new Map());
+  for (const [u, v, w] of g.edges) {
+    if (!adj.has(u)) adj.set(u, new Map());
+    if (!adj.has(v)) adj.set(v, new Map());
+    adj.get(u).set(v, w);
+    if (!g.directed) adj.get(v).set(u, w);
+  }
+  return adj;
+}
+/* matrice d'adjacence */
+function buildMatrix(g) {
+  const idx = new Map(g.nodes.map((n, i) => [n, i]));
+  const n = g.nodes.length;
+  const M = Array.from({ length: n }, () => new Array(n).fill(null));
+  for (const [u, v, w] of g.edges) {
+    M[idx.get(u)][idx.get(v)] = w;
+    if (!g.directed) M[idx.get(v)][idx.get(u)] = w;
+  }
+  return { M, idx };
+}
+/* BFS : parcours en largeur, renvoie l'ordre et les parents */
+function bfs(g, start) {
+  const adj = buildAdj(g), order = [], parent = new Map(), dist = new Map();
+  const queue = [start]; dist.set(start, 0);
+  const seen = new Set([start]);
+  while (queue.length) {
+    const u = queue.shift(); order.push(u);
+    for (const v of adj.get(u).keys()) {
+      if (!seen.has(v)) { seen.add(v); parent.set(v, u); dist.set(v, dist.get(u) + 1); queue.push(v); }
+    }
+  }
+  return { order, parent, dist };
+}
+/* DFS récursif : ordre, parents, cycles */
+function dfs(g, start) {
+  const adj = buildAdj(g), order = [], parent = new Map(), seen = new Set(), cycle = [];
+  const stack = [start]; seen.add(start);
+  while (stack.length) {
+    const u = stack.pop(); order.push(u);
+    for (const v of adj.get(u).keys()) {
+      if (!seen.has(v)) { seen.add(v); parent.set(v, u); stack.push(v); }
+    }
+  }
+  return { order, parent };
+}
+/* connectivité et détection de cycle */
+function components(g) {
+  const adj = buildAdj(g), seen = new Set(), comps = [];
+  for (const n of g.nodes) {
+    if (seen.has(n)) continue;
+    const comp = [], queue = [n]; seen.add(n);
+    while (queue.length) {
+      const u = queue.shift(); comp.push(u);
+      for (const v of adj.get(u).keys()) if (!seen.has(v)) { seen.add(v); queue.push(v); }
+    }
+    comps.push(comp);
+  }
+  return comps;
+}
+function hasCycle(g) {
+  const adj = buildAdj(g), seen = new Set();
+  const rec = (u, p) => {
+    seen.add(u);
+    for (const v of adj.get(u).keys()) {
+      if (!seen.has(v)) { if (rec(v, u)) return true; }
+      else if (v !== p) return true;
+    }
+    return false;
+  };
+  for (const n of g.nodes) if (!seen.has(n)) if (rec(n, null)) return true;
+  return false;
+}
+/* Dijkstra avec file de priorité naïve (minimum par recherche) */
+function dijkstra(g, start) {
+  const adj = buildAdj(g), dist = new Map(), parent = new Map(), steps = [];
+  for (const n of g.nodes) dist.set(n, Infinity);
+  dist.set(start, 0);
+  const visited = new Set();
+  while (visited.size < g.nodes.length) {
+    let u = null, dmin = Infinity;
+    for (const n of g.nodes) if (!visited.has(n) && dist.get(n) < dmin) { dmin = dist.get(n); u = n; }
+    if (u === null) break;
+    visited.add(u);
+    steps.push({ u, dist: new Map(dist), visited: new Set(visited), parent: new Map(parent), phase: 'extract' });
+    for (const [v, w] of adj.get(u)) {
+      if (dist.get(u) + w < dist.get(v)) {
+        dist.set(v, dist.get(u) + w); parent.set(v, u);
+        steps.push({ u, v, w, dist: new Map(dist), visited: new Set(visited), parent: new Map(parent), phase: 'relax' });
+      }
+    }
+  }
+  return { dist, parent, steps };
+}
+/* A* avec heuristique */
+function astar(g, start, goal) {
+  const adj = buildAdj(g), h = g.heur || {}, dist = new Map(), parent = new Map(), steps = [];
+  for (const n of g.nodes) dist.set(n, Infinity);
+  dist.set(start, 0);
+  const open = new Set([start]), closed = new Set();
+  while (open.size) {
+    let u = null, fmin = Infinity;
+    for (const n of open) { const f = dist.get(n) + (h[n] || 0); if (f < fmin) { fmin = f; u = n; } }
+    if (u === null) break;
+    open.delete(u);
+    if (u === goal) { steps.push({ u, dist: new Map(dist), open: new Set(open), closed: new Set(closed), parent: new Map(parent), phase: 'goal' }); break; }
+    closed.add(u);
+    steps.push({ u, dist: new Map(dist), open: new Set(open), closed: new Set(closed), parent: new Map(parent), phase: 'extract' });
+    for (const [v, w] of adj.get(u)) {
+      if (closed.has(v)) continue;
+      if (dist.get(u) + w < dist.get(v)) {
+        dist.set(v, dist.get(u) + w); parent.set(v, u);
+        open.add(v);
+        steps.push({ u, v, w, dist: new Map(dist), open: new Set(open), closed: new Set(closed), parent: new Map(parent), phase: 'relax' });
+      }
+    }
+  }
+  return { dist, parent, steps };
+}
+/* reconstruire le chemin à partir des parents — [FIX] garde-fou contre les cycles */
+function pathTo(parent, goal) {
+  const path = []; let cur = goal; let guard = 0;
+  while (cur !== undefined && guard++ < 1000) { path.push(cur); cur = parent.get(cur); }
+  return path.reverse();
+}
+/* [FIX] Calcule l'ensemble « en attente » (dans la file de priorité) pour un état Dijkstra. */
+function dijkstraFrontier(st, nodes) {
+  if (!st || !st.dist || !st.visited) return new Set();
+  const f = new Set();
+  for (const n of nodes) {
+    const d = st.dist.get(n);
+    if (d !== undefined && d !== Infinity && !st.visited.has(n)) f.add(n);
+  }
+  return f;
+}
+
+/* Nouveau : génère le tableau d'évolution des distances (comme sur l'image) */
+function buildHistoryTable(steps, g, start, finalDist, finalParent, currentIdx) {
+  let historyHtml = '<div class="dwrap"><table class="dt"><thead><tr><th>E</th>';
+  g.nodes.forEach(n => historyHtml += '<th>' + esc(n) + '</th>');
+  historyHtml += '</tr></thead><tbody>';
+
+  // Étape 0 : initialisation
+  historyHtml += '<tr><td>0</td>';
+  g.nodes.forEach(n => {
+    historyHtml += '<td class="m">' + (n === start ? '0' : '∞') + '</td>';
+  });
+  historyHtml += '</tr>';
+
+  // On ne garde que les étapes "extract" et "goal" (fin d'algorithme)
+  const finalSteps = [];
+  for (let i = 0; i < steps.length; i++) {
+    if (steps[i].phase === 'extract' || steps[i].phase === 'goal') {
+      finalSteps.push(i);
+    }
+  }
+
+  for (let i = 0; i < finalSteps.length; i++) {
+    const stepIdx = finalSteps[i];
+    const step = steps[stepIdx];
+    const u = step.u;
+    // Dans Dijkstra on a "visited", dans A* on a "closed"
+    const visited = new Set(step.visited || step.closed || []);
+    visited.add(u); // Le sommet extrait est définitif
+
+    // Trouver l'état après les relaxations (c'est l'état de l'étape suivante, ou l'état final)
+    let nextStepIdx = stepIdx + 1;
+    while (nextStepIdx < steps.length && steps[nextStepIdx].phase === 'relax') {
+      nextStepIdx++;
+    }
+    let d_map, p_map;
+    if (nextStepIdx < steps.length) {
+      d_map = steps[nextStepIdx].dist;
+      p_map = steps[nextStepIdx].parent;
+    } else {
+      d_map = finalDist;
+      p_map = finalParent;
+    }
+
+    // Surligner la ligne correspondant à l'étape en cours d'affichage
+    const nextFinalStepIdx = (i + 1 < finalSteps.length) ? finalSteps[i+1] : steps.length;
+    const isCurrent = (currentIdx >= stepIdx && currentIdx < nextFinalStepIdx);
+    const rowStyle = isCurrent ? ' style="background:var(--accent-soft)"' : '';
+
+    historyHtml += '<tr' + rowStyle + '><td>' + (i + 1) + '</td>';
+    g.nodes.forEach(n => {
+      let cell = '';
+      const d = d_map.get(n);
+      const parent = p_map.get(n);
+      if (visited.has(n)) {
+        cell = '•';
+      } else if (d !== Infinity && d !== undefined) {
+        cell = d + '<sub>' + (parent || '?') + '</sub>';
+      } else {
+        cell = '∞';
+      }
+      historyHtml += '<td class="m">' + cell + '</td>';
+    });
+    historyHtml += '</tr>';
+  }
+  historyHtml += '</tbody></table></div>';
+  return historyHtml;
+}
+/*LOGIC-END*/
+
+/* ---------- aides d'interface ---------- */
+/* [FIX] Renvoie un DocumentFragment de .stat, et non un .gstats imbriqué dans #wN-stats (qui est déjà .gstats). */
+function stats(list) {
+  const frag = document.createDocumentFragment();
+  list.forEach(([label, value]) => frag.append(h('div', { class: 'stat' }, h('span', null, label), h('b', null, value))));
+  return frag;
+}
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', onclick: () => cb(it[0]) }, it[1])));
+}
+function codeBlock(code, on) {
+  const KW = /^(def|return|for|in|if|elif|else|while|not|raise|import|from|with|as|and|or|is|lambda|class|pass|break|continue)$/;
+  const BI = /^(print|len|range|set|dict|list|max|min|sum|id|hash|sorted|open|str|int|float|None|True|False|deque|heappush|heappop|isinf|heapify|append|appendleft|popleft)$/;
+  const lines = code.split('\n').map(line => {
+    let out = '', i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '#') { out += '<span style="color:#7a7a88;font-style:italic">' + esc(line.slice(i)) + '</span>'; break; }
+      if (ch === '"' || ch === "'") { let j = i + 1; while (j < line.length && line[j] !== ch) j++; out += '<span style="color:#1c6b40">' + esc(line.slice(i, j + 1)) + '</span>'; i = j + 1; continue; }
+      let j = i; while (j < line.length && line[j] !== '#' && line[j] !== '"' && line[j] !== "'") j++;
+      let seg = esc(line.slice(i, j)).replace(/\b([A-Za-z_]\w*|\d+(?:\.\d+)?)\b/g, m => /^\d/.test(m) ? '<span style="color:#b05a00">' + m + '</span>' : KW.test(m) ? '<span style="color:#7c3aa8">' + m + '</span>' : BI.test(m) ? '<span style="color:#1f3fa0">' + m + '</span>' : m);
+      out += seg; i = j;
+    }
+    return out;
+  });
+  return '<pre class="code">' + lines.map((l, i) => '<span style="display:block;padding:0 ' + (on === i + 1 || (Array.isArray(on) && on.includes(i + 1)) ? '10px 0 10px;background:#fff3dc;border-left:3px solid #e08a00' : '10px') + ';white-space:pre">' + (l || ' ') + '</span>').join('') + '</pre>';
+}
+
+/* dessin du graphe — [FIX] priorité final > current > frontier > visited */
+function drawGraph(svg, g, opts) {
+  const o = opts || {};
+  const pos = g.pos || {};
+  const nodes = g.nodes.filter(n => pos[n]);
+  const adj = buildAdj(g);
+  const visited = o.visited || new Set();
+  const frontier = o.frontier || new Set();
+  const current = o.current;
+  const final = o.final || new Set();
+  const treeEdges = o.treeEdges || new Set();
+  const pathEdges = o.pathEdges || new Set();
+  const relaxEdge = o.relaxEdge;
+  const dist = o.dist;
+  const showWeights = g.edges.some(e => e[2] !== 1);
+  let s = '<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8a94a0"/></marker><marker id="arrT" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="' + '#2e6da4' + '"/></marker><marker id="arrP" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="' + '#1e7a2e' + '"/></marker></defs>';
+  const drawn = new Set();
+  g.edges.forEach(([u, v, w]) => {
+    if (!pos[u] || !pos[v]) return;
+    const key = g.directed ? u + '>' + v : [u, v].sort().join('|');
+    if (drawn.has(key)) return; drawn.add(key);
+    const [x1, y1] = pos[u], [x2, y2] = pos[v];
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+    const r = 20;
+    const ax = x1 + ux * r, ay = y1 + uy * r, bx = x2 - ux * r, by = y2 - uy * r;
+    let cls = 'gedge';
+    if (treeEdges.has(key)) cls += ' tree';
+    if (pathEdges.has(key)) cls += ' path';
+    if (relaxEdge && ((relaxEdge[0] === u && relaxEdge[1] === v) || (!g.directed && relaxEdge[0] === v && relaxEdge[1] === u))) cls += ' relax';
+    const marker = cls.includes('path') ? 'url(#arrP)' : cls.includes('tree') ? 'url(#arrT)' : 'url(#arr)';
+    s += '<line class="' + cls + '" x1="' + ax + '" y1="' + ay + '" x2="' + bx + '" y2="' + by + '"' + (g.directed ? ' marker-end="' + marker + '"' : '') + '/>';
+    if (showWeights) {
+      const mx = (x1 + x2) / 2 - uy * 10, my = (y1 + y2) / 2 + ux * 10;
+      s += '<text class="gweight" x="' + mx + '" y="' + my + '">' + w + '</text>';
+    }
+  });
+  nodes.forEach(n => {
+    const [x, y] = pos[n];
+    let cls = 'gnode';
+    /* [FIX] Priorité : final (chemin trouvé) > current (extrait) > frontier (en attente) > visited (fermé) */
+    if (final.has(n)) cls += ' final';
+    else if (current === n) cls += ' current';
+    else if (frontier.has(n)) cls += ' frontier';
+    else if (visited.has(n)) cls += ' visited';
+
+    let style = '';
+    if (o.nodeColor) style += 'fill:' + o.nodeColor(n) + ';';
+    if (o.nodeStroke) style += 'stroke:' + o.nodeStroke(n) + ';';
+    if (o.nodeStrokeWidth) style += 'stroke-width:' + o.nodeStrokeWidth(n) + ';';
+
+    s += '<circle class="' + cls + '" cx="' + x + '" cy="' + y + '" r="20"' + (style ? ' style="' + style + '"' : '') + '/>';
+    s += '<text class="glabel" x="' + x + '" y="' + y + '">' + esc(n) + '</text>';
+    if (dist && dist.get(n) !== undefined && dist.get(n) !== Infinity) {
+      s += '<text class="gdist" x="' + x + '" y="' + (y - 28) + '">' + dist.get(n) + '</text>';
+    }
+  });
+  svg.innerHTML = s;
+}
+
+/* ================= Atelier 1 : vocabulaire et représentations ================= */
+const W1 = { graph: 'simple', repr: 'adj', highlight: null };
+function mountW1(root) {
+  root.innerHTML = '<h2>Vocabulaire et représentations</h2><p>Un graphe <b>G = (S, A)</b> est la donnée d\'un ensemble de <b>sommets</b> S et d\'un ensemble d\'<b>arêtes</b> (ou <b>arcs</b>) A. Chaque arête relie deux sommets, éventuellement avec un <b>poids</b> ou une étiquette.</p>' +
+    '<div class="opts"><div class="fld"><span>Graphe</span><div id="w1-g"></div></div><div class="fld"><span>Représentation</span><div id="w1-r"></div></div></div>' +
+    '<div class="gwrap"><svg id="w1-svg" viewBox="0 0 640 360"></svg></div>' +
+    '<div class="legend"><span><i></i>sommet</span><span><i class="v"></i>sélectionné</span><span><i class="e"></i>arête</span></div>' +
+    '<div class="gstats" id="w1-stats"></div>' +
+    '<div id="w1-repr"></div>' +
+    '<h3>Notations</h3><ul style="padding-left:22px;line-height:1.7"><li><b>Graphe non orienté</b> : les arêtes n\'ont pas de sens. Degré d(u) = nombre de voisins de u.</li><li><b>Graphe orienté</b> : les arcs ont un sens. Degré entrant d₋(u) et sortant d₊(u).</li><li><b>Chemin</b> : suite de sommets reliés par des arêtes. <b>Cycle</b> : chemin qui revient à son point de départ.</li><li><b>Connexe</b> (non orienté) : tout sommet est relié à tout autre par un chemin.</li></ul>';
+  const S = W1;
+  function render() {
+    const g = GRAPHS[S.graph];
+    $('#w1-g').innerHTML = '';
+    $('#w1-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['pondere', 'Pondéré'], ['cycle', 'Avec cycles']], S.graph, v => { S.graph = v; S.highlight = null; render(); }, 'Graphe'));
+    $('#w1-r').innerHTML = '';
+    $('#w1-r').append(chipsRow([['adj', 'Listes d\'adjacence'], ['mat', 'Matrice d\'adjacence']], S.repr, v => { S.repr = v; render(); }, 'Représentation'));
+    drawGraph($('#w1-svg'), g, { current: S.highlight });
+    const adj = buildAdj(g);
+    const n = g.nodes.length;
+    let m = 0, sumDeg = 0, sumOut = 0, sumIn = 0;
+    g.edges.forEach(([u, v]) => { m++; if (!g.directed) sumDeg += 2; });
+    if (g.directed) { for (const [u, nb] of adj) sumOut += nb.size; for (const n2 of g.nodes) { let d = 0; for (const [, nb] of adj) if (nb.has(n2)) d++; sumIn += d; } }
+    const comps = components(g), cyc = hasCycle(g);
+    $('#w1-stats').innerHTML = '';
+    $('#w1-stats').append(stats([
+      ['Sommets |S|', String(n)],
+      ['Arêtes |A|', String(m)],
+      [g.directed ? 'Degrés entrants (Σ)' : 'Degrés (Σ)', String(g.directed ? sumIn : sumDeg)],
+      [g.directed ? 'Degrés sortants (Σ)' : 'Composantes connexes', String(g.directed ? sumOut : comps.length)],
+      ['Cycles', cyc ? 'oui' : 'non'],
+      ['Connexe', comps.length === 1 ? 'oui' : 'non']
+    ]));
+    let degTbl = '<h3>Degrés</h3><div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>' + (g.directed ? 'd₋ (entrant)' : 'd (degré)') + '</th>' + (g.directed ? '<th>d₊ (sortant)</th>' : '') + '</tr></thead><tbody>';
+    g.nodes.forEach(n2 => {
+      let din = 0, dout = 0;
+      for (const [, nb] of adj) if (nb.has(n2)) din++;
+      dout = adj.get(n2) ? adj.get(n2).size : 0;
+      degTbl += '<tr><td><b>' + esc(n2) + '</b></td><td class="m">' + (g.directed ? din : dout) + '</td>' + (g.directed ? '<td class="m">' + dout + '</td>' : '') + '</tr>';
+    });
+    degTbl += '</tbody></table></div>';
+    let reprHtml = '';
+    if (S.repr === 'adj') {
+      reprHtml = '<h3>Listes d\'adjacence</h3><pre class="code">G = {';
+      const keys = Array.from(adj.keys());
+      keys.forEach((k, i) => {
+        const nbs = Array.from(adj.get(k).entries()).map(([v, w]) => g.edges.some(e => e[2] !== 1) ? v + ': ' + w : v);
+        reprHtml += (i ? ',' : '') + '\n    \'' + k + '\': ' + (g.edges.some(e => e[2] !== 1) ? '{' + nbs.join(', ') + '}' : '[' + nbs.join(', ') + ']');
+      });
+      reprHtml += '\n}</pre><p class="small">Accès aux voisins d\'un sommet : O(degré(u)). Espace mémoire : O(|S| + |A|). C\'est la représentation recommandée pour les grands graphes creux (réseaux sociaux, web).</p>';
+    } else {
+      const { M, idx } = buildMatrix(g);
+      reprHtml = '<h3>Matrice d\'adjacence</h3><div class="dwrap"><table class="adj"><thead><tr><th></th>' + g.nodes.map(n2 => '<th>' + esc(n2) + '</th>').join('') + '</tr></thead><tbody>';
+      g.nodes.forEach(u => {
+        reprHtml += '<tr><th>' + esc(u) + '</th>' + g.nodes.map(v => {
+          const val = M[idx.get(u)][idx.get(v)];
+          return '<td class="' + (val !== null ? (S.highlight === u || S.highlight === v ? 'cur' : 'on') : '') + '">' + (val === null ? '·' : val) + '</td>';
+        }).join('') + '</tr>';
+      });
+      reprHtml += '</tbody></table></div><p class="small">Accès à une arête : O(1). Espace mémoire : O(|S|²) même si le graphe a peu d\'arêtes. Adaptée aux graphes denses ou aux calculs matriciels.</p>';
+    }
+    reprHtml += '<p class="small">Cliquez sur un sommet dans la liste pour le mettre en évidence :</p><div id="w1-nav"></div>';
+    reprHtml += degTbl;
+    $('#w1-repr').innerHTML = reprHtml;
+    $('#w1-nav').append(chipsRow(g.nodes.map(n2 => [n2, n2]), S.highlight, v => { S.highlight = S.highlight === v ? null : v; render(); }, 'Sommet'));
+  }
+  render();
+}
+WORKSHOPS.push({ id: 'w1', title: 'Vocabulaire et représentations', hint: 'Explorez un graphe non orienté, orienté et pondéré ; comparez listes et matrice d\'adjacence, degrés et composantes connexes.',
+  mount: mountW1, reset: () => { Object.assign(W1, { graph: 'simple', repr: 'adj', highlight: null }); } });
+
+/* ================= Atelier 2 : parcours BFS / DFS ================= */
+const W2 = { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null, timer: null, treeN: 15 };
+function mountW2(root) {
+  root.innerHTML = '<h2>Parcours en largeur et en profondeur</h2><p>Parcourir un graphe, c\'est visiter ses sommets en suivant ses arêtes. Deux stratégies classiques : <b>en largeur</b> (BFS, avec une file) et <b>en profondeur</b> (DFS, avec une pile).</p>' +
+    '<div class="opts"><div class="fld"><span>Graphe</span><div id="w2-g"></div></div><div class="fld"><span>Sommet de départ</span><div id="w2-s"></div></div><div class="fld"><span>Algorithme</span><div id="w2-m"></div></div></div>' +
+    '<div class="opts" id="w2-tree-ctrl" style="display:none; align-items:center; gap:10px; margin-bottom:10px;"><label for="w2-tree-n" class="small" style="margin:0;">Nombre de sommets : <b id="w2-tree-nval">15</b></label><input type="range" id="w2-tree-n" min="3" max="15" value="15" style="width:150px;"></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w2-prev" type="button">◀ Précédent</button><button class="btn pri" id="w2-next" type="button">Suivant ▶</button><button class="btn" id="w2-play" type="button">Lecture</button><button class="btn" id="w2-reset" type="button">Départ</button></div>' +
+    '<div class="gwrap"><svg id="w2-svg" viewBox="0 0 640 360"></svg></div>' +
+    '<div class="legend"><span><i></i>non visité</span><span><i class="f"></i>dans la file / pile</span><span><i class="v"></i>visité</span><span><i class="c"></i>courant</span><span><i class="t"></i>arête de l\'arbre</span></div>' +
+    '<div class="verdict" id="w2-msg" aria-live="polite"></div>' +
+    '<div class="gstats" id="w2-stats"></div>' +
+    '<div id="w2-queue"></div>' +
+    '<h3>Code Python</h3><div id="w2-code"></div>';
+  const S = W2;
+  $('#w2-tree-n').addEventListener('input', (e) => {
+    S.treeN = parseInt(e.target.value, 10);
+    $('#w2-tree-nval').textContent = S.treeN;
+    S.start = '1';
+    S.step = 0; S.frames = null; stop(); render();
+  });
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w2-play'); if (b) b.textContent = 'Lecture'; }
+  function buildFrames() {
+    const g = S.graph === 'tree' ? generateTree(S.treeN) : GRAPHS[S.graph];
+    const adj = buildAdj(g);
+    const frames = [];
+    if (S.mode === 'bfs') {
+      const queue = [S.start], dist = new Map([[S.start, 0]]), parent = new Map(), visited = new Set(), treeEdges = new Set();
+      frames.push({ queue: queue.slice(), visited: new Set(visited), current: null, treeEdges: new Set(treeEdges), msg: 'File initiale : [' + S.start + ']. On retire le premier, on ajoute ses voisins non visités à la fin.' });
+      while (queue.length) {
+        const u = queue.shift();
+        visited.add(u);
+        const newV = [];
+        for (const [v] of adj.get(u)) {
+          if (!visited.has(v) && !queue.includes(v)) { queue.push(v); parent.set(v, u); dist.set(v, dist.get(u) + 1); treeEdges.add([u, v].sort().join('|')); newV.push(v); }
+        }
+        frames.push({ queue: queue.slice(), visited: new Set(visited), current: u, treeEdges: new Set(treeEdges), dist: new Map(dist), msg: 'On extrait ' + u + '. Voisins ajoutés à la file : ' + (newV.length ? newV.join(', ') : 'aucun (tous déjà visités ou dans la file).') });
+      }
+      frames.push({ queue: [], visited: new Set(visited), current: null, treeEdges: new Set(treeEdges), dist: new Map(dist), msg: 'Parcours terminé. Ordre des distances depuis ' + S.start + ' : ' + Array.from(dist.entries()).map(([k, v]) => k + ' (' + v + ')').join(', ') + '.' });
+      return { frames, parent, dist, order: Array.from(visited) };
+    } else {
+      const stack = [S.start], seen = new Set(), treeEdges = new Set(), order = [];
+      frames.push({ stack: stack.slice(), visited: new Set(seen), current: null, treeEdges: new Set(treeEdges), msg: 'Pile initiale : [' + S.start + ']. On retire le sommet en haut de la pile, on empile ses voisins non visités.' });
+      while (stack.length) {
+        const u = stack.pop();
+        if (seen.has(u)) continue;
+        seen.add(u); order.push(u);
+        const newV = [];
+        for (const [v] of adj.get(u)) {
+          if (!seen.has(v)) { stack.push(v); treeEdges.add([u, v].sort().join('|')); newV.push(v); }
+        }
+        frames.push({ stack: stack.slice(), visited: new Set(seen), current: u, treeEdges: new Set(treeEdges), msg: 'On dépile ' + u + '. Voisins empilés : ' + (newV.length ? newV.reverse().join(', ') : 'aucun.') });
+      }
+      frames.push({ stack: [], visited: new Set(seen), current: null, treeEdges: new Set(treeEdges), msg: 'Parcours terminé. Ordre de visite : ' + order.join(' → ') + '.' });
+      return { frames, parent: new Map(), dist: null, order };
+    }
+  }
+  function render() {
+    $('#w2-g').innerHTML = '';
+    $('#w2-g').append(chipsRow([['simple', 'Non orienté'], ['oriente', 'Orienté'], ['cycle', 'Avec cycles'], ['tree', 'Arbre']], S.graph, v => { S.graph = v; S.start = v === 'tree' ? '1' : GRAPHS[v].nodes[0]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
+    const treeCtrl = $('#w2-tree-ctrl');
+    if (S.graph === 'tree') treeCtrl.style.display = 'flex';
+    else treeCtrl.style.display = 'none';
+    const g = S.graph === 'tree' ? generateTree(S.treeN) : GRAPHS[S.graph];
+    if (!g.nodes.includes(S.start)) S.start = g.nodes[0];
+    $('#w2-s').innerHTML = '';
+    $('#w2-s').append(chipsRow(g.nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Départ'));
+    $('#w2-m').innerHTML = '';
+    $('#w2-m').append(chipsRow([['bfs', 'Largeur (BFS)'], ['dfs', 'Profondeur (DFS)']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
+    if (!S.frames) S.frames = buildFrames();
+    const f = S.frames.frames[S.step];
+    const frontier = new Set(f.queue || f.stack || []);
+    drawGraph($('#w2-svg'), g, { visited: f.visited, frontier, current: f.current, treeEdges: f.treeEdges, dist: f.dist });
+    const last = S.step === S.frames.frames.length - 1;
+    $('#w2-msg').className = 'verdict' + (last ? ' yes' : '');
+    $('#w2-msg').innerHTML = '<b>Étape ' + S.step + ' / ' + (S.frames.frames.length - 1) + '.</b> ' + f.msg;
+    $('#w2-stats').innerHTML = '';
+    $('#w2-stats').append(stats([
+      ['Structure', S.mode === 'bfs' ? 'file (FIFO)' : 'pile (LIFO)'],
+      ['Contenu', (f.queue || f.stack || []).join(' , ') || '—'],
+      ['Taille', String((f.queue || f.stack || []).length)],
+      ['Visités', String(f.visited.size)]
+    ]));
+    $('#w2-queue').innerHTML = S.mode === 'bfs'
+      ? '<p class="small">La <b>file</b> est lue de la gauche (tête) vers la droite (queue) : on retire en tête et on ajoute en queue.</p>'
+      : '<p class="small">La <b>pile</b> est lue de la droite (sommet) vers la gauche : on dépile et on empile au même endroit.</p>';
+    $('#w2-code').innerHTML = codeBlock(S.mode === 'bfs'
+      ? 'from collections import deque\n\ndef bfs(G, s):\n    file = deque([s])\n    vus = {s}\n    while file:\n        u = file.popleft()\n        for v in G[u]:\n            if v not in vus:\n                vus.add(v)\n                file.append(v)\n    return vus'
+      : 'def dfs(G, s):\n    pile = [s]\n    vus = set()\n    while pile:\n        u = pile.pop()\n        if u in vus:\n            continue\n        vus.add(u)\n        for v in G[u]:\n            if v not in vus:\n                pile.append(v)\n    return vus', f.current ? (S.mode === 'bfs' ? 8 : 4) : null);
+    $('#w2-prev').disabled = S.step === 0;
+    $('#w2-next').disabled = last;
+  }
+  $('#w2-prev').addEventListener('click', () => { stop(); if (S.step > 0) { S.step--; render(); } });
+  $('#w2-next').addEventListener('click', () => { stop(); if (S.step < S.frames.frames.length - 1) { S.step++; render(); } });
+  $('#w2-reset').addEventListener('click', () => { stop(); S.step = 0; render(); });
+  $('#w2-play').addEventListener('click', () => {
+    if (S.timer) { stop(); return; }
+    if (S.step >= S.frames.frames.length - 1) S.step = 0;
+    $('#w2-play').textContent = 'Pause';
+    S.timer = setInterval(() => { if (S.step >= S.frames.frames.length - 1) { stop(); render(); return; } S.step++; render(); }, 800);
+    render();
+  });
+  render();
+}
+WORKSHOPS.push({ id: 'w2', title: 'Parcours BFS et DFS', hint: 'Comparez parcours en largeur (file) et en profondeur (pile) : ordre de visite, arbre couvrant, distance en nombre d\'arêtes.',
+  mount: mountW2, reset: () => { Object.assign(W2, { graph: 'simple', start: 'A', mode: 'bfs', step: 0, frames: null, treeN: 15 }); if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } },
+  leave: () => { if (W2.timer) { clearInterval(W2.timer); W2.timer = null; } } });
+
+/* ================= Atelier 3 : connexité et cycles ================= */
+const W3 = { graph: 'cycle', start: '1' };
+function mountW3(root) {
+  root.innerHTML = '<h2>Connexité et détection de cycles</h2><p>Un parcours permet de tester deux propriétés fondamentales : la <b>connexité</b> (un seul parcours visite tous les sommets) et l\'existence de <b>cycles</b> (chemin qui revient à son point de départ).</p>' +
+    '<div class="opts"><div class="fld"><span>Graphe</span><div id="w3-g"></div></div></div>' +
+    '<div class="gwrap"><svg id="w3-svg" viewBox="0 0 640 360"></svg></div>' +
+    '<div class="gstats" id="w3-stats"></div>' +
+    '<div id="w3-comp"></div>' +
+    '<h3>Code Python</h3><div id="w3-code"></div>';
+  const S = W3;
+  function render() {
+    $('#w3-g').innerHTML = '';
+    $('#w3-g').append(chipsRow([['simple', 'Non orienté'], ['cycle', 'Deux triangles'], ['oriente', 'Orienté']], S.graph, v => { S.graph = v; render(); }, 'Graphe'));
+    const g = GRAPHS[S.graph];
+    const comps = components(g), adj = buildAdj(g);
+    const colors = ['#2e6da4', '#1e7a2e', '#9a5b00', '#7b4fc2', '#c0281f'];
+    const compOf = new Map();
+    comps.forEach((c, i) => c.forEach(n => compOf.set(n, i)));
+    drawGraph($('#w3-svg'), g, {
+      nodeColor: n => colors[(compOf.get(n) || 0) % colors.length] + '22',
+      nodeStroke: n => colors[(compOf.get(n) || 0) % colors.length],
+      nodeStrokeWidth: () => 2.5
+    });
+    const cyc = hasCycle(g);
+    $('#w3-stats').innerHTML = '';
+    $('#w3-stats').append(stats([
+      ['Composantes connexes', String(comps.length)],
+      ['Graphe connexe', comps.length === 1 ? 'oui' : 'non'],
+      ['Cycle détecté', cyc ? 'oui' : 'non'],
+      ['Sommets visités', String(g.nodes.length)]
+    ]));
+    let html = '<h3>Composantes connexes</h3>';
+    comps.forEach((c, i) => { html += '<p><b style="color:' + colors[i % colors.length] + '">Composante ' + (i + 1) + '</b> : ' + c.join(', ') + ' (' + c.length + ' sommet' + (c.length > 1 ? 's' : '') + ').</p>'; });
+    html += '<h3>Détection de cycle</h3><p>Un parcours en profondeur détecte un cycle quand il rencontre un voisin déjà visité qui n\'est pas le parent du sommet courant.</p>';
+    if (cyc) {
+      const seen = new Set(), parent = new Map();
+      let cycleFound = null;
+      const dfsCycle = (u, p) => {
+        seen.add(u); parent.set(u, p);
+        for (const v of adj.get(u).keys()) {
+          if (!seen.has(v)) { const r = dfsCycle(v, u); if (r) return r; }
+          else if (v !== p) { return { u, v }; }
+        }
+        return null;
+      };
+      for (const n of g.nodes) if (!seen.has(n)) { cycleFound = dfsCycle(n, null); if (cycleFound) break; }
+      if (cycleFound) {
+        const path = [cycleFound.v]; let cur = cycleFound.u;
+        while (cur !== cycleFound.v && cur !== null) { path.push(cur); cur = parent.get(cur); }
+        path.push(cycleFound.v);
+        html += '<p class="verdict warn">Cycle trouvé : ' + path.join(' → ') + '.</p>';
+      }
+    } else html += '<p class="verdict yes">Aucun cycle : le graphe est une forêt (réunion d\'arbres).</p>';
+    $('#w3-comp').innerHTML = html;
+    $('#w3-code').innerHTML = codeBlock('def composantes(G):\n    vus = set()\n    comps = []\n    for s in G:\n        if s in vus:\n            continue\n        comp = []\n        pile = [s]\n        while pile:\n            u = pile.pop()\n            if u in vus:\n                continue\n            vus.add(u)\n            comp.append(u)\n            for v in G[u]:\n                if v not in vus:\n                    pile.append(v)\n        comps.append(comp)\n    return comps\n\ndef a_un_cycle(G):\n    vus = set()\n    def explore(u, parent):\n        vus.add(u)\n        for v in G[u]:\n            if v not in vus:\n                if explore(v, u):\n                    return True\n            elif v != parent:\n                return True\n        return False\n    for s in G:\n        if s not in vus and explore(s, None):\n            return True\n    return False');
+  }
+  render();
+}
+WORKSHOPS.push({ id: 'w3', title: 'Connexité et cycles', hint: 'Détectez les composantes connexes et les cycles d\'un graphe non orienté grâce au parcours en profondeur.',
+  mount: mountW3, reset: () => { Object.assign(W3, { graph: 'cycle', start: '1' }); } });
+
+/* ================= Atelier 4 : Dijkstra ================= */
+const W4 = { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null, timer: null };
+function mountW4(root) {
+  root.innerHTML = '<h2>Plus courts chemins : Dijkstra</h2><p>L\'algorithme de <b>Dijkstra</b> calcule les plus courts chemins depuis une source dans un graphe pondéré à poids <b>positifs</b>. Il maintient pour chaque sommet une distance provisoire et extrait à chaque étape le sommet non visité de distance minimale.</p>' +
+    '<div class="opts"><div class="fld"><span>Graphe</span><div id="w4-g"></div></div><div class="fld"><span>Source</span><div id="w4-s"></div></div><div class="fld"><span>Destination</span><div id="w4-t"></div></div></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w4-prev" type="button">◀ Précédent</button><button class="btn pri" id="w4-next" type="button">Suivant ▶</button><button class="btn" id="w4-play" type="button">Lecture</button><button class="btn" id="w4-reset" type="button">Départ</button></div>' +
+    '<div class="gwrap"><svg id="w4-svg" viewBox="0 0 720 380"></svg></div>' +
+    '<div class="legend"><span><i></i>non atteint</span><span><i class="f"></i>en attente (file de priorité)</span><span><i class="v"></i>distance définitive</span><span><i class="c"></i>extrait</span><span><i class="r"></i>relâchement</span><span><i class="p"></i>plus court chemin</span></div>' +
+    '<div class="verdict" id="w4-msg" aria-live="polite"></div>' +
+    '<div class="gstats" id="w4-stats"></div>' +
+    '<h3>File de priorité naïve</h3><p class="small">On peut se contenter d\'un parcours linéaire pour extraire le minimum : le coût est alors O(|S|²). Une vraie file de priorité (tas binaire) ramène à O((|S| + |A|) log |S|).</p>' +
+    '<div id="w4-table"></div>' +
+    '<h3>Code Python</h3><div id="w4-code"></div>';
+  const S = W4;
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w4-play'); if (b) b.textContent = 'Lecture'; }
+  function render() {
+    $('#w4-g').innerHTML = '';
+    $('#w4-g').append(chipsRow([['pondere', 'Pondéré'], ['oriente', 'Orienté'], ['heuristique', 'Pour A*']], S.graph, v => { S.graph = v; S.start = GRAPHS[v].nodes[0]; S.target = GRAPHS[v].nodes[GRAPHS[v].nodes.length - 1]; S.step = 0; S.frames = null; stop(); render(); }, 'Graphe'));
+    $('#w4-s').innerHTML = '';
+    $('#w4-s').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.start, v => { S.start = v; S.step = 0; S.frames = null; stop(); render(); }, 'Source'));
+    $('#w4-t').innerHTML = '';
+    $('#w4-t').append(chipsRow(GRAPHS[S.graph].nodes.map(n => [n, n]), S.target, v => { S.target = v; S.step = 0; S.frames = null; stop(); render(); }, 'Destination'));
+    const g = GRAPHS[S.graph];
+    if (!S.frames) S.frames = dijkstra(g, S.start);
+    const steps = S.frames.steps;
+    /* [FIX] On borne S.step pour éviter un affichage « étape 20 / 15 » */
+    const idx = Math.min(S.step, steps.length - 1);
+    const st = steps[idx];
+    const visited = st.visited, current = st.u, dist = st.dist;
+    /* [FIX] Frontière calculée pour la visualization : sommets atteints mais pas encore extraits */
+    const frontier = dijkstraFrontier(st, g.nodes);
+    let pathEdges = new Set(), final = new Set();
+    const lastStep = idx >= steps.length - 1;
+    if (lastStep && S.target) {
+      const p = pathTo(S.frames.parent, S.target);
+      final = new Set(p);
+      for (let i = 0; i < p.length - 1; i++) pathEdges.add([p[i], p[i + 1]].sort().join('|'));
+    }
+    const treeEdges = new Set();
+    for (const [v, u] of st.parent) treeEdges.add([u, v].sort().join('|'));
+    drawGraph($('#w4-svg'), g, { visited, frontier, current, dist, treeEdges, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
+    const msg = st.phase === 'extract'
+      ? 'On extrait <b>' + current + '</b> (distance provisoire ' + dist.get(current) + '). Sa distance devient définitive : c\'est le plus proche sommet non visité.'
+      : 'Relâchement de l\'arête ' + st.u + ' → ' + st.v + ' (poids ' + st.w + ') : nouvelle distance de ' + st.v + ' = ' + dist.get(st.v) + '.';
+    $('#w4-msg').className = 'verdict' + (lastStep ? ' yes' : '');
+    $('#w4-msg').innerHTML = '<b>Étape ' + idx + ' / ' + (steps.length - 1) + '.</b> ' + msg;
+    $('#w4-stats').innerHTML = '';
+    $('#w4-stats').append(stats([
+      ['Visités', String(visited.size) + ' / ' + g.nodes.length],
+      ['En attente', String(frontier.size)],
+      ['Distance de ' + S.target, dist.get(S.target) === Infinity ? '∞' : String(dist.get(S.target))],
+      ['Sommet courant', current || '—']
+    ]));
+    let tbl = '<h3>État courant</h3><div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>Distance</th><th>Parent</th><th>État</th></tr></thead><tbody>';
+    g.nodes.forEach(n => {
+      const d = dist.get(n);
+      const parent = st.parent.get(n);
+      let state;
+      if (final.has(n)) state = 'chemin final';
+      else if (n === current) state = 'extrait';
+      else if (visited.has(n)) state = 'définitif';
+      else if (frontier.has(n)) state = 'en attente';
+      else state = (d === Infinity || d === undefined) ? '∞' : 'non atteint';
+      tbl += '<tr' + (n === current ? ' style="background:var(--accent-soft)"' : '') + '><td><b>' + esc(n) + '</b></td><td class="m">' + (d === Infinity || d === undefined ? '∞' : d) + '</td><td class="m">' + (parent || '—') + '</td><td>' + state + '</td></tr>';
+    });
+    tbl += '</tbody></table></div>';
+    
+    // Tableau d'évolution
+    tbl += '<h3>Tableau des distances</h3>';
+    tbl += buildHistoryTable(steps, g, S.start, S.frames.dist, S.frames.parent, idx);
+
+    if (lastStep) {
+      const p = pathTo(S.frames.parent, S.target);
+      tbl += '<p class="verdict yes">Plus court chemin de ' + S.start + ' à ' + S.target + ' : <b>' + p.join(' → ') + '</b>, de longueur <b>' + S.frames.dist.get(S.target) + '</b>.</p>';
+    }
+    $('#w4-table').innerHTML = tbl;
+    $('#w4-code').innerHTML = codeBlock('def dijkstra(G, s):\n    dist = {u: float("inf") for u in G}\n    dist[s] = 0\n    parent = {}\n    vus = set()\n    while len(vus) < len(G):\n        # extraire le sommet non visité de distance minimale\n        u = min((x for x in G if x not in vus), key=dist.get, default=None)\n        if u is None or dist[u] == float("inf"):\n            break\n        vus.add(u)\n        for v, w in G[u].items():\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n                parent[v] = u\n    return dist, parent');
+    $('#w4-prev').disabled = idx === 0;
+    $('#w4-next').disabled = lastStep;
+  }
+  $('#w4-prev').addEventListener('click', () => { stop(); if (S.step > 0) { S.step--; render(); } });
+  $('#w4-next').addEventListener('click', () => { stop(); if (S.step < S.frames.steps.length - 1) { S.step++; render(); } });
+  $('#w4-reset').addEventListener('click', () => { stop(); S.step = 0; render(); });
+  $('#w4-play').addEventListener('click', () => {
+    if (S.timer) { stop(); return; }
+    if (S.step >= S.frames.steps.length - 1) S.step = 0;
+    $('#w4-play').textContent = 'Pause';
+    S.timer = setInterval(() => { if (S.step >= S.frames.steps.length - 1) { stop(); render(); return; } S.step++; render(); }, 900);
+    render();
+  });
+  render();
+}
+WORKSHOPS.push({ id: 'w4', title: 'Plus courts chemins : Dijkstra', hint: 'Suivez l\'algorithme de Dijkstra pas à pas : extraction du minimum, relâchement des arêtes, arbre des plus courts chemins.',
+  mount: mountW4, reset: () => { Object.assign(W4, { graph: 'pondere', start: 'A', target: 'H', step: 0, frames: null }); if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } },
+  leave: () => { if (W4.timer) { clearInterval(W4.timer); W4.timer = null; } } });
+
+/* ================= Atelier 5 : Dijkstra vs A* ================= */
+const W5 = { start: 'S', target: 'T', step: 0, frames: null, timer: null, mode: 'dijkstra' };
+function mountW5(root) {
+  root.innerHTML = '<h2>Dijkstra et A* : heuristique</h2><p>Quand on connaît une estimation de la distance au but (<b>heuristique</b> h), on peut orienter la recherche. L\'algorithme <b>A*</b> extrait le sommet de valeur f = g + h minimale au lieu de g seule.</p>' +
+    '<div class="opts"><div class="fld"><span>Algorithme</span><div id="w5-m"></div></div></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="w5-prev" type="button">◀ Précédent</button><button class="btn pri" id="w5-next" type="button">Suivant ▶</button><button class="btn" id="w5-play" type="button">Lecture</button><button class="btn" id="w5-reset" type="button">Départ</button></div>' +
+    '<div class="gwrap"><svg id="w5-svg" viewBox="0 0 660 360"></svg></div>' +
+    '<div class="legend"><span><i></i>inconnu</span><span><i class="f"></i>dans la file</span><span><i class="v"></i>fermé</span><span><i class="c"></i>extrait</span><span><i class="p"></i>chemin final</span></div>' +
+    '<div class="verdict" id="w5-msg" aria-live="polite"></div>' +
+    '<div class="gstats" id="w5-stats"></div>' +
+    '<div id="w5-table"></div>' +
+    '<h3>Code Python</h3><div id="w5-code"></div>';
+  const S = W5;
+  function stop() { if (S.timer) { clearInterval(S.timer); S.timer = null; } const b = $('#w5-play'); if (b) b.textContent = 'Lecture'; }
+  function render() {
+    $('#w5-m').innerHTML = '';
+    $('#w5-m').append(chipsRow([['dijkstra', 'Dijkstra'], ['astar', 'A*']], S.mode, v => { S.mode = v; S.step = 0; S.frames = null; stop(); render(); }, 'Algorithme'));
+    const g = GRAPHS.heuristique;
+    if (!S.frames) S.frames = S.mode === 'astar' ? astar(g, S.start, S.target) : dijkstra(g, S.start);
+    const steps = S.frames.steps;
+    const idx = Math.min(S.step, steps.length - 1);
+    const st = steps[idx];
+    const dist = st.dist;
+    /* [FIX] Récupère les ensembles open/closed/frontier pour les deux modes */
+    let open, closed, frontier;
+    if (st.open) {
+      open = st.open;
+      closed = st.closed;
+      frontier = open;
+    } else {
+      closed = st.visited || new Set();
+      frontier = dijkstraFrontier(st, g.nodes);
+      open = frontier;
+    }
+    const current = st.u;
+    const lastStep = idx >= steps.length - 1;
+    let pathEdges = new Set(), final = new Set();
+    if (lastStep) {
+      const p = pathTo(S.frames.parent, S.target);
+      final = new Set(p);
+      for (let i = 0; i < p.length - 1; i++) pathEdges.add([p[i], p[i + 1]].sort().join('|'));
+    }
+    drawGraph($('#w5-svg'), g, { visited: closed, frontier, current, dist, pathEdges, final, relaxEdge: st.phase === 'relax' ? [st.u, st.v] : null });
+    const hval = n => g.heur ? (g.heur[n] || 0) : 0;
+    let msg;
+    if (st.phase === 'goal') {
+      msg = 'Le but ' + S.target + ' est atteint : distance = ' + dist.get(S.target) + '.';
+    } else if (st.phase === 'extract') {
+      if (S.mode === 'astar') {
+        msg = 'On extrait <b>' + current + '</b> (g = ' + dist.get(current) + ', h = ' + hval(current) + ', f = ' + (dist.get(current) + hval(current)) + ').';
+      } else {
+        msg = 'On extrait <b>' + current + '</b> (distance provisoire ' + dist.get(current) + ').';
+      }
+    } else {
+      msg = 'Relâchement ' + st.u + ' → ' + st.v + ' (poids ' + st.w + ') : distance de ' + st.v + ' = ' + dist.get(st.v) + '.';
+    }
+    $('#w5-msg').className = 'verdict' + (lastStep ? ' yes' : '');
+    $('#w5-msg').innerHTML = '<b>Étape ' + idx + ' / ' + (steps.length - 1) + '.</b> ' + msg;
+    $('#w5-stats').innerHTML = '';
+    $('#w5-stats').append(stats([
+      ['Algorithme', S.mode === 'astar' ? 'A* (g + h)' : 'Dijkstra (g)'],
+      ['File', String(open.size)],
+      ['Fermés', String(closed.size)],
+      ['Distance de ' + S.target, dist.get(S.target) === Infinity ? '∞' : String(dist.get(S.target))]
+    ]));
+    /* [FIX] En mode Dijkstra, on masque les colonnes h et f qui ne sont pas utilisées. */
+    const showHF = S.mode === 'astar';
+    let tbl = '<h3>État courant</h3><div class="dwrap"><table class="dt"><thead><tr><th>Sommet</th><th>g</th>' + (showHF ? '<th>h</th><th>f = g+h</th>' : '') + '<th>État</th></tr></thead><tbody>';
+    g.nodes.forEach(n => {
+      const d = dist.get(n);
+      let state;
+      if (final.has(n)) state = 'chemin final';
+      else if (n === current) state = 'extrait';
+      else if (closed.has(n)) state = 'fermé';
+      else if (open.has(n)) state = 'dans la file';
+      else state = (d === Infinity || d === undefined) ? '∞' : 'non atteint';
+      let row = '<tr' + (n === current ? ' style="background:var(--accent-soft)"' : '') + '><td><b>' + esc(n) + '</b></td><td class="m">' + (d === Infinity || d === undefined ? '∞' : d) + '</td>';
+      if (showHF) {
+        const hv = hval(n);
+        const f = (d === Infinity || d === undefined) ? Infinity : d + hv;
+        row += '<td class="m">' + hv + '</td><td class="m">' + (f === Infinity ? '∞' : f) + '</td>';
+      }
+      row += '<td>' + state + '</td></tr>';
+      tbl += row;
+    });
+    tbl += '</tbody></table></div>';
+    
+    // Tableau d'évolution (distance g)
+    tbl += '<h3>Tableau des distances (g)</h3>';
+    tbl += buildHistoryTable(steps, g, S.start, S.frames.dist, S.frames.parent, idx);
+
+    if (lastStep) {
+      const p = pathTo(S.frames.parent, S.target);
+      tbl += '<p class="verdict yes">Chemin trouvé : <b>' + p.join(' → ') + '</b>, longueur <b>' + S.frames.dist.get(S.target) + '</b>.</p>';
+    }
+    $('#w5-table').innerHTML = tbl;
+    const codeDij = 'def dijkstra(G, s):\n    dist = {u: float("inf") for u in G}\n    dist[s] = 0\n    parent = {}\n    vus = set()\n    while len(vus) < len(G):\n        u = min((x for x in G if x not in vus), key=dist.get, default=None)\n        if u is None or dist[u] == float("inf"):\n            break\n        vus.add(u)\n        for v, w in G[u].items():\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n                parent[v] = u\n    return dist, parent';
+    const codeAst = 'def astar(G, s, t, h):\n    dist = {u: float("inf") for u in G}\n    dist[s] = 0\n    parent = {}\n    ouvert = {s}\n    ferme = set()\n    while ouvert:\n        u = min(ouvert, key=lambda x: dist[x] + h[x])\n        if u == t:\n            break\n        ouvert.remove(u)\n        ferme.add(u)\n        for v, w in G[u].items():\n            if v in ferme:\n                continue\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n                parent[v] = u\n                ouvert.add(v)\n    return dist, parent';
+    $('#w5-code').innerHTML = S.mode === 'astar' ? codeBlock(codeAst) : codeBlock(codeDij);
+    $('#w5-prev').disabled = idx === 0;
+    $('#w5-next').disabled = lastStep;
+  }
+  $('#w5-prev').addEventListener('click', () => { stop(); if (S.step > 0) { S.step--; render(); } });
+  $('#w5-next').addEventListener('click', () => { stop(); if (S.step < S.frames.steps.length - 1) { S.step++; render(); } });
+  $('#w5-reset').addEventListener('click', () => { stop(); S.step = 0; render(); });
+  $('#w5-play').addEventListener('click', () => {
+    if (S.timer) { stop(); return; }
+    if (S.step >= S.frames.steps.length - 1) S.step = 0;
+    $('#w5-play').textContent = 'Pause';
+    S.timer = setInterval(() => { if (S.step >= S.frames.steps.length - 1) { stop(); render(); return; } S.step++; render(); }, 900);
+    render();
+  });
+  render();
+}
+WORKSHOPS.push({ id: 'w5', title: 'Dijkstra et A*', hint: 'Comparez Dijkstra et A* sur un même graphe : nombre de sommets fermés, rôle de l\'heuristique h.',
+  mount: mountW5, reset: () => { Object.assign(W5, { start: 'S', target: 'T', step: 0, frames: null }); if (W5.timer) { clearInterval(W5.timer); W5.timer = null; } },
+  leave: () => { if (W5.timer) { clearInterval(W5.timer); W5.timer = null; } } });
+
+/* ---------- activités ---------- */
+const ACT = {
+  w1: {
+    title: 'Vocabulaire et représentations', level: 'Niveau 1 · Découvrir', time: '20 min', course: 'vocabulaire',
+    goal: 'Définir sommets, arêtes, arcs, degrés, chemin, cycle, connexité ; choisir entre listes et matrice d\'adjacence.',
+    steps: [
+      'Choisissez le graphe « Non orienté ». Combien de sommets, d\'arêtes, de composantes connexes ?',
+      'Regardez le tableau des degrés. Que vaut la somme des degrés ? Pourquoi est-elle égale à 2|A| ?',
+      'Passez au graphe « Orienté ». Distinguez degrés entrants et sortants.',
+      'Passez au graphe « Pondéré ». Que représentent les nombres sur les arêtes ?',
+      'Comparez listes et matrice d\'adjacence : espace mémoire, accès à un voisin, test d\'existence d\'une arête.',
+      'Cliquez sur un sommet dans la liste : voyez les cases de la matrice et la couleur des arêtes.'
+    ],
+    defi: { q: 'Un graphe non orienté a 5 sommets et 4 arêtes. Combien de composantes connexes au minimum ? au maximum ? Quelle est la somme des degrés ?',
+      a: 'Au minimum <b>1</b> composante (arbre à 5 sommets : 4 arêtes suffisent), au maximum <b>5</b> (aucune arête, mais alors 0 arête). Avec 4 arêtes, on a au moins un sommet relié, donc au plus 4 composantes (1 paire + 3 isolés). La somme des degrés vaut 2|A| = <b>8</b>.' },
+    qcm: [
+      { q: 'Un graphe orienté est un graphe où :', o: ['les arêtes ont un sens', 'les sommets sont numérotés', 'il n\'y a pas de cycles', 'les poids sont positifs'], a: 0, w: 'Les arêtes sont alors appelées des arcs : l\'arc u → v va de u vers v.' },
+      { q: 'Que vaut la somme des degrés d\'un graphe non orienté ?', o: ['|S|', '|A|', '2|A|', '|S| × |A|'], a: 2, w: 'Chaque arête contribue 1 au degré de chacune de ses deux extrémités.' },
+      { q: 'La matrice d\'adjacence d\'un graphe à |S| sommets utilise :', o: ['O(|S|) cases', 'O(|A|) cases', 'O(|S|²) cases', 'O(|S| + |A|) cases'], a: 2, w: 'Une matrice |S| × |S|, même si le graphe est très creux.' },
+      { q: 'Les listes d\'adjacence sont préférées quand :', o: ['le graphe est dense', 'le graphe est creux', 'on doit tester une arête en O(1)', 'on utilise une bibliothèque de matrices'], a: 1, w: 'Elles occupent O(|S| + |A|) : c\'est la représentation des grands graphes (réseaux sociaux, web).' },
+      { q: 'Un graphe non orienté est connexe si :', o: ['il a un cycle', 'tout sommet est relié à tout autre par un chemin', 'tous les degrés sont égaux', 'il a plus d\'arêtes que de sommets'], a: 1, w: 'La connexité est une propriété globale : un seul parcours visite alors tous les sommets.' }
+    ]
+  },
+  w2: {
+    title: 'Parcours BFS et DFS', level: 'Niveau 2 · Comprendre', time: '30 min', course: 'parcours',
+    goal: 'Suivre un parcours en largeur et un parcours en profondeur ; comprendre le rôle de la file et de la pile ; calculer une distance en nombre d\'arêtes.',
+    steps: [
+      'Lancez le BFS depuis A sur le graphe non orienté. Notez l\'ordre de sortie de la file.',
+      'Vérifiez que le BFS donne la distance en nombre d\'arêtes depuis A : chaque sommet a la même distance que son parent + 1.',
+      'Passez au DFS. Comparez l\'ordre de visite : pourquoi est-il très différent ?',
+      'Changez le sommet de départ. Que devient l\'arbre couvrant ?',
+      'Testez BFS et DFS sur le graphe orienté. Tous les sommets sont-ils atteints ?',
+      'Regardez le code Python : pourquoi utilise-t-on <code>deque</code> plutôt qu\'une liste pour la file ?'
+    ],
+    defi: { q: 'Un graphe a 1000 sommets et 5000 arêtes. Combien de sommets visite un BFS en moyenne ? Peut-on utiliser une liste Python au lieu d\'un <code>deque</code> pour la file ?',
+      a: 'Un BFS visite tous les sommets de la composante connexe du départ (jusqu\'à 1000). On peut utiliser une liste, mais <code>pop(0)</code> est en O(n) : le BFS devient O(n²) dans le pire cas. <code>deque.popleft()</code> est en O(1).' },
+    qcm: [
+      { q: 'Le parcours en largeur utilise :', o: ['une pile', 'une file', 'un tas', 'une table de hachage'], a: 1, w: 'On ajoute les voisins en queue et on extrait en tête : c\'est une file (FIFO).' },
+      { q: 'Le parcours en profondeur utilise :', o: ['une pile', 'une file', 'un arbre binaire', 'une matrice'], a: 0, w: 'On empile et on dépile au même endroit : c\'est une pile (LIFO).' },
+      { q: 'Le BFS calcule :', o: ['le plus court chemin en nombre d\'arêtes', 'le plus court chemin en poids', 'un tri', 'un cycle'], a: 0, w: 'Chaque arête vaut 1 : le BFS donne la distance minimale en nombre d\'arêtes.' },
+      { q: 'Pourquoi préférer <code>collections.deque</code> à une liste pour la file ?', o: ['<code>pop(0)</code> est en O(n)', '<code>deque</code> trie les éléments', '<code>deque</code> utilise moins de mémoire', 'On ne peut pas utiliser une liste'], a: 0, w: 'Retirer le premier élément d\'une liste décale tous les autres ; <code>deque.popleft()</code> est en O(1).' },
+      { q: 'Sur un graphe orienté, un BFS depuis s atteint :', o: ['tous les sommets du graphe', 'les sommets accessibles depuis s', 'uniquement les voisins de s', 'aucun sommet'], a: 1, w: 'Sur un graphe orienté, seuls les sommets atteignables par un chemin orienté depuis s sont visités.' }
+    ]
+  },
+  w3: {
+    title: 'Connexité et cycles', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'connexite',
+    goal: 'Détecter les composantes connexes et les cycles d\'un graphe non orienté à l\'aide d\'un parcours.',
+    steps: [
+      'Chargez le graphe « Deux triangles ». Combien de composantes ?',
+      'Lisez la détection de cycle : pourquoi trouve-t-on un cycle dans chaque triangle ?',
+      'Passez au graphe « Non orienté » : est-il connexe ? a-t-il un cycle ?',
+      'Testez le graphe orienté : la notion de connexité est-elle la même ?',
+      'Modifiez mentalement une arête pour casser un cycle. Que devient le graphe ?'
+    ],
+    defi: { q: 'Un graphe non orienté connexe à n sommets et n − 1 arêtes : a-t-il un cycle ? Et avec n arêtes ?',
+      a: 'Un graphe connexe à n sommets et n − 1 arêtes est un <b>arbre</b> : il n\'a pas de cycle. Avec n arêtes (et toujours n sommets), il contient au moins un cycle.' },
+    qcm: [
+      { q: 'Combien de composantes connexes a un graphe non orienté à 4 sommets isolés ?', o: ['1', '2', '4', '0'], a: 2, w: 'Chaque sommet isolé est sa propre composante.' },
+      { q: 'Un arbre est un graphe :', o: ['connexe sans cycle', 'avec un cycle', 'orienté', 'pondéré'], a: 0, w: 'Un arbre est connexe, sans cycle, et a exactement |S| − 1 arêtes.' },
+      { q: 'Comment détecte-t-on un cycle en DFS ?', o: ['En comptant les arêtes', 'En rencontrant un voisin déjà visité autre que le parent', 'En triant les degrés', 'En utilisant une file'], a: 1, w: 'Si on rencontre un sommet déjà visité qui n\'est pas celui d\'où l\'on vient, on a trouvé un cycle.' },
+      { q: 'Si un BFS depuis un sommet visite tous les sommets, le graphe est :', o: ['connexe', 'acyclique', 'orienté', 'complet'], a: 0, w: 'Tous les sommets sont dans la même composante connexe.' }
+    ]
+  },
+  w4: {
+    title: 'Plus courts chemins : Dijkstra', level: 'Niveau 3 · Construire', time: '35 min', course: 'dijkstra',
+    goal: 'Suivre l\'algorithme de Dijkstra pas à pas : extraction du minimum, relâchement des arêtes, arbre des plus courts chemins.',
+    steps: [
+      'Choisissez le graphe pondéré, source A, destination H. Lancez le pas-à-pas.',
+      'À chaque étape, vérifiez l\'extraction : le sommet extrait a la plus petite distance provisoire.',
+      'Observez les relâchements : quand une distance est-elle mise à jour ?',
+      'Quand toutes les distances sont définitives, lisez le plus court chemin A → H et sa longueur.',
+      'Comparez avec une autre destination : le chemin change-t-il ?',
+      'Essayez sur le graphe orienté : le résultat est-il différent d\'un parcours non orienté ?'
+    ],
+    defi: { q: 'Sur le graphe pondéré, quelle est la longueur du plus court chemin de A à H ? Quel est le chemin ?',
+      a: 'A → C (2) → E (3) → G (6) → H (1) : longueur <b>12</b>. La variante A → B (4) → D (10) → G (5) → H (1) vaut 20 ; A → C (2) → B (5) → D (10) → F (11) → H (7) est encore plus longue.' },
+    qcm: [
+      { q: 'L\'algorithme de Dijkstra s\'applique à un graphe :', o: ['sans poids', 'à poids positifs', 'à poids négatifs', 'orienté uniquement'], a: 1, w: 'Avec des poids négatifs, un cycle négatif peut rendre le problème mal posé.' },
+      { q: 'À chaque étape, Dijkstra extrait :', o: ['un sommet au hasard', 'le sommet non visité de distance minimale', 'le sommet de degré maximal', 'le dernier sommet visité'], a: 1, w: 'C\'est le cœur de l\'algorithme : le plus proche non encore traité.' },
+      { q: 'Que fait un relâchement sur l\'arête u → v ?', o: ['On visite v', 'On met à jour la distance de v si passer par u raccourcit', 'On supprime l\'arête', 'On ajoute une arête'], a: 1, w: 'Si dist(u) + poids(u, v) < dist(v), on met à jour dist(v) et on note u comme parent.' },
+      { q: 'Le plus court chemin dans un graphe pondéré est :', o: ['toujours unique', 'un chemin de poids minimal', 'le chemin avec le moins d\'arêtes', 'le chemin qui passe par le plus de sommets'], a: 1, w: 'C\'est le chemin dont la somme des poids des arêtes est minimale.' },
+      { q: 'Quelle structure est la plus adaptée à l\'extraction du minimum ?', o: ['Une file FIFO', 'Une pile LIFO', 'Un tas (file de priorité)', 'Un ensemble'], a: 2, w: 'Un tas binaire permet l\'extraction en O(log n), d\'où O((|S| + |A|) log |S|).' }
+    ]
+  },
+  w5: {
+    title: 'Dijkstra et A*', level: 'Niveau 3 · Approfondir', time: '25 min', course: 'astar',
+    goal: 'Comprendre l\'heuristique h et comparer l\'exploration de Dijkstra et A* sur un même graphe.',
+    steps: [
+      'Lancez Dijkstra sur le graphe heuristique. Notez le nombre de sommets fermés.',
+      'Relancez avec A*. Le nombre de sommets fermés est-il plus petit ? Pourquoi ?',
+      'Vérifiez que A* trouve bien le même chemin et la même longueur que Dijkstra.',
+      'Regardez la colonne h de la table : que doit vérifier une bonne heuristique ?',
+      'Modifiez mentalement h pour être très pessimiste (h(x) grand). A* devient-il plus ou moins efficace ?'
+    ],
+    defi: { q: 'Que doit vérifier une heuristique h pour que A* trouve toujours le plus court chemin ? Et si h est toujours nulle, que devient A* ?',
+      a: 'Une bonne heuristique est <b>admissible</b> : h(x) ≤ distance réelle de x au but. Si h ≡ 0, A* se réduit à Dijkstra (f = g).' },
+    qcm: [
+      { q: 'L\'algorithme A* extrait le sommet de plus petite valeur :', o: ['g seule', 'h seule', 'g + h', 'g × h'], a: 2, w: 'f = g + h : coût déjà parcouru plus estimation restante.' },
+      { q: 'Une heuristique est admissible si :', o: ['elle surestime toujours', 'elle ne surestime jamais la distance réelle', 'elle est constante', 'elle vaut 0'], a: 1, w: 'h(x) ≤ distance réelle de x au but : A* ne « saute » pas un chemin meilleur.' },
+      { q: 'Quand h est nulle partout, A* :', o: ['ne trouve rien', 'est équivalent à Dijkstra', 'est plus rapide que Dijkstra', 'est faux'], a: 1, w: 'f = g + 0 = g : on extrait le sommet de distance minimale, comme Dijkstra.' },
+      { q: 'Par rapport à Dijkstra, A* explore en général :', o: ['plus de sommets', 'moins de sommets', 'autant de sommets', 'aucun sommet'], a: 1, w: 'L\'heuristique guide la recherche vers le but et réduit le nombre de sommets fermés.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'vocabulaire', t: 'Vocabulaire et notations', h: `
+<p>Un graphe <b>G = (S, A)</b> est la donnée d'un ensemble de <b>sommets</b> S et d'un ensemble d'<b>arêtes</b> (ou <b>arcs</b>) A.</p>
+<h3>Graphe non orienté</h3>
+<ul><li><b>Arête</b> {u, v} : les deux extrémités sont reliées sans direction.</li><li><b>Degré</b> d(u) : nombre de voisins de u. On a Σ d(u) = 2|A|.</li><li><b>Chemin</b> : suite de sommets reliés par des arêtes.</li><li><b>Cycle</b> : chemin qui revient à son point de départ.</li><li><b>Connexe</b> : tout sommet est relié à tout autre par un chemin.</li></ul>
+<h3>Graphe orienté</h3>
+<ul><li><b>Arc</b> u → v : sens de u vers v.</li><li><b>Degré entrant</b> d₋(u) : nombre d'arcs qui arrivent à u. <b>Degré sortant</b> d₊(u) : nombre d'arcs qui partent de u.</li><li>Σ d₋(u) = Σ d₊(u) = |A|.</li></ul>
+<h3>Pondération</h3>
+<p>Chaque arête (ou arc) peut être étiquetée par un <b>poids</b> : une distance, un coût, une durée. Le graphe est alors dit <b>pondéré</b>.</p>
+<h3>Représentations</h3>
+<table class="ctable"><thead><tr><th>Représentation</th><th>Mémoire</th><th>Voisins de u</th><th>Arête u→v ?</th></tr></thead><tbody>
+<tr><td>Listes d'adjacence</td><td>O(|S| + |A|)</td><td>O(degré(u))</td><td>O(degré(u))</td></tr>
+<tr><td>Matrice d'adjacence</td><td>O(|S|²)</td><td>O(|S|)</td><td>O(1)</td></tr>
+</tbody></table>
+<pre class="code">G = {
+    'A': ['B', 'C'],
+    'B': ['A', 'D'],
+    'C': ['A', 'D'],
+    'D': ['B', 'C']
+}
+
+M = [[0, 1, 1, 0],
+     [1, 0, 0, 1],
+     [1, 0, 0, 1],
+     [0, 1, 1, 0]]</pre>
+<div class="retain"><b>À retenir.</b> Un graphe se représente par ses sommets et ses arêtes. On choisit listes d'adjacence pour les graphes creux, matrice pour les graphes denses.</div>` });
+
+COURSE.push({ id: 'parcours', t: 'Parcours BFS et DFS', h: `
+<p>Parcourir un graphe, c'est visiter ses sommets en suivant ses arêtes. On distingue deux stratégies.</p>
+<h3>Parcours en largeur (BFS)</h3>
+<p>On utilise une <b>file</b> : on ajoute les voisins en queue et on extrait en tête. On explore d'abord tous les sommets à distance 1, puis 2, etc.</p>
+<pre class="code">from collections import deque
+
+def bfs(G, s):
+    file = deque([s])
+    vus = {s}
+    while file:
+        u = file.popleft()       # O(1)
+        for v in G[u]:
+            if v not in vus:
+                vus.add(v)
+                file.append(v)
+    return vus</pre>
+<p>Le BFS calcule la <b>distance en nombre d'arêtes</b> depuis s.</p>
+<h3>Parcours en profondeur (DFS)</h3>
+<p>On utilise une <b>pile</b> : on empile et on dépile au même endroit. On descend aussi loin que possible avant de revenir.</p>
+<pre class="code">def dfs(G, s):
+    pile = [s]
+    vus = set()
+    while pile:
+        u = pile.pop()
+        if u in vus:
+            continue
+        vus.add(u)
+        for v in G[u]:
+            if v not in vus:
+                pile.append(v)
+    return vus</pre>
+<h3>File ou pile : coût</h3>
+<p>Une liste Python peut servir de file, mais <code>pop(0)</code> est en O(n) : le BFS devient O(n²). <code>collections.deque</code> fournit <code>popleft()</code> en O(1).</p>
+<div class="retain"><b>À retenir.</b> BFS = file ; DFS = pile. Le BFS donne les distances en nombre d'arêtes. <code>deque</code> évite le coût de <code>list.pop(0)</code>.</div>` });
+
+COURSE.push({ id: 'connexite', t: 'Connexité et cycles', h: `
+<h3>Composantes connexes</h3>
+<p>Un parcours depuis un sommet visite exactement sa composante connexe. Pour trouver toutes les composantes, on recommence depuis chaque sommet non visité.</p>
+<pre class="code">def composantes(G):
+    vus = set()
+    comps = []
+    for s in G:
+        if s in vus:
+            continue
+        comp = []
+        pile = [s]
+        while pile:
+            u = pile.pop()
+            if u in vus:
+                continue
+            vus.add(u)
+            comp.append(u)
+            for v in G[u]:
+                if v not in vus:
+                    pile.append(v)
+        comps.append(comp)
+    return comps</pre>
+<h3>Détection de cycle</h3>
+<p>Sur un graphe non orienté, un DFS détecte un cycle quand il rencontre un sommet déjà visité autre que son parent.</p>
+<pre class="code">def a_un_cycle(G):
+    vus = set()
+    def explore(u, parent):
+        vus.add(u)
+        for v in G[u]:
+            if v not in vus:
+                if explore(v, u):
+                    return True
+            elif v != parent:
+                return True
+        return False
+    for s in G:
+        if s not in vus and explore(s, None):
+            return True
+    return False</pre>
+<p>Un graphe non orienté connexe sans cycle est un <b>arbre</b> : il a exactement |S| − 1 arêtes.</p>
+<div class="retain"><b>À retenir.</b> Le parcours permet de tester connexité et acyclicité en temps linéaire.</div>` });
+
+COURSE.push({ id: 'dijkstra', t: 'Plus courts chemins : Dijkstra', h: `
+<p>Dans un graphe pondéré à poids <b>positifs</b>, on cherche le chemin de poids minimal entre deux sommets.</p>
+<h3>Principe</h3>
+<p>On maintient pour chaque sommet une distance provisoire depuis la source. À chaque étape :</p>
+<ol><li>extraire le sommet non visité de distance minimale ;</li><li>sa distance devient définitive ;</li><li>relâcher ses arêtes : pour chaque voisin v, si dist(u) + poids(u, v) < dist(v), mettre à jour dist(v).</li></ol>
+<h3>Exemple</h3>
+<pre class="code">A --4-- B
+| \     |
+2  5    10
+|   \   |
+C --3-- E --4-- D --11-- F</pre>
+<p>Plus court chemin de A à D : A → C (2) → E (3) → D (4) = 9.</p>
+<h3>Code Python</h3>
+<pre class="code">def dijkstra(G, s):
+    dist = {u: float("inf") for u in G}
+    dist[s] = 0
+    parent = {}
+    vus = set()
+    while len(vus) < len(G):
+        # extraction du minimum : file de priorité naïve
+        u = min((x for x in G if x not in vus), key=dist.get, default=None)
+        if u is None or dist[u] == float("inf"):
+            break
+        vus.add(u)
+        for v, w in G[u].items():
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                parent[v] = u
+    return dist, parent</pre>
+<p>Avec une file de priorité (tas binaire), le coût est <b>O((|S| + |A|) log |S|)</b> ; avec l'extraction naïve en O(|S|), il est <b>O(|S|²)</b>.</p>
+<div class="retain"><b>À retenir.</b> Dijkstra suppose des poids positifs. Chaque sommet est extrait une seule fois. Le résultat est un arbre des plus courts chemins.</div>` });
+
+COURSE.push({ id: 'astar', t: 'A* et heuristique', h: `
+<p>Quand on connaît une estimation de la distance au but (<b>heuristique</b> h), on peut orienter la recherche.</p>
+<h3>Principe</h3>
+<p>Pour chaque sommet x, on évalue <b>f(x) = g(x) + h(x)</b> : g(x) est la distance connue depuis la source, h(x) est l'estimation vers le but. On extrait le sommet de f minimal.</p>
+<h3>Admissibilité</h3>
+<p>Une heuristique est <b>admissible</b> si h(x) ≤ distance réelle de x au but. Alors A* trouve toujours un plus court chemin.</p>
+<ul><li>Si h ≡ 0, A* se réduit à Dijkstra (f = g).</li><li>Si h est très pessimiste (grande), A* se comporte comme un parcours en largeur et perd l'avantage de l'heuristique.</li><li>Si h est très optimiste (trop petite), A* explore plus de sommets que nécessaire.</li></ul>
+<h3>Code Python</h3>
+<pre class="code">def astar(G, s, t, h):
+    dist = {u: float("inf") for u in G}
+    dist[s] = 0
+    parent = {}
+    ouvert = {s}
+    ferme = set()
+    while ouvert:
+        u = min(ouvert, key=lambda x: dist[x] + h[x])
+        if u == t:
+            break
+        ouvert.remove(u)
+        ferme.add(u)
+        for v, w in G[u].items():
+            if v in ferme:
+                continue
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                parent[v] = u
+                ouvert.add(v)
+    return dist, parent</pre>
+<p>Par rapport à Dijkstra, A* ferme en général moins de sommets : c'est l'intérêt de l'heuristique.</p>
+<div class="retain"><b>À retenir.</b> A* = Dijkstra + heuristique. Une heuristique admissible garantit l'optimalité. h nulle redonne Dijkstra.</div>` });
+
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Sommet (ou nœud)</dt><dd>Élément d'un graphe.</dd>
+<dt>Arête</dt><dd>Lien non orienté entre deux sommets.</dd>
+<dt>Arc</dt><dd>Lien orienté entre deux sommets.</dd>
+<dt>Degré</dt><dd>Nombre d'arêtes incidentes à un sommet (non orienté) ; d₋ et d₊ en orienté.</dd>
+<dt>Chemin</dt><dd>Suite de sommets reliés par des arêtes ou arcs.</dd>
+<dt>Cycle</dt><dd>Chemin qui revient à son point de départ.</dd>
+<dt>Connexe</dt><dd>Graphe non orienté où tout sommet est relié à tout autre.</dd>
+<dt>Composante connexe</dt><dd>Sous-ensemble maximal de sommets reliés entre eux.</dd>
+<dt>Liste d'adjacence</dt><dd>Représentation où G[u] contient les voisins de u.</dd>
+<dt>Matrice d'adjacence</dt><dd>Matrice M où M[u][v] vaut 1 (ou le poids) si l'arête existe.</dd>
+<dt>File</dt><dd>Structure FIFO : on retire en tête, on ajoute en queue.</dd>
+<dt>Pile</dt><dd>Structure LIFO : on ajoute et retire au même endroit.</dd>
+<dt>BFS</dt><dd>Parcours en largeur, avec une file.</dd>
+<dt>DFS</dt><dd>Parcours en profondeur, avec une pile.</dd>
+<dt>Dijkstra</dt><dd>Algorithme des plus courts chemins à poids positifs.</dd>
+<dt>A*</dt><dd>Dijkstra + heuristique h ; f = g + h.</dd>
+<dt>Heuristique</dt><dd>Estimation de la distance restante au but ; admissible si elle ne surestime jamais.</dd>
+</dl>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'w1' };
+const AS = { key: 'w1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'vocabulaire' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : graphes et plus courts chemins'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur les graphes et les plus courts chemins (ITC, CPGE 1re année) : vocabulaire et représentations, parcours BFS et DFS, connexité et cycles, Dijkstra, Dijkstra et A*.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut, puis manipulez les boutons et les curseurs.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque partie.</li></ul>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
