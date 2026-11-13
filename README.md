@@ -44,6 +44,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | Année | Outil | Description |
 | :---: | --- | --- |
+| 1ère année | [Structures de contrôle et données](https://siicpgeamansur.github.io/ITC/structures_controle.html) | Types de base (entiers, flottants, booléens, chaînes, tuples, listes) et structures de contrôle (`if`, `while`, `for`) : ateliers interactifs, cours et QCM. |
 | 1ère année | [Modules et bibliothèques](https://siicpgeamansur.github.io/ITC/modules_bibliotheques.html) | Découverte des modules et bibliothèques en Python. |
 | 1ère année | [Matrices de pixels et images](https://siicpgeamansur.github.io/ITC/matrices_de_pixels_images.html) | Manipulation d'images comme matrices de pixels. |
 
@@ -72,10 +73,3 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 ```bash
 git clone https://github.com/siicpgeamansur/ITC.git
 cd ITC
-```
-
-Ouvrez ensuite le fichier `.html` de votre choix dans un navigateur récent (Chrome, Firefox, Edge, Safari).
-
-## Contribuer
-
-Les suggestions, corrections et idées de nouveaux simulateurs sont les bienvenues : ouvrez une [issue](https://github.com/siicpgeamansur/ITC/issues) ou proposez une *pull request*.
