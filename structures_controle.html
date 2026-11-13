@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atelier Structures de contrôle et données</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+pre.code .codeline{display:block;padding:1px 6px;margin:0 -6px;border-left:3px solid transparent;border-radius:0 4px 4px 0}
+pre.code .codeline.hit{background:var(--accent-soft);border-left-color:var(--accent);color:var(--accent-ink)}
+pre.code .codeline.skip{opacity:.45}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:220px;max-width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.stat.on{border-color:var(--accent);background:var(--accent-soft)}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+/* listes / cellules */
+.cells{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px}
+.cell{width:44px;text-align:center}
+.cell .v{border:1px solid var(--line);border-radius:6px;padding:6px 0;font:600 14px var(--font-mono);background:#fff;min-height:33px}
+.cell .i{font:11px var(--font-mono);color:var(--muted);margin-top:2px}
+.cell.hi .v{background:var(--accent);color:#fff;border-color:var(--accent-ink)}
+.cell.old .v{background:var(--panel2);color:var(--muted)}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px;background:#fff;margin:8px 0}
+.rowname{font-size:12px;color:var(--muted);margin:4px 2px 0}
+/* résultats d'expressions */
+.result{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 4px}
+.result .expr{font:600 15px var(--font-mono);background:var(--panel2);padding:4px 10px;border-radius:6px}
+.result .arrow{color:var(--muted);font-size:18px}
+.result .val{font:600 17px var(--font-mono);color:var(--accent-ink)}
+/* variables de boucle */
+.vars{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.var{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font:13px var(--font-mono)}
+.var b{color:var(--accent-ink)}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cell{width:34px}.cell .v{font-size:12px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+        <path d="M10 4 L4 13 L10 22" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 4 L22 13 L16 22" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Atelier Structures de contrôle et données <small>ITC · CPGE 1<sup>re</sup> année</small></span>
+    </div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-controle-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+
+/* =========================================================================
+   LOGIQUE
+   ========================================================================= */
+function pyRepr(v, tuple) {
+  if (v === true) return 'True';
+  if (v === false) return 'False';
+  if (v === null || v === undefined) return 'None';
+  if (typeof v === 'string') return "'" + v + "'";
+  if (Array.isArray(v)) return (tuple ? '(' : '[') + v.map(x => typeof x === 'string' ? "'" + x + "'" : x).join(', ') + (tuple ? ')' : ']');
+  return String(v);
+}
+function fmtN(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'); }
+
+/* ---------- Atelier 1 : types de base ---------- */
+const EXPRS = [
+  { g: 'Arithmétique', items: [
+    { e: '7 + 3', v: 10, t: 'int', note: 'Addition de deux entiers : le résultat est un entier.' },
+    { e: '7 / 2', v: 3.5, t: 'float', note: 'La division / renvoie toujours un flottant, même quand elle tombe juste.' },
+    { e: '7 // 2', v: 3, t: 'int', note: 'Division entière : quotient tronqué vers le bas.' },
+    { e: '7 % 3', v: 1, t: 'int', note: 'Modulo : reste de la division euclidienne.' },
+    { e: '2 ** 10', v: 1024, t: 'int', note: 'Puissance. Le résultat est entier quand les deux opérandes le sont et l’exposant positif.' },
+    { e: '2 ** -1', v: 0.5, t: 'float', note: 'Exposant négatif : le résultat est un flottant.' },
+    { e: 'True + True', v: 2, t: 'int', note: 'bool est une sous-classe de int : True vaut 1, False vaut 0.' },
+    { e: '2.5 * 2', v: 5.0, t: 'float', note: 'Dès qu’un opérande est un flottant, le résultat est un flottant.' }
+  ]},
+  { g: 'Chaînes', items: [
+    { e: '"ab" + "cd"', v: 'abcd', t: 'str', note: 'Concaténation de chaînes.' },
+    { e: '"ab" * 3', v: 'ababab', t: 'str', note: 'Répétition : la chaîne est répétée 3 fois.' },
+    { e: 'len("bonjour")', v: 7, t: 'int', note: 'Longueur de la chaîne (nombre de caractères).' },
+    { e: '"bonjour"[0]', v: 'b', t: 'str', note: 'Accès par indice, à partir de 0.' },
+    { e: '"bonjour"[-1]', v: 'r', t: 'str', note: 'Indice négatif : on compte depuis la fin.' },
+    { e: '"bonjour"[1:4]', v: 'onn', t: 'str', note: 'Tranche : de l’indice 1 inclus à 4 exclu.' }
+  ]},
+  { g: 'Séquences', items: [
+    { e: '[1, 2] + [3]', v: [1, 2, 3], t: 'list', note: 'Concaténation : une nouvelle liste est créée.' },
+    { e: '[1, 2] * 2', v: [1, 2, 1, 2], t: 'list', note: 'Répétition d’une liste.' },
+    { e: '(1, 2) + (3,)', v: [1, 2, 3], tuple: true, t: 'tuple', note: 'Concaténation de tuples.' },
+    { e: 'len([10, 20, 30])', v: 3, t: 'int', note: 'Longueur d’une liste.' },
+    { e: '2 in [1, 2, 3]', v: true, t: 'bool', note: 'Test d’appartenance.' }
+  ]},
+  { g: 'Comparaisons et booléens', items: [
+    { e: '3 < 5', v: true, t: 'bool', note: 'Une comparaison renvoie toujours un booléen.' },
+    { e: '3 < 5 < 7', v: true, t: 'bool', note: 'Comparaison chaînée : 3 < 5 et 5 < 7.' },
+    { e: '2 == 2.0', v: true, t: 'bool', note: 'Égalité de valeurs : un entier et un flottant peuvent être égaux.' },
+    { e: '"abc" < "abd"', v: true, t: 'bool', note: 'Comparaison lexicographique.' },
+    { e: 'True and False', v: false, t: 'bool', note: 'Et logique.' },
+    { e: 'not True', v: false, t: 'bool', note: 'Négation.' }
+  ]},
+  { g: 'Erreurs typiques', items: [
+    { e: '"ab" + 7', err: 'TypeError', note: 'Impossible de concaténer une chaîne et un entier : il faut convertir avec str(7).' },
+    { e: 'int("abc")', err: 'ValueError', note: 'La chaîne ne représente pas un entier.' },
+    { e: '[1, 2][5]', err: 'IndexError', note: 'Indice hors des bornes de la liste.' },
+    { e: '7 / 0', err: 'ZeroDivisionError', note: 'La division par zéro est interdite.' },
+    { e: '(1, 2)[0] = 5', err: 'TypeError', note: 'Un tuple est immuable : on ne peut pas modifier ses éléments.' }
+  ]}
+];
+const TYPE_TABLE = [
+  ['int', 'Entier', '42, −7, 0, 10**20', 'précision arbitraire', 'immuable'],
+  ['float', 'Flottant', '3.14, 2.0, 1e-3', 'IEEE 754 double', 'immuable'],
+  ['bool', 'Booléen', 'True, False', 'sous-type de int', 'immuable'],
+  ['str', 'Chaîne', '"bonjour", \'a\'', 'suite de caractères', 'immuable'],
+  ['tuple', 'Tuple', '(1, 2), (1,), ()', 'séquence ordonnée', 'immuable'],
+  ['list', 'Liste', '[1, 2, 3], []', 'séquence ordonnée', 'mutable']
+];
+let T1SEL = null;
+
+function mountT1(root) {
+  root.innerHTML = '<h2>Types de base</h2>' +
+    '<p>Python est un langage à <b>typage dynamique</b> : une variable n’a pas de type déclaré, c’est la valeur qu’elle référence qui en a un. Les six types de base sont <code>int</code>, <code>float</code>, <code>bool</code>, <code>str</code>, <code>tuple</code> et <code>list</code>. Cliquez sur une expression pour voir son résultat et son type.</p>' +
+    '<div id="t1-groups"></div>' +
+    '<div id="t1-out"></div>' +
+    '<h3>Les six types</h3>' +
+    '<div class="dwrap"><table class="dt"><thead><tr><th>Type</th><th>Nom</th><th>Exemples</th><th>Nature</th><th>Mutabilité</th></tr></thead><tbody id="t1-types"></tbody></table></div>' +
+    '<p class="small">Retenez surtout la distinction <b>immuable / mutable</b> : on ne peut pas modifier un <code>int</code>, une <code>str</code> ou un <code>tuple</code>, mais on peut modifier une <code>list</code>.</p>';
+  const tb = $('#t1-types');
+  TYPE_TABLE.forEach(r => tb.append(h('tr', null, h('td', { class: 'm' }, r[0]), h('td', null, r[1]), h('td', { class: 'm' }, r[2]), h('td', null, r[3]), h('td', null, r[4]))));
+  drawT1();
+}
+function drawT1() {
+  const g = $('#t1-groups'), out = $('#t1-out'); if (!g) return;
+  g.innerHTML = '';
+  EXPRS.forEach(grp => {
+    g.append(h('div', { class: 'rowname', style: 'margin-top:12px' }, grp.g));
+    const chips = h('div', { class: 'chips' });
+    grp.items.forEach(it => chips.append(h('button', {
+      type: 'button',
+      class: 'chip' + (T1SEL === it ? ' on' : ''),
+      'aria-pressed': T1SEL === it ? 'true' : 'false',
+      onclick: () => { T1SEL = it; drawT1(); }
+    }, it.e)));
+    g.append(chips);
+  });
+  out.innerHTML = '';
+  if (!T1SEL) { out.append(h('div', { class: 'verdict' }, 'Cliquez sur une expression pour voir son résultat et son type.')); return; }
+  const it = T1SEL, card = h('div', { class: 'stagebox' });
+  if (it.err) {
+    card.append(h('div', { class: 'result' }, h('span', { class: 'expr' }, it.e), h('span', { class: 'arrow' }, '→'), h('span', { class: 'val', style: 'color:var(--bad)' }, it.err)));
+    card.append(h('p', null, it.note));
+  } else {
+    card.append(h('div', { class: 'result' }, h('span', { class: 'expr' }, it.e), h('span', { class: 'arrow' }, '→'), h('span', { class: 'val' }, pyRepr(it.v, it.tuple))));
+    card.append(h('p', null, h('b', null, 'Type : '), h('code', null, it.t), ' · ', it.note));
+  }
+  out.append(card);
+}
+WORKSHOPS.push({ id: 'c1', title: 'Types de base', hint: 'Explorez les six types de base et les opérations qui les combinent : résultat et type à chaque fois.', mount: mountT1, reset: () => { T1SEL = null; } });
+
+/* ---------- Atelier 2 : conditions ---------- */
+const IF_FUNCS = {
+  mention: {
+    title: 'Mention au bac', fname: 'mention', param: 'note', min: 0, max: 20, step: 0.5,
+    branches: [
+      { txt: 'note >= 16', cond: x => x >= 16, body: 'return "Très bien"' },
+      { txt: 'note >= 14', cond: x => x >= 14, body: 'return "Bien"' },
+      { txt: 'note >= 12', cond: x => x >= 12, body: 'return "Assez bien"' },
+      { txt: 'note >= 10', cond: x => x >= 10, body: 'return "Passable"' }
+    ],
+    els: 'return "Insuffisant"',
+    result: x => x >= 16 ? 'Très bien' : x >= 14 ? 'Bien' : x >= 12 ? 'Assez bien' : x >= 10 ? 'Passable' : 'Insuffisant'
+  },
+  signe: {
+    title: 'Signe d’un nombre', fname: 'signe', param: 'x', min: -10, max: 10, step: 1,
+    branches: [
+      { txt: 'x > 0', cond: x => x > 0, body: 'return "positif"' },
+      { txt: 'x < 0', cond: x => x < 0, body: 'return "négatif"' }
+    ],
+    els: 'return "nul"',
+    result: x => x > 0 ? 'positif' : x < 0 ? 'négatif' : 'nul'
+  },
+  pair: {
+    title: 'Parité', fname: 'parite', param: 'n', min: 0, max: 30, step: 1,
+    branches: [
+      { txt: 'n % 2 == 0', cond: x => x % 2 === 0, body: 'return "pair"' }
+    ],
+    els: 'return "impair"',
+    result: x => x % 2 === 0 ? 'pair' : 'impair'
+  }
+};
+const T2VAL = { mention: 13, signe: -3, pair: 7 };
+let T2CUR = 'mention';
+
+function mountT2(root) {
+  root.innerHTML = '<h2>Structures conditionnelles</h2>' +
+    '<p>Un <code>if</code> exécute un bloc si une condition est vraie. <code>elif</code> permet d’enchaîner des tests, <code>else</code> traite le cas restant. Les conditions sont évaluées <b>dans l’ordre</b> : dès qu’une est vraie, on exécute son bloc et on saute le reste.</p>' +
+    '<div class="opts"><div class="fld"><span>Fonction</span><div id="t2-func"></div></div><label class="fld"><span id="t2-plabel"></span><input type="range" id="t2-range"></label></div>' +
+    '<h3>Code exécuté</h3><pre class="code" id="t2-code"></pre>' +
+    '<h3>Conditions évaluées</h3><div id="t2-conds"></div>' +
+    '<div class="verdict" id="t2-res" aria-live="polite"></div>';
+  drawT2();
+}
+function drawT2() {
+  const f = IF_FUNCS[T2CUR];
+  const fb = $('#t2-func'); fb.innerHTML = '';
+  fb.append(chipsRow(Object.entries(IF_FUNCS).map(([k, v]) => [k, v.title]), T2CUR, k => { T2CUR = k; drawT2(); }, 'Fonction'));
+  const r = $('#t2-range');
+  r.min = f.min; r.max = f.max; r.step = f.step; r.value = T2VAL[T2CUR];
+  $('#t2-plabel').textContent = f.param + ' = ' + T2VAL[T2CUR];
+  r.oninput = e => { T2VAL[T2CUR] = +e.target.value; drawT2(); };
+  const x = T2VAL[T2CUR];
+  const lines = [{ t: 'def ' + f.fname + '(' + f.param + '):', k: '' }];
+  let hit = -1;
+  f.branches.forEach((b, i) => {
+    const ok = b.cond(x);
+    const isHit = hit === -1 && ok;
+    if (isHit) hit = i;
+    const kw = i === 0 ? 'if' : 'elif';
+    const klass = isHit ? 'hit' : 'skip';
+    lines.push({ t: '    ' + kw + ' ' + b.txt + ':', k: klass });
+    lines.push({ t: '        ' + b.body, k: isHit ? 'hit' : 'skip' });
+  });
+  const elseHit = hit === -1;
+  lines.push({ t: '    else:', k: elseHit ? 'hit' : 'skip' });
+  lines.push({ t: '        ' + f.els, k: elseHit ? 'hit' : 'skip' });
+  const cb = $('#t2-code'); cb.innerHTML = '';
+  lines.forEach(l => cb.append(h('span', { class: 'codeline' + (l.k ? ' ' + l.k : '') }, l.t)));
+  const cbox = $('#t2-conds'); cbox.innerHTML = '';
+  const list = h('div', { class: 'gstats' });
+  f.branches.forEach((b, i) => {
+    const evaluated = hit === -1 || i <= hit;
+    const ok = b.cond(x);
+    const val = evaluated ? (ok ? 'True' : 'False') : '—';
+    const lab = !evaluated ? 'non évaluée' : (ok ? 'vraie' : 'fausse');
+    list.append(h('div', { class: 'stat' + (i === hit ? ' on' : '') }, h('span', null, b.txt), h('b', null, val), h('span', { class: 'small' }, lab)));
+  });
+  cbox.append(list);
+  const res = $('#t2-res'); res.innerHTML = '';
+  res.append(h('b', null, f.fname + '(' + x + ')'), ' → ', h('b', null, '"' + f.result(x) + '"'));
+  if (hit === -1) res.append(h('span', { class: 'small' }, '  (aucune condition vraie : on passe dans le else)'));
+}
+WORKSHOPS.push({ id: 'c2', title: 'Conditions', hint: 'Suivez l’exécution d’un if/elif/else : quelle branche est prise, et pourquoi ?', mount: mountT2, reset: () => { T2CUR = 'mention'; Object.assign(T2VAL, { mention: 13, signe: -3, pair: 7 }); } });
+
+/* ---------- Atelier 3 : boucles ---------- */
+let T3MODE = 'for', T3N = 5, T3K = 0, T3F = null, T3TIMER = null;
+function t3Code() {
+  return T3MODE === 'for'
+    ? ['def somme(n):', '    s = 0', '    for i in range(1, n + 1):', '        s = s + i', '    return s']
+    : ['def chiffres(n):', '    k = 0', '    while n > 0:', '        n = n // 10', '        k = k + 1', '    return k'];
+}
+function framesSomme(n) {
+  const F = []; let s = 0;
+  F.push({ line: 1, vars: { n, s }, msg: 'Initialisation : s = 0.' });
+  for (let i = 1; i <= n; i++) {
+    F.push({ line: 2, vars: { n, s, i }, msg: 'Tour ' + i + ' : i vaut ' + i + ' (range(1, ' + (n + 1) + ') va de 1 à ' + n + ').' });
+    s += i;
+    F.push({ line: 3, vars: { n, s, i }, msg: 's = s + i = ' + (s - i) + ' + ' + i + ' = ' + s + '.' });
+  }
+  F.push({ line: 4, vars: { n, s }, msg: 'La boucle est finie : on renvoie ' + s + '.' });
+  return F;
+}
+function framesChiffres(n0) {
+  const F = []; let n = n0, k = 0;
+  F.push({ line: 1, vars: { n, k }, msg: 'Initialisation : k = 0.' });
+  while (true) {
+    const ok = n > 0;
+    F.push({ line: 2, vars: { n, k }, msg: 'Test de la condition n > 0 : ' + n + ' > 0 → ' + (ok ? 'True' : 'False') + '.' });
+    if (!ok) break;
+    n = Math.floor(n / 10);
+    F.push({ line: 3, vars: { n, k }, msg: 'n = n // 10 = ' + n + ' (on retire le dernier chiffre).' });
+    k = k + 1;
+    F.push({ line: 4, vars: { n, k }, msg: 'k = k + 1 = ' + k + ' (un chiffre de plus compté).' });
+  }
+  F.push({ line: 5, vars: { n, k }, msg: 'Fin : le nombre possédait ' + k + ' chiffre(s).' });
+  return F;
+}
+function t3Build() { T3F = T3MODE === 'for' ? framesSomme(T3N) : framesChiffres(T3N); T3K = 0; }
+function t3Stop() { clearInterval(T3TIMER); T3TIMER = null; const b = $('#t3-play'); if (b) b.textContent = 'Lecture'; }
+
+function mountT3(root) {
+  root.innerHTML = '<h2>Boucles : for et while</h2>' +
+    '<p>Une boucle <code>for</code> parcourt une séquence connue à l’avance (ici <code>range</code>). Une boucle <code>while</code> répète un bloc <b>tant qu’une condition est vraie</b> : le nombre d’itérations n’est pas connu à l’avance. Déroulez les deux pas à pas.</p>' +
+    '<div class="opts"><div class="fld"><span>Boucle</span><div id="t3-mode"></div></div><label class="fld"><span id="t3-nlabel"></span><input type="range" id="t3-range"></label><button class="btn" id="t3-new" type="button" style="margin-bottom:9px">Réinitialiser</button></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn" id="t3-prev" type="button">◀ Précédent</button><button class="btn pri" id="t3-next" type="button">Suivant ▶</button><button class="btn" id="t3-play" type="button">Lecture</button><button class="btn" id="t3-all" type="button">Tout exécuter</button><button class="btn" id="t3-reset" type="button">Départ</button></div>' +
+    '<h3>Code</h3><pre class="code" id="t3-code"></pre>' +
+    '<h3>Variables</h3><div class="vars" id="t3-vars"></div>' +
+    '<div class="verdict" id="t3-msg" aria-live="polite"></div>' +
+    '<div id="t3-stepbox"></div>';
+  $('#t3-prev').addEventListener('click', () => { t3Stop(); if (T3K > 0) { T3K--; drawT3(); } });
+  $('#t3-next').addEventListener('click', () => { t3Stop(); if (T3K < T3F.length - 1) { T3K++; drawT3(); } });
+  $('#t3-all').addEventListener('click', () => { t3Stop(); T3K = T3F.length - 1; drawT3(); });
+  $('#t3-reset').addEventListener('click', () => { t3Stop(); T3K = 0; drawT3(); });
+  $('#t3-new').addEventListener('click', () => { t3Stop(); t3Build(); drawT3(); });
+  $('#t3-play').addEventListener('click', () => {
+    if (T3TIMER) { t3Stop(); return; }
+    if (T3K >= T3F.length - 1) T3K = 0;
+    $('#t3-play').textContent = 'Pause';
+    T3TIMER = setInterval(() => { if (T3K >= T3F.length - 1) { t3Stop(); drawT3(); return; } T3K++; drawT3(); }, 650);
+    drawT3();
+  });
+  t3Build();
+  drawT3();
+}
+function drawT3() {
+  if (!T3F) return;
+  const mb = $('#t3-mode'); if (!mb) return;
+  mb.innerHTML = '';
+  mb.append(chipsRow([['for', 'for (range)'], ['while', 'while']], T3MODE, m => { t3Stop(); T3MODE = m; T3N = m === 'for' ? 5 : 1234; t3Build(); drawT3(); }, 'Type de boucle'));
+  const r = $('#t3-range');
+  r.min = T3MODE === 'for' ? 1 : 1; r.max = T3MODE === 'for' ? 12 : 9999; r.step = 1; r.value = T3N;
+  $('#t3-nlabel').textContent = 'n = ' + T3N;
+  r.oninput = e => { t3Stop(); T3N = +e.target.value; t3Build(); drawT3(); };
+  const code = t3Code(), f = T3F[T3K];
+  const cb = $('#t3-code'); cb.innerHTML = '';
+  code.forEach((line, i) => cb.append(h('span', { class: 'codeline' + (i === f.line ? ' hit' : '') }, line)));
+  const vb = $('#t3-vars'); vb.innerHTML = '';
+  Object.entries(f.vars).forEach(([k, v]) => vb.append(h('span', { class: 'var' }, h('b', null, k), ' = ' + v)));
+  $('#t3-msg').textContent = f.msg;
+  $('#t3-stepbox').innerHTML = '';
+  $('#t3-stepbox').append(h('p', { class: 'small' }, 'Étape ' + T3K + ' / ' + (T3F.length - 1)));
+  $('#t3-prev').disabled = T3K === 0;
+  $('#t3-next').disabled = T3K === T3F.length - 1;
+}
+WORKSHOPS.push({ id: 'c3', title: 'Boucles', hint: 'Déroulez une boucle for et une boucle while pas à pas, en observant les variables.', mount: mountT3, leave: t3Stop, reset: () => { t3Stop(); T3MODE = 'for'; T3N = 5; t3Build(); } });
+
+/* ---------- Atelier 4 : tuples et listes ---------- */
+const T4OPS = [
+  { label: 't[2]', fn: (t, isT) => ({ expr: 't[2]', res: t[2], rt: 'int' }) },
+  { label: 't[-1]', fn: (t, isT) => ({ expr: 't[-1]', res: t[t.length - 1], rt: 'int' }) },
+  { label: 't[1:4]', fn: (t, isT) => ({ expr: 't[1:4]', res: t.slice(1, 4), rt: isT ? 'tuple' : 'list' }) },
+  { label: 't[::-1]', fn: (t, isT) => ({ expr: 't[::-1]', res: t.slice().reverse(), rt: isT ? 'tuple' : 'list' }) },
+  { label: 't + [60]', fn: (t, isT) => ({ expr: 't + ' + (isT ? '(60,)' : '[60]'), res: t.concat([60]), rt: isT ? 'tuple' : 'list' }) },
+  { label: 'len(t)', fn: (t, isT) => ({ expr: 'len(t)', res: t.length, rt: 'int' }) },
+  { label: '30 in t', fn: (t, isT) => ({ expr: '30 in t', res: t.indexOf(30) !== -1, rt: 'bool' }) },
+  { label: 't.append(60)', fn: (t, isT) => isT ? { expr: 't.append(60)', err: 'AttributeError', note: 'Un tuple n’a pas de méthode append.' } : { expr: 't.append(60)', res: null, rt: 'NoneType', newData: t.concat([60]), note: 'La liste est modifiée en place ; append renvoie None.' } },
+  { label: 't[0] = 99', fn: (t, isT) => isT ? { expr: 't[0] = 99', err: 'TypeError', note: 'Un tuple est immuable : on ne peut pas modifier ses éléments.' } : { expr: 't[0] = 99', res: null, rt: 'NoneType', newData: [99, ...t.slice(1)], note: 'Affectation d’un élément de liste.' } },
+  { label: 't.pop()', fn: (t, isT) => isT ? { expr: 't.pop()', err: 'AttributeError', note: 'Un tuple n’a pas de méthode pop.' } : { expr: 't.pop()', res: t[t.length - 1], rt: 'int', newData: t.slice(0, -1), note: 'Retire et renvoie le dernier élément.' } },
+  { label: 'sorted(t)', fn: (t, isT) => ({ expr: 'sorted(t)', res: t.slice().sort((a, b) => a - b), rt: 'list', note: 'Renvoie une nouvelle liste triée ; t est inchangé.' }) }
+];
+let T4TYPE = 'list', T4DATA = [10, 20, 30, 40, 50], T4LOG = [];
+
+function t4Reset() { T4TYPE = 'list'; T4DATA = [10, 20, 30, 40, 50]; T4LOG = []; }
+function mountT4(root) {
+  root.innerHTML = '<h2>Tuples et listes</h2>' +
+    '<p>Les deux sont des <b>séquences ordonnées</b> indexées à partir de 0. La grande différence : une <b>liste est mutable</b> (on peut la modifier en place), un <b>tuple est immuable</b>. Manipulez <code>t</code> avec les opérations proposées.</p>' +
+    '<div class="opts"><div class="fld"><span>Type de t</span><div id="t4-type"></div></div><button class="btn" id="t4-reset" type="button" style="margin-bottom:9px">Réinitialiser t</button></div>' +
+    '<div class="stagebox" id="t4-disp"></div>' +
+    '<h3>Opérations</h3><div class="chips" id="t4-ops"></div>' +
+    '<h3>Journal</h3><div id="t4-log"></div>';
+  $('#t4-reset').addEventListener('click', () => { t4Reset(); drawT4(); });
+  drawT4();
+}
+function drawT4() {
+  const tb = $('#t4-type'); if (!tb) return;
+  tb.innerHTML = '';
+  tb.append(chipsRow([['list', 'liste [ ... ]'], ['tuple', 'tuple ( ... )']], T4TYPE, v => {
+    T4TYPE = v;
+    T4DATA = [10, 20, 30, 40, 50];
+    T4LOG = [];
+    drawT4();
+  }, 'Type de t'));
+  const isT = T4TYPE === 'tuple';
+  const disp = $('#t4-disp'); disp.innerHTML = '';
+  disp.append(h('div', { class: 'rowname' }, 't (' + T4TYPE + ')'));
+  const cells = h('div', { class: 'cells' });
+  T4DATA.forEach((v, i) => cells.append(h('div', { class: 'cell' }, h('div', { class: 'v' }, String(v)), h('div', { class: 'i' }, String(i)))));
+  disp.append(cells);
+  disp.append(h('p', { class: 'small' }, isT ? 'Un tuple : les valeurs affichées sont ( ' + T4DATA.join(', ') + ' )' : 'Une liste : les valeurs affichées sont [ ' + T4DATA.join(', ') + ' ]'));
+  const ob = $('#t4-ops'); ob.innerHTML = '';
+  T4OPS.forEach(op => ob.append(h('button', { type: 'button', class: 'chip', onclick: () => applyT4(op) }, op.label)));
+  const lb = $('#t4-log'); lb.innerHTML = '';
+  if (!T4LOG.length) lb.append(h('p', { class: 'small' }, 'Cliquez sur une opération : chaque résultat s’ajoute ici.'));
+  T4LOG.forEach(e => {
+    if (e.err) lb.append(h('div', { class: 'verdict no' }, h('code', null, e.expr), ' → ', h('b', null, e.err), ' : ' + e.note));
+    else lb.append(h('div', { class: 'verdict' }, h('code', null, e.expr), ' → ', h('b', null, pyRepr(e.res, e.rt === 'tuple')), h('span', { class: 'small' }, '  (' + e.rt + ')'), e.note ? ' — ' + e.note : ''));
+  });
+}
+function applyT4(op) {
+  const isT = T4TYPE === 'tuple';
+  const r = op.fn(T4DATA, isT);
+  if (r.err) {
+    T4LOG.unshift({ expr: op.label, err: r.err, note: r.note });
+  } else {
+    if (r.newData) T4DATA = r.newData;
+    T4LOG.unshift({ expr: r.expr, res: r.res, rt: r.rt, note: r.note });
+  }
+  if (T4LOG.length > 12) T4LOG.pop();
+  drawT4();
+}
+WORKSHOPS.push({ id: 'c4', title: 'Tuples et listes', hint: 'Manipulez une liste et un tuple : indices, tranches, méthodes, et la grande différence : la mutabilité.', mount: mountT4, reset: t4Reset });
+
+/* =========================================================================
+   ACTIVITÉS
+   ========================================================================= */
+const ACT = {
+  c1: {
+    title: 'Types de base', level: 'Niveau 1 · Découvrir', time: '25 min', course: 'types',
+    goal: 'Reconnaître les six types de base, prévoir le type d’une expression et distinguer les types mutables des types immuables.',
+    steps: [
+      'Dans l’atelier, cliquez sur quelques expressions arithmétiques. Notez le type du résultat pour <code>7 / 2</code> et pour <code>7 // 2</code>. Quelle est la différence ?',
+      'Testez <code>True + True</code> et <code>2 == 2.0</code>. Que peut-on en déduire sur le lien entre <code>bool</code>, <code>int</code> et <code>float</code> ?',
+      'Cliquez sur <code>"ab" * 3</code>, <code>[1, 2] * 2</code> et <code>(1, 2) + (3,)</code>. Sur quels types ces opérations sont-elles définies ?',
+      'Regardez les erreurs typiques. Pour chacune, proposez une correction (par exemple <code>str(7)</code> ou une conversion).',
+      'Remplissez le tableau des six types : pour chacun, un exemple, une opération, et sa mutabilité.'
+    ],
+    defi: { q: 'Que valent <code>10 / 2</code>, <code>10 // 3</code>, <code>10 % 3</code> et <code>2 ** 0.5</code> ? Donnez le type de chacun.',
+      a: '<code>10 / 2</code> vaut <b>5.0</b> (<code>float</code>, la division <code>/</code> renvoie toujours un flottant). <code>10 // 3</code> vaut <b>3</b> (<code>int</code>). <code>10 % 3</code> vaut <b>1</b> (<code>int</code>). <code>2 ** 0.5</code> vaut <b>1.4142135623730951</b> (<code>float</code>, car l’exposant est flottant).' },
+    qcm: [
+      { q: 'Quel est le type de <code>7 / 2</code> en Python ?', o: ['int', 'float', 'str', 'bool'], a: 1, w: 'La division <code>/</code> renvoie toujours un flottant : 3.5, même lorsque le quotient est entier.' },
+      { q: 'Que vaut <code>True + True</code> ?', o: ['True', '2', '1', 'Une erreur'], a: 1, w: 'bool est une sous-classe de int : True vaut 1, donc la somme vaut 2 (de type int).' },
+      { q: 'Que vaut <code>"ab" * 3</code> ?', o: ['"ab3"', '"ababab"', 'Une erreur', '"ab ab ab"'], a: 1, w: 'L’opérateur * répète la chaîne : "ab" * 3 donne "ababab".' },
+      { q: 'Quels types sont immuables ?', o: ['list et tuple', 'str et tuple', 'int et list', 'Tous les types sont mutables'], a: 1, w: 'str, tuple, int, float et bool sont immuables. Seule la list est mutable.' },
+      { q: 'Que vaut <code>7 // 2</code> ?', o: ['3.5', '3', '4', '1'], a: 1, w: 'La division entière tronque vers le bas : 7 // 2 vaut 3.' }
+    ]
+  },
+  c2: {
+    title: 'Conditions', level: 'Niveau 1 · Découvrir', time: '25 min', course: 'conditions',
+    goal: 'Comprendre l’ordre d’évaluation des conditions, la différence entre = et ==, et la notion de valeur « fausse ».',
+    steps: [
+      'Dans l’atelier, choisissez la fonction « Mention au bac ». Réglez la note sur 13 puis sur 17. Quelle branche est prise à chaque fois ?',
+      'Réglez la note sur 0 et 20. Vérifiez que le else final est bien atteint pour 0.',
+      'Passez à « Signe d’un nombre » et réglez x = 0. Pourquoi le else est-il pris ?',
+      'Passez à « Parité » et testez n = 0, 1, 2, 3. Quelle condition suffit pour distinguer pair et impair ?',
+      'Écrivez sur papier la fonction <code>mention</code> telle qu’elle s’affiche, et vérifiez la logique de vos tests.'
+    ],
+    defi: { q: 'Que vaut <code>3 < 5 < 7</code> ? Et <code>if x:</code> est-il vrai quand <code>x = 0</code> ? Et quand <code>x = "0"</code> ?',
+      a: '<code>3 < 5 < 7</code> vaut <b>True</b> : Python enchaîne les comparaisons (3 < 5 et 5 < 7). <code>if 0:</code> est <b>faux</b> (0 est une valeur « fausse »). <code>if "0":</code> est <b>vrai</b> : toute chaîne non vide est « vraie », même "0".' },
+    qcm: [
+      { q: 'À quoi sert <code>elif</code> ?', o: ['À tester une autre condition si la précédente est fausse', 'À répéter le bloc précédent', 'À déclarer une variable', 'À sortir de la fonction'], a: 0, w: '<code>elif</code> n’est évalué que si toutes les conditions précédentes étaient fausses.' },
+      { q: 'Que vaut <code>3 < 5 < 7</code> ?', o: ['True', 'False', 'Une erreur', '3'], a: 0, w: 'Python autorise les comparaisons chaînées : 3 < 5 et 5 < 7, donc True.' },
+      { q: 'Quelle est la différence entre <code>=</code> et <code>==</code> ?', o: ['Aucune', '= affecte, == compare', '= compare, == affecte', 'Les deux comparent'], a: 1, w: '<code>=</code> est l’affectation, <code>==</code> le test d’égalité.' },
+      { q: 'Que vaut <code>not (True and False)</code> ?', o: ['True', 'False', 'None', 'Une erreur'], a: 0, w: 'True and False vaut False ; la négation donne True.' },
+      { q: 'Pour quelle valeur de x la condition <code>if x:</code> est-elle fausse ?', o: ['x = 1', 'x = "0"', 'x = 0', 'x = "False"'], a: 2, w: 'Sont faux : 0, 0.0, "", [], (), None, False. La chaîne "0" est non vide, donc vraie.' }
+    ]
+  },
+  c3: {
+    title: 'Boucles', level: 'Niveau 2 · Comprendre', time: '30 min', course: 'boucles',
+    goal: 'Distinguer for et while, connaître range, et comprendre l’accumulation et le comptage.',
+    steps: [
+      'Dans l’atelier, choisissez la boucle for avec n = 5. Déroulez jusqu’au bout et notez la trace : i, puis s.',
+      'Changez n pour 10. Combien de tours la boucle fait-elle ? Quelle est la valeur finale de s ?',
+      'Passez à la boucle while avec n = 1234. Combien d’itérations observez-vous ? Pourquoi ce nombre ?',
+      'Testez while avec n = 7 puis n = 100. Que fait l’instruction <code>n = n // 10</code> à chaque tour ?',
+      'Comparez : dans le for, sait-on à l’avance combien de tours ? Et dans le while ?'
+    ],
+    defi: { q: 'Que vaut <code>range(1, 5)</code> ? Combien de fois s’exécute <code>for i in range(3)</code> ? Et <code>for i in range(1, 10, 2)</code> ?',
+      a: '<code>range(1, 5)</code> produit <b>1, 2, 3, 4</b>. <code>for i in range(3)</code> s’exécute <b>3 fois</b> (i = 0, 1, 2). <code>range(1, 10, 2)</code> produit <b>1, 3, 5, 7, 9</b> : le pas est 2.' },
+    qcm: [
+      { q: 'Combien de fois s’exécute <code>for i in range(3)</code> ?', o: ['2 fois', '3 fois', '4 fois', 'Une infinité'], a: 1, w: 'range(3) produit 0, 1, 2 : trois valeurs, donc trois tours.' },
+      { q: 'Que produit <code>range(1, 5)</code> ?', o: ['1, 2, 3, 4, 5', '1, 2, 3, 4', '0, 1, 2, 3, 4', '2, 3, 4, 5'], a: 1, w: 'La borne de fin est exclue : 1, 2, 3, 4.' },
+      { q: 'Quand préfère-t-on <code>while</code> à <code>for</code> ?', o: ['Quand on connaît à l’avance le nombre d’itérations', 'Quand on ne connaît pas à l’avance le nombre d’itérations', 'Quand on parcourt une liste', 'Jamais : for est toujours préférable'], a: 1, w: 'while répète tant qu’une condition reste vraie ; le nombre de tours peut dépendre des données (recherche, division répétée…).' },
+      { q: 'Que fait l’instruction <code>break</code> ?', o: ['Elle recommence le tour', 'Elle sort immédiatement de la boucle', 'Elle lève une exception', 'Elle saute à l’itération suivante'], a: 1, w: 'break interrompt la boucle. Pour passer au tour suivant sans exécuter la fin du bloc, on utilise continue.' },
+      { q: 'Que fait l’instruction <code>continue</code> ?', o: ['Elle sort de la boucle', 'Elle passe immédiatement à l’itération suivante', 'Elle arrête le programme', 'Elle réinitialise le compteur'], a: 1, w: 'continue saute le reste du bloc et passe au tour suivant.' }
+    ]
+  },
+  c4: {
+    title: 'Tuples et listes', level: 'Niveau 2 · Comprendre', time: '30 min', course: 'sequences',
+    goal: 'Maîtriser l’indexation, les tranches, les méthodes de liste et la distinction liste / tuple.',
+    steps: [
+      'Dans l’atelier, avec une liste, cliquez sur <code>t[2]</code>, <code>t[-1]</code>, <code>t[1:4]</code>. Notez les résultats.',
+      'Cliquez sur <code>t + [60]</code> puis vérifiez l’affichage de t. La liste a-t-elle changé ? Et le résultat ?',
+      'Cliquez sur <code>t.append(60)</code> : le résultat affiché est None, mais la liste t a été modifiée. Expliquez.',
+      'Passez au tuple. Recliquez sur <code>t.append(60)</code> et <code>t[0] = 99</code>. Que se passe-t-il ? Pourquoi ?',
+      'Utilisez <code>sorted(t)</code> : renvoie-t-il une nouvelle liste ou modifie-t-il t ? Concluez sur les opérations « en place » et « qui renvoient une nouvelle valeur ».'
+    ],
+    defi: { q: 'Pourquoi <code>t[0] = 99</code> fonctionne-t-il sur une liste mais pas sur un tuple ? Et que fait exactement <code>t[::-1]</code> ?',
+      a: 'Une liste est <b>mutable</b> : on peut remplacer un élément par affectation. Un tuple est <b>immuable</b> : son contenu est fixé à la création, l’affectation lève une <code>TypeError</code>. <code>t[::-1]</code> est une tranche avec un pas négatif : elle renvoie une <b>nouvelle séquence</b> renversée, sans modifier t.' },
+    qcm: [
+      { q: 'Quelle est la différence essentielle entre une liste et un tuple ?', o: ['La liste peut contenir plus d’éléments', 'Le tuple est immuable, la liste est mutable', 'Le tuple ne peut contenir que des entiers', 'Aucune : ce sont des synonymes'], a: 1, w: 'Un tuple ne peut pas être modifié après création ; une liste peut l’être (append, affectation, etc.).' },
+      { q: 'Que renvoie <code>[10, 20, 30, 40][1:3]</code> ?', o: ['[10, 20]', '[20, 30]', '[20, 30, 40]', '[10, 20, 30]'], a: 1, w: 'La tranche va de l’indice 1 inclus à 3 exclu : [20, 30].' },
+      { q: 'Que renvoie <code>t.append(x)</code> ?', o: ['La liste modifiée', 'None : la liste est modifiée en place', 'Le nouvel élément', 'Une copie de la liste'], a: 1, w: 'append modifie la liste et renvoie None. C’est un piège classique : <code>t = t.append(x)</code> met None dans t !' },
+      { q: 'Que fait <code>t[::-1]</code> ?', o: ['Elle trie la liste', 'Elle renvoie une nouvelle séquence renversée', 'Elle supprime le dernier élément', 'Elle lève une erreur'], a: 1, w: 'Le pas -1 parcourt la séquence à l’envers. C’est une tranche : elle ne modifie pas t.' },
+      { q: 'Que vaut <code>[1, 2] + [3]</code> ?', o: ['[1, 2, 3]', '[6]', 'Une erreur', '[1, 2, [3]]'], a: 0, w: 'L’opérateur + concatène deux listes pour en créer une nouvelle.' }
+    ]
+  }
+};
+
+/* =========================================================================
+   COURS
+   ========================================================================= */
+const COURSE = [];
+COURSE.push({ id: 'types', t: 'Types de base', h: `
+<p>Python est un langage à <b>typage dynamique</b> : une variable n’a pas de type déclaré, c’est la valeur qu’elle référence qui en a un. Les six types de base du programme sont <code>int</code>, <code>float</code>, <code>bool</code>, <code>str</code>, <code>tuple</code> et <code>list</code>.</p>
+<h3>Entiers : int</h3>
+<p>Les entiers ont une <b>précision arbitraire</b> : <code>2 ** 1000</code> se calcule sans débordement. Opérations : <code>+</code>, <code>-</code>, <code>*</code>, <code>//</code> (division entière), <code>%</code> (modulo), <code>**</code> (puissance).</p>
+<pre class="code">&gt;&gt;&gt; 7 // 2
+3
+&gt;&gt;&gt; 7 % 3
+1
+&gt;&gt;&gt; 2 ** 10
+1024</pre>
+<h3>Flottants : float</h3>
+<p>Les flottants suivent le standard IEEE 754 (double précision). La division <code>/</code> renvoie <b>toujours</b> un flottant. Attention aux erreurs d’arrondi : <code>0.1 + 0.2</code> ne vaut pas exactement <code>0.3</code>.</p>
+<pre class="code">&gt;&gt;&gt; 7 / 2
+3.5
+&gt;&gt;&gt; 0.1 + 0.2
+0.30000000000000004</pre>
+<h3>Booléens : bool</h3>
+<p><code>True</code> et <code>False</code> sont les seules valeurs. <code>bool</code> est une <b>sous-classe de int</b> : <code>True == 1</code> et <code>False == 0</code>. Les opérateurs sont <code>and</code>, <code>or</code>, <code>not</code>.</p>
+<h3>Chaînes : str</h3>
+<p>Une chaîne est une séquence <b>immuable</b> de caractères Unicode. Opérations : concaténation <code>+</code>, répétition <code>*</code>, longueur <code>len</code>, indexation <code>s[i]</code>, tranches <code>s[i:j]</code>.</p>
+<pre class="code">&gt;&gt;&gt; "bonjour"[0]
+'b'
+&gt;&gt;&gt; "bonjour"[-1]
+'r'
+&gt;&gt;&gt; "bonjour"[1:4]
+'onn'</pre>
+<h3>Conversions</h3>
+<table class="ctable"><thead><tr><th>Expression</th><th>Résultat</th><th>Remarque</th></tr></thead><tbody>
+<tr><td><code>int("42")</code></td><td>42</td><td>chaîne → entier</td></tr>
+<tr><td><code>int(3.9)</code></td><td>3</td><td>troncature vers zéro</td></tr>
+<tr><td><code>float("3.14")</code></td><td>3.14</td><td>chaîne → flottant</td></tr>
+<tr><td><code>str(42)</code></td><td>"42"</td><td>entier → chaîne</td></tr>
+<tr><td><code>bool(0)</code></td><td>False</td><td>0, "", [], None sont faux</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> Les types de base sont <code>int</code>, <code>float</code>, <code>bool</code>, <code>str</code>, <code>tuple</code> et <code>list</code>. Seule la liste est mutable. La division <code>/</code> renvoie un flottant, <code>//</code> un entier.</div>` });
+
+COURSE.push({ id: 'sequences', t: 'Tuples et listes', h: `
+<p>Une <b>séquence</b> est une collection ordonnée d’éléments, indexée à partir de 0. Les deux séquences du programme sont le <b>tuple</b> (immuable) et la <b>liste</b> (mutable).</p>
+<h3>Indexation et tranches</h3>
+<pre class="code">&gt;&gt;&gt; t = [10, 20, 30, 40, 50]
+&gt;&gt;&gt; t[0], t[-1]
+(10, 50)
+&gt;&gt;&gt; t[1:4]
+[20, 30, 40]
+&gt;&gt;&gt; t[::-1]
+[50, 40, 30, 20, 10]</pre>
+<p>Une tranche <code>t[i:j]</code> va de l’indice <code>i</code> <b>inclus</b> à <code>j</code> <b>exclu</b>. Un indice négatif compte depuis la fin. Un pas négatif parcourt à l’envers.</p>
+<h3>Listes mutables</h3>
+<pre class="code">&gt;&gt;&gt; t = [10, 20, 30]
+&gt;&gt;&gt; t.append(40)      # modifie t, renvoie None
+&gt;&gt;&gt; t
+[10, 20, 30, 40]
+&gt;&gt;&gt; t[0] = 99         # affectation d'un élément
+&gt;&gt;&gt; t
+[99, 20, 30, 40]</pre>
+<p>Les méthodes usuelles : <code>append</code>, <code>insert</code>, <code>pop</code>, <code>remove</code>, <code>sort</code>, <code>reverse</code>. Elles modifient la liste <b>en place</b> et renvoient souvent <code>None</code> — d’où le piège <code>t = t.append(x)</code> qui met <code>None</code> dans <code>t</code>.</p>
+<h3>Tuples immuables</h3>
+<pre class="code">&gt;&gt;&gt; p = (1, 2)
+&gt;&gt;&gt; p[0] = 5
+TypeError: 'tuple' object does not support item assignment</pre>
+<p>Un tuple ne peut pas être modifié après sa création. On l’utilise pour des données fixes (coordonnées, dates, enregistrements) et comme clés de dictionnaire. Un tuple à un seul élément s’écrit <code>(1,)</code> — la virgule est indispensable.</p>
+<h3>Opérations communes</h3>
+<table class="ctable"><thead><tr><th>Opération</th><th>Liste</th><th>Tuple</th></tr></thead><tbody>
+<tr><td><code>t[i]</code></td><td>oui</td><td>oui</td></tr>
+<tr><td><code>t[i:j]</code></td><td>oui (liste)</td><td>oui (tuple)</td></tr>
+<tr><td><code>len(t)</code></td><td>oui</td><td>oui</td></tr>
+<tr><td><code>t + u</code></td><td>oui</td><td>oui</td></tr>
+<tr><td><code>t.append(x)</code></td><td>oui</td><td>non</td></tr>
+<tr><td><code>t[0] = x</code></td><td>oui</td><td>non</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> Liste : mutable, méthodes en place. Tuple : immuable, plus léger, utilisable comme clé. Les deux s’indexent de 0 et acceptent les tranches.</div>` });
+
+COURSE.push({ id: 'conditions', t: 'Structures conditionnelles', h: `
+<p>Une structure conditionnelle exécute un bloc <b>selon la valeur d’une condition</b>. La forme générale est :</p>
+<pre class="code">if condition1:
+    bloc1
+elif condition2:
+    bloc2
+else:
+    bloc3</pre>
+<p>Les conditions sont évaluées <b>dans l’ordre</b>. Dès qu’une est vraie, son bloc est exécuté et les suivantes sont ignorées. Le <code>else</code> final est facultatif.</p>
+<h3>Opérateurs de comparaison</h3>
+<table class="ctable"><thead><tr><th>Opérateur</th><th>Signification</th></tr></thead><tbody>
+<tr><td><code>==</code></td><td>égal à</td></tr>
+<tr><td><code>!=</code></td><td>différent de</td></tr>
+<tr><td><code>&lt;</code>, <code>&lt;=</code></td><td>plus petit (ou égal)</td></tr>
+<tr><td><code>&gt;</code>, <code>&gt;=</code></td><td>plus grand (ou égal)</td></tr>
+</tbody></table>
+<p>Attention : <code>=</code> est l’affectation, <code>==</code> le test d’égalité. On peut enchaîner les comparaisons : <code>0 &lt; x &lt; 10</code>.</p>
+<h3>Opérateurs booléens et valeurs fausses</h3>
+<p><code>and</code>, <code>or</code>, <code>not</code> combinent des conditions. En Python, sont considérés comme <b>faux</b> : <code>False</code>, <code>0</code>, <code>0.0</code>, <code>""</code>, <code>[]</code>, <code>()</code>, <code>None</code>. Tout le reste est vrai.</p>
+<pre class="code">if x:                 # vrai si x n'est pas une valeur « fausse »
+    print("non vide")
+
+if 0 &lt;= note &lt;= 20:   # comparaison chaînée
+    print("note valide")</pre>
+<h3>Expression conditionnelle</h3>
+<pre class="code">statut = "majeur" if age &gt;= 18 else "mineur"</pre>
+<div class="retain"><b>À retenir.</b> if/elif/else s’évalue de haut en bas ; le premier test vrai l’emporte. Une condition peut être une valeur quelconque : sa « véracité » est testée.</div>` });
+
+COURSE.push({ id: 'boucles', t: 'Boucles', h: `
+<p>Une boucle répète un bloc d’instructions. On distingue deux formes : <code>for</code> (parcours d’une séquence connue) et <code>while</code> (répétition tant qu’une condition est vraie).</p>
+<h3>for et range</h3>
+<pre class="code">for i in range(1, n + 1):
+    s = s + i</pre>
+<p><code>range(a, b)</code> produit les entiers de <code>a</code> inclus à <code>b</code> <b>exclu</b>. <code>range(b)</code> va de 0 à <code>b - 1</code>. <code>range(a, b, p)</code> utilise un pas <code>p</code>.</p>
+<table class="ctable"><thead><tr><th>Expression</th><th>Valeurs</th></tr></thead><tbody>
+<tr><td><code>range(4)</code></td><td>0, 1, 2, 3</td></tr>
+<tr><td><code>range(1, 5)</code></td><td>1, 2, 3, 4</td></tr>
+<tr><td><code>range(1, 10, 2)</code></td><td>1, 3, 5, 7, 9</td></tr>
+</tbody></table>
+<h3>while</h3>
+<pre class="code">k = 0
+while n &gt; 0:
+    n = n // 10
+    k = k + 1</pre>
+<p>On utilise <code>while</code> quand le nombre d’itérations n’est pas connu à l’avance. <b>Attention aux boucles infinies</b> : la condition doit devenir fausse à un moment.</p>
+<h3>break, continue, else</h3>
+<ul>
+<li><code>break</code> sort immédiatement de la boucle.</li>
+<li><code>continue</code> passe à l’itération suivante sans exécuter la fin du bloc.</li>
+<li>Un <code>else</code> après la boucle s’exécute si la boucle s’est terminée <b>sans break</b>.</li>
+</ul>
+<h3>Schémas classiques</h3>
+<pre class="code"># accumulateur
+s = 0
+for x in t:
+    s = s + x
+
+# compteur
+k = 0
+for x in t:
+    if x &gt; 0:
+        k = k + 1
+
+# recherche avec break
+for x in t:
+    if x == cible:
+        trouve = True
+        break</pre>
+<div class="retain"><b>À retenir.</b> <code>for</code> parcourt une séquence, <code>while</code> répète tant qu’une condition tient. <code>range(a, b)</code> exclut b. <code>break</code> sort, <code>continue</code> saute.</div>` });
+
+COURSE.push({ id: 'bilan', t: 'Bilan et vocabulaire', h: `
+<table class="ctable"><thead><tr><th>Type</th><th>Exemple</th><th>Mutable</th><th>Usage typique</th></tr></thead><tbody>
+<tr><td><code>int</code></td><td>42</td><td>non</td><td>compteurs, indices</td></tr>
+<tr><td><code>float</code></td><td>3.14</td><td>non</td><td>calculs réels</td></tr>
+<tr><td><code>bool</code></td><td>True</td><td>non</td><td>conditions</td></tr>
+<tr><td><code>str</code></td><td>"abc"</td><td>non</td><td>texte</td></tr>
+<tr><td><code>tuple</code></td><td>(1, 2)</td><td>non</td><td>données fixes, clés</td></tr>
+<tr><td><code>list</code></td><td>[1, 2, 3]</td><td>oui</td><td>collections modifiables</td></tr>
+</tbody></table>
+<h3>Structures de contrôle</h3>
+<table class="ctable"><thead><tr><th>Structure</th><th>Rôle</th><th>Mot-clés</th></tr></thead><tbody>
+<tr><td>Conditionnelle</td><td>choisir un bloc</td><td><code>if</code>, <code>elif</code>, <code>else</code></td></tr>
+<tr><td>Boucle bornée</td><td>parcourir une séquence</td><td><code>for</code>, <code>range</code></td></tr>
+<tr><td>Boucle conditionnelle</td><td>répéter tant qu’une condition tient</td><td><code>while</code></td></tr>
+<tr><td>Contrôle de boucle</td><td>sortir ou sauter un tour</td><td><code>break</code>, <code>continue</code></td></tr>
+</tbody></table>
+<h3>Vocabulaire</h3>
+<dl class="gloss">
+<dt>Type</dt><dd>Nature d’une valeur : entier, flottant, booléen, chaîne, tuple, liste.</dd>
+<dt>Typage dynamique</dt><dd>Le type est porté par la valeur, pas par la variable.</dd>
+<dt>Mutable</dt><dd>Qui peut être modifié après création (list).</dd>
+<dt>Immuable</dt><dd>Qui ne peut pas être modifié (int, float, bool, str, tuple).</dd>
+<dt>Index</dt><dd>Position d’un élément dans une séquence, à partir de 0.</dd>
+<dt>Tranche (slice)</dt><dd>Sous-séquence <code>t[i:j]</code>, de i inclus à j exclu.</dd>
+<dt>Itération</dt><dd>Un tour de boucle.</dd>
+<dt>Accumulateur</dt><dd>Variable qui agrège une valeur à chaque tour (somme, produit, concaténation).</dd>
+<dt>Valeur « fausse »</dt><dd>Valeur considérée comme False dans un test : 0, "", [], None…</dd>
+<dt>Boucle infinie</dt><dd>Boucle dont la condition reste toujours vraie : erreur classique.</dd>
+</dl>
+<div class="retain"><b>À retenir.</b> Choisir le bon type (mutable ou non), la bonne structure (if/for/while) et éviter les pièges (None renvoyé par les méthodes de liste, boucle while qui ne progresse pas).</div>` });
+
+/* =========================================================================
+   INTERFACE
+   ========================================================================= */
+const UI = { cur: 'c1' };
+const AS = { key: 'c1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'types' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', {
+    type: 'button',
+    class: 'chip' + (cur === it[0] ? ' on' : ''),
+    'aria-pressed': cur === it[0] ? 'true' : 'false',
+    onclick: () => cb(it[0])
+  }, it[1])));
+}
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', {
+    type: 'button', role: 'tab',
+    'aria-pressed': w.id === UI.cur ? 'true' : 'false',
+    'aria-selected': w.id === UI.cur ? 'true' : 'false',
+    onclick: () => gotoWs(w.id)
+  }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false');
+  btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab;
+  const keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time));
+    body.append(h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', {
+      class: 'btn', type: 'button', onclick: ev => {
+        const b = ev.currentTarget;
+        if (!AS.arm) {
+          b.textContent = 'Confirmer ? Votre travail sera effacé';
+          AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500);
+          return;
+        }
+        clearTimeout(AS.arm); AS.arm = null;
+        wsById(UI.cur).reset(); mountWs(); renderAct();
+      }
+    }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', { html: o + (good ? '  ✓' : '') + (bad ? '  ✗' : '') })));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false');
+  btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', {
+    type: 'button', class: s.id === cur.id ? 'on' : '',
+    'aria-current': s.id === cur.id ? 'true' : 'false',
+    onclick: () => go(s.id)
+  }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) },
+    COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : structures de contrôle et données'),
+    h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title },
+    h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')),
+    h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bAct').addEventListener('click', () => { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); });
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', {
+    html: '<p>Quatre ateliers sur les structures de contrôle et les types de base en Python (ITC, CPGE 1re année) : types, conditions, boucles, tuples et listes.</p>' +
+      '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans l’atelier Types, cliquez sur une expression pour voir son résultat et son type.</li><li>Dans l’atelier Conditions, réglez le paramètre et observez la branche prise.</li><li>Dans l’atelier Boucles, avancez pas à pas dans le code et les variables.</li><li>Dans l’atelier Tuples et listes, cliquez sur les opérations pour voir leur effet.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille chaque notion.</li></ul>' +
+      '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>'
+  }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+</body>
+</html>
