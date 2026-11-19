@@ -35,7 +35,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | 1ère année | [Algorithmes gloutons](https://siicpgeamansur.github.io/ITC/algorithmes_gloutons.html) | Illustration du principe glouton et de ses applications. |
 | 1ère année | [Récursivité](https://siicpgeamansur.github.io/ITC/recursivite.html) | Visualisation et apprentissage des concepts de base de la récursivité. |
 | 1ère année | [Parcours de graphes et plus court chemin (Dijkstra, A*)](https://siicpgeamansur.github.io/ITC/dfs_bfs_dijkstra.html) | Parcours de graphes (DFS, BFS) et recherche de plus court chemin. |
-| 2ème année | [Parcours de graphes](https://siicpgeamansur.github.io/ITC/Parcours_de_graphes_animation.html) | Animation des différents parcours de graphes au programme de CPGE en deuxième année. |
+| 2ème année | [Parcours de graphes](https://siicpgeamansur.github.io/ITC/parcours_graphes.html) | Animation des différents parcours de graphes au programme de CPGE en deuxième année. |
 | 2ème année | [Algorithmes de tri](https://siicpgeamansur.github.io/ITC/algorithmes_tri.html) | Page pour s'entraîner aux algorithmes de tri. |
 | 2ème année | [Programmation dynamique](https://siicpgeamansur.github.io/ITC/programmation_dynamique.html) | Illustration de la résolution de certains types de problèmes par programmation dynamique. |
 | 2ème année | [Théorie des jeux](https://siicpgeamansur.github.io/ITC/theorie_des_jeux.html) | Exploration des stratégies et de la théorie des jeux en algorithmique. |
