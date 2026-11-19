@@ -1,0 +1,1276 @@
+<title>Atelier Parcours de graphes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,600;1,700&display=swap">
+<style>
+/* Mise en page : barre d'outils, zone de travail (commandes, message, graphe animé, structure de données, sommets, code, tableur) et panneau Activité/QCM à droite (sous la zone sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+#scroller>*{flex:none}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --font-body:var(--font-ui);
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;--look:#e65f00;
+  --grid-major:#d3d7dc;--grid-minor:#eceef1;--axis:#111111;--edge:#33475b;--pt-idle:#8a9099;--sheet-k:#f1f3f6;
+  --surface:var(--panel);--head:var(--panel2);--border:var(--line);--on-accent:var(--accent-fg);
+  --pt-blue:var(--violet);--pt-done:var(--ok);--pt-bad:var(--bad);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#000000;--bar:#0e0e0e;--panel:#000000;--panel2:#161616;--field:#000000;--line:#3a3a3a;
+  --fg:#f2f2f2;--muted:#a0a0a0;--accent:#5b9bd5;--accent-fg:#000000;--accent-soft:#1c1c1c;--accent-ink:#b5d4f1;
+  --ok:#5fd16a;--warn:#e0a24a;--bad:#ff7b72;--violet:#b896f5;--look:#ff9a3d;
+  --grid-major:#2c2c2c;--grid-minor:#151515;--axis:#cfcfcf;--edge:#c8c8c8;--pt-idle:#7d7d7d;--sheet-k:#1a1a1a;
+  color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.grow{flex:1}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto;padding:10px 12px 14px;display:flex;flex-direction:column;gap:12px}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+select{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+
+/* graphe */
+.views {
+  display: grid; grid-template-columns: minmax(270px, 330px) minmax(0, 1fr); gap: 12px; align-items: start;
+}
+.right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.view { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; min-width: 0; }
+.vh {
+  background: var(--head); border-bottom: 1px solid var(--border); padding: 7px 12px;
+  font: 600 0.78rem var(--font-body); color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px;
+}
+.vh .hint { font-weight: 400; }
+
+/* Algèbre */
+.msgbox { padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 6px; min-height: 8.6rem; }
+.step { font: 500 0.74rem var(--font-mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+#msg { font-size: 0.95rem; }
+#msg.warn { color: var(--bad); font-weight: 600; }
+.sec {
+  border-top: 1px solid var(--border); background: var(--head); padding: 5px 12px;
+  font: 600 0.72rem var(--font-body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 12px;
+}
+.sec .hint { font-weight: 400; text-transform: none; letter-spacing: 0; }
+.struct { padding: 10px 12px 12px; font: 500 0.88rem/1.9 var(--font-mono); min-height: 3.4rem; }
+.struct .br { color: var(--muted); }
+.struct .it { padding: 1px 5px; border-radius: 3px; }
+.struct .it.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.struct .it.on { color: var(--ok); font-weight: 600; }
+.struct .sep { color: var(--muted); }
+.alist { list-style: none; margin: 0; padding: 0; }
+.arow { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-top: 1px solid var(--grid-minor); }
+.bul {
+  --c: var(--pt-idle); flex: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--c); border: 2px solid var(--c); box-shadow: inset 0 0 0 2px var(--surface);
+}
+.arow.st-open .bul { --c: var(--pt-blue); }
+.arow.st-cur .bul { --c: var(--accent); }
+.arow.st-done .bul { --c: var(--pt-done); }
+.arow.st-bad .bul { --c: var(--pt-bad); }
+.arow.st-cur { background: var(--accent-soft); }
+.expr { font-size: 0.95rem; }
+.expr i { font-style: italic; font-weight: 600; }
+.expr .v { font-weight: 700; }
+
+/* Graphique */
+#svg { width: 100%; height: auto; display: block; background: var(--surface); }
+.gm { stroke: var(--grid-minor); stroke-width: 1; }
+.gM { stroke: var(--grid-major); stroke-width: 1; }
+.axis { stroke: var(--axis); stroke-width: 1.5; }
+.axarrow { fill: var(--axis); }
+.tk { font: 400 11px var(--font-body); fill: var(--muted); }
+.legend { list-style: none; margin: 0; padding: 8px 12px 10px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--border); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--pt-idle); flex: none; }
+.dot.open { background: var(--pt-blue); }
+.dot.cur { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.dot.done { background: var(--pt-done); }
+.dot.bad { background: var(--pt-bad); }
+.bar { width: 18px; height: 4px; border-radius: 2px; flex: none; }
+.bar.tree { background: var(--pt-blue); }
+.bar.win { background: var(--ok); }
+.bar.fail { background: var(--bad); }
+
+.edge { stroke: var(--edge); stroke-width: 2; fill: none; transition: stroke 0.2s; }
+.edge.tree { stroke: var(--pt-blue); stroke-width: 3.2; }
+.edge.look-try { stroke: var(--look); stroke-width: 3.8; }
+.edge.look-win { stroke: var(--ok); stroke-width: 3.8; }
+.edge.look-fail { stroke: var(--bad); stroke-width: 3.8; }
+.ma-idle { fill: var(--edge); }
+.ma-tree { fill: var(--pt-blue); }
+.ma-look-try { fill: var(--look); }
+.ma-look-win { fill: var(--ok); }
+.ma-look-fail { fill: var(--bad); }
+.w { font: 600 14px var(--font-mono); fill: var(--muted); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.w.neg { fill: var(--bad); }
+.node .pt { fill: var(--pt-idle); stroke: var(--surface); stroke-width: 2; transition: fill 0.2s, r 0.2s; }
+.node .halo { fill: var(--accent); opacity: 0; transition: opacity 0.2s; }
+.node .ring { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 3; display: none; }
+.node.src .ring { display: block; }
+.node text.lab { font: 600 15px var(--font-body); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.node .ltr { font-style: italic; font-weight: 700; fill: var(--fg); }
+.node .val { font: 600 13.5px var(--font-mono); fill: var(--accent); }
+.st-open .pt { fill: var(--pt-blue); }
+.st-cur .pt { fill: var(--accent); r: 8.5px; }
+.st-cur .halo { opacity: 0.28; }
+.st-done .pt { fill: var(--pt-done); }
+.st-bad .pt { fill: var(--pt-bad); }
+
+/* Tableur */
+.scroll { overflow-x: auto; }
+table.mat { border-collapse: collapse; width: 100%; font: 400 0.85rem var(--font-mono); }
+.mat th, .mat td { text-align: center; padding: 5px 4px; border: 1px solid var(--border); min-width: 2.4rem; }
+.mat th { background: var(--head); color: var(--muted); font-weight: 600; }
+.mat td.k { background: var(--sheet-k); }
+.mat td.chg { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); font-weight: 700; }
+.mat td.neg { color: var(--bad); }
+.mat td.inf { color: var(--muted); }
+
+/* Algorithme */
+pre { margin: 0; padding: 6px 0; font: 400 0.8rem/1.7 var(--font-mono); overflow-x: auto; color: var(--fg); }
+.ln { display: block; white-space: pre; padding: 0 12px 0 0; min-height: 1.7em; }
+.ln::before {
+  content: attr(data-n); display: inline-block; width: 2.6em; margin-right: 0.9em; padding-right: 0.7em; text-align: right;
+  color: var(--muted); border-right: 1px solid var(--border);
+}
+.ln.on { background: var(--accent-soft); }
+.ln.on::before { color: var(--accent); font-weight: 700; }
+
+.mono2{font:400 0.8rem var(--font-mono);color:var(--muted);white-space:nowrap}
+.info{color:var(--muted);font:400 0.8rem var(--font-mono);margin:0}
+.field{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--muted)}
+.speed input{width:110px}
+.scrub{display:flex;align-items:center;gap:12px}
+.scrub input{flex:1;min-width:0}
+.ctl{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.ctl .row{padding-block:2px}
+.views{margin-top:0}
+.view{border-radius:8px}
+.vh{font-family:var(--font-ui)}
+.w{font-family:var(--font-mono)}
+.formula{font-family:var(--font-mono);font-style:normal;font-size:13.5px}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre;color:var(--fg)}
+.cbody code{font-family:var(--font-mono);font-size:13px;background:var(--panel2);padding:0 4px;border-radius:4px}
+
+/* activité */
+#act{flex:none;width:clamp(290px,26vw,360px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+details.rep{margin:4px 0 0}details.rep summary{cursor:pointer;color:var(--accent-ink);font-size:13px}
+details.rep div{background:var(--panel2);border-radius:6px;padding:6px 9px;margin-top:4px;font-size:13px}
+table.rel{border-collapse:collapse;width:100%;font-size:12px;margin:6px 0}
+table.rel th,table.rel td{border:1px solid var(--line);padding:3px 5px;text-align:right;font-family:var(--font-mono)}
+table.rel th{background:var(--panel2);font-family:var(--font-ui);font-weight:600;text-align:center}
+.tblwrap{overflow-x:auto}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;flex:none}
+.opt.good{background:rgba(30,122,46,.18)}.opt.bad{background:rgba(192,40,31,.18)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.tw{overflow-x:auto;max-width:100%}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto;font-family:'IBM Plex Serif',Georgia,serif;font-style:italic}
+.formula i{font-style:italic}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+.cbody svg.fig{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:block;margin:8px 0}
+@media (max-width:900px){
+  html,body{height:auto}
+  #app{height:auto}
+  .work{flex-direction:column}
+  #stage{overflow:visible}
+  #scroller{overflow:visible}
+  #act{width:auto;max-height:none}
+  .trio{grid-template-columns:1fr}
+  .ctoc{display:none}.ctoc-sel{display:block}
+  .cwrap{display:block}
+  .cbody{overflow:visible}
+  #course{min-height:0}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+@media (max-width: 900px) {
+  .views { display: flex; flex-direction: column; gap: 12px; }
+  .right { display: contents; }
+  .v-gfx { order: 1; }
+  .v-alg { order: 2; }
+  .v-sheet { order: 3; }
+  .v-code { order: 4; }
+  .msgbox { min-height: 0; }
+}
+
+@media (max-width:520px){.speed input{width:90px}}
+</style>
+
+<div id="app">
+<div class="band"><div class="inner row">
+  <div class="brand">Atelier Parcours de graphes <small>Informatique · CPGE</small></div>
+  <div class="seg" role="group" aria-label="Vue">
+    <button id="vLab" aria-pressed="true">Atelier</button>
+    <button id="vCourse" aria-pressed="false">Cours</button>
+  </div>
+  <span class="grow"></span>
+  <button class="btn" id="theme" aria-pressed="false">Mode sombre</button>
+</div></div>
+
+<div id="lab" class="work inner">
+  <div id="stage">
+    <div id="hint">Choisissez un algorithme, puis lancez la lecture ou avancez pas à pas (flèches du clavier). Le graphe, la structure de données et le code se mettent à jour ensemble.</div>
+    <div id="scroller">
+      <div class="ctl">
+        <div class="seg" id="tabs" role="group" aria-label="Algorithme">
+          <button type="button" class="tab" data-algo="bfs" aria-pressed="true">Largeur</button>
+          <button type="button" class="tab" data-algo="dfs" aria-pressed="false">Profondeur</button>
+          <button type="button" class="tab" data-algo="dijkstra" aria-pressed="false">Dijkstra</button>
+          <button type="button" class="tab" data-algo="bf" aria-pressed="false">Bellman-Ford</button>
+          <button type="button" class="tab" data-algo="fw" aria-pressed="false">Floyd-Warshall</button>
+        </div>
+        <p class="info" id="info"></p>
+        <div class="row">
+          <label class="field" for="graph">Graphe
+            <select id="graph">
+              <option value="pos">Poids positifs</option>
+              <option value="neg">Un arc négatif, sans cycle absorbant</option>
+              <option value="cyc">Cycle absorbant</option>
+            </select>
+          </label>
+          <label class="field" for="src" id="src-field">Départ
+            <select id="src"></select>
+          </label>
+        </div>
+        <div class="row">
+          <button type="button" class="btn" id="btn-restart">Début</button>
+          <button type="button" class="btn" id="btn-prev">‹ Précédent</button>
+          <button type="button" class="btn pri" id="btn-play" style="min-width:6.5rem">Lecture</button>
+          <button type="button" class="btn" id="btn-next">Suivant ›</button>
+          <label class="field speed" for="speed">Vitesse
+            <input type="range" id="speed" min="1" max="5" value="3">
+          </label>
+        </div>
+        <div class="scrub">
+          <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Étape de l'animation">
+          <span class="mono2" id="count"></span>
+        </div>
+      </div>
+
+      <div class="views">
+        <section class="view v-alg" aria-label="Vue Algèbre">
+          <div class="vh">Algèbre</div>
+          <div class="msgbox">
+            <span class="step" id="step-kicker"></span>
+            <p id="msg"></p>
+          </div>
+          <div class="sec"><span id="st-title"></span><span class="hint" id="st-hint"></span></div>
+          <div class="struct" id="chips"></div>
+          <div class="sec"><span>Sommets</span></div>
+          <ul class="alist" id="nodes"></ul>
+        </section>
+        <div class="right">
+          <section class="view v-gfx" aria-label="Vue Graphique">
+            <div class="vh">Graphique</div>
+            <svg id="svg" viewBox="0 0 650 420" role="img" aria-label="Graphe orienté et pondéré de sept sommets, de A à G, tracé sur une grille"></svg>
+            <ul class="legend">
+              <li><span class="dot"></span>pas atteint</li>
+              <li><span class="dot open"></span>découvert</li>
+              <li><span class="dot cur"></span>en cours</li>
+              <li><span class="dot done"></span>terminé</li>
+              <li><span class="dot bad"></span>faux ou problème</li>
+              <li><span class="bar tree"></span>meilleur chemin connu</li>
+              <li><span class="bar win"></span>arc qui améliore</li>
+              <li><span class="bar fail"></span>arc sans effet</li>
+            </ul>
+          </section>
+          <section class="view v-sheet" id="matcard" hidden aria-label="Vue Tableur">
+            <div class="vh"><span>Tableur : matrice des distances d</span><span class="hint">ligne = départ i, colonne = arrivée j</span></div>
+            <div class="scroll"><table class="mat" id="mat"></table></div>
+          </section>
+          <section class="view v-code" aria-label="Algorithme">
+            <div class="vh">Algorithme (Python)</div>
+            <pre id="code"></pre>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside id="act" aria-label="Activité et QCM">
+    <div class="phead"><b>Activité</b></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tAct" aria-selected="true">Activité</button>
+      <button role="tab" id="tQcm" aria-selected="false">QCM</button>
+    </div>
+    <div class="pbody" id="actBody"></div>
+  </aside>
+</div>
+
+<div id="course" hidden>
+  <div class="ctop">
+    <b>Cours : parcours de graphes et plus courts chemins</b>
+    <button class="btn sm" id="toLab">Ouvrir l'atelier</button>
+  </div>
+  <select id="toc2" class="ctoc-sel" aria-label="Sommaire"></select>
+  <div class="cwrap">
+    <nav class="ctoc" id="toc" aria-label="Sommaire"></nav>
+    <div class="cbody" id="cbody">
+
+<section><p class="ckick">Partie 1</p><h2>Graphes : vocabulaire et représentation</h2>
+<p>Un <b>graphe orienté</b> G = (S, A) est formé d'un ensemble S de <i>n</i> sommets et d'un ensemble A de <i>m</i> arcs (couples de sommets). Il est <b>pondéré</b> quand une fonction de poids w associe un réel à chaque arc.</p>
+<ul>
+<li>Un <b>chemin</b> est une suite de sommets consécutifs reliés par des arcs. Son <b>poids</b> est la somme des poids de ses arcs, sa <b>longueur</b> est son nombre d'arcs.</li>
+<li>Un <b>cycle</b> est un chemin qui revient à son point de départ. Un cycle de poids strictement négatif est un <b>cycle absorbant</b>.</li>
+<li>La <b>distance</b> δ(s, v) est le poids minimal d'un chemin de s à v, et vaut +∞ si v n'est pas accessible depuis s.</li>
+</ul>
+<h3>Représentations</h3>
+<div class="tw"><table class="ctable">
+<tr><th></th><th>Listes d'adjacence</th><th>Matrice d'adjacence</th></tr>
+<tr><td>Espace</td><td>O(n + m)</td><td>O(n²)</td></tr>
+<tr><td>Parcourir les voisins de u</td><td>O(deg u)</td><td>O(n)</td></tr>
+<tr><td>Tester l'arc u → v</td><td>O(deg u)</td><td>O(1)</td></tr>
+<tr><td>Adaptée à</td><td>Graphes peu denses (parcours, Dijkstra)</td><td>Graphes denses, Floyd-Warshall</td></tr>
+</table></div>
+<pre class="code">g = {"A": [("B", 4), ("C", 1)],     # listes d'adjacence : (voisin, poids)
+     "B": [("D", 5)],
+     "C": [("B", 2), ("D", 8)]}</pre>
+<div class="retain"><b>À retenir.</b> Le choix de la représentation conditionne la complexité. Les parcours sont en O(n + m) avec des listes d'adjacence.</div>
+</section>
+
+<section><p class="ckick">Partie 2</p><h2>Parcours en largeur (BFS)</h2>
+<p>On explore le graphe <b>couche par couche</b> : d'abord le sommet de départ, puis ses voisins, puis les voisins de ses voisins. On utilise une <b>file</b> (premier entré, premier sorti).</p>
+<pre class="code">def bfs(g, s):
+    dist = {s: 0}
+    file = deque([s])
+    while file:
+        u = file.popleft()
+        for v in g[u]:
+            if v not in dist:
+                dist[v] = dist[u] + 1
+                file.append(v)
+    return dist</pre>
+<h3>Propriétés</h3>
+<ul>
+<li>Chaque sommet est enfilé au plus une fois, chaque arc examiné au plus une fois : complexité <b>O(n + m)</b>.</li>
+<li>dist[v] est le <b>nombre minimal d'arcs</b> d'un chemin de s à v. Les poids sont ignorés : le BFS donne des plus courts chemins seulement si tous les arcs ont le même poids.</li>
+<li>Les sommets absents de dist ne sont pas accessibles depuis s.</li>
+</ul>
+<p>Dans l'atelier, depuis A, les sommets B et C sont à distance 1, D et E à 2, F et G à 3, alors que le plus court chemin pondéré vers G pèse 14.</p>
+<div class="retain"><b>À retenir.</b> BFS = file + distance en nombre d'arcs. Il ne tient pas compte des poids.</div>
+</section>
+
+<section><p class="ckick">Partie 3</p><h2>Parcours en profondeur (DFS)</h2>
+<p>On suit un chemin <b>le plus loin possible</b> avant de revenir en arrière. L'algorithme est naturellement récursif : la pile d'appels joue le rôle de structure de données.</p>
+<pre class="code">def dfs(g, u, vus):
+    vus.add(u)              # début de visite
+    for v in g[u]:
+        if v not in vus:
+            dfs(g, v, vus)
+    # fin de visite de u</pre>
+<h3>Dates de début et de fin</h3>
+<p>En numérotant les événements, on associe à chaque sommet une date de début d(u) et une date de fin f(u). Pour deux sommets u et v, les intervalles [d, f] sont soit disjoints, soit emboîtés.</p>
+<ul>
+<li>Complexité <b>O(n + m)</b>.</li>
+<li>Applications : accessibilité, composantes connexes, <b>détection de cycle</b> (un arc vers un sommet en cours de visite), <b>tri topologique</b> (ordre décroissant des dates de fin dans un graphe sans cycle).</li>
+<li>Attention : la récursion peut dépasser la limite de profondeur de Python sur de grands graphes.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> DFS = pile (d'appels) + dates de début et de fin. Il ne donne pas de plus courts chemins.</div>
+</section>
+
+<section><p class="ckick">Partie 4</p><h2>Plus courts chemins : le relâchement</h2>
+<p>Pour une source s, on maintient une estimation dist[v] ≥ δ(s, v), initialisée à ∞ sauf dist[s] = 0. L'opération de base est le <b>relâchement</b> d'un arc (u, v) de poids w :</p>
+<pre class="code">if dist[u] + w &lt; dist[v]:
+    dist[v] = dist[u] + w</pre>
+<p>Cette opération ne fait jamais descendre dist[v] sous la vraie distance. Les trois algorithmes de la suite diffèrent par l'<b>ordre</b> dans lequel ils relâchent les arcs.</p>
+<div class="tw"><table class="ctable">
+<tr><th>Algorithme</th><th>Ordre de relâchement</th><th>Poids admis</th></tr>
+<tr><td>Dijkstra</td><td>Sommet par sommet, du plus proche au plus lointain</td><td>≥ 0</td></tr>
+<tr><td>Bellman-Ford</td><td>Tous les arcs, tour après tour</td><td>Quelconques</td></tr>
+<tr><td>Floyd-Warshall</td><td>Par sommet intermédiaire k autorisé</td><td>Quelconques</td></tr>
+</table></div>
+<div class="retain"><b>À retenir.</b> Tout algorithme de plus court chemin à source unique est une stratégie de relâchement. Une distance est exacte quand plus aucun relâchement n'est possible.</div>
+</section>
+
+<section><p class="ckick">Partie 5</p><h2>Algorithme de Dijkstra</h2>
+<p>Stratégie <b>gloutonne</b> : à chaque étape, on fixe le sommet non traité de plus petite distance estimée, puis on relâche ses arcs sortants.</p>
+<pre class="code">def dijkstra(g, s):
+    dist = {u: inf for u in g}
+    dist[s] = 0
+    a_traiter = set(g)
+    while a_traiter:
+        u = min(a_traiter, key=lambda x: dist[x])
+        if dist[u] == inf: break
+        a_traiter.remove(u)       # dist[u] est définitive
+        for v, w in g[u]:
+            if v in a_traiter and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+    return dist</pre>
+<h3>Pourquoi ça marche, et pourquoi il faut w ≥ 0</h3>
+<p>Invariant : quand u est extrait, dist[u] = δ(s, u). Un chemin passant par un sommet non traité y arrive avec un poids au moins égal à dist[u], et ne peut que croître ensuite, car les poids sont positifs. Avec un poids négatif, un sommet déjà fixé pourrait encore être amélioré : l'invariant tombe.</p>
+<p>Dans l'atelier, choisissez le graphe avec un arc négatif : C est fixé à 2 alors que le chemin A → B → C pèse 5 − 4 = 1.</p>
+<h3>Complexité</h3>
+<ul>
+<li>Version ci-dessus (recherche du minimum dans un ensemble) : O(n²).</li>
+<li>Avec un <b>tas binaire</b> (file de priorité) : O((n + m) log n).</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Dijkstra : glouton, poids ≥ 0 obligatoire, sommet fixé = distance définitive.</div>
+</section>
+
+<section><p class="ckick">Partie 6</p><h2>Algorithme de Bellman-Ford</h2>
+<p>On relâche <b>tous les arcs</b>, dans n'importe quel ordre, et on recommence. Un plus court chemin simple compte au plus n − 1 arcs : après <i>k</i> tours, les distances des sommets dont un plus court chemin a au plus <i>k</i> arcs sont exactes.</p>
+<pre class="code">def bellman_ford(n, aretes, s):
+    dist = [inf] * n
+    dist[s] = 0
+    for tour in range(n - 1):
+        change = False
+        for u, v, w in aretes:
+            if dist[u] + w &lt; dist[v]:
+                dist[v] = dist[u] + w
+                change = True
+        if not change:
+            return dist
+    for u, v, w in aretes:          # vérification
+        if dist[u] + w &lt; dist[v]:
+            return None             # cycle absorbant
+    return dist</pre>
+<h3>Détection d'un cycle absorbant</h3>
+<p>Si, après n − 1 tours, un arc peut encore être relâché, alors un cycle absorbant est accessible depuis s : les distances ne sont pas définies. Dans l'atelier, le graphe à cycle absorbant (B → C → D → B, de poids 2 − 4 + 1 = −1) est détecté au tour de vérification.</p>
+<ul>
+<li>Complexité <b>O(n · m)</b>.</li>
+<li>Poids quelconques acceptés, y compris négatifs.</li>
+<li>L'arrêt anticipé (aucun changement pendant un tour) évite des tours inutiles.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Bellman-Ford : n − 1 tours sur la liste d'arcs, un n-ième tour de vérification détecte les cycles absorbants.</div>
+</section>
+
+<section><p class="ckick">Partie 7</p><h2>Algorithme de Floyd-Warshall</h2>
+<p>On calcule les distances entre <b>toutes les paires</b> de sommets par programmation dynamique. On note d<sub>k</sub>[i][j] le poids minimal d'un chemin de i à j dont les sommets intermédiaires sont dans {0, …, k − 1}.</p>
+<div class="formula">d<sub>k+1</sub>[i][j] = min( d<sub>k</sub>[i][j] , d<sub>k</sub>[i][k] + d<sub>k</sub>[k][j] )</div>
+<pre class="code">def floyd_warshall(d):
+    n = len(d)
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if d[i][k] + d[k][j] &lt; d[i][j]:
+                    d[i][j] = d[i][k] + d[k][j]
+    return d</pre>
+<ul>
+<li>Initialisation : d[i][j] = poids de l'arc i → j, ∞ s'il n'existe pas, 0 sur la diagonale.</li>
+<li>La boucle sur k doit être la <b>plus externe</b>.</li>
+<li>Complexité <b>O(n³)</b> en temps, O(n²) en espace.</li>
+<li>Un terme diagonal d[i][i] &lt; 0 en fin de calcul révèle un cycle absorbant passant par i.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Floyd-Warshall : trois boucles imbriquées, k à l'extérieur, matrice des distances mise à jour sur place.</div>
+</section>
+
+<section><p class="ckick">Partie 8</p><h2>Choisir un algorithme, glossaire</h2>
+<div class="tw"><table class="ctable">
+<tr><th>Besoin</th><th>Algorithme</th><th>Complexité</th></tr>
+<tr><td>Accessibilité, composantes, distance en nombre d'arcs</td><td>BFS / DFS</td><td>O(n + m)</td></tr>
+<tr><td>Plus courts chemins depuis une source, poids ≥ 0</td><td>Dijkstra</td><td>O((n + m) log n) avec un tas</td></tr>
+<tr><td>Poids négatifs, détection de cycle absorbant</td><td>Bellman-Ford</td><td>O(n · m)</td></tr>
+<tr><td>Toutes les paires de sommets</td><td>Floyd-Warshall</td><td>O(n³)</td></tr>
+</table></div>
+<dl class="gloss">
+<dt>Relâchement</dt><dd>Mise à jour de dist[v] par dist[u] + w quand elle améliore.</dd>
+<dt>Cycle absorbant</dt><dd>Cycle de poids total strictement négatif : les distances ne sont plus définies (−∞).</dd>
+<dt>Glouton</dt><dd>Stratégie qui fait à chaque étape le choix localement optimal et ne le remet jamais en cause.</dd>
+<dt>Programmation dynamique</dt><dd>Résolution d'un problème à partir de sous-problèmes plus petits dont les solutions sont mémorisées.</dd>
+<dt>Arbre des plus courts chemins</dt><dd>Arcs (parent[v], v) retenus par le dernier relâchement : en violet dans l'atelier.</dd>
+</dl>
+</section>
+
+      <div class="cpn"><button class="btn" id="cPrev">← Précédent</button><button class="btn pri" id="cNext">Suivant →</button></div>
+    </div>
+  </div>
+</div>
+</div>
+<div id="toast" hidden></div>
+<script>
+//<LOGIC>
+var IDS = ["A", "B", "C", "D", "E", "F", "G"];
+var N = IDS.length;
+var POS = { A: [60, 190], B: [190, 80], C: [190, 300], D: [350, 150], E: [350, 320], F: [510, 110], G: [520, 260] };
+var LABEL_DY = { A: 38, B: -32, C: 38, D: -32, E: 38, F: -32, G: 38 };
+/* Les listes d'arcs sont volontairement dans un ordre défavorable : Bellman-Ford a alors besoin de plusieurs tours. */
+var GRAPHS = {
+  pos: { edges: [["E","F",3],["D","E",2],["A","B",4],["C","D",8],["B","D",5],["F","G",1],["A","C",1],["C","B",2],["D","F",6],["C","E",10],["E","G",4]] },
+  neg: { edges: [["E","F",3],["D","E",2],["B","C",-4],["C","D",3],["A","B",5],["F","G",1],["A","C",2],["B","D",6],["D","F",7],["C","E",9],["E","G",4]] },
+  cyc: { edges: [["D","B",1],["C","D",-4],["A","B",1],["B","C",2],["E","F",2],["F","G",1],["D","E",3],["A","C",5]] }
+};
+var EDGES = [];
+var adj = {};
+
+function setGraph(key) {
+  EDGES = GRAPHS[key].edges;
+  adj = {};
+  IDS.forEach(function (i) { adj[i] = []; });
+  EDGES.forEach(function (e) { adj[e[0]].push({ v: e[1], w: e[2] }); });
+  IDS.forEach(function (i) { adj[i].sort(function (a, b) { return a.v < b.v ? -1 : 1; }); });
+}
+function fmt(x) { return x === Infinity ? "∞" : String(x); }
+function items(arr) { return arr.map(function (t) { return { t: t }; }); }
+
+function trueDist(edges, s) {
+  var d = {};
+  IDS.forEach(function (i) { d[i] = Infinity; });
+  d[s] = 0;
+  for (var t = 0; t < N - 1; t++) {
+    var ch = false;
+    edges.forEach(function (e) { if (d[e[0]] + e[2] < d[e[1]]) { d[e[1]] = d[e[0]] + e[2]; ch = true; } });
+    if (!ch) break;
+  }
+  var cyc = false;
+  edges.forEach(function (e) { if (d[e[0]] + e[2] < d[e[1]]) cyc = true; });
+  return { d: d, cyc: cyc };
+}
+
+function Rec(title, hint) {
+  this.frames = [];
+  this.ns = {}; this.nl = {}; this.parent = {};
+  var self = this;
+  IDS.forEach(function (i) { self.ns[i] = "idle"; self.nl[i] = ""; });
+  this.st = { title: title, hint: hint, items: [] };
+}
+Rec.prototype.snap = function (line, msg, o) {
+  o = o || {};
+  this.frames.push({
+    ns: Object.assign({}, this.ns),
+    nl: Object.assign({}, this.nl),
+    parent: Object.assign({}, this.parent),
+    st: { title: this.st.title, hint: this.st.hint, items: this.st.items.map(function (x) { return Object.assign({}, x); }) },
+    line: line, msg: msg,
+    look: o.look || null, kind: o.kind || null, warn: !!o.warn,
+    mat: o.mat || null, hi: o.hi || null
+  });
+};
+
+function hasNeg() { return EDGES.some(function (e) { return e[2] < 0; }); }
+
+function genBFS(s) {
+  var r = new Rec("File (FIFO)", "entrée à droite, sortie à gauche");
+  r.snap(-1, "Parcours en largeur depuis " + s + ". On explore couche par couche avec une file : d'abord les voisins de " + s + ", puis leurs voisins, et ainsi de suite. Les poids sont ignorés. Lance la lecture ou avance pas à pas.");
+  var dist = {}, q = [];
+  dist[s] = 0; q.push(s); r.ns[s] = "open"; r.nl[s] = "d=0"; r.st.items = items(q);
+  r.snap(2, s + " entre dans la file avec dist[" + s + "] = 0.");
+  while (q.length) {
+    var u = q.shift();
+    r.ns[u] = "cur"; r.st.items = items(q);
+    r.snap(4, "On défile " + u + " et on examine ses voisins.");
+    adj[u].forEach(function (a) {
+      var v = a.v, key = u + ">" + v;
+      if (dist[v] === undefined) {
+        dist[v] = dist[u] + 1; q.push(v);
+        r.ns[v] = "open"; r.nl[v] = "d=" + dist[v]; r.parent[v] = u; r.st.items = items(q);
+        r.snap(7, v + " est nouveau : dist[" + v + "] = " + dist[v] + ", on l'enfile.", { look: key, kind: "win" });
+      } else {
+        r.snap(6, v + " est déjà découvert : on l'ignore.", { look: key, kind: "fail" });
+      }
+    });
+    r.ns[u] = "done";
+  }
+  r.snap(9, "La file est vide : fin du parcours. d est le nombre minimal d'arcs depuis " + s + ". Les sommets restés blancs ne sont pas accessibles.");
+  return r.frames;
+}
+
+function genDFS(s) {
+  var r = new Rec("Pile d'appels", "dernier appel à droite");
+  var stack = [], d = {}, f = {}, clock = 0;
+  function sync() { r.st.items = items(stack); }
+  r.snap(-1, "Parcours en profondeur depuis " + s + ". On suit un chemin le plus loin possible, puis on revient en arrière. L'algorithme est récursif : la pile d'appels est affichée à droite, et chaque sommet reçoit une date de début et de fin. Les poids sont ignorés.");
+  function visit(u, from) {
+    if (stack.length) r.ns[stack[stack.length - 1]] = "open";
+    stack.push(u); d[u] = ++clock;
+    r.ns[u] = "cur"; r.nl[u] = d[u] + "/";
+    if (from) r.parent[u] = from;
+    sync();
+    r.snap(1, "Appel dfs(" + u + ") : début de visite, date " + d[u] + ".");
+    adj[u].forEach(function (a) {
+      var v = a.v, key = u + ">" + v;
+      if (d[v] === undefined) {
+        r.snap(4, v + " n'est pas encore visité : on descend dans " + v + ".", { look: key, kind: "win" });
+        visit(v, u);
+      } else {
+        r.snap(3, v + " est déjà visité : on ignore cet arc.", { look: key, kind: "fail" });
+      }
+    });
+    f[u] = ++clock; stack.pop();
+    r.ns[u] = "done"; r.nl[u] = d[u] + "/" + f[u];
+    if (stack.length) r.ns[stack[stack.length - 1]] = "cur";
+    sync();
+    r.snap(5, "Fin de visite de " + u + " (date " + f[u] + ") : retour à l'appelant.");
+  }
+  visit(s, null);
+  r.snap(5, "Parcours terminé. Chaque sommet affiche début/fin. Les sommets restés blancs ne sont pas accessibles depuis " + s + ".");
+  return r.frames;
+}
+
+function genDijkstra(s) {
+  var r = new Rec("File de priorité", "sommets non fixés, plus petite distance en premier");
+  var dist = {}, rem = new Set(IDS);
+  IDS.forEach(function (i) { dist[i] = Infinity; });
+  var intro = "Dijkstra depuis " + s + ". À chaque étape, on fixe le sommet non traité de plus petite distance, puis on relâche ses arcs sortants.";
+  if (hasNeg()) intro += " Ce graphe a un arc négatif : Dijkstra n'est pas fait pour ça, regarde ce qui arrive.";
+  r.snap(-1, intro);
+  function pq() {
+    return items(IDS.filter(function (x) { return rem.has(x) && dist[x] !== Infinity; })
+      .sort(function (a, b) { return dist[a] - dist[b] || (a < b ? -1 : 1); })
+      .map(function (x) { return x + " : " + dist[x]; }));
+  }
+  IDS.forEach(function (i) { r.nl[i] = "∞"; });
+  dist[s] = 0; r.nl[s] = "0"; r.ns[s] = "open"; r.st.items = pq();
+  r.snap(2, "dist[" + s + "] = 0, toutes les autres distances valent ∞.");
+  while (rem.size) {
+    var u = null;
+    rem.forEach(function (x) { if (u === null || dist[x] < dist[u]) u = x; });
+    if (dist[u] === Infinity) {
+      r.st.items = [];
+      r.snap(6, "Il ne reste que des sommets à distance ∞ : ils sont inaccessibles, on s'arrête.");
+      break;
+    }
+    rem.delete(u); r.ns[u] = "cur"; r.st.items = pq();
+    r.snap(7, "On extrait " + u + ", de plus petite distance (" + dist[u] + ") : sa distance est définitive.");
+    adj[u].forEach(function (a) {
+      var v = a.v, w = a.w, key = u + ">" + v, sum = dist[u] + w;
+      if (!rem.has(v)) {
+        var extra = sum < dist[v] ? " Avec ce poids négatif, " + v + " aurait pu être amélioré (" + sum + " < " + dist[v] + ") : c'est l'erreur de Dijkstra." : "";
+        r.snap(9, v + " est déjà fixé : on n'y touche plus." + extra, { look: key, kind: "fail", warn: extra !== "" });
+      } else if (sum < dist[v]) {
+        var old = dist[v];
+        dist[v] = sum; r.parent[v] = u; r.nl[v] = String(sum); r.ns[v] = "open"; r.st.items = pq();
+        r.snap(10, u + "→" + v + " : " + dist[u] + " + " + w + " = " + sum + " < " + fmt(old) + ", on met à jour dist[" + v + "].", { look: key, kind: "win" });
+      } else {
+        r.snap(9, u + "→" + v + " : " + dist[u] + " + " + w + " = " + sum + " ≥ " + dist[v] + ", pas d'amélioration.", { look: key, kind: "fail" });
+      }
+    });
+    r.ns[u] = "done";
+  }
+  r.st.items = pq();
+  var msg = "Terminé : toutes les distances affichées sont définitives et exactes.", warn = false;
+  if (hasNeg()) {
+    var tr = trueDist(EDGES, s);
+    if (tr.cyc) {
+      msg = "⚠ Le graphe contient un cycle absorbant : les vraies distances ne sont pas définies. Dijkstra s'est terminé, mais son résultat n'a pas de sens."; warn = true;
+      IDS.forEach(function (x) { if (dist[x] !== Infinity) r.ns[x] = "bad"; });
+    } else {
+      var wrong = IDS.filter(function (x) { return dist[x] !== tr.d[x]; });
+      if (wrong.length) {
+        wrong.forEach(function (x) { r.ns[x] = "bad"; });
+        msg = "⚠ Dijkstra donne un résultat faux pour " + wrong.join(", ") + ". Valeurs exactes : " + wrong.map(function (x) { return x + " = " + fmt(tr.d[x]); }).join(", ") + ". Avec des poids négatifs, utilise Bellman-Ford.";
+        warn = true;
+      } else {
+        msg = "Il y a des poids négatifs, mais depuis ce sommet de départ le résultat est correct, par chance. Dijkstra ne le garantit pas : essaie un autre départ.";
+      }
+    }
+  }
+  r.snap(11, msg, { warn: warn });
+  return r.frames;
+}
+
+function genBF(s) {
+  var r = new Rec("Arcs relâchés dans cet ordre", "");
+  var dist = {};
+  IDS.forEach(function (i) { dist[i] = Infinity; });
+  dist[s] = 0;
+  function sync(cur) {
+    IDS.forEach(function (i) { r.ns[i] = dist[i] === Infinity ? "idle" : "open"; r.nl[i] = fmt(dist[i]); });
+    if (cur) r.ns[cur] = "cur";
+  }
+  function edgeItems(k) { return EDGES.map(function (e, idx) { return { t: e[0] + "→" + e[1], c: idx === k ? "cur" : "" }; }); }
+  var intro = "Bellman-Ford depuis " + s + ". On relâche tous les arcs, dans l'ordre de la liste, jusqu'à ce que plus rien ne change (au plus " + (N - 1) + " tours). Les poids négatifs sont acceptés.";
+  if (EDGES.some(function (e) { return e[0] === "C" && e[1] === "D" && e[2] === -4; })) intro += " Ce graphe contient un cycle absorbant (B → C → D → B, de poids −1) : l'algorithme doit le détecter.";
+  r.st.items = edgeItems(-1);
+  r.snap(-1, intro);
+  sync();
+  r.snap(2, "dist[" + s + "] = 0, les autres distances valent ∞.");
+  for (var t = 1; t <= N - 1; t++) {
+    var change = false;
+    r.st.hint = "Tour " + t + " sur " + (N - 1);
+    for (var k = 0; k < EDGES.length; k++) {
+      var u = EDGES[k][0], v = EDGES[k][1], w = EDGES[k][2], key = u + ">" + v;
+      r.st.items = edgeItems(k);
+      if (dist[u] === Infinity) {
+        sync();
+        r.snap(6, "Tour " + t + " · " + u + "→" + v + " : dist[" + u + "] = ∞, rien à propager.", { look: key, kind: "fail" });
+      } else if (dist[u] + w < dist[v]) {
+        var old = dist[v];
+        dist[v] = dist[u] + w; r.parent[v] = u; change = true;
+        sync(v);
+        r.snap(7, "Tour " + t + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + dist[v] + " < " + fmt(old) + ", dist[" + v + "] est améliorée.", { look: key, kind: "win" });
+      } else {
+        sync();
+        r.snap(6, "Tour " + t + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + (dist[u] + w) + " ≥ " + fmt(dist[v]) + ", pas d'amélioration.", { look: key, kind: "fail" });
+      }
+    }
+    r.st.items = edgeItems(-1); sync();
+    if (!change) {
+      IDS.forEach(function (x) { if (dist[x] !== Infinity) r.ns[x] = "done"; });
+      r.snap(10, "Fin du tour " + t + " : aucune distance n'a changé, on s'arrête. Les distances sont exactes.");
+      return r.frames;
+    }
+    r.snap(9, "Fin du tour " + t + " : au moins une distance a changé, on continue.");
+  }
+  r.st.title = "Tour de vérification"; r.st.hint = "une amélioration possible prouve un cycle absorbant";
+  for (var k2 = 0; k2 < EDGES.length; k2++) {
+    var u2 = EDGES[k2][0], v2 = EDGES[k2][1], w2 = EDGES[k2][2], key2 = u2 + ">" + v2;
+    r.st.items = edgeItems(k2); sync();
+    if (dist[u2] !== Infinity && dist[u2] + w2 < dist[v2]) {
+      r.ns[v2] = "bad";
+      r.snap(13, "Vérification · " + u2 + "→" + v2 + " : " + dist[u2] + " + " + w2 + " = " + (dist[u2] + w2) + " < " + fmt(dist[v2]) + ". Après " + (N - 1) + " tours, une amélioration est encore possible : il existe un cycle absorbant accessible depuis " + s + ". Les distances ne sont pas définies.", { look: key2, kind: "fail", warn: true });
+      return r.frames;
+    }
+    r.snap(12, "Vérification · " + u2 + "→" + v2 + " : aucune amélioration possible.", { look: key2, kind: "fail" });
+  }
+  r.st.items = edgeItems(-1);
+  IDS.forEach(function (x) { if (dist[x] !== Infinity) r.ns[x] = "done"; });
+  r.snap(14, "Aucune amélioration à la vérification : pas de cycle absorbant, les distances sont exactes.");
+  return r.frames;
+}
+
+function genFW() {
+  var r = new Rec("Sommets intermédiaires autorisés", "en vert : déjà autorisés, en bleu : k");
+  var d = IDS.map(function () { return IDS.map(function () { return Infinity; }); });
+  IDS.forEach(function (_, i) { d[i][i] = 0; });
+  EDGES.forEach(function (e) { d[IDS.indexOf(e[0])][IDS.indexOf(e[1])] = e[2]; });
+  function cp() { return d.map(function (row) { return row.slice(); }); }
+  function kItems(k) { return IDS.map(function (id, i) { return { t: id, c: i === k ? "cur" : (i < k ? "on" : "") }; }); }
+  function resetNs() { IDS.forEach(function (i) { r.ns[i] = "idle"; r.nl[i] = ""; }); }
+  var intro = "Floyd-Warshall calcule les distances entre toutes les paires de sommets. Pour chaque sommet k, on teste si passer par k raccourcit le trajet de i à j. Pas de sommet de départ ici.";
+  if (EDGES.some(function (e) { return e[0] === "C" && e[1] === "D" && e[2] === -4; })) intro += " Ce graphe contient un cycle absorbant : on le repérera à un terme diagonal négatif.";
+  r.st.items = kItems(-1);
+  r.snap(-1, intro, { mat: cp() });
+  r.snap(1, "Matrice initiale : d[i][j] est le poids de l'arc i→j, ∞ s'il n'y en a pas, et 0 sur la diagonale.", { mat: cp(), hi: {} });
+  for (var k = 0; k < N; k++) {
+    var K = IDS[k], before = cp(), ev = [];
+    for (var i = 0; i < N; i++) {
+      for (var j = 0; j < N; j++) {
+        var a = d[i][k], b = d[k][j];
+        if (a + b < d[i][j]) {
+          var old = d[i][j];
+          d[i][j] = a + b;
+          ev.push({ i: i, j: j, old: old, a: a, b: b, mat: cp() });
+        }
+      }
+    }
+    resetNs(); r.ns[K] = "cur"; r.st.items = kItems(k);
+    r.snap(2, "k = " + K + " : on autorise " + K + " comme sommet intermédiaire. " + (ev.length ? ev.length + " amélioration" + (ev.length > 1 ? "s" : "") + " à venir." : "Aucune amélioration avec ce sommet."), { mat: before, hi: { k: k } });
+    ev.forEach(function (e) {
+      resetNs(); r.ns[K] = "cur"; r.ns[IDS[e.i]] = r.ns[IDS[e.i]] === "cur" ? "cur" : "open"; r.ns[IDS[e.j]] = r.ns[IDS[e.j]] === "cur" ? "cur" : "open";
+      r.snap(6, "d[" + IDS[e.i] + "][" + IDS[e.j] + "] : " + e.a + " + " + e.b + " = " + (e.a + e.b) + " < " + fmt(e.old) + ". Passer par " + K + " est plus court : mise à jour.", { mat: e.mat, hi: { k: k, i: e.i, j: e.j } });
+    });
+  }
+  resetNs();
+  var neg = IDS.filter(function (_, i) { return d[i][i] < 0; });
+  r.st.items = kItems(N);
+  if (neg.length) {
+    neg.forEach(function (x) { r.ns[x] = "bad"; });
+    r.snap(7, "⚠ d[" + neg[0] + "][" + neg[0] + "] < 0 : il existe un cycle absorbant passant par " + neg.join(", ") + ". Les distances ne sont pas définies pour les trajets qui peuvent l'emprunter.", { mat: cp(), hi: {}, warn: true });
+  } else {
+    r.snap(7, "Terminé : d[i][j] est la plus courte distance de i à j, ∞ si j n'est pas accessible depuis i. La diagonale reste à 0, donc pas de cycle absorbant.", { mat: cp(), hi: {} });
+  }
+  return r.frames;
+}
+
+var CODE = {
+  bfs: [
+    "def bfs(g, s):",
+    "    dist = {s: 0}",
+    "    file = deque([s])",
+    "    while file:",
+    "        u = file.popleft()",
+    "        for v in g[u]:",
+    "            if v not in dist:",
+    "                dist[v] = dist[u] + 1",
+    "                file.append(v)",
+    "    return dist"
+  ],
+  dfs: [
+    "def dfs(g, u, vus):",
+    "    vus.add(u)            # début de visite",
+    "    for v in g[u]:",
+    "        if v not in vus:",
+    "            dfs(g, v, vus)",
+    "    # fin de visite de u"
+  ],
+  dijkstra: [
+    "def dijkstra(g, s):",
+    "    dist = {u: inf for u in g}",
+    "    dist[s] = 0",
+    "    a_traiter = set(g)       # non fixés",
+    "    while a_traiter:",
+    "        u = min(a_traiter, key=lambda x: dist[x])",
+    "        if dist[u] == inf: break",
+    "        a_traiter.remove(u)  # dist[u] définitive",
+    "        for v, w in g[u]:",
+    "            if v in a_traiter and dist[u] + w < dist[v]:",
+    "                dist[v] = dist[u] + w",
+    "    return dist"
+  ],
+  bf: [
+    "def bellman_ford(n, aretes, s):",
+    "    dist = [inf] * n",
+    "    dist[s] = 0",
+    "    for tour in range(n - 1):",
+    "        change = False",
+    "        for u, v, w in aretes:",
+    "            if dist[u] + w < dist[v]:",
+    "                dist[v] = dist[u] + w",
+    "                change = True",
+    "        if not change:",
+    "            return dist",
+    "    for u, v, w in aretes:   # vérification",
+    "        if dist[u] + w < dist[v]:",
+    "            return None      # cycle absorbant",
+    "    return dist"
+  ],
+  fw: [
+    "def floyd_warshall(d):",
+    "    n = len(d)",
+    "    for k in range(n):",
+    "        for i in range(n):",
+    "            for j in range(n):",
+    "                if d[i][k] + d[k][j] < d[i][j]:",
+    "                    d[i][j] = d[i][k] + d[k][j]",
+    "    return d"
+  ]
+};
+var INFO = {
+  bfs: "Temps O(n + m) · structure : file · poids : ignorés · distances en nombre d'arcs",
+  dfs: "Temps O(n + m) · structure : pile d'appels · poids : ignorés",
+  dijkstra: "Temps O(n²) ici, O((n + m) log n) avec un tas · poids ≥ 0 uniquement",
+  bf: "Temps O(n · m) · structure : liste d'arcs · poids quelconques · détecte les cycles absorbants",
+  fw: "Temps O(n³), espace O(n²) · matrice des distances · poids quelconques · toutes les paires"
+};
+function generate(algo, s) {
+  if (algo === "bfs") return genBFS(s);
+  if (algo === "dfs") return genDFS(s);
+  if (algo === "dijkstra") return genDijkstra(s);
+  if (algo === "bf") return genBF(s);
+  return genFW();
+}
+//</LOGIC>
+
+(function () {
+  var SVGNS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("svg");
+  var algo = "bfs", graphKey = "pos", src = "A";
+  var frames = [], idx = 0, playing = false, timer = null;
+  var nodeEls = {}, valEls = {}, edgeEls = [], rowEls = {}, valCells = {};
+  var SPEEDS = [2200, 1500, 1000, 600, 300];
+  var VBW = 650, OX = 24, OY = 392, TX = 40, TY = 10;
+  var LDY = { A: 24, B: -20, C: 24, D: -20, E: 24, F: -20, G: 24 };
+  var PRE = { bfs: "d", dfs: "t", dijkstra: "dist", bf: "dist", fw: null };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var srcSel = $("src"), graphSel = $("graph"), speedEl = $("speed"), scrub = $("scrub");
+
+  IDS.forEach(function (id) {
+    var o = document.createElement("option");
+    o.value = id; o.textContent = id; srcSel.appendChild(o);
+  });
+
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(SVGNS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function seg(x1, y1, x2, y2, cls, parent) {
+    return el("line", { x1: x1, y1: y1, x2: x2, y2: y2, class: cls }, parent);
+  }
+
+  function buildSvg() {
+    svg.textContent = "";
+    var defs = el("defs", {}, svg);
+    ["idle", "tree", "look-try", "look-win", "look-fail"].forEach(function (c) {
+      var m = el("marker", { id: "m-" + c, markerUnits: "userSpaceOnUse", markerWidth: 10, markerHeight: 10, refX: 9, refY: 5, orient: "auto" }, defs);
+      el("path", { d: "M0,0 L10,5 L0,10 z", class: "ma-" + c }, m);
+    });
+    var x, y, k, t;
+    for (x = OX + 20; x < VBW; x += 20) if ((x - OX) % 40 !== 0) seg(x, 6, x, OY, "gm", svg);
+    for (y = OY - 20; y > 6; y -= 20) if ((OY - y) % 40 !== 0) seg(OX, y, VBW, y, "gm", svg);
+    for (x = OX + 40; x < VBW; x += 40) seg(x, 6, x, OY, "gM", svg);
+    for (y = OY - 40; y > 6; y -= 40) seg(OX, y, VBW, y, "gM", svg);
+    seg(OX - 8, OY, VBW - 6, OY, "axis", svg);
+    seg(OX, OY + 8, OX, 8, "axis", svg);
+    el("path", { d: "M" + (VBW - 14) + "," + (OY - 4.5) + " L" + (VBW - 4) + "," + OY + " L" + (VBW - 14) + "," + (OY + 4.5) + " z", class: "axarrow" }, svg);
+    el("path", { d: "M" + (OX - 4.5) + ",16 L" + OX + ",6 L" + (OX + 4.5) + ",16 z", class: "axarrow" }, svg);
+    for (k = 1; OX + 40 * k < VBW - 14; k++) {
+      seg(OX + 40 * k, OY - 4, OX + 40 * k, OY + 4, "axis", svg);
+      t = el("text", { x: OX + 40 * k, y: OY + 17, class: "tk", "text-anchor": "middle" }, svg); t.textContent = String(k);
+    }
+    for (k = 1; OY - 40 * k > 18; k++) {
+      seg(OX - 4, OY - 40 * k, OX + 4, OY - 40 * k, "axis", svg);
+      t = el("text", { x: OX - 8, y: OY - 40 * k, class: "tk", "text-anchor": "end", "dominant-baseline": "central" }, svg); t.textContent = String(k);
+    }
+    t = el("text", { x: OX - 8, y: OY + 14, class: "tk", "text-anchor": "end" }, svg); t.textContent = "0";
+
+    var content = el("g", { transform: "translate(" + TX + "," + TY + ")" }, svg);
+    edgeEls = [];
+    EDGES.forEach(function (e) {
+      var p1 = POS[e[0]], p2 = POS[e[1]];
+      var dx = p2[0] - p1[0], dy = p2[1] - p1[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+      var line = el("line", {
+        x1: p1[0] + ux * 8, y1: p1[1] + uy * 8,
+        x2: p2[0] - ux * 9, y2: p2[1] - uy * 9,
+        class: "edge", "marker-end": "url(#m-idle)"
+      }, content);
+      edgeEls.push(line);
+    });
+    EDGES.forEach(function (e) {
+      var p1 = POS[e[0]], p2 = POS[e[1]];
+      var dx = p2[0] - p1[0], dy = p2[1] - p1[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+      var w = el("text", { x: (p1[0] + p2[0]) / 2 - uy * 14, y: (p1[1] + p2[1]) / 2 + ux * 14, class: "w" + (e[2] < 0 ? " neg" : "") }, content);
+      w.textContent = String(e[2]).replace("-", "−");
+    });
+    IDS.forEach(function (id) {
+      var g = el("g", { class: "node st-idle", transform: "translate(" + POS[id][0] + "," + POS[id][1] + ")" }, content);
+      el("circle", { r: 16, class: "halo" }, g);
+      el("circle", { r: 13, class: "ring" }, g);
+      el("circle", { r: 6.5, class: "pt" }, g);
+      var lab = el("text", { class: "lab", y: LDY[id] }, g);
+      var ltr = el("tspan", { class: "ltr" }, lab); ltr.textContent = id;
+      var val = el("tspan", { class: "val", dx: 0 }, lab);
+      nodeEls[id] = g; valEls[id] = val;
+    });
+  }
+
+  function buildAlgebra() {
+    var ul = $("nodes");
+    ul.textContent = "";
+    rowEls = {}; valCells = {};
+    function it(txt) { var i = document.createElement("i"); i.textContent = txt; return i; }
+    IDS.forEach(function (id) {
+      var li = document.createElement("li"); li.className = "arow st-idle";
+      var b = document.createElement("span"); b.className = "bul"; li.appendChild(b);
+      var ex = document.createElement("span"); ex.className = "expr";
+      if (PRE[algo]) {
+        ex.appendChild(it(PRE[algo]));
+        ex.appendChild(document.createTextNode("("));
+        ex.appendChild(it(id));
+        ex.appendChild(document.createTextNode(") = "));
+        var v = document.createElement("b"); v.className = "v"; ex.appendChild(v); valCells[id] = v;
+      } else {
+        ex.appendChild(it(id));
+      }
+      li.appendChild(ex); ul.appendChild(li); rowEls[id] = li;
+    });
+  }
+
+  function valText(nl) {
+    if (algo === "dfs") {
+      if (!nl) return "?";
+      var p = nl.split("/");
+      return p[0] + " / " + (p[1] || "?");
+    }
+    if (!nl) return "?";
+    if (algo === "bfs") return nl.replace(/^d=/, "");
+    return nl.replace("-", "−");
+  }
+
+  function buildCode() {
+    var pre = $("code");
+    pre.textContent = "";
+    CODE[algo].forEach(function (line, i) {
+      var s = document.createElement("span");
+      s.className = "ln"; s.id = "ln" + i; s.setAttribute("data-n", String(i + 1)); s.textContent = line;
+      pre.appendChild(s);
+    });
+  }
+
+  function buildMat(f) {
+    var t = $("mat");
+    t.textContent = "";
+    var hi = f.hi || {};
+    var head = document.createElement("tr");
+    head.appendChild(document.createElement("th"));
+    IDS.forEach(function (id) { var th = document.createElement("th"); th.textContent = id; head.appendChild(th); });
+    t.appendChild(head);
+    f.mat.forEach(function (row, i) {
+      var tr = document.createElement("tr");
+      var th = document.createElement("th"); th.textContent = IDS[i]; tr.appendChild(th);
+      row.forEach(function (val, j) {
+        var td = document.createElement("td");
+        var cls = [];
+        if (hi.k !== undefined && (i === hi.k || j === hi.k)) cls.push("k");
+        if (hi.i === i && hi.j === j) cls.push("chg");
+        if (val === Infinity) cls.push("inf");
+        if (val < 0) cls.push("neg");
+        td.className = cls.join(" ");
+        td.textContent = fmt(val).replace("-", "−");
+        tr.appendChild(td);
+      });
+      t.appendChild(tr);
+    });
+  }
+
+  function render() {
+    var f = frames[idx];
+    IDS.forEach(function (id) {
+      nodeEls[id].setAttribute("class", "node st-" + f.ns[id] + (algo !== "fw" && id === src ? " src" : ""));
+      var lbl = (f.nl[id] || "").replace("-", "−");
+      valEls[id].textContent = lbl;
+      valEls[id].setAttribute("dx", lbl ? 6 : 0);
+      rowEls[id].className = "arow st-" + f.ns[id];
+      if (valCells[id]) valCells[id].textContent = valText(f.nl[id]);
+    });
+    EDGES.forEach(function (e, i) {
+      var key = e[0] + ">" + e[1], cls = "idle";
+      if (f.parent[e[1]] === e[0]) cls = "tree";
+      if (f.look === key) cls = "look-" + (f.kind || "try");
+      edgeEls[i].setAttribute("class", "edge " + (cls === "idle" ? "" : cls));
+      edgeEls[i].setAttribute("marker-end", "url(#m-" + cls + ")");
+    });
+    $("st-title").textContent = f.st.title;
+    $("st-hint").textContent = f.st.hint;
+    var box = $("chips");
+    box.textContent = "";
+    function span(cls, txt) { var s = document.createElement("span"); s.className = cls; s.textContent = txt; box.appendChild(s); }
+    span("br", "{ ");
+    f.st.items.forEach(function (it, i) {
+      if (i) span("sep", ", ");
+      span("it" + (it.c ? " " + it.c : ""), it.t.replace("-", "−"));
+    });
+    span("br", f.st.items.length ? " }" : "}");
+    var msg = $("msg");
+    msg.textContent = f.msg;
+    msg.className = f.warn ? "warn" : "";
+    $("step-kicker").textContent = idx === 0 ? "Présentation" : "Étape " + idx + " sur " + (frames.length - 1);
+    CODE[algo].forEach(function (_, i) { $("ln" + i).className = "ln" + (i === f.line ? " on" : ""); });
+    var mc = $("matcard");
+    if (f.mat) { mc.hidden = false; buildMat(f); } else { mc.hidden = true; }
+    scrub.max = frames.length - 1; scrub.value = idx;
+    $("count").textContent = idx + " / " + (frames.length - 1);
+    $("btn-prev").disabled = idx === 0;
+    $("btn-restart").disabled = idx === 0;
+    $("btn-next").disabled = idx >= frames.length - 1;
+    $("btn-play").textContent = playing ? "Pause" : (idx >= frames.length - 1 ? "Rejouer" : "Lecture");
+  }
+
+  function stop() {
+    playing = false;
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+  function tick() {
+    timer = setTimeout(function () {
+      if (idx < frames.length - 1) { idx++; render(); tick(); }
+      else { stop(); render(); }
+    }, SPEEDS[+speedEl.value - 1]);
+  }
+  function play() {
+    if (idx >= frames.length - 1) idx = 0;
+    playing = true; render(); tick();
+  }
+
+  function rebuild() {
+    stop();
+    setGraph(graphKey);
+    buildSvg();
+    buildAlgebra();
+    buildCode();
+    frames = generate(algo, src);
+    idx = 0;
+    $("info").textContent = INFO[algo];
+    $("src-field").hidden = algo === "fw";
+    render();
+  }
+
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".tab");
+    if (!b) return;
+    algo = b.getAttribute("data-algo");
+    document.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-pressed", t === b ? "true" : "false"); });
+    rebuild();
+  });
+  graphSel.addEventListener("change", function () { graphKey = graphSel.value; rebuild(); });
+  srcSel.addEventListener("change", function () { src = srcSel.value; rebuild(); });
+  $("btn-play").addEventListener("click", function () { if (playing) { stop(); render(); } else play(); });
+  $("btn-next").addEventListener("click", function () { stop(); if (idx < frames.length - 1) idx++; render(); });
+  $("btn-prev").addEventListener("click", function () { stop(); if (idx > 0) idx--; render(); });
+  $("btn-restart").addEventListener("click", function () { stop(); idx = 0; render(); });
+  scrub.addEventListener("input", function () { stop(); idx = +scrub.value; render(); });
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target && e.target.tagName) || "";
+    if (tag === "INPUT" || tag === "SELECT") return;
+    if (e.key === "ArrowRight") { stop(); if (idx < frames.length - 1) idx++; render(); }
+    if (e.key === "ArrowLeft") { stop(); if (idx > 0) idx--; render(); }
+  });
+
+  rebuild();
+})();
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)};
+var tt;
+function toast(m){var t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},2400)}
+function cfg(spec){
+  var p=spec.split('|');
+  document.querySelector('.tab[data-algo="'+p[0]+'"]').click();
+  if(p[1]){var g=$('graph');g.value=p[1];g.dispatchEvent(new Event('change'))}
+  if(p[2]&&p[0]!=='fw'){var s=$('src');s.value=p[2];s.dispatchEvent(new Event('change'))}
+  $('scroller').scrollTop=0;
+  try{$('stage').scrollIntoView({block:'start'})}catch(e){}
+  toast('Configuration chargée dans l’atelier');
+}
+
+/* ---- Activité ---- */
+var M=[
+ {t:'Largeur',c:'bfs|pos|A',q:'Lancez la lecture. Notez l’ordre dans lequel les sommets sont défilés et leur distance d.',a:'Ordre : A, B, C, D, E, F, G. Distances : B et C = 1, D et E = 2, F et G = 3. Ce sont des nombres d’arcs : les poids sont ignorés.'},
+ {t:'Profondeur',c:'dfs|pos|A',q:'Notez les dates début/fin de chaque sommet. Pourquoi C, voisin direct de A, est-il visité en dernier ?',a:'A 1/14, B 2/11, D 3/10, E 4/9, F 5/8, G 6/7, C 12/13. Les voisins sont pris par ordre alphabétique : le parcours plonge dans B et visite D, E, F, G avant de revenir vers C, qu’aucun de ces sommets n’atteint.'},
+ {t:'Dijkstra, poids positifs',c:'dijkstra|pos|A',q:'Relevez l’ordre d’extraction et les distances finales. Pourquoi B est-il extrait après C ? Comparez la distance de G avec celle du BFS.',a:'Ordre : A, C, B, D, E, F, G. dist(B) = 3 en passant par C (1 + 2), ce qui bat l’arc direct A→B de poids 4. Distances : B 3, C 1, D 8, E 10, F 13, G 14. G est à 3 arcs mais à poids 14.'},
+ {t:'Dijkstra en échec',c:'dijkstra|neg|A',q:'Avec l’arc B→C de poids −4, que se passe-t-il quand B est extrait ? Quelles distances sont fausses ?',a:'C a déjà été fixé à 2 avant B (5). Quand on examine B→C, on trouverait 5 − 4 = 1 < 2, mais C est fixé : l’amélioration est ignorée. Résultat faux pour C, D, E, F, G. Valeurs exactes : C 1, D 4, E 6, F 9, G 10.'},
+ {t:'Bellman-Ford',c:'bf|neg|A',q:'Combien de tours sont nécessaires ? Les distances finales sont-elles exactes ?',a:'Cinq tours : les quatre premiers améliorent au moins une distance, le cinquième ne change rien et arrête l’algorithme. Distances exactes : B 5, C 1, D 4, E 6, F 9, G 10.'},
+ {t:'Cycle absorbant',c:'bf|cyc|A',q:'À quel moment le cycle est-il détecté ? Quel est le poids du cycle B→C→D→B ?',a:'Pendant le tour de vérification, sur l’arc D→B, après les 6 tours (n − 1). Poids du cycle : 2 − 4 + 1 = −1 < 0 : chaque passage réduit les distances.'},
+ {t:'Floyd-Warshall',c:'fw|pos',q:'Comparez la ligne A de la matrice finale avec le résultat de Dijkstra. Combien de tests d[i][k] + d[k][j] < d[i][j] l’algorithme effectue-t-il ?',a:'La ligne A donne 0, 3, 1, 8, 10, 13, 14 : identique à Dijkstra. Trois boucles imbriquées sur n = 7 : 7³ = 343 tests. Avec le graphe à cycle absorbant, la diagonale devient négative (d[B][B] < 0).'}
+];
+function esc(t){return t.replace(/ < /g,' &lt; ')}
+function actHTML(){
+  var h='<div class="goal"><b>Objectif.</b> Comparer les parcours et les algorithmes de plus courts chemins sur un même graphe, et repérer les cas où ils échouent.</div>'+
+  '<p class="small">Chaque mission charge la bonne configuration dans l’atelier. Lancez la lecture, observez, puis ouvrez la réponse.</p>';
+  M.forEach(function(m,i){
+    h+='<div class="defi"><p><b>Mission '+(i+1)+' · '+m.t+'</b></p><p><button class="btn sm pri" data-cfg="'+m.c+'">Charger dans l’atelier</button></p><p>'+esc(m.q)+'</p>'+
+    '<details class="rep"><summary>Réponse</summary><div>'+esc(m.a)+'</div></details></div>';
+  });
+  h+='<div class="defi"><p><b>Défi.</b> Pourquoi la liste d’arcs de Bellman-Ford est-elle volontairement donnée dans un ordre défavorable ? Que changerait un meilleur ordre ?</p>'+
+  '<details class="rep"><summary>Réponse</summary><div>Un ordre défavorable oblige à plusieurs tours, ce qui rend l’algorithme visible. Avec les arcs rangés dans l’ordre des chemins (A→C, C→B, B→D, …), un seul tour suffirait pour propager les distances. Le pire cas reste n − 1 tours.</div></details></div>';
+  return h;
+}
+$('actBody').addEventListener('click',function(e){var b=e.target.closest('[data-cfg]');if(b)cfg(b.getAttribute('data-cfg'))});
+
+/* ---- QCM ---- */
+var Q=[
+ {q:'Quelle structure de données gère l’ordre d’exploration d’un parcours en largeur ?',o:['Une pile','Une file','Un tas','Un dictionnaire'],ok:1,why:'Premier entré, premier sorti : les sommets découverts en premier sont traités en premier, donc couche par couche.'},
+ {q:'Dans un graphe pondéré, que calcule le BFS depuis s ?',o:['Le poids minimal des chemins','Le nombre minimal d’arcs des chemins','Le plus long chemin','Un arbre couvrant de poids minimal'],ok:1,why:'Le BFS ignore les poids : dist[v] est le nombre minimal d’arcs de s à v.'},
+ {q:'Quelle est la complexité d’un BFS ou d’un DFS avec listes d’adjacence ?',o:['O(n)','O(n + m)','O(n · m)','O(n²) toujours'],ok:1,why:'Chaque sommet est traité une fois et chaque arc examiné une fois.'},
+ {q:'Dans l’atelier, depuis A (poids positifs), quel est l’ordre de visite du DFS ?',o:['A B C D E F G','A B D E F G C','A C B D E F G','A C E G F D B'],ok:1,why:'Voisins par ordre alphabétique : le parcours plonge dans B, visite D, E, F, G, puis revient vers C.'},
+ {q:'Pourquoi Dijkstra exige-t-il des poids positifs ou nuls ?',o:['Pour que la file de priorité fonctionne','Parce qu’un sommet fixé ne doit plus pouvoir être amélioré','Pour éviter la récursion','Parce qu’il utilise une matrice'],ok:1,why:'Avec un poids négatif, un sommet déjà fixé pourrait encore être amélioré par un chemin plus long en arcs : l’invariant de Dijkstra tombe.'},
+ {q:'Pour un graphe à 7 sommets, combien de tours de relâchement Bellman-Ford fait-il au plus avant le tour de vérification ?',o:['6','7','49','3'],ok:0,why:'Un plus court chemin simple compte au plus n − 1 = 6 arcs.'},
+ {q:'Comment Floyd-Warshall révèle-t-il un cycle absorbant ?',o:['Par une valeur ∞ sur la diagonale','Par une valeur négative sur la diagonale','Par une matrice non symétrique','Il ne le peut pas'],ok:1,why:'d[i][i] < 0 signifie qu’un chemin de i vers i a un poids négatif : c’est un cycle absorbant.'},
+ {q:'Quelle est la complexité de Floyd-Warshall pour n sommets ?',o:['O(n²)','O(n³)','O(n · m)','O(n log n)'],ok:1,why:'Trois boucles imbriquées de n itérations chacune.'},
+ {q:'Dans le graphe à poids positifs, quelle est la distance pondérée de A à G ?',o:['3','10','14','13'],ok:2,why:'A→C→B→D→E→G pèse 1 + 2 + 5 + 2 + 4 = 14. Le nombre 3 est la distance en arcs (BFS).'}
+];
+function qcmHTML(){
+  var h='<p class="small">Neuf questions, une seule bonne réponse chacune.</p>';
+  Q.forEach(function(q,i){
+    h+='<fieldset class="q"><legend>'+(i+1)+'. '+q.q+'</legend>';
+    q.o.forEach(function(o,j){h+='<label class="opt"><input type="radio" name="q'+i+'" value="'+j+'"> <span>'+o+'</span></label>'});
+    h+='<div class="why" id="why'+i+'" hidden></div></fieldset>';
+  });
+  h+='<div class="score" id="score"></div><div class="row" style="padding:0"><button class="btn pri" id="qOk">Valider</button><button class="btn" id="qRaz">Recommencer</button></div>';
+  return h;
+}
+function qcmBind(){
+  $('qOk').onclick=function(){
+    var sc=0,left=0;
+    Q.forEach(function(q,i){
+      var sel=document.querySelector('input[name="q'+i+'"]:checked');
+      document.querySelectorAll('input[name="q'+i+'"]').forEach(function(r,j){var l=r.parentNode;l.classList.remove('good','bad');if(j===q.ok)l.classList.add('good');else if(sel&&+sel.value===j)l.classList.add('bad')});
+      if(!sel)left++;else if(+sel.value===q.ok)sc++;
+      var w=$('why'+i);w.textContent=q.why;w.hidden=false;
+    });
+    $('score').textContent='Score : '+sc+' / '+Q.length+(left?' ('+left+' sans réponse)':'');
+  };
+  $('qRaz').onclick=function(){$('actBody').innerHTML=qcmHTML();qcmBind()};
+}
+function showTab(t){
+  $('tAct').setAttribute('aria-selected',t==='act');$('tQcm').setAttribute('aria-selected',t==='qcm');
+  if(t==='act'){$('actBody').innerHTML=actHTML()}else{$('actBody').innerHTML=qcmHTML();qcmBind()}
+  $('actBody').scrollTop=0;
+}
+$('tAct').onclick=function(){showTab('act')};
+$('tQcm').onclick=function(){showTab('qcm')};
+showTab('act');
+
+/* ---- Cours ---- */
+var secs=Array.prototype.slice.call($('cbody').querySelectorAll('section')),cur=0;
+secs.forEach(function(s,i){
+  var title=s.querySelector('h2').textContent;
+  var b=document.createElement('button');b.textContent=(i+1)+'. '+title;b.onclick=function(){showSec(i)};$('toc').appendChild(b);
+  var o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+title;$('toc2').appendChild(o);
+});
+$('toc2').onchange=function(){showSec(+this.value)};
+function showSec(i){
+  cur=Math.max(0,Math.min(secs.length-1,i));
+  secs.forEach(function(s,j){s.hidden=j!==cur});
+  Array.prototype.forEach.call($('toc').children,function(b,j){b.classList.toggle('on',j===cur)});
+  $('toc2').value=cur;
+  $('cPrev').style.visibility=cur===0?'hidden':'visible';
+  $('cNext').style.visibility=cur===secs.length-1?'hidden':'visible';
+  $('cbody').scrollTop=0;
+  try{window.scrollTo(0,0)}catch(e){}
+}
+$('cPrev').onclick=function(){showSec(cur-1)};
+$('cNext').onclick=function(){showSec(cur+1)};
+showSec(0);
+
+/* ---- Thème et vues ---- */
+function setTheme(d){
+  document.documentElement.setAttribute('data-theme',d?'dark':'light');
+  $('theme').textContent=d?'Mode clair':'Mode sombre';$('theme').setAttribute('aria-pressed',d);
+}
+$('theme').onclick=function(){setTheme(document.documentElement.getAttribute('data-theme')!=='dark')};
+setTheme(false);
+function view(v){
+  var lab=v==='lab';
+  $('lab').hidden=!lab;$('course').hidden=lab;
+  $('vLab').setAttribute('aria-pressed',lab);$('vCourse').setAttribute('aria-pressed',!lab);
+}
+$('vLab').onclick=function(){view('lab')};
+$('vCourse').onclick=function(){view('course')};
+$('toLab').onclick=function(){view('lab')};
+})();
+</script>
