@@ -46,6 +46,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+/* Dans la colonne de commandes, la barre d'onglets ne s'étire plus : sa bordure droite ferme l'onglet Floyd-Warshall. */
+#tabs{align-self:flex-start}
 .work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
 #stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
 #hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
@@ -160,6 +162,9 @@ table.mat { border-collapse: collapse; width: 100%; font: 400 0.85rem var(--font
 .mat td.chg { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); font-weight: 700; }
 .mat td.neg { color: var(--bad); }
 .mat td.inf { color: var(--muted); }
+/* sommet étudié (Bellman-Ford) : en-tête de colonne et cellule de la ligne en cours */
+.mat th.hu { background: var(--look); color: var(--bg); }
+.mat td.hu { box-shadow: inset 0 0 0 2px var(--look); font-weight: 700; }
 
 /* Algorithme */
 pre { margin: 0; padding: 6px 0; font: 400 0.8rem/1.7 var(--font-mono); overflow-x: auto; color: var(--fg); }
@@ -291,6 +296,10 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
               <option value="pos">Poids positifs</option>
               <option value="neg">Un arc négatif, sans cycle absorbant</option>
               <option value="cyc">Cycle absorbant</option>
+              <option value="tri">Triangle, poids positifs</option>
+              <option value="trn">Triangle, un arc négatif</option>
+              <option value="six">Six sommets, arcs négatifs, sans cycle absorbant</option>
+              <option value="quad">Quatre sommets, arcs négatifs, sans cycle absorbant</option>
             </select>
           </label>
           <label class="field" for="src" id="src-field">Départ
@@ -327,7 +336,7 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
         <div class="right">
           <section class="view v-gfx" aria-label="Vue Graphique">
             <div class="vh">Graphique</div>
-            <svg id="svg" viewBox="0 0 650 420" role="img" aria-label="Graphe orienté et pondéré de sept sommets, de A à G, tracé sur une grille"></svg>
+            <svg id="svg" viewBox="0 0 650 420" role="img" aria-label="Graphe orienté et pondéré tracé sur une grille"></svg>
             <ul class="legend">
               <li><span class="dot"></span>pas atteint</li>
               <li><span class="dot open"></span>découvert</li>
@@ -489,13 +498,14 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
         if dist[u] + w &lt; dist[v]:
             return None             # cycle absorbant
     return dist</pre>
-<p>Dans l'atelier, le tableur affiche une ligne par tour et une colonne par sommet : les cellules modifiées par rapport au tour précédent sont en surbrillance, et la cellule qui vient d'être relâchée est encadrée.</p>
+<p>Dans l'atelier, les arcs sont relâchés <b>sommet par sommet</b>, dans l'ordre des colonnes du tableur (A, B, C, … ou S, A, B, … selon le graphe) : le sommet étudié est surligné en orange dans la ligne « dist », et ses arcs sortants sont examinés un à un. Le tableur affiche une ligne par tour et une colonne par sommet : les cellules modifiées par rapport au tour précédent sont en surbrillance, et la cellule qui vient d'être relâchée est encadrée.</p>
 <h3>Détection d'un cycle absorbant</h3>
 <p>Si, après n − 1 tours, un arc peut encore être relâché, alors un cycle absorbant est accessible depuis s : les distances ne sont pas définies. Dans l'atelier, le graphe à cycle absorbant (B → C → D → B, de poids 2 − 4 + 1 = −1) est détecté au tour de vérification.</p>
 <ul>
 <li>Complexité <b>O(n · m)</b>.</li>
 <li>Poids quelconques acceptés, y compris négatifs.</li>
 <li>L'arrêt anticipé (aucun changement pendant un tour) évite des tours inutiles.</li>
+<li>L'ordre des arcs ne change pas le résultat, mais il change le nombre de tours nécessaires.</li>
 </ul>
 <div class="retain"><b>À retenir.</b> Bellman-Ford : n − 1 tours sur la liste d'arcs, un n-ième tour de vérification détecte les cycles absorbants.</div>
 </section>
@@ -545,25 +555,40 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
 <div id="toast" hidden></div>
 <script>
 //<LOGIC>
-var IDS = ["A", "B", "C", "D", "E", "F", "G"];
-var N = IDS.length;
-var POS = { A: [60, 190], B: [190, 80], C: [190, 300], D: [350, 150], E: [350, 320], F: [510, 110], G: [520, 260] };
-var LABEL_DY = { A: 38, B: -32, C: 38, D: -32, E: 38, F: -32, G: 38 };
-/* Les listes d'arcs sont volontairement dans un ordre défavorable : Bellman-Ford a alors besoin de plusieurs tours. */
+/* Chaque graphe définit ses sommets (ids, dans l'ordre des colonnes du tableur), leurs positions, le décalage vertical des étiquettes, le départ par défaut et ses arcs. */
+var IDS7 = ["A", "B", "C", "D", "E", "F", "G"];
+var POS7 = { A: [60, 190], B: [190, 80], C: [190, 300], D: [350, 150], E: [350, 320], F: [510, 110], G: [520, 260] };
+var DY7 = { A: 24, B: -20, C: 24, D: -20, E: 24, F: -20, G: 24 };
+var POS_TRI = { S: [100, 190], A: [380, 60], B: [380, 320] };
+var DY_TRI = { S: 24, A: -20, B: 24 };
+var POS_SIX = { S: [250, 40], E: [60, 120], A: [470, 150], D: [60, 250], B: [470, 290], C: [260, 340] };
+var DY_SIX = { S: -20, E: -20, A: -20, D: 24, B: 24, C: 24 };
+var POS_QUAD = { "1": [330, 60], "2": [190, 190], "3": [470, 190], "4": [330, 320] };
+var DY_QUAD = { "1": -20, "2": 24, "3": 24, "4": 24 };
 var GRAPHS = {
-  pos: { edges: [["E","F",3],["D","E",2],["A","B",4],["C","D",8],["B","D",5],["F","G",1],["A","C",1],["C","B",2],["D","F",6],["C","E",10],["E","G",4]] },
-  neg: { edges: [["E","F",3],["D","E",2],["B","C",-4],["C","D",3],["A","B",5],["F","G",1],["A","C",2],["B","D",6],["D","F",7],["C","E",9],["E","G",4]] },
-  cyc: { edges: [["D","B",1],["C","D",-4],["A","B",1],["B","C",2],["E","F",2],["F","G",1],["D","E",3],["A","C",5]] }
+  pos: { ids: IDS7, pos: POS7, dy: DY7, src: "A", edges: [["E","F",3],["D","E",2],["A","B",4],["C","D",8],["B","D",5],["F","G",1],["A","C",1],["C","B",2],["D","F",6],["C","E",10],["E","G",4]] },
+  neg: { ids: IDS7, pos: POS7, dy: DY7, src: "A", edges: [["E","F",3],["D","E",2],["B","C",-4],["C","D",3],["A","B",5],["F","G",1],["A","C",2],["B","D",6],["D","F",7],["C","E",9],["E","G",4]] },
+  cyc: { ids: IDS7, pos: POS7, dy: DY7, src: "A", edges: [["D","B",1],["C","D",-4],["A","B",1],["B","C",2],["E","F",2],["F","G",1],["D","E",3],["A","C",5]] },
+  tri: { ids: ["S","A","B"], pos: POS_TRI, dy: DY_TRI, src: "S", edges: [["S","A",3],["S","B",4],["B","A",2]] },
+  trn: { ids: ["S","A","B"], pos: POS_TRI, dy: DY_TRI, src: "S", edges: [["S","A",3],["S","B",4],["B","A",-2]] },
+  six: { ids: ["S","A","B","C","D","E"], pos: POS_SIX, dy: DY_SIX, src: "S", edges: [["S","E",8],["S","A",10],["E","D",1],["D","A",-4],["D","C",-1],["A","C",2],["C","B",-2],["B","A",1]] },
+  quad: { ids: ["1","2","3","4"], pos: POS_QUAD, dy: DY_QUAD, src: "1", edges: [["2","1",4],["1","3",-2],["2","3",3],["3","4",2],["4","2",-1]] }
 };
+var IDS = [], N = 0, POS = {}, LABEL_DY = {};
 var EDGES = [];
 var adj = {};
 
 function setGraph(key) {
-  EDGES = GRAPHS[key].edges;
+  var G = GRAPHS[key];
+  IDS = G.ids.slice(); N = IDS.length; POS = G.pos; LABEL_DY = G.dy;
+  /* Les arcs sont rangés sommet par sommet, dans l'ordre des colonnes du tableur : Bellman-Ford les relâche dans cet ordre. */
+  EDGES = G.edges.slice().sort(function (a, b) {
+    return IDS.indexOf(a[0]) - IDS.indexOf(b[0]) || IDS.indexOf(a[1]) - IDS.indexOf(b[1]);
+  });
   adj = {};
   IDS.forEach(function (i) { adj[i] = []; });
   EDGES.forEach(function (e) { adj[e[0]].push({ v: e[1], w: e[2] }); });
-  IDS.forEach(function (i) { adj[i].sort(function (a, b) { return a.v < b.v ? -1 : 1; }); });
+  IDS.forEach(function (i) { adj[i].sort(function (a, b) { return IDS.indexOf(a.v) - IDS.indexOf(b.v); }); });
 }
 function fmt(x) { return x === Infinity ? "∞" : String(x); }
 function items(arr) { return arr.map(function (t) { return { t: t }; }); }
@@ -671,7 +696,7 @@ function genDijkstra(s) {
   r.snap(-1, intro);
   function pq() {
     return items(IDS.filter(function (x) { return rem.has(x) && dist[x] !== Infinity; })
-      .sort(function (a, b) { return dist[a] - dist[b] || (a < b ? -1 : 1); })
+      .sort(function (a, b) { return dist[a] - dist[b] || (IDS.indexOf(a) - IDS.indexOf(b)); })
       .map(function (x) { return x + " : " + dist[x]; }));
   }
   IDS.forEach(function (i) { r.nl[i] = "∞"; });
@@ -725,47 +750,49 @@ function genDijkstra(s) {
 }
 
 function genBF(s) {
-  var r = new Rec("Arcs relâchés dans cet ordre", "");
+  var r = new Rec("Arcs relâchés, sommet par sommet", "");
   var dist = {};
   IDS.forEach(function (i) { dist[i] = Infinity; });
   dist[s] = 0;
   var done = [], live = null;
-  function tabNow(hc) {
+  /* hc : colonne du sommet dont la distance vient d'être améliorée ; hu : colonne du sommet étudié (origine de l'arc examiné). */
+  function tabNow(hc, hu) {
     var rows = done.map(function (x) { return { l: x.l, d: x.d.slice() }; });
     if (live) rows.push({ l: live, d: IDS.map(function (i) { return dist[i]; }) });
-    return { rows: rows, hc: hc };
+    return { rows: rows, hc: hc, hu: hu };
   }
-  function snapT(line, msg, o) { o = o || {}; o.tab = tabNow(o.hc); r.snap(line, msg, o); }
+  function snapT(line, msg, o) { o = o || {}; o.tab = tabNow(o.hc, o.hu); r.snap(line, msg, o); }
   function endRow() { done.push({ l: live, d: IDS.map(function (i) { return dist[i]; }) }); live = null; }
   function sync(cur) {
     IDS.forEach(function (i) { r.ns[i] = dist[i] === Infinity ? "idle" : "open"; r.nl[i] = fmt(dist[i]); });
     if (cur) r.ns[cur] = "cur";
   }
   function edgeItems(k) { return EDGES.map(function (e, idx) { return { t: e[0] + "→" + e[1], c: idx === k ? "cur" : "" }; }); }
-  var intro = "Bellman-Ford depuis " + s + ". On relâche tous les arcs, dans l'ordre de la liste, jusqu'à ce que plus rien ne change (au plus " + (N - 1) + " tours). Les poids négatifs sont acceptés.";
+  var intro = "Bellman-Ford depuis " + s + ". On relâche tous les arcs, sommet par sommet dans l'ordre des colonnes du tableur (" + IDS.join(", ") + "), jusqu'à ce que plus rien ne change (au plus " + (N - 1) + " tours). Le sommet étudié est surligné dans la ligne dist du tableur. Les poids négatifs sont acceptés.";
   if (EDGES.some(function (e) { return e[0] === "C" && e[1] === "D" && e[2] === -4; })) intro += " Ce graphe contient un cycle absorbant (B → C → D → B, de poids −1) : l'algorithme doit le détecter.";
   r.st.items = edgeItems(-1);
+  /* La ligne Init est posée avant la présentation : le tableur est visible dès la première étape. */
+  done.push({ l: "Init", d: IDS.map(function (i) { return dist[i]; }) });
   snapT(-1, intro);
   sync();
-  done.push({ l: "Init", d: IDS.map(function (i) { return dist[i]; }) });
   snapT(2, "dist[" + s + "] = 0, les autres distances valent ∞.");
   for (var t = 1; t <= N - 1; t++) {
     var change = false;
     r.st.hint = "Tour " + t + " sur " + (N - 1); live = "Tour " + t;
     for (var k = 0; k < EDGES.length; k++) {
-      var u = EDGES[k][0], v = EDGES[k][1], w = EDGES[k][2], key = u + ">" + v;
+      var u = EDGES[k][0], v = EDGES[k][1], w = EDGES[k][2], key = u + ">" + v, hu = IDS.indexOf(u);
       r.st.items = edgeItems(k);
       if (dist[u] === Infinity) {
-        sync();
-        snapT(6, "Tour " + t + " · " + u + "→" + v + " : dist[" + u + "] = ∞, rien à propager.", { look: key, kind: "fail" });
+        sync(u);
+        snapT(6, "Tour " + t + " · sommet " + u + " · " + u + "→" + v + " : dist[" + u + "] = ∞, rien à propager.", { look: key, kind: "fail", hu: hu });
       } else if (dist[u] + w < dist[v]) {
         var old = dist[v];
         dist[v] = dist[u] + w; r.parent[v] = u; change = true;
-        sync(v);
-        snapT(7, "Tour " + t + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + dist[v] + " < " + fmt(old) + ", dist[" + v + "] est améliorée.", { look: key, kind: "win", hc: IDS.indexOf(v) });
+        sync(u);
+        snapT(7, "Tour " + t + " · sommet " + u + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + dist[v] + " < " + fmt(old) + ", dist[" + v + "] est améliorée.", { look: key, kind: "win", hc: IDS.indexOf(v), hu: hu });
       } else {
-        sync();
-        snapT(6, "Tour " + t + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + (dist[u] + w) + " ≥ " + fmt(dist[v]) + ", pas d'amélioration.", { look: key, kind: "fail" });
+        sync(u);
+        snapT(6, "Tour " + t + " · sommet " + u + " · " + u + "→" + v + " : " + dist[u] + " + " + w + " = " + (dist[u] + w) + " ≥ " + fmt(dist[v]) + ", pas d'amélioration.", { look: key, kind: "fail", hu: hu });
       }
     }
     r.st.items = edgeItems(-1); sync(); endRow();
@@ -778,16 +805,16 @@ function genBF(s) {
   }
   r.st.title = "Tour de vérification"; live = "Vérif."; r.st.hint = "une amélioration possible prouve un cycle absorbant";
   for (var k2 = 0; k2 < EDGES.length; k2++) {
-    var u2 = EDGES[k2][0], v2 = EDGES[k2][1], w2 = EDGES[k2][2], key2 = u2 + ">" + v2;
-    r.st.items = edgeItems(k2); sync();
+    var u2 = EDGES[k2][0], v2 = EDGES[k2][1], w2 = EDGES[k2][2], key2 = u2 + ">" + v2, hu2 = IDS.indexOf(u2);
+    r.st.items = edgeItems(k2); sync(u2);
     if (dist[u2] !== Infinity && dist[u2] + w2 < dist[v2]) {
       r.ns[v2] = "bad";
-      snapT(13, "Vérification · " + u2 + "→" + v2 + " : " + dist[u2] + " + " + w2 + " = " + (dist[u2] + w2) + " < " + fmt(dist[v2]) + ". Après " + (N - 1) + " tours, une amélioration est encore possible : il existe un cycle absorbant accessible depuis " + s + ". Les distances ne sont pas définies.", { look: key2, kind: "fail", warn: true, hc: IDS.indexOf(v2) });
+      snapT(13, "Vérification · sommet " + u2 + " · " + u2 + "→" + v2 + " : " + dist[u2] + " + " + w2 + " = " + (dist[u2] + w2) + " < " + fmt(dist[v2]) + ". Après " + (N - 1) + " tours, une amélioration est encore possible : il existe un cycle absorbant accessible depuis " + s + ". Les distances ne sont pas définies.", { look: key2, kind: "fail", warn: true, hc: IDS.indexOf(v2), hu: hu2 });
       return r.frames;
     }
-    snapT(12, "Vérification · " + u2 + "→" + v2 + " : aucune amélioration possible.", { look: key2, kind: "fail" });
+    snapT(12, "Vérification · sommet " + u2 + " · " + u2 + "→" + v2 + " : aucune amélioration possible.", { look: key2, kind: "fail", hu: hu2 });
   }
-  r.st.items = edgeItems(-1);
+  r.st.items = edgeItems(-1); sync();
   IDS.forEach(function (x) { if (dist[x] !== Infinity) r.ns[x] = "done"; });
   snapT(14, "Aucune amélioration à la vérification : pas de cycle absorbant, les distances sont exactes.");
   return r.frames;
@@ -904,7 +931,7 @@ var INFO = {
   bfs: "Temps O(n + m) · structure : file · poids : ignorés · distances en nombre d'arcs",
   dfs: "Temps O(n + m) · structure : pile d'appels · poids : ignorés",
   dijkstra: "Temps O(n²) ici, O((n + m) log n) avec un tas · poids ≥ 0 uniquement",
-  bf: "Temps O(n · m) · structure : liste d'arcs · poids quelconques · détecte les cycles absorbants",
+  bf: "Temps O(n · m) · structure : liste d'arcs (rangés par sommet) · poids quelconques · détecte les cycles absorbants",
   fw: "Temps O(n³), espace O(n²) · matrice des distances · poids quelconques · toutes les paires"
 };
 function generate(algo, s) {
@@ -924,16 +951,19 @@ function generate(algo, s) {
   var nodeEls = {}, valEls = {}, edgeEls = [], rowEls = {}, valCells = {};
   var SPEEDS = [2200, 1500, 1000, 600, 300];
   var VBW = 650, OX = 24, OY = 392, TX = 40, TY = 10;
-  var LDY = { A: 24, B: -20, C: 24, D: -20, E: 24, F: -20, G: 24 };
   var PRE = { bfs: "d", dfs: "t", dijkstra: "dist", bf: "dist", fw: null };
 
   var $ = function (id) { return document.getElementById(id); };
   var srcSel = $("src"), graphSel = $("graph"), speedEl = $("speed"), scrub = $("scrub");
 
-  IDS.forEach(function (id) {
-    var o = document.createElement("option");
-    o.value = id; o.textContent = id; srcSel.appendChild(o);
-  });
+  function fillSrc() {
+    srcSel.textContent = "";
+    IDS.forEach(function (id) {
+      var o = document.createElement("option");
+      o.value = id; o.textContent = id; srcSel.appendChild(o);
+    });
+    srcSel.value = src;
+  }
 
   function el(name, attrs, parent) {
     var e = document.createElementNS(SVGNS, name);
@@ -947,6 +977,8 @@ function generate(algo, s) {
 
   function buildSvg() {
     svg.textContent = "";
+    nodeEls = {}; valEls = {};
+    svg.setAttribute("aria-label", "Graphe orienté et pondéré de " + N + " sommets (" + IDS.join(", ") + "), tracé sur une grille");
     var defs = el("defs", {}, svg);
     ["idle", "tree", "look-try", "look-win", "look-fail"].forEach(function (c) {
       var m = el("marker", { id: "m-" + c, markerUnits: "userSpaceOnUse", markerWidth: 10, markerHeight: 10, refX: 9, refY: 5, orient: "auto" }, defs);
@@ -994,7 +1026,7 @@ function generate(algo, s) {
       el("circle", { r: 16, class: "halo" }, g);
       el("circle", { r: 13, class: "ring" }, g);
       el("circle", { r: 6.5, class: "pt" }, g);
-      var lab = el("text", { class: "lab", y: LDY[id] }, g);
+      var lab = el("text", { class: "lab", y: LABEL_DY[id] }, g);
       var ltr = el("tspan", { class: "ltr" }, lab); ltr.textContent = id;
       var val = el("tspan", { class: "val", dx: 0 }, lab);
       nodeEls[id] = g; valEls[id] = val;
@@ -1073,9 +1105,14 @@ function generate(algo, s) {
   function buildTab(tb) {
     var t = $("mat");
     t.textContent = "";
+    var hasHu = tb.hu !== undefined && tb.hu !== null;
     var head = document.createElement("tr");
     var h0 = document.createElement("th"); h0.textContent = "dist"; head.appendChild(h0);
-    IDS.forEach(function (id) { var th = document.createElement("th"); th.textContent = id; head.appendChild(th); });
+    IDS.forEach(function (id, j) {
+      var th = document.createElement("th"); th.textContent = id;
+      if (hasHu && j === tb.hu) th.className = "hu";
+      head.appendChild(th);
+    });
     t.appendChild(head);
     tb.rows.forEach(function (row, i) {
       var tr = document.createElement("tr");
@@ -1083,8 +1120,10 @@ function generate(algo, s) {
       row.d.forEach(function (val, j) {
         var td = document.createElement("td");
         var cls = [];
+        var last = i === tb.rows.length - 1;
         if (i > 0 && val !== tb.rows[i - 1].d[j]) cls.push("upd");
-        if (tb.hc !== undefined && tb.hc !== null && i === tb.rows.length - 1 && j === tb.hc) cls.push("chg");
+        if (tb.hc !== undefined && tb.hc !== null && last && j === tb.hc) cls.push("chg");
+        if (hasHu && last && j === tb.hu) cls.push("hu");
         if (val === Infinity) cls.push("inf");
         if (val < 0) cls.push("neg");
         td.className = cls.join(" ");
@@ -1130,7 +1169,7 @@ function generate(algo, s) {
     CODE[algo].forEach(function (_, i) { $("ln" + i).className = "ln" + (i === f.line ? " on" : ""); });
     var mc = $("matcard");
     if (f.mat) { mc.hidden = false; $("mt-title").textContent = "Tableur : matrice des distances d"; $("mt-hint").textContent = "ligne = départ i, colonne = arrivée j"; buildMat(f); }
-    else if (f.tab && f.tab.rows.length) { mc.hidden = false; $("mt-title").textContent = "Tableur : distances après chaque tour"; $("mt-hint").textContent = "une ligne par tour, une colonne par sommet"; buildTab(f.tab); }
+    else if (f.tab && f.tab.rows.length) { mc.hidden = false; $("mt-title").textContent = "Tableur : distances après chaque tour"; $("mt-hint").textContent = "une ligne par tour, une colonne par sommet · sommet étudié en orange"; buildTab(f.tab); }
     else { mc.hidden = true; }
     scrub.max = frames.length - 1; scrub.value = idx;
     $("count").textContent = idx + " / " + (frames.length - 1);
@@ -1175,7 +1214,13 @@ function generate(algo, s) {
     document.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-pressed", t === b ? "true" : "false"); });
     rebuild();
   });
-  graphSel.addEventListener("change", function () { graphKey = graphSel.value; rebuild(); });
+  graphSel.addEventListener("change", function () {
+    graphKey = graphSel.value;
+    setGraph(graphKey);
+    src = GRAPHS[graphKey].src;
+    fillSrc();
+    rebuild();
+  });
   srcSel.addEventListener("change", function () { src = srcSel.value; rebuild(); });
   $("btn-play").addEventListener("click", function () { if (playing) { stop(); render(); } else play(); });
   $("btn-next").addEventListener("click", function () { stop(); if (idx < frames.length - 1) idx++; render(); });
@@ -1189,6 +1234,9 @@ function generate(algo, s) {
     if (e.key === "ArrowLeft") { stop(); if (idx > 0) idx--; render(); }
   });
 
+  setGraph(graphKey);
+  src = GRAPHS[graphKey].src;
+  fillSrc();
   rebuild();
 })();
 (function(){
@@ -1212,9 +1260,11 @@ var M=[
  {t:'Profondeur',c:'dfs|pos|A',q:'Notez les dates début/fin de chaque sommet. Pourquoi C, voisin direct de A, est-il visité en dernier ?',a:'A 1/14, B 2/11, D 3/10, E 4/9, F 5/8, G 6/7, C 12/13. Les voisins sont pris par ordre alphabétique : le parcours plonge dans B et visite D, E, F, G avant de revenir vers C, qu’aucun de ces sommets n’atteint.'},
  {t:'Dijkstra, poids positifs',c:'dijkstra|pos|A',q:'Relevez l’ordre d’extraction et les distances finales. Pourquoi B est-il extrait après C ? Comparez la distance de G avec celle du BFS.',a:'Ordre : A, C, B, D, E, F, G. dist(B) = 3 en passant par C (1 + 2), ce qui bat l’arc direct A→B de poids 4. Distances : B 3, C 1, D 8, E 10, F 13, G 14. G est à 3 arcs mais à poids 14.'},
  {t:'Dijkstra en échec',c:'dijkstra|neg|A',q:'Avec l’arc B→C de poids −4, que se passe-t-il quand B est extrait ? Quelles distances sont fausses ?',a:'C a déjà été fixé à 2 avant B (5). Quand on examine B→C, on trouverait 5 − 4 = 1 < 2, mais C est fixé : l’amélioration est ignorée. Résultat faux pour C, D, E, F, G. Valeurs exactes : C 1, D 4, E 6, F 9, G 10.'},
- {t:'Bellman-Ford',c:'bf|neg|A',q:'Suivez le tableur ligne par ligne. \u00c0 quel tour la distance de C descend-elle de 2 \u00e0 1 ? Pourquoi la ligne du tour 5 est-elle identique \u00e0 celle du tour 4 ?',a:'C passe de 2 \u00e0 1 au tour 2 : au tour 1, l\u2019arc B\u2192C est examin\u00e9 avant que B ait re\u00e7u sa distance (encore \u221e) ; au tour 2, B vaut 5 et 5 \u2212 4 = 1 < 2. Le tour 5 ne modifie aucune cellule : l\u2019algorithme s\u2019arr\u00eate. Distances exactes : B 5, C 1, D 4, E 6, F 9, G 10.'},
- {t:'Cycle absorbant',c:'bf|cyc|A',q:'À quel moment le cycle est-il détecté ? Quel est le poids du cycle B→C→D→B ?',a:'Pendant le tour de vérification, sur l’arc D→B, après les 6 tours (n − 1). Poids du cycle : 2 − 4 + 1 = −1 < 0 : chaque passage réduit les distances.'},
- {t:'Floyd-Warshall',c:'fw|pos',q:'Comparez la ligne A de la matrice finale avec le résultat de Dijkstra. Combien de tests d[i][k] + d[k][j] < d[i][j] l’algorithme effectue-t-il ?',a:'La ligne A donne 0, 3, 1, 8, 10, 13, 14 : identique à Dijkstra. Trois boucles imbriquées sur n = 7 : 7³ = 343 tests. Avec le graphe à cycle absorbant, la diagonale devient négative (d[B][B] < 0).'}
+ {t:'Bellman-Ford',c:'bf|neg|A',q:'Suivez le tableur : le sommet étudié est encadré en orange. Au tour 1, la distance de C est mise à jour deux fois. Lesquelles ? Pourquoi le tour 2 est-il quand même nécessaire ?',a:'Au tour 1, A→C donne C = 2, puis, quand B est étudié, B→C donne 5 − 4 = 1 < 2. B est étudié avant C, donc sa distance est déjà connue. Après le tour 1, toutes les distances sont déjà exactes (B 5, C 1, D 4, E 6, F 9, G 10), mais l’algorithme ne peut pas le savoir : le tour 2 ne modifie aucune cellule, ce qui prouve qu’on peut s’arrêter.'},
+ {t:'Cycle absorbant',c:'bf|cyc|A',q:'À quel moment le cycle est-il détecté, et sur quel arc ? Quel est le poids du cycle B→C→D→B ?',a:'Pendant le tour de vérification, sur l’arc B→C : après les 6 tours (n − 1), B vaut −5 et C vaut −2, et −5 + 2 = −3 < −2. Poids du cycle : 2 − 4 + 1 = −1 < 0 : à chaque tour, les distances de B, C et D baissent d’une unité.'},
+ {t:'Floyd-Warshall',c:'fw|pos',q:'Comparez la ligne A de la matrice finale avec le résultat de Dijkstra. Combien de tests d[i][k] + d[k][j] < d[i][j] l’algorithme effectue-t-il ?',a:'La ligne A donne 0, 3, 1, 8, 10, 13, 14 : identique à Dijkstra. Trois boucles imbriquées sur n = 7 : 7³ = 343 tests. Avec le graphe à cycle absorbant, la diagonale devient négative (d[B][B] < 0).'},
+ {t:'Petits graphes : triangle',c:'dijkstra|trn|S',q:'Comparez le triangle à poids positifs et le triangle avec B→A = −2. Quelle distance Dijkstra trouve-t-il pour A dans chaque cas ? Que donne Bellman-Ford sur le second ?',a:'Poids positifs : A = 3 (S→A), correct, car 4 + 2 = 6 > 3. Avec B→A = −2 : Dijkstra fixe A à 3 avant d’examiner B, puis ignore B→A ; or S→B→A pèse 4 − 2 = 2. Bellman-Ford trouve A = 2.'},
+ {t:'Six sommets',c:'bf|six|S',q:'Sur ce graphe à 6 sommets, Bellman-Ford fait au plus 5 tours. Combien de tours sont effectivement nécessaires ? Relevez les distances finales.',a:'Trois tours modifient des distances, un quatrième constate que plus rien ne change (le maximum de 5 n’est pas atteint). Distances finales : A 5, B 5, C 7, D 9, E 8. Plusieurs arcs sont négatifs (D→A = −4, D→C = −1, C→B = −2) mais le cycle A→C→B→A pèse 2 − 2 + 1 = 1 > 0 : pas de cycle absorbant.'}
 ];
 function esc(t){return t.replace(/ < /g,' &lt; ')}
 function actHTML(){
@@ -1224,8 +1274,8 @@ function actHTML(){
     h+='<div class="defi"><p><b>Mission '+(i+1)+' · '+m.t+'</b></p><p><button class="btn sm pri" data-cfg="'+m.c+'">Charger dans l’atelier</button></p><p>'+esc(m.q)+'</p>'+
     '<details class="rep"><summary>Réponse</summary><div>'+esc(m.a)+'</div></details></div>';
   });
-  h+='<div class="defi"><p><b>Défi.</b> Pourquoi la liste d’arcs de Bellman-Ford est-elle volontairement donnée dans un ordre défavorable ? Que changerait un meilleur ordre ?</p>'+
-  '<details class="rep"><summary>Réponse</summary><div>Un ordre défavorable oblige à plusieurs tours, ce qui rend l’algorithme visible. Avec les arcs rangés dans l’ordre des chemins (A→C, C→B, B→D, …), un seul tour suffirait pour propager les distances. Le pire cas reste n − 1 tours.</div></details></div>';
+  h+='<div class="defi"><p><b>Défi.</b> Dans le graphe à poids positifs, les arcs de Bellman-Ford sont parcourus sommet par sommet (A, B, C, …). Pourquoi un seul tour ne suffit-il pas ? Combien de tours modifient des distances ?</p>'+
+  '<details class="rep"><summary>Réponse</summary><div>B est étudié avant C : B→D utilise dist(B) = 4, et ce n’est qu’ensuite que C→B améliore B à 3. Cette amélioration n’est exploitée qu’au tour suivant (D passe de 9 à 8, puis E, F et G s’améliorent). Deux tours modifient des distances, un troisième vérifie que plus rien ne change. Le pire cas reste n − 1 tours : l’ordre des arcs change le nombre de tours, pas le résultat.</div></details></div>';
   return h;
 }
 $('actBody').addEventListener('click',function(e){var b=e.target.closest('[data-cfg]');if(b)cfg(b.getAttribute('data-cfg'))});
